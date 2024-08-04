@@ -53,6 +53,7 @@ class BasicController extends Controller
       'businesses' => $businessesIWork,
       'presets' => $views,
       'session' => Auth::user(),
+      'WA_URL' => env('WA_URL'),
       'PUBLIC_RSA_KEY' => Controller::$PUBLIC_RSA_KEY,
       'APP_URL' => env('APP_URL'),
       'APP_DOMAIN' => env('APP_DOMAIN', 'atalaya.localhost'),
