@@ -36,7 +36,8 @@ class User extends Model
         'fullname',
         'email',
         'user_id',
-        'business_id'
+        'business_id',
+        'relative_id'
     ];
 
     /**

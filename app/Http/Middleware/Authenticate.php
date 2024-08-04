@@ -52,6 +52,7 @@ class Authenticate extends Middleware
                 'lastname' => Auth::user()->lastname,
                 'email' => Auth::user()->email,
                 'fullname' => Auth::user()->name . ' ' . Auth::user()->lastname,
+                'relative_id' => Auth::user()->relative_id
             ]);
 
             $serviceUser->getAllPermissions();
