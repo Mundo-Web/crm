@@ -7,13 +7,13 @@ import WhatsAppModal from './modals/WhatsAppModal'
 
 moment.tz.setDefault('UTC');
 
-const Adminto = ({ session, children, title, can, WA_URL, APP_URL, presets, businesses }) => {
+const Adminto = ({ session, children, title, can, WA_URL, APP_URL, presets, businesses, APP_DOMAIN }) => {
   const [whatsappStatus, setWhatsappStatus] = useState('verifying')
 
   return (<>
     <div id="wrapper">
-      <NavBar session={session} title={title} can={can} whatsappStatus={whatsappStatus} businesses={businesses} />
-      <Menu session={session} can={can} presets={presets} />
+      <NavBar session={session} title={title} can={can} whatsappStatus={whatsappStatus} businesses={businesses} APP_DOMAIN={APP_DOMAIN} />
+      <Menu session={session} can={can} presets={presets} APP_DOMAIN={APP_DOMAIN} />
       <div className="content-page">
         <div className="content">
           <div className="container-fluid">
