@@ -2,7 +2,7 @@ import React, { useEffect } from "react"
 import Logout from "../actions/Logout"
 import WhatsAppStatuses from "../Reutilizables/WhatsApp/WhatsAppStatuses"
 
-const NavBar = ({ can, session = {}, title = '', whatsappStatus, businesses }) => {
+const NavBar = ({ can, session = {}, title = '', whatsappStatus, businesses, APP_DOMAIN }) => {
 
   const { color } = WhatsAppStatuses[whatsappStatus]
 
@@ -111,7 +111,7 @@ const NavBar = ({ can, session = {}, title = '', whatsappStatus, businesses }) =
         <li className="dropdown notification-list topbar-dropdown">
           <a className="nav-link dropdown-toggle nav-user me-0 waves-effect waves-light" data-bs-toggle="dropdown"
             href="#" role="button" aria-haspopup="false" aria-expanded="false">
-            <img src={`/api/profile/thumbnail/${session.relative_id}?v=${crypto.randomUUID()}`} alt="user-image" className="rounded-circle" style={{ objectFit: 'cover', objectPosition: 'center' }} />
+            <img src={`//${APP_DOMAIN}/api/profile/thumbnail/${session.relative_id}?v=${crypto.randomUUID()}`} alt="user-image" className="rounded-circle" style={{ objectFit: 'cover', objectPosition: 'center' }} />
             <span className="pro-user-name ms-1">
               {session.name} {session.lastname}
               <i className="mdi mdi-chevron-down"></i>
