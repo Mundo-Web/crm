@@ -38,7 +38,7 @@ class ProjectController extends BasicController
             DB::raw('MAX(payments.created_at) AS last_payment_date'),
         ])
             ->leftJoin('payments', 'payments.project_id', 'projects.id')
-            ->groupBy('projects.id');
+            ->groupBy('projects.id', 'type.id');
     }
 
     static function projectStatus(Request $request)
