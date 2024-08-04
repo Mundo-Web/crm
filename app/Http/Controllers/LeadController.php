@@ -1,0 +1,245 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Jobs\SendNewLeadNotification;
+use App\Models\Atalaya\Business;
+use App\Models\Client;
+use App\Models\ClientNote;
+use App\Models\NoteType;
+use App\Models\Setting;
+use App\Models\Status;
+use App\Models\Task;
+use Carbon\Carbon;
+use Database\Seeders\ClientSeeder;
+use Exception;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use SoDe\Extend\Response;
+use SoDe\Extend\Text;
+use SoDe\Extend\Trace;
+
+class LeadController extends BasicController
+{
+    public $model = Client::class;
+    public $softDeletion = false;
+    public $reactView = 'Leads';
+    public $prefix4filter = 'clients';
+
+    public function setReactViewProperties(Request $request)
+    {
+        $statuses = Status::select()
+            ->where('table_id', 'e05a43e5-b3a6-46ce-8d1f-381a73498f33')
+            ->where('business_id', Auth::user()->business_id)
+            ->get();
+        $defaultClientStatus = Setting::get('default-client-status');
+        $noteTypes = NoteType::all();
+
+        $manageStatuses = Status::select()
+            ->where('table_id', '9c27e649-574a-47eb-82af-851c5d425434')
+            ->where('business_id', Auth::user()->business_id)
+            ->get();
+
+        return [
+            'manageStatuses' => $manageStatuses,
+            'defaultClientStatus' => $defaultClientStatus,
+            'statuses' => $statuses,
+            'noteTypes' => $noteTypes
+        ];
+    }
+
+    public function setPaginationInstance(string $model)
+    {
+        return $model::select('clients.*')
+            ->withCount(['notes', 'tasks', 'pendingTasks'])
+            ->with(['status', 'assigned', 'manageStatus'])
+            ->join('statuses AS status', 'status.id', 'status_id')
+            ->leftJoin('statuses AS manage_status', 'status.id', 'manage_status_id')
+            ->where('status.table_id', 'e05a43e5-b3a6-46ce-8d1f-381a73498f33')
+            ->where('clients.business_id', Auth::user()->business_id);
+    }
+
+    public function beforeSave(Request $request)
+    {
+        $status = Setting::get('default-lead-status');
+        $manage_status = Setting::get('default-manage-lead-status');
+        $body = $request->all();
+        $body['created_by'] = Auth::user()->service_user->id;
+        $body['status_id'] = $status;
+        $body['manage_status_id'] = $manage_status;
+        $body['source'] = env('APP_NAME');
+        $body['origin'] = env('APP_NAME');
+        $body['date'] = Trace::getDate('date');
+        $body['time'] = Trace::getDate('time');
+        $body['ip'] = $request->ip();
+        return $body;
+    }
+
+    public function afterSave(Request $request, object $jpa)
+    {
+        $noteJpa = ClientNote::create([
+            'note_type_id' => '8e895346-3d87-4a87-897a-4192b917c211',
+            'client_id' => $jpa->id,
+            'name' => 'Lead nuevo',
+            'description' => UtilController::replaceData(
+                Setting::get('whatsapp-new-lead-notification-message', Auth::user()->business_id),
+                $jpa->toArray()
+            )
+        ]);
+
+        Task::create([
+            'model_id' => ClientNote::class,
+            'note_id' => $noteJpa->id,
+            'name' => 'Revisar lead',
+            'description' => 'Debes revisar los requerimientos del lead',
+            'ends_at' => Carbon::now()->addDay()->format('Y-m-d H:i:s'),
+            'status' => 'Pendiente',
+        ]);
+    }
+
+    public function all(Request $request)
+    {
+        $response = Response::simpleTryCatch(function (Response $response) use ($request) {
+            $clients = Client::select('clients.*')
+                ->withCount(['notes', 'tasks', 'pendingTasks'])
+                ->with(['status', 'assigned', 'manageStatus'])
+                ->join('statuses AS status', 'status.id', 'status_id')
+                ->where('status.table_id', 'e05a43e5-b3a6-46ce-8d1f-381a73498f33')
+                ->where('clients.business_id', Auth::user()->business_id)
+                ->get();
+            $response->data = $clients;
+        });
+        return response($response->toArray(), $response->status);
+    }
+
+    public function byStatus(Request $request, string $status)
+    {
+        $response = Response::simpleTryCatch(function (Response $response) use ($request, $status) {
+            $clients = Client::withCount('notes')
+                ->where('status_id', $status)
+                ->where('business_id', Auth::user()->business_id)
+                ->get();
+            $response->data = $clients;
+        });
+        return response($response->toArray(), $response->status);
+    }
+
+    public function leadStatus(Request $request)
+    {
+        $response = Response::simpleTryCatch(function (Response $response) use ($request) {
+            $leadJpa = Client::find($request->lead);
+            if ($leadJpa->business_id != Auth::user()->business_id) throw new Exception('Este lead no pertenece a tu empresa');
+            $leadJpa->status_id = $request->status;
+            $leadJpa->save();
+        });
+        return response($response->toArray(), $response->status);
+    }
+
+    public function manageStatus(Request $request)
+    {
+        $response = Response::simpleTryCatch(function (Response $response) use ($request) {
+            $leadJpa = Client::find($request->lead);
+            if ($leadJpa->business_id != Auth::user()->business_id) throw new Exception('Este lead no pertenece a tu empresa');
+            $leadJpa->manage_status_id = $request->status;
+            $leadJpa->save();
+        });
+        return response($response->toArray(), $response->status);
+    }
+
+    public function attend(Request $request)
+    {
+        $response = Response::simpleTryCatch(function (Response $response) use ($request) {
+            $leadJpa = Client::find($request->lead);
+            if ($leadJpa->business_id != Auth::user()->business_id) throw new Exception('Este lead no pertenece a tu empresa');
+            $leadJpa->assigned_to = $request->method() == 'DELETE' ? null : Auth::user()->service_user->id;
+            $leadJpa->save();
+        });
+        return response($response->toArray(), $response->status);
+    }
+
+    public function external(Request $request)
+    {
+        $response = Response::simpleTryCatch(function (Response $response) use ($request) {
+
+            $authorizationHeader = $request->header('Authorization');
+
+            if (Text::nullOrEmpty($authorizationHeader)) {
+                throw new Exception("Debe enviar los parámetros de autenticación 'Authorization'");
+            }
+
+            if (!Text::startsWith($authorizationHeader, 'Bearer ')) {
+                throw new Exception("El token de autorización debe ser de tipo Bearer");
+            }
+
+            $uuid = \str_replace('Bearer ', '', $authorizationHeader);
+
+            $businessJpa = Business::select('id')->where('uuid', $uuid)->first();
+            if (!$businessJpa) {
+                throw new Exception("Empresa no encontrada para el token proporcionado");
+            }
+
+            $messages = [
+                'contact_name.required' => 'El nombre de contacto es obligatorio.',
+                'contact_phone.required' => 'El teléfono de contacto es obligatorio.',
+                'contact_phone.max' => 'El teléfono de contacto no debe exceder los 15 caracteres.',
+                'contact_email.required' => 'El correo electrónico es obligatorio.',
+                'contact_email.email' => 'El correo electrónico debe tener el formato user@domain.com.',
+                'contact_email.max' => 'El correo electrónico no debe exceder los 320 caracteres.',
+                'contact_position.string' => 'La posición de contacto debe ser una cadena de texto.',
+                'tradename.required' => 'El nombre comercial es obligatorio.',
+                'tradename.string' => 'El nombre comercial debe ser una cadena de texto.',
+                'message.required' => 'El mensaje es obligatorio.',
+                'message.string' => 'El mensaje debe ser una cadena de texto.',
+                'origin.required' => 'El origen es obligatorio.',
+                'origin.string' => 'El origen debe ser una cadena de texto.'
+            ];
+
+            $validatedData = $request->validate([
+                'contact_name' => 'required|string',
+                'contact_phone' => 'required|max:15',
+                'contact_email' => 'required|email|max:320',
+                'contact_position' => 'nullable|string',
+                'tradename' => 'required|string',
+                'workers' => 'nullable|string',
+                'source' => 'nullable|string',
+                'message' => 'required|string',
+                'origin' => 'required|string'
+            ], $messages);
+
+            $validatedData['business_id'] = $businessJpa->id;
+            $validatedData['name'] = $validatedData['contact_name'];
+            $validatedData['source'] = $validatedData['source'] ?? 'Externo';
+            $validatedData['date'] = Trace::getDate('date');
+            $validatedData['time'] = Trace::getDate('time');
+            $validatedData['ip'] = $request->ip();
+            $validatedData['status_id'] = Setting::get('default-lead-status', $businessJpa->id);
+            $validatedData['manage_status_id'] = Setting::get('default-manage-lead-status', $businessJpa->id);
+
+            $leadJpa = Client::create($validatedData);
+            $noteJpa = ClientNote::create([
+                'note_type_id' => '8e895346-3d87-4a87-897a-4192b917c211',
+                'client_id' => $leadJpa->id,
+                'name' => 'Lead nuevo',
+                'description' => UtilController::replaceData(
+                    Setting::get('whatsapp-new-lead-notification-message', $businessJpa->id),
+                    $leadJpa->toArray()
+                )
+            ]);
+
+            Task::create([
+                'model_id' => ClientNote::class,
+                'note_id' => $noteJpa->id,
+                'name' => 'Revisar lead',
+                'description' => 'Debes revisar los requerimientos del lead',
+                'ends_at' => Carbon::now()->addDay()->format('Y-m-d H:i:s'),
+                'status' => 'Pendiente',
+            ]);
+
+            SendNewLeadNotification::dispatchAfterResponse($leadJpa, $businessJpa);
+
+            $response->message = 'Se ha creado el lead correctamente';
+        });
+
+        return response($response->toArray(), $response->status);
+    }
+}

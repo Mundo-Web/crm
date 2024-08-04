@@ -1,0 +1,96 @@
+<?php
+
+namespace App\Models;
+
+use App\Models\User;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
+class Client extends Model
+{
+    use HasFactory, HasUuids;
+
+    public $incrementing = false;
+    protected $keyType = 'string';
+
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var array<int, string>
+     */
+    protected $fillable = [
+        'id',
+        'description',
+        'contact_name',
+        'contact_phone',
+        'contact_email',
+        'contact_address',
+        'status',
+        'created_at',
+        'updated_at',
+        'ruc',
+        'name',
+        'contact_position',
+        'message',
+        'web_url',
+        'source',
+        'date',
+        'time',
+        'ip',
+        'origin',
+        'client_width',
+        'client_height',
+        'client_latitude',
+        'client_longitude',
+        'client_system',
+        'status_id',
+        'manage_status_id',
+        'created_by',
+        'updated_by',
+        'tradename',
+        'assigned_to',
+        'sector',
+        'country_prefix',
+        'workers',
+        'business_id'
+    ];
+
+    protected $hidden = [
+        'business_id'
+    ];
+
+    public function projects()
+    {
+        return $this->hasMany(Project::class, 'client_id', 'id');
+    }
+
+    public function assigned()
+    {
+        return $this->hasOne(User::class, 'id', 'assigned_to');
+    }
+
+    public function status()
+    {
+        return $this->hasOne(Status::class, 'id', 'status_id');
+    }
+
+    public function manageStatus()
+    {
+        return $this->hasOne(Status::class, 'id', 'manage_status_id');
+    }
+
+    public function notes()
+    {
+        return $this->hasMany(ClientNote::class, 'client_id', 'id');
+    }
+
+    public function tasks() {
+        return $this->hasManyThrough(Task::class, ClientNote::class, 'client_id', 'note_id', 'id', 'id');
+    }
+
+    public function pendingTasks()
+    {
+        return $this->hasManyThrough(Task::class, ClientNote::class, 'client_id', 'note_id', 'id', 'id')->whereNot('status', 'Realizado');
+    }
+}
