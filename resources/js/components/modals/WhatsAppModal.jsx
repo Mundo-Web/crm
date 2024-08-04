@@ -13,10 +13,12 @@ const WhatsAppModal = ({ status: whatsappStatus, setStatus, WA_URL, APP_URL, ses
   const [percent, setPercent] = useState(0)
   const [sessionInfo, setSessionInfo] = useState({})
 
+  const businessSession = `atalaya-${session.business_uuid}`
+
   useEffect(() => {
     if (whatsappStatus == 'verifying') {
       const searchParams = new URLSearchParams({
-        session: `atalaya-${session.business_uuid}`,
+        session: businessSession,
         redirect_to: APP_URL
       })
 
@@ -80,7 +82,7 @@ const WhatsAppModal = ({ status: whatsappStatus, setStatus, WA_URL, APP_URL, ses
       cancelButtonText: `Cancelar`
     })
     if (!isConfirmed) return
-    await fetch(`${WA_URL}/api/session/atalaya`, {
+    await fetch(`${WA_URL}/api/session/${businessSession}`, {
       method: 'DELETE'
     })
     Notify.add({
@@ -100,7 +102,7 @@ const WhatsAppModal = ({ status: whatsappStatus, setStatus, WA_URL, APP_URL, ses
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          from: 'atalaya',
+          from: businessSession,
           to: [phoneRef.current.value],
           content: 'Ping!\n> Mensaje automatico',
         })
