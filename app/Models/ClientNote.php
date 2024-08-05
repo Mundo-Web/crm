@@ -21,7 +21,13 @@ class ClientNote extends Model
         'description'
     ];
 
-    public function type(){
+    public function client()
+    {
+        return $this->hasOne(Client::class, 'id', 'client_id');
+    }
+
+    public function type()
+    {
         return $this->belongsTo(NoteType::class, 'note_type_id', 'id');
     }
 
@@ -30,7 +36,8 @@ class ClientNote extends Model
         return $this->belongsTo(User::class, 'user_id', 'id');
     }
 
-    public function tasks() {
+    public function tasks()
+    {
         return $this->hasMany(Task::class, 'note_id', 'id');
     }
 }

@@ -64,7 +64,7 @@ class BasicRest {
         type: 'success'
       })
 
-      return true
+      return result
     } catch (error) {
       Notify.add({
         icon: '/assets/img/logo-login.svg',

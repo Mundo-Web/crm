@@ -84,18 +84,9 @@ const Menu = ({ session, can, presets, APP_DOMAIN }) => {
         <ul id="side-menu">
           <li className="menu-title">Panel de navegacion</li>
           <MenuItem href="/home" icon='mdi mdi-home'>Inicio</MenuItem>
-          {
-            can('clients', 'root', 'all', 'list') &&
-            <MenuItemContainer title='Personas' icon='mdi mdi-account-group'>
-              <MenuItem href="/clients" icon='mdi mdi-account-group'>Clientes</MenuItem>
-              <MenuItem href="/leads" icon='mdi mdi-texture'>Leads</MenuItem>
-              {/* {
-                presets.filter(x => x.table.name == 'Clientes').map((view, i) => {
-                  return <MenuItem key={`menu-${i}`} href={`/clients/${view.id}`} icon='mdi mdi-page-layout-sidebar-left'>{view.name}</MenuItem>
-                })
-              } */}
-            </MenuItemContainer>
-          }
+
+          <MenuItem href="/leads" icon='mdi mdi-texture'>Leads</MenuItem>
+          {can('clients', 'all', 'list') && <MenuItem href="/clients" icon='mdi mdi-account-group'>Clientes</MenuItem>}
 
           {
             can('projects', 'root', 'all', 'list') &&

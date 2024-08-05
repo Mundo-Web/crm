@@ -54,6 +54,10 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
   })
 
   useEffect(() => {
+    $(modalRef.current).on('hidden.bs.modal', () => setLeadLoaded(null));
+  }, [null])
+
+  useEffect(() => {
     const ids = statuses.map(x => `#status-${Correlative(x.name)}`).join(', ');
     $(ids).sortable({
       connectWith: '.taskList',
@@ -175,6 +179,10 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
   const onTaskStatusChange = async (id, status) => {
     const result = await taskRest.status({ id, status })
     if (!result) return
+    if (result?.data?.refresh) {
+      if (defaultView == 'kanban') getLeads()
+      else $(gridRef.current).dxDataGrid('instance').refresh()
+    }
     getNotes()
   }
 
@@ -252,7 +260,7 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
                 onClick: () => $(gridRef.current).dxDataGrid('instance').refresh()
               }
             });
-            can('leads', 'root', 'all', 'create') && container.unshift({
+            can('leads', 'all', 'create') && container.unshift({
               widget: 'dxButton', location: 'after',
               options: {
                 icon: 'plus',
@@ -267,9 +275,8 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
               caption: 'Cliente',
               width: 250,
               cellTemplate: (container, { data }) => {
-                // container.attr('style', 'display:flex; overflow: visible')
                 ReactAppend(container, <div className='d-flex align-items-center' style={{ cursor: 'pointer' }} onClick={() => onLeadClicked(data)}>
-                  <div>{data.contact_name}</div>
+                  <b>{data.contact_name}</b>
                   {data.assigned_to && <Tippy content={`Atendido por ${data.assigned.name} ${data.assigned.lastname}`}>
                     <img className='avatar-xs rounded-circle ms-1' src={`/api/profile/thumbnail/${data.assigned.relative_id}`} alt={data.assigned.name} />
                   </Tippy>}
@@ -284,22 +291,25 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
               dataField: 'contact_phone',
               caption: 'Telefono'
             },
-            can('leads', 'root', 'all', 'changestatus') ? {
+            {
               dataField: 'status.name',
               caption: 'Estado del lead',
               dataType: 'string',
               cellTemplate: (container, { data }) => {
                 container.attr('style', 'overflow: visible')
-                ReactAppend(container, <Dropdown className='btn btn-xs btn-white rounded-pill' title={data.status.name} icon={{ icon: 'fa fa-circle', color: data.status.color }} tippy='Actualizar estado'>
-                  {statuses.map(({ id, name, color }) => {
-                    return <DropdownItem key={id} onClick={() => onClientStatusClicked(data.id, id)}>
-                      <i className='fa fa-circle' style={{ color }}></i> {name}
-                    </DropdownItem>
-                  })}
+                ReactAppend(container, <Dropdown className='btn btn-xs btn-white rounded-pill' title={data.status.name} icon={{ icon: 'fa fa-circle', color: data.status.color }} tippy='Actualizar estado' show={can('leads', 'all', 'status')}>
+                  {
+                    can('leads', 'all', 'status') &&
+                    statuses.map(({ id, name, color }) => {
+                      return <DropdownItem key={id} onClick={() => onClientStatusClicked(data.id, id)}>
+                        <i className='fa fa-circle' style={{ color }}></i> {name}
+                      </DropdownItem>
+                    })
+                  }
                 </Dropdown>)
               }
-            } : null,
-            can('leads', 'root', 'all', 'changestatus') ? {
+            },
+            can('leads', 'all', 'managestatus') ? {
               dataField: 'manage_status.name',
               caption: 'Estado de gestion',
               dataType: 'string',
@@ -644,7 +654,6 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
 };
 
 CreateReactScript((el, properties) => {
-  if (!properties.can('leads', 'root', 'all', 'list')) return location.href = '/';
   createRoot(el).render(
     <Adminto {...properties} title='Leads'>
       <Leads {...properties} />

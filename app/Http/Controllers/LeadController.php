@@ -94,6 +94,7 @@ class LeadController extends BasicController
             'description' => 'Debes revisar los requerimientos del lead',
             'ends_at' => Carbon::now()->addDay()->format('Y-m-d H:i:s'),
             'status' => 'Pendiente',
+            'asignable' => true
         ]);
     }
 
@@ -216,24 +217,8 @@ class LeadController extends BasicController
             $validatedData['manage_status_id'] = Setting::get('default-manage-lead-status', $businessJpa->id);
 
             $leadJpa = Client::create($validatedData);
-            $noteJpa = ClientNote::create([
-                'note_type_id' => '8e895346-3d87-4a87-897a-4192b917c211',
-                'client_id' => $leadJpa->id,
-                'name' => 'Lead nuevo',
-                'description' => UtilController::replaceData(
-                    Setting::get('whatsapp-new-lead-notification-message', $businessJpa->id),
-                    $leadJpa->toArray()
-                )
-            ]);
 
-            Task::create([
-                'model_id' => ClientNote::class,
-                'note_id' => $noteJpa->id,
-                'name' => 'Revisar lead',
-                'description' => 'Debes revisar los requerimientos del lead',
-                'ends_at' => Carbon::now()->addDay()->format('Y-m-d H:i:s'),
-                'status' => 'Pendiente',
-            ]);
+            $this->afterSave($request, $leadJpa);
 
             SendNewLeadNotification::dispatchAfterResponse($leadJpa, $businessJpa);
 
