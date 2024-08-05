@@ -73,7 +73,7 @@ const Apikeys = ({ can, apikey, APP_DOMAIN, APP_CORRELATIVE }) => {
 
             <div class="mb-3">
               <h5>URL:</h5>
-              <code>https://{APP_CORRELATIVE}.{APP_DOMAIN}/free/leads</code>
+              <span className='badge bg-danger'>POST</span> <code>https://{APP_CORRELATIVE}.{APP_DOMAIN}/free/leads</code>
             </div>
 
             <div class="mb-3">
