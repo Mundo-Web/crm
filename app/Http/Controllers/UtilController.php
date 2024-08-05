@@ -87,8 +87,8 @@ class UtilController
       Setting::set('whatsapp-new-lead-notification-message', File::get('../storage/app/utils/whatsapp-new-lead-notification-message.html'), $businessJpa->id);
       Setting::set('whatsapp-new-lead-notification-message-client', File::get('../storage/app/utils/whatsapp-new-lead-notification-message-client.html'), $businessJpa->id);
 
-      Setting::set('email-new-lead-notification-message', File::get('../storage/app/utils/whatsapp-new-lead-notification-message.html'), $businessJpa->id);
-      Setting::set('email-new-lead-notification-message-client', File::get('../storage/app/utils/whatsapp-new-lead-notification-message-client.html'), $businessJpa->id);
+      Setting::set('email-new-lead-notification-message', File::get('../storage/app/utils/email-new-lead-notification-message.html'), $businessJpa->id);
+      Setting::set('email-new-lead-notification-message-client', File::get('../storage/app/utils/email-new-lead-notification-message-client.html'), $businessJpa->id);
       Setting::set('email-new-lead-notification-message-owneremail', $businessJpa->creator->email, $businessJpa->id);
 
     });
