@@ -36,6 +36,10 @@ class Business extends Model
     {
         return $this->belongsTo(Person::class, 'owner_id');
     }
+    public function creator()
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
     public function contact()
     {
         return $this->belongsTo(Person::class, 'contact_id');
