@@ -8,21 +8,19 @@ const DataGrid = ({ gridRef: dataGridRef, rest, columns, toolBar, masterDetail, 
       language: "es",
       dataSource: {
         load: async (params) => {
-          const data = (await rest.paginate(params)) ?? {}
-          let newData = data?.data || []
+          const data = (await rest.paginate(params)) ?? {};
+          let newData = data?.data || [];
+
           if (defaultRows) {
-            newData = defaultRows.map(row => {
-              const keys = Object.keys(row);
-              const found = (data?.data ?? []).find(x => keys.every(key => x[key] == row[key]))
-              for (const key of Object.keys(found ?? row)) {
-                row[key] = found?.[key] ?? row[key]
-              }
-              return row
-            })
+            const defaultKeys = defaultRows.map(row => Object.keys(row));
+            const combinedData = newData.concat(defaultRows.filter(row => {
+              return !newData.some(dataRow => defaultKeys.some(keys => keys.every(key => dataRow[key] == row[key])));
+            }));
+            data.data = combinedData;
           }
-          data.data = newData
-          return data
-        },
+
+          return data;
+        }
       },
       onToolbarPreparing: (e) => {
         const { items } = e.toolbarOptions;

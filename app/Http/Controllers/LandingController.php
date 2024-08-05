@@ -2,174 +2,404 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Classes\dxResponse;
-use App\Models\dxDataGrid;
-use App\Models\Landing;
-use Exception;
-use Illuminate\Contracts\Routing\ResponseFactory;
-use Illuminate\Http\Request;
-use Illuminate\Http\Response as HttpResponse;
-use SoDe\Extend\JSON;
-use SoDe\Extend\Response;
+use App\Http\Classes\EmailConfig;
+use App\Models\Atalaya\Business;
+use App\Models\Client;
+use SoDe\Extend\Fetch;
+use SoDe\Extend\Text;
 
 class LandingController extends Controller
 {
-    public function paginate(Request $request): HttpResponse|ResponseFactory
+    static function envioCorreo(Client $client, Business $business)
     {
-        $response =  new dxResponse();
+
+        $name = $client['contact_name'];
+        $mail = EmailConfig::config($name); /* variable $name que se agregó */
         try {
-            $instance = Landing::select();
+            $html =
+                '
+            <html lang="en">
+                <head>
+                    <meta charset="UTF-8" />
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+                    <title>Mundo web</title>
+                    <link rel="preconnect" href="https://fonts.googleapis.com" />
+                    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+                    <link
+                        href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap"
+                        rel="stylesheet"
+                    />
+                    <style>
+                        * {
+                            margin: 0;
+                            padding: 0;
+                            box-sizing: border-box;
+                        }
 
-            if ($request->group != null) {
-                [$grouping] = $request->group;
-                $selector = \str_replace('.', '__', $grouping['selector']);
-                $instance = Landing::select([
-                    "{$selector} AS key"
-                ])
-                    ->groupBy($selector);
+                        @font-face {
+                            font-family: grotesk;
+                            src: url(../../public/fonts/PPRightGroteskCompactMedium.woff);
+                            font-weight: normal;
+                        }
+                    </style>
+                </head>
+                <body>
+                    <main>
+                        <table
+                            style="
+                                width: 600px;
+                                margin: 0 auto;
+                                text-align: center;
+                                background-image: url(https://mundoweb.pe/mail/Fondo.png);
+                                background-repeat: no-repeat;
+                                background-position: center;
+                                background-size: cover;
+                            "
+                        >
+                            <thead>
+                                <tr>
+                                    <th
+                                        style="
+                                            display: flex;
+                                            flex-direction: row;
+                                            justify-content: center;
+                                            align-items: center;
+                                            margin: 100px;
+                                        "
+                                    >
+                                        <img src="https://mundoweb.pe/mail/Frame_14466.png" alt="mundo web" />
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>
+                                        <p
+                                            style="
+                                            color: #050a41;
+                                            font-weight: 500;
+                                            font-size: 18px;
+                                            text-align: center;
+                                            width: 500px;
+                                            margin: 0 auto;
+                                            padding: 20px 0;
+                                            font-family: Montserrat, sans-serif;
+                                        "
+                                        >
+                                             <span style="display:block">Hola </span>
+                                            
+                                            
+                                        </p>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <p
+                                            style="
+                                                color: #e15a29;
+                                                font-size: 40px;
+                                                line-height: 40px;
+                                                font-family: Montserrat, sans-serif;
+                                            "
+                                        >
+                                             <span style="display:block">' . $name . ' </span>
+                                            
+                                            
+                                        </p>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <p
+                                            style="
+                                                color: #e15a29;
+                                                font-size: 40px;
+                                                line-height: 70px;
+                                                font-family: Montserrat, sans-serif;
+                                            "
+                                        >
+                                            ¡Gracias
+                                            <span style="color: #050a41"
+                                                >por escribirnos! 🚀</span
+                                            >
+                                        </p>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <p
+                                            style="
+                                                color: #050a41;
+                                                font-weight: 500;
+                                                font-size: 18px;
+                                                text-align: center;
+                                                width: 500px;
+                                                margin: 0 auto;
+                                                padding: 20px 0;
+                                                font-family: Montserrat, sans-serif;
+                                            "
+                                        >
+                                        
+                                            En breve nuestra ejecutiva comercial se estará comunicando contigo.
+                                        </p>
+                                    </td>
+                                </tr>
+            <tr>
+            <td>
+                <a href="https://mundoweb.pe/" style="
+                    text-decoration: none;
+                    background-color: #e15a29;
+                    color: white;
+                    border-radius: 40px;
+                    padding: 12px 20px;
+                    display: inline-flex;
+                    justify-content: center;
+                    align-items: center;
+                    gap: 10px;
+                    font-weight: 600;
+                    font-family: Montserrat, sans-serif;
+                ">
+                    <span>Haz que tu negocio despegue</span>
+                    <img  src="https://mundoweb.pe/mail/buttonmailing.png" style="
+                        width: 20px;
+                        margin-left: 15px;
+                        height: 20px;
+                    " />
+                </a>
+            </td>
+        </tr>
+        <tr>
+            <td style="text-align: right; padding-right: 30px;">
+                <img src="https://mundoweb.pe/mail/10_rgb.png" alt="mundo web" style="width: 80%; margin-top: 100px" />
+            </td>
+        </tr>
+            </tbody>
+            </table>
+            </main>
+            </body>
+
+            </html>
+            ';
+            $mail->addAddress($client['contact_email']);
+            $mail->Body = $html;
+            $mail->isHTML(true);
+            $mail->send();
+
+            new Fetch(env('WA_URL') . '/api/send', [
+                'method' => 'POST',
+                'headers' => [
+                    'Accept' => 'application/json',
+                    'Content-Type' => 'application/json'
+                ],
+                'body' => [
+                    'from' => 'atalaya-' . $business->uuid,
+                    'to' => [
+                        $client['country_prefix'] . $client['contact_phone']
+                    ],
+                    'html' => $html
+                ]
+            ]);
+
+            sleep(5);
+
+            $message = SettingController::get('whatsapp-new-lead-notification-message-client');
+
+            foreach ($client->toArray() as $key => $value) {
+                $message = str_replace('{{' . $key . '}}', $value, $message);
             }
 
-            if (!auth()->user()->can('users.root')) {
-                $instance->whereNotNull('status');
-            }
-            if ($request->filter) {
-                $instance->where(function ($query) use ($request) {
-                    dxDataGrid::filter($query, $request->filter ?? []);
-                });
-            }
-
-            if ($request->sort != null) {
-                foreach ($request->sort as $sorting) {
-                    $selector = \str_replace('.', '__', $sorting['selector']);
-                    $instance->orderBy(
-                        $selector,
-                        $sorting['desc'] ? 'DESC' : 'ASC'
-                    );
-                }
-            } else {
-                $instance->orderBy('id', 'DESC');
-            }
-
-            $totalCount = $instance->count('*');
-            $jpas = $request->isLoadingAll
-                ? $instance->get()
-                : $instance
-                ->skip($request->skip ?? 0)
-                ->take($request->take ?? 10)
-                ->get();
-
-            $results = [];
-
-            foreach ($jpas as $jpa) {
-                $result = JSON::unflatten($jpa->toArray(), '__');
-                $results[] = $result;
-            }
-
-            $response->status = 200;
-            $response->message = 'Operación correcta';
-            $response->data = $results;
-            $response->totalCount = $totalCount;
+            new Fetch(env('WA_URL') . '/api/send', [
+                'method' => 'POST',
+                'headers' => [
+                    'Accept' => 'application/json',
+                    'Content-Type' => 'application/json'
+                ],
+                'body' => [
+                    'from' => 'atalaya-' . $business->uuid,
+                    'to' => [
+                        $client['country_prefix'] . $client['contact_phone']
+                    ],
+                    'content' => UtilController::html2wa($message)
+                ]
+            ]);
         } catch (\Throwable $th) {
-            $response->status = 400;
-            $response->message = $th->getMessage() . " " . $th->getFile() . ' Ln.' . $th->getLine();
-        } finally {
-            return response(
-                $response->toArray(),
-                $response->status
-            );
+            // dump($th);
         }
     }
-
-    public function save(Request $request): HttpResponse|ResponseFactory
+    static function envioCorreoMundo($client)
     {
-        $response = new Response();
+        $name = 'Administrador';
+        $mail = EmailConfig::config($name); /* variable $name que se agregó */
         try {
+            $mail->addAddress('hola@mundoweb.pe');
+            $mail->Body = '<html lang="en">
+                <head>
+                    <meta charset="UTF-8" />
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+                    <title>Mundo web</title>
+                    <link rel="preconnect" href="https://fonts.googleapis.com" />
+                    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+                    <link
+                        href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap"
+                        rel="stylesheet"
+                    />
+                    <style>
+                        * {
+                            margin: 0;
+                            padding: 0;
+                            box-sizing: border-box;
+                        }
 
-            $body = $request->all();
+                        @font-face {
+                            font-family: grotesk;
+                            src: url(../../public/fonts/PPRightGroteskCompactMedium.woff);
+                            font-weight: normal;
+                        }
+                    </style>
+                </head>
+                <body>
+                    <main>
+                        <table
+                            style="
+                                width: 600px;
+                                margin: 0 auto;
+                                text-align: center;
+                                background-image: url(https://mundoweb.pe/mail/Fondo.png);
+                                background-repeat: no-repeat;
+                                background-position: center;
+                                background-size: cover;
+                            "
+                        >
+                            <thead>
+                                <tr>
+                                    <th
+                                        style="
+                                            display: flex;
+                                            flex-direction: row;
+                                            justify-content: center;
+                                            align-items: center;
+                                            margin: 100px;
+                                        "
+                                    >
+                                        <img src="https://mundoweb.pe/mail/Frame_14466.png" alt="mundo web" />
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>
+                                        <p
+                                            style="
+                                            color: #050a41;
+                                            font-weight: 500;
+                                            font-size: 18px;
+                                            text-align: center;
+                                            width: 500px;
+                                            margin: 0 auto;
+                                            padding: 20px 0;
+                                            font-family: Montserrat, sans-serif;
+                                        "
+                                        >
+                                             <span style="display:block">Hola </span>
+                                            
+                                            
+                                        </p>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <p
+                                            style="
+                                                color: #e15a29;
+                                                font-size: 40px;
+                                                line-height: 20px;
+                                                font-family: Montserrat, sans-serif;
+                                            "
+                                        >
+                                             <span style="display:block">' . $name . ' </span>
+                                            
+                                            
+                                        </p>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <p
+                                            style="
+                                                color: #e15a29;
+                                                font-size: 40px;
+                                                line-height: 70px;
+                                                font-family: Montserrat, sans-serif;
+                                            "
+                                        >
+                                            ¡Tienes
+                                            <span style="color: #050a41"
+                                                >un nuevo mensaje! 🚀</span
+                                            >
+                                        </p>
+                                    </td>
+                                </tr>
+                                
+                <tr>
+                <td>
+                    <a href="https://mundoweb.pe/" style="
+                        text-decoration: none;
+                        background-color: #e15a29;
+                        color: white;
+                        border-radius: 40px;
+                        padding: 12px 20px;
+                        display: inline-flex;
+                        justify-content: center;
+                        align-items: center;
+                        gap: 10px;
+                        font-weight: 600;
+                        font-family: Montserrat, sans-serif;
+                    ">
+                        <span>Haz que tu negocio despegue</span>
+                        <img  src="https://mundoweb.pe/mail/buttonmailing.png" style="
+                            width: 20px;
+                            margin-left: 15px;
+                            height: 20px;
+                        " />
+                    </a>
+                </td>
+                </tr>
+                <tr>
+                    <td style="text-align: right; padding-right: 30px;">
+                        <img src="https://mundoweb.pe/mail/10_rgb.png" alt="mundo web" style="width: 80%; margin-top: 100px" />
+                    </td>
+                </tr>
+                </tbody>
+                </table>
+                </main>
+                </body>
 
-            $jpa = Landing::find($request->id);
-            if (!$jpa) {
-                Landing::create($body);
-            } else {
-                $jpa->update($body);
+            </html>';
+            $mail->isHTML(true);
+            $mail->send();
+
+
+            $message = SettingController::get('whatsapp-new-lead-notification-message');
+            $destinatary = Text::keep(SettingController::get('whatsapp-new-lead-notification-waid'), '0123456789@gc.us');
+
+            foreach ($client->toArray() as $key => $value) {
+                $message = str_replace('{{' . $key . '}}', $value, $message);
             }
 
-            $response->status = 200;
-            $response->message = 'Operacion correcta';
+            new Fetch(env('WA_URL') . '/api/send', [
+                'method' => 'POST',
+                'headers' => [
+                    'Accept' => 'application/json',
+                    'Content-Type' => 'application/json'
+                ],
+                'body' => [
+                    'from' => 'atalaya',
+                    'to' => [$destinatary],
+                    'content' => UtilController::html2wa($message)
+                ]
+            ]);
         } catch (\Throwable $th) {
-            $response->status = 400;
-            $response->message = $th->getMessage();
-        } finally {
-            return response(
-                $response->toArray(),
-                $response->status
-            );
-        }
-    }
-
-    static function status(Request $request)
-    {
-        $response = new Response();
-        try {
-            Landing::where('id', $request->id)
-                ->update([
-                    'status' => $request->status ? 0 : 1
-                ]);
-
-            $response->status = 200;
-            $response->message = 'Operacion correcta';
-        } catch (\Throwable $th) {
-            $response->status = 400;
-            $response->message = $th->getMessage();
-        } finally {
-            return response(
-                $response->toArray(),
-                $response->status
-            );
-        }
-    }
-
-    static function projectStatus(Request $request)
-    {
-        $response = new Response();
-        try {
-            Landing::where('id', $request->project)
-                ->update([
-                    'status_id' => $request->status
-                ]);
-
-            $response->status = 200;
-            $response->message = 'Operacion correcta';
-        } catch (\Throwable $th) {
-            $response->status = 400;
-            $response->message = $th->getMessage();
-        } finally {
-            return response(
-                $response->toArray(),
-                $response->status
-            );
-        }
-    }
-
-    static function delete(Request $request, string $id)
-    {
-        $response = new Response();
-        try {
-            $deleted = Landing::where('id', $id)
-                ->update(['status' => null]);
-
-            if (!$deleted) throw new Exception('No se ha eliminado ningun registro');
-
-            $response->status = 200;
-            $response->message = 'Operacion correcta';
-        } catch (\Throwable $th) {
-            $response->status = 400;
-            $response->message = $th->getMessage();
-        } finally {
-            return response(
-                $response->toArray(),
-                $response->status
-            );
+            //throw $th;
         }
     }
 }

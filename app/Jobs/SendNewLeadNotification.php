@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Http\Classes\EmailConfig;
 use App\Http\Controllers\SettingController;
 use App\Models\Client;
 use Illuminate\Bus\Queueable;
@@ -30,16 +31,48 @@ class SendNewLeadNotification implements ShouldQueue
 
   public function handle()
   {
-    $client = $this->client;
-    try {
-      $to = Text::keep(Setting::get('whatsapp-new-lead-notification-waid', $this->business->id), '0123456789@gc.us');
+    $this->send2client();
+    $this->send2owner();
+  }
 
-      $content = UtilController::replaceData(
-        Setting::get('whatsapp-new-lead-notification-message', $this->business->id),
+  public function send2owner()
+  {
+    $client = $this->client;
+    $business = $this->business;
+
+    try {
+      $html = Text::replaceData(
+        Setting::get(
+          'email-new-lead-notification-message',
+          $business->id
+        ),
+        $client->toArray()
+      );
+      $to = Setting::get(
+        'email-new-lead-notification-message-owneremail',
+        $business->id
+      );
+      $mail = EmailConfig::config($business->name);
+      $mail->addAddress($to);
+      $mail->Body = $html;
+      $mail->isHTML(true);
+      $mail->send();
+    } catch (\Throwable $th) {
+      dump("EmailError: " . $th->getMessage());
+    }
+
+    try {
+      $to = Text::keep(Setting::get('whatsapp-new-lead-notification-waid', $business->id), '0123456789@gc.us');
+
+      $content = Text::replaceData(
+        Setting::get(
+          'whatsapp-new-lead-notification-message',
+          $business->id
+        ),
         $client->toArray()
       );
 
-      new Fetch('https://wajs.factusode.xyz/api/send', [
+      new Fetch(env('WA_URL') . '/api/send', [
         'method' => 'POST',
         'headers' => [
           'Content-Type' => 'application/json'
@@ -51,7 +84,64 @@ class SendNewLeadNotification implements ShouldQueue
         ]
       ]);
     } catch (\Throwable $th) {
-      // dump($th->getMessage());
+      dump("WhatsAppError: " . $th->getMessage());
+    }
+  }
+
+  public function send2client()
+  {
+    $client = $this->client;
+    $business = $this->business;
+
+    $html = Text::replaceData(
+      Setting::get('email-new-lead-notification-message-client', $business->id),
+      $client->toArray()
+    );
+
+    try {
+      $mail = EmailConfig::config($client->name);
+      $mail->addAddress($client->contact_email);
+      $mail->Body = $html;
+      $mail->isHTML(true);
+      $mail->send();
+    } catch (\Throwable $th) {
+      dump("EmailError: " . $th->getMessage());
+    }
+
+    try {
+      new Fetch(env('WA_URL') . '/api/send', [
+        'method' => 'POST',
+        'headers' => [
+          'Accept' => 'application/json',
+          'Content-Type' => 'application/json'
+        ],
+        'body' => [
+          'from' => 'atalaya-' . $business->uuid,
+          'to' => [$client->country_prefix . $client->contact_phone],
+          'html' => $html
+        ]
+      ]);
+
+      sleep(5);
+
+      $message = SettingController::get('whatsapp-new-lead-notification-message-client');
+
+      $message = Text::replaceData($message, $client->toArray());
+
+      new Fetch(env('WA_URL') . '/api/send', [
+        'method' => 'POST',
+        'headers' => [
+          'Accept' => 'application/json',
+          'Content-Type' => 'application/json'
+        ],
+        'body' => [
+          'from' => 'atalaya-' . $business->uuid,
+          'to' => [$client->country_prefix . $client->contact_phone],
+          'content' => UtilController::html2wa($message)
+        ]
+      ]);
+    } catch (\Throwable $th) {
+      dump("WhatsAppError: " . $th->getMessage());
     }
   }
 }
