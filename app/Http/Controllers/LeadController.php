@@ -173,6 +173,7 @@ class LeadController extends BasicController
             }
 
             $uuid = \str_replace('Bearer ', '', $authorizationHeader);
+            $uuid = \str_replace('bearer ', '', $uuid);
 
             $businessJpa = Business::select('id')->where('uuid', $uuid)->first();
             if (!$businessJpa) {

@@ -297,9 +297,8 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
               dataType: 'string',
               cellTemplate: (container, { data }) => {
                 container.attr('style', 'overflow: visible')
-                ReactAppend(container, <Dropdown className='btn btn-xs btn-white rounded-pill' title={data.status.name} icon={{ icon: 'fa fa-circle', color: data.status.color }} tippy='Actualizar estado' show={can('leads', 'all', 'status')}>
+                ReactAppend(container, <Dropdown className='btn btn-xs btn-white rounded-pill' title={data.status.name} icon={{ icon: 'fa fa-circle', color: data.status.color }} tippy='Actualizar estado'>
                   {
-                    can('leads', 'all', 'status') &&
                     statuses.map(({ id, name, color }) => {
                       return <DropdownItem key={id} onClick={() => onClientStatusClicked(data.id, id)}>
                         <i className='fa fa-circle' style={{ color }}></i> {name}
@@ -309,7 +308,7 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
                 </Dropdown>)
               }
             },
-            can('leads', 'all', 'managestatus') ? {
+            {
               dataField: 'manage_status.name',
               caption: 'Estado de gestion',
               dataType: 'string',
@@ -323,7 +322,7 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
                   })}
                 </Dropdown>)
               }
-            } : null,
+            },
             {
               dataField: 'origin',
               caption: 'Origen',
@@ -344,7 +343,7 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
               cellTemplate: (container, { data }) => {
                 container.attr('style', 'display: flex; gap: 4px; overflow: visible')
 
-                can('leads', 'root', 'all', 'update') && ReactAppend(container, <TippyButton className='btn btn-xs btn-soft-primary' title='Ver detalles' onClick={() => onLeadClicked(data)}>
+                ReactAppend(container, <TippyButton className='btn btn-xs btn-soft-primary' title='Ver detalles' onClick={() => onLeadClicked(data)}>
                   <i className='fa fa-eye'></i>
                 </TippyButton>)
 
@@ -360,7 +359,7 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
                   </TippyButton>)
                 }
 
-                can('leads', 'root', 'all', 'movetoclient') && ReactAppend(container, <TippyButton className='btn btn-xs btn-soft-success' title='Convertir en cliente' onClick={async () => {
+                ReactAppend(container, <TippyButton className='btn btn-xs btn-soft-success' title='Convertir en cliente' onClick={async () => {
                   const { isConfirmed } = await Swal.fire({
                     title: "Estas seguro?",
                     text: `${data.contact_name} pasara a ser un cliente!`,
@@ -373,7 +372,7 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
                 }}>
                   <i className='fa fa-user-plus'></i>
                 </TippyButton>)
-                can('leads', 'root', 'all', 'delete') && ReactAppend(container, <TippyButton className='btn btn-xs btn-soft-danger' title='Eliminar lead' onClick={() => onDeleteClicked(data)}>
+                ReactAppend(container, <TippyButton className='btn btn-xs btn-soft-danger' title='Eliminar lead' onClick={() => onDeleteClicked(data)}>
                   <i className='fa fa-trash'></i>
                 </TippyButton>)
               },

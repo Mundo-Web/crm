@@ -30,7 +30,7 @@ class Setting extends Model
     {
         $jpa = Setting::select(['value'])
             ->where('name', $name)
-            ->where('business_id', $business_id ?? Auth::user()->business_id)
+            ->where('business_id', $business_id ? $business_id : Auth::user()->business_id)
             ->first();
         if (!$jpa) return null;
         return $jpa->value;
@@ -40,7 +40,7 @@ class Setting extends Model
     {
         $settingJpa = Setting::updateOrCreate([
             'name' => $name,
-            'business_id' => $business_id ?? Auth::user()->business_id
+            'business_id' => $business_id ? $business_id : Auth::user()->business_id
         ], [
             'value' => $value
         ]);
