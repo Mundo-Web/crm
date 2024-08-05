@@ -9,6 +9,7 @@ use App\Models\Type;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Concerns\Importable;
 use Maatwebsite\Excel\Facades\Excel;
+use SoDe\Extend\File;
 use SoDe\Extend\Response;
 use SoDe\Extend\Text;
 
@@ -67,7 +68,8 @@ class UtilController
         if (!is_numeric($row[0])) continue;
 
         $statusJpa = Status::updateOrCreate([
-          'name' => $row[1]
+          'name' => $row[1],
+          'business_id' => $businessJpa->id
         ], [
           'name' => $row[1],
           'description' => $row[2],
@@ -82,8 +84,8 @@ class UtilController
         Setting::set($row[5], $statusJpa->id, $businessJpa->id);
       }
 
-      Setting::set('whatsapp-new-lead-notification-message', '<p>Hola, se ha registrado un nuevo lead en Atalaya.</p><p>Nombre: <strong>{{contact_name}}</strong></p><p>Teléfono: <strong>{{contact_phone}}</strong></p><p>Mensaje: {{message}}</p><blockquote><strong>Registrado desde {{origin}}</strong></blockquote>', $businessJpa->id);
-      Setting::set('whatsapp-new-lead-notification-message-client', '<p>Estas listo para conversar?</p>', $businessJpa->id);
+      Setting::set('whatsapp-new-lead-notification-message', File::get('storage/app/utils/whatsapp-new-lead-notification-message.html'), $businessJpa->id);
+      Setting::set('whatsapp-new-lead-notification-message-client', File::get('storage/app/utils/whatsapp-new-lead-notification-message-client.html'), $businessJpa->id);
 
     });
     return response($response->toArray(), $response->status);
