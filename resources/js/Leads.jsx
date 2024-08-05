@@ -278,7 +278,7 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
                 ReactAppend(container, <div className='d-flex align-items-center' style={{ cursor: 'pointer' }} onClick={() => onLeadClicked(data)}>
                   <b>{data.contact_name}</b>
                   {data.assigned_to && <Tippy content={`Atendido por ${data.assigned.name} ${data.assigned.lastname}`}>
-                    <img className='avatar-xs rounded-circle ms-1' src={`/api/profile/thumbnail/${data.assigned.relative_id}`} alt={data.assigned.name} />
+                    <img className='avatar-xs rounded-circle ms-1' src={`//${APP_DOMAIN}/api/profile/thumbnail/${data.assigned.relative_id}`} alt={data.assigned.name} />
                   </Tippy>}
                 </div>)
               }
