@@ -82,7 +82,7 @@ class LeadController extends BasicController
             'client_id' => $jpa->id,
             'name' => 'Lead nuevo',
             'description' => UtilController::replaceData(
-                Setting::get('whatsapp-new-lead-notification-message', Auth::user()->business_id),
+                Setting::get('whatsapp-new-lead-notification-message', $jpa->business_id),
                 $jpa->toArray()
             )
         ]);
