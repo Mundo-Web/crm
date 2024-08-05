@@ -83,6 +83,7 @@ class UtilController
       }
 
       Setting::set('whatsapp-new-lead-notification-message', '<p>Hola, se ha registrado un nuevo lead en Atalaya.</p><p>Nombre: <strong>{{contact_name}}</strong></p><p>Teléfono: <strong>{{contact_phone}}</strong></p><p>Mensaje: {{message}}</p><blockquote><strong>Registrado desde {{origin}}</strong></blockquote>', $businessJpa->id);
+      Setting::set('whatsapp-new-lead-notification-message-client', '<p>Estas listo para conversar?</p>', $businessJpa->id);
 
     });
     return response($response->toArray(), $response->status);
