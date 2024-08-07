@@ -256,6 +256,7 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
               widget: 'dxButton', location: 'after',
               options: {
                 icon: 'refresh',
+                text: 'Actualizar leads',
                 hint: 'Refrescar tabla',
                 onClick: () => $(gridRef.current).dxDataGrid('instance').refresh()
               }
