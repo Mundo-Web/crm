@@ -318,8 +318,8 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
               dataField: 'manage_status.name',
               caption: 'Estado de gestion',
               dataType: 'string',
+              width: '180px',
               cellTemplate: (container, { data }) => {
-                container.attr('style', 'width: 180px')
                 ReactAppend(container, <Dropdown className='btn btn-xs btn-white rounded-pill' title={data?.manage_status?.name} icon={{ icon: 'fa fa-circle', color: data?.manage_status?.color }} tippy='Actualizar estado'>
                   {manageStatuses.map((status, i) => {
                     return <DropdownItem key={`status-${i}`} onClick={() => onManageStatusChange(data, status)}>
