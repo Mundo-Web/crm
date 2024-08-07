@@ -271,10 +271,10 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
               }
             });
           }}
-          selection={{
-            mode: 'multiple',
-            selectAllMode: 'page'
-          }}
+          // selection={{
+          //   mode: 'multiple',
+          //   selectAllMode: 'page'
+          // }}
           columns={[
             {
               dataField: 'contact_name',
