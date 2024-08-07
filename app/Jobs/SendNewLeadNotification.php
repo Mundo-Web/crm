@@ -49,7 +49,7 @@ class SendNewLeadNotification implements ShouldQueue
         $client->toArray()
       );
       $to = Setting::get(
-        'email-new-lead-notification-message-owneremail',
+        'email-new-lead-notification-owneremail',
         $business->id
       );
       $mail = EmailConfig::config($business->name);
