@@ -49,6 +49,9 @@
       vertical-align: middle;
     }
 
+    .dropdown-menu { 
+      box-shadow: 0 0 20px rgba(51, 51, 51, .125)
+    }
     .dropdown-menu-center {
       left: 50% !important;
       transform: translate(-50%, 0) !important;

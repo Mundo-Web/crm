@@ -84,7 +84,7 @@ const Menu = ({ session, can, presets, APP_PROTOCOL, APP_DOMAIN, businesses }) =
 
       <div className='px-2 py-1 text-center' style={{ position: 'relative' }}>
         <a className="btn dropdown-toggle waves-effect waves-light d-flex align-items-center justify-content-between gap-1 mx-auto" data-bs-toggle="dropdown"
-          href="#" role="button" aria-haspopup="false" aria-expanded="false" style={{ borderColor: 'rgba(51,51,51, .25)', width: 'max-content', boxShadow: '0 0 10px rgba(51, 51, 51, .25)', borderRadius: '8px' }}>
+          href="#" role="button" aria-haspopup="false" aria-expanded="false" style={{ borderColor: 'rgba(51,51,51, .25)', width: 'max-content', boxShadow: '0 0 8px rgba(51, 51, 51, .25)', borderRadius: '8px' }}>
           <div className="d-flex align-items-start">
             <img className="d-flex me-2 rounded-circle" src={`//${APP_DOMAIN}/api/logo/thumbnail/null`}
               alt={currentBusiness.name} height="32" />
