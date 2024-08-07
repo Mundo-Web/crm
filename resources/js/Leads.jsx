@@ -301,7 +301,7 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
               caption: 'Estado del lead',
               dataType: 'string',
               cellTemplate: (container, { data }) => {
-                container.attr('style', 'overflow: visible')
+                // container.attr('style', 'overflow: visible')
                 ReactAppend(container, <Dropdown className='btn btn-xs btn-white rounded-pill' title={data.status.name} icon={{ icon: 'fa fa-circle', color: data.status.color }} tippy='Actualizar estado'>
                   {
                     statuses.map(({ id, name, color }) => {
