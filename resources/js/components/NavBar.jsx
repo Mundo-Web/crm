@@ -140,7 +140,7 @@ const NavBar = ({ can, session = {}, title = '', whatsappStatus, businesses, APP
               otherBusinesses.length > 0 &&
               <>
                 <div className="dropdown-header noti-title">
-                  <h6 className="text-overflow m-0">Empresas</h6>
+                  <h6 className="text-overflow m-0">Otras empresas</h6>
                 </div>
                 <div className="notification-list">
                   {

@@ -111,7 +111,7 @@ const Menu = ({ session, can, presets, APP_PROTOCOL, APP_DOMAIN, businesses }) =
               <div className="dropdown-divider"></div>
             </>
           }
-          <a href={`//${APP_DOMAIN}/businesses`} className="dropdown-item notify-item" target='_blank'>
+          <a href={`//${APP_DOMAIN}/businesses`} className="dropdown-item notify-item">
             <i className="fe-arrow-up-right"></i>
             <span>Otras empresas</span>
           </a>
