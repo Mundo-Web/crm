@@ -4,8 +4,9 @@ import MenuItem from './MenuItem'
 import MenuItemContainer from './MenuItemContainer'
 import Tippy from '@tippyjs/react'
 import 'tippy.js/dist/tippy.css';
+import BusinessCard from '../Reutilizables/Business/BusinessCard'
 
-const Menu = ({ session, can, presets, APP_DOMAIN, businesses }) => {
+const Menu = ({ session, can, presets, APP_PROTOCOL, APP_DOMAIN, businesses }) => {
   let mainRole = {}
   if (session.is_owner) {
     mainRole = {
@@ -19,7 +20,8 @@ const Menu = ({ session, can, presets, APP_DOMAIN, businesses }) => {
     }
   }
 
-  const currentBusiness = businesses.find(({ id }) => session.business_id)
+  const currentBusiness = businesses.find(({ id }) => session.business_id == id)
+  const otherBusinesses = businesses.filter(({ id }) => session.business_id != id)
 
   const idBirthday = moment(session.birthdate).format('MM-DD') == moment().format('MM-DD')
 
@@ -61,7 +63,7 @@ const Menu = ({ session, can, presets, APP_DOMAIN, businesses }) => {
           <p className="text-muted left-user-info" >{mainRole.name}</p>
         </Tippy>
 
-        <ul className="list-inline">
+        {/* <ul className="list-inline">
           <li className="list-inline-item">
             <Tippy content="Configuracion">
               <a href="#" className="text-muted left-user-info right-bar-toggle dropdown notification-list">
@@ -77,43 +79,42 @@ const Menu = ({ session, can, presets, APP_DOMAIN, businesses }) => {
               </a>
             </Tippy>
           </li>
-        </ul>
+        </ul> */}
       </div>
 
-      <div className='px-3 py-1 text-center' style={{position: 'relative'}}>
-        <a className="btn dropdown-toggle waves-effect waves-light" data-bs-toggle="dropdown"
-          href="#" role="button" aria-haspopup="false" aria-expanded="false" style={{ borderColor: '#bbbbbb'}}>
+      <div className='px-2 py-1 text-center' style={{ position: 'relative' }}>
+        <a className="btn dropdown-toggle waves-effect waves-light d-flex align-items-center justify-content-between gap-1 mx-auto" data-bs-toggle="dropdown"
+          href="#" role="button" aria-haspopup="false" aria-expanded="false" style={{ borderColor: '#6c757d', width: 'max-content' }}>
           <div className="d-flex align-items-start">
-            <img className="d-flex me-2 rounded-circle" src={`//${APP_DOMAIN}/api/profile/thumbnail/null`}
+            <img className="d-flex me-2 rounded-circle" src={`//${APP_DOMAIN}/api/logo/thumbnail/null`}
               alt={currentBusiness.name} height="32" />
             <div className="w-100">
               <h5 className={`m-0 font-14 text-primary`}>{currentBusiness.name}</h5>
               <span className="font-12 mb-0">RUC: {currentBusiness.person.document_number}</span>
             </div>
           </div>
+          <i className="mdi mdi-chevron-down"></i>
         </a>
-        <div className="dropdown-menu dropdown-menu-end profile-dropdown ">
-          <div className="dropdown-header noti-title">
-            <h6 className="text-overflow m-0">Empresas</h6>
-          </div>
-          <div className="notification-list">
-            {
-              businesses.sort((a, b) => {
-                return a.id == session.business_id ? -1 : 1
-              }).map((business, i) => {
-                return <span key={`business-${i}`} className="dropdown-item notify-item" style={{ cursor: 'pointer' }}>
-                  <div className="d-flex align-items-start">
-                    <img className="d-flex me-2 rounded-circle" src="/api/profile/thumbnail/null"
-                      alt={business.name} height="32" />
-                    <div className="w-100">
-                      <h5 className={`m-0 font-14 ${business.id == session.business_id && 'text-primary'}`}>{business.name}</h5>
-                      <span className="font-12 mb-0">RUC: {business.person.document_number}</span>
-                    </div>
-                  </div>
-                </span>
-              })
-            }
-          </div>
+        <div className="dropdown-menu dropdown-menu-center profile-dropdown w-full">
+          {
+            otherBusinesses.length > 0 &&
+            <>
+              <div className="notification-list">
+                {
+                  otherBusinesses.sort((a, b) => {
+                    return a.id == session.business_id ? -1 : 1
+                  }).map((business, i) => {
+                    return <BusinessCard key={`business-${i}`} {...business} session={session} APP_PROTOCOL={APP_PROTOCOL} APP_DOMAIN={APP_DOMAIN} />
+                  })
+                }
+              </div>
+              <div className="dropdown-divider"></div>
+            </>
+          }
+          <a href={`//${APP_DOMAIN}/businesses`} className="dropdown-item notify-item" target='_blank'>
+            <i className="fe-arrow-up-right"></i>
+            <span>Otras empresas</span>
+          </a>
         </div>
 
       </div>

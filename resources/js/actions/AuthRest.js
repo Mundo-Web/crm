@@ -27,6 +27,29 @@ class AuthRest {
       return false
     }
   }
+
+  static activeService = async (business) => {
+    try {
+      const { status, result } = await Fetch(`./api/authorize/${business}`)
+      if (!status) throw new Error(result?.message || 'Error al cambiar de empresa')
+
+      Notify.add({
+        icon: '/assets/img/logo-login.svg',
+        title: 'Operacion correcta',
+        body: 'Se hizo el cambio de empresa correctamente'
+      })
+
+      return true
+    } catch (error) {
+      Notify.add({
+        icon: '/assets/img/logo-login.svg',
+        title: 'Error',
+        body: error.message,
+        type: 'danger'
+      })
+      return false
+    }
+  }
 }
 
 export default AuthRest

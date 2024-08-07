@@ -1,14 +1,17 @@
 import React, { useEffect } from "react"
 import Logout from "../actions/Logout"
 import WhatsAppStatuses from "../Reutilizables/WhatsApp/WhatsAppStatuses"
+import BusinessCard from "../Reutilizables/Business/BusinessCard"
 
-const NavBar = ({ can, session = {}, title = '', whatsappStatus, businesses, APP_DOMAIN }) => {
+const NavBar = ({ can, session = {}, title = '', whatsappStatus, businesses, APP_PROTOCOL, APP_DOMAIN }) => {
 
   const { color } = WhatsAppStatuses[whatsappStatus]
 
   useEffect(() => {
     document.title = `${title} | Atalaya`
   }, [null])
+
+  const otherBusinesses = businesses.filter(({ id }) => session.business_id != id)
 
   return (
     <div className="navbar-custom">
@@ -133,27 +136,21 @@ const NavBar = ({ can, session = {}, title = '', whatsappStatus, businesses, APP
               <i className="mdi mdi-account-key-outline"></i>
               <span>Mi cuenta</span>
             </a>
-            <div className="dropdown-header noti-title">
-              <h6 className="text-overflow m-0">Empresas</h6>
-            </div>
-            <div className="notification-list">
-              {
-                businesses.sort((a, b) => {
-                  return a.id == session.business_id ? -1 : 1
-                }).map((business, i) => {
-                  return <span key={`business-${i}`} className="dropdown-item notify-item" style={{cursor: 'pointer'}}>
-                    <div className="d-flex align-items-start">
-                      <img className="d-flex me-2 rounded-circle" src="/api/profile/thumbnail/null"
-                        alt={business.name} height="32" />
-                      <div className="w-100">
-                        <h5 className={`m-0 font-14 ${business.id == session.business_id && 'text-primary'}`}>{business.name}</h5>
-                        <span className="font-12 mb-0">RUC: {business.person.document_number}</span>
-                      </div>
-                    </div>
-                  </span>
-                })
-              }
-            </div>
+            {
+              otherBusinesses.length > 0 &&
+              <>
+                <div className="dropdown-header noti-title">
+                  <h6 className="text-overflow m-0">Empresas</h6>
+                </div>
+                <div className="notification-list">
+                  {
+                    otherBusinesses.map((business, i) => {
+                      return <BusinessCard key={`business-${i}`} {...business} session={session} APP_PROTOCOL={APP_PROTOCOL} APP_DOMAIN={APP_DOMAIN} />
+                    })
+                  }
+                </div>
+              </>
+            }
             <div className="dropdown-divider"></div>
             <a href="#" className="dropdown-item notify-item" onClick={Logout}>
               <i className="fe-log-out"></i>

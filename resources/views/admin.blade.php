@@ -48,6 +48,11 @@
     .dx-datagrid-content .dx-datagrid-table .dx-row>td {
       vertical-align: middle;
     }
+
+    .dropdown-menu-center {
+      left: 50% !important;
+      transform: translate(-50%, 0) !important;
+    }
   </style>
 </head>
 

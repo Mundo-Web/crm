@@ -41,6 +41,8 @@ Route::get('/start/{uuid}', [UtilController::class, 'start']);
 Route::middleware('auth')->group(function () {
     Route::delete('/logout', [AuthController::class, 'destroy'])
         ->name('logout');
+    Route::get('/authorize/{business}', [AuthController::class, 'activeService']);
+
     Route::get('/dashboard/{range}', [DashboardController::class, 'revenue']);
 
     // Users routes
