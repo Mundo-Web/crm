@@ -5,7 +5,7 @@ import MenuItemContainer from './MenuItemContainer'
 import Tippy from '@tippyjs/react'
 import 'tippy.js/dist/tippy.css';
 
-const Menu = ({ session, can, presets, APP_DOMAIN }) => {
+const Menu = ({ session, can, presets, APP_DOMAIN, businesses }) => {
   let mainRole = {}
   if (session.is_owner) {
     mainRole = {
@@ -18,6 +18,8 @@ const Menu = ({ session, can, presets, APP_DOMAIN }) => {
       description: 'El usuario aún no tiene un rol asignado'
     }
   }
+
+  const currentBusiness = businesses.find(({ id }) => session.business_id)
 
   const idBirthday = moment(session.birthdate).format('MM-DD') == moment().format('MM-DD')
 
@@ -76,6 +78,44 @@ const Menu = ({ session, can, presets, APP_DOMAIN }) => {
             </Tippy>
           </li>
         </ul>
+      </div>
+
+      <div className='px-3 py-1 text-center' style={{position: 'relative'}}>
+        <a className="btn dropdown-toggle waves-effect waves-light" data-bs-toggle="dropdown"
+          href="#" role="button" aria-haspopup="false" aria-expanded="false" style={{ borderColor: '#bbbbbb'}}>
+          <div className="d-flex align-items-start">
+            <img className="d-flex me-2 rounded-circle" src={`//${APP_DOMAIN}/api/profile/thumbnail/null`}
+              alt={currentBusiness.name} height="32" />
+            <div className="w-100">
+              <h5 className={`m-0 font-14 text-primary`}>{currentBusiness.name}</h5>
+              <span className="font-12 mb-0">RUC: {currentBusiness.person.document_number}</span>
+            </div>
+          </div>
+        </a>
+        <div className="dropdown-menu dropdown-menu-end profile-dropdown ">
+          <div className="dropdown-header noti-title">
+            <h6 className="text-overflow m-0">Empresas</h6>
+          </div>
+          <div className="notification-list">
+            {
+              businesses.sort((a, b) => {
+                return a.id == session.business_id ? -1 : 1
+              }).map((business, i) => {
+                return <span key={`business-${i}`} className="dropdown-item notify-item" style={{ cursor: 'pointer' }}>
+                  <div className="d-flex align-items-start">
+                    <img className="d-flex me-2 rounded-circle" src="/api/profile/thumbnail/null"
+                      alt={business.name} height="32" />
+                    <div className="w-100">
+                      <h5 className={`m-0 font-14 ${business.id == session.business_id && 'text-primary'}`}>{business.name}</h5>
+                      <span className="font-12 mb-0">RUC: {business.person.document_number}</span>
+                    </div>
+                  </div>
+                </span>
+              })
+            }
+          </div>
+        </div>
+
       </div>
 
 

@@ -13,7 +13,7 @@ const Adminto = ({ session, children, title, can, WA_URL, APP_URL, presets, busi
   return (<>
     <div id="wrapper">
       <NavBar session={session} title={title} can={can} whatsappStatus={whatsappStatus} businesses={businesses} APP_DOMAIN={APP_DOMAIN} />
-      <Menu session={session} can={can} presets={presets} APP_DOMAIN={APP_DOMAIN} />
+      <Menu session={session} can={can} presets={presets} APP_DOMAIN={APP_DOMAIN} businesses={businesses} />
       <div className="content-page">
         <div className="content">
           <div className="container-fluid">
