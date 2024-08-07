@@ -265,6 +265,7 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
               widget: 'dxButton', location: 'after',
               options: {
                 icon: 'plus',
+                text: 'Nuevo',
                 hint: 'Nuevo registro',
                 onClick: () => $(newLeadModalRef.current).modal('show')
               }
