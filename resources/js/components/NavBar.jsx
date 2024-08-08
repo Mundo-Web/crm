@@ -165,7 +165,7 @@ const NavBar = ({ can, session = {}, title = '', whatsappStatus, businesses, APP
             href="#" role="button" aria-haspopup="false" aria-expanded="false">
             <img src={`//${APP_DOMAIN}/api/profile/thumbnail/${session.relative_id}?v=${crypto.randomUUID()}`} alt="user-image" className="rounded-circle" style={{ objectFit: 'cover', objectPosition: 'center' }} />
             <span className="pro-user-name ms-1">
-              {session.name} {session.lastname}
+              {session.name.split(' ')[0]} {session.lastname.name.split(' ')[0]}
               <i className="mdi mdi-chevron-down"></i>
             </span>
           </a>
