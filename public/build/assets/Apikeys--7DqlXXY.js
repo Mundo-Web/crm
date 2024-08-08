@@ -10,6 +10,7 @@ import{C as i,c as d,R as e,r,m}from"./CreateReactScript-vbGM1frk.js";import{A a
   "workers": "5-10",
   "message": "Este es un mensaje de prueba.",   --Requerido
   "origin": "Landing Page"                      --Requerido
+  "triggered_by": "WhatsApp|Instagram|Facebook|Tiktok|etc"
 }`))),e.createElement("div",{class:"mb-3"},e.createElement("h5",null,"Ejemplos de Respuesta:"),e.createElement("ul",{class:"nav nav-tabs",id:"responseTab",role:"tablist"},e.createElement("li",{class:"nav-item",role:"presentation"},e.createElement("a",{class:"nav-link active",id:"response-200-tab","data-bs-toggle":"tab",href:"#response-200",role:"tab","aria-controls":"response-200","aria-selected":"true"},"200")),e.createElement("li",{class:"nav-item",role:"presentation"},e.createElement("a",{class:"nav-link",id:"response-400-tab","data-bs-toggle":"tab",href:"#response-400",role:"tab","aria-controls":"response-400","aria-selected":"false"},"400"))),e.createElement("div",{class:"tab-content",id:"responseTabContent"},e.createElement("div",{class:"tab-pane fade show active",id:"response-200",role:"tabpanel","aria-labelledby":"response-200-tab"},e.createElement("pre",null,e.createElement("code",null,`{
   "status": 200,
   "message": "Se ha creado el lead correctamente"

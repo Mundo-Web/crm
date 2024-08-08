@@ -95,6 +95,7 @@ const Apikeys = ({ can, apikey, APP_DOMAIN, APP_CORRELATIVE }) => {
   "workers": "5-10",
   "message": "Este es un mensaje de prueba.",   --Requerido
   "origin": "Landing Page"                      --Requerido
+  "triggered_by": "WhatsApp|Instagram|Facebook|Tiktok|etc"
 }`}</code></pre>
             </div>
 
