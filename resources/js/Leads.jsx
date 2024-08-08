@@ -73,7 +73,8 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
       setNotes([])
       $(modalRef.current).modal('show')
       if (GET.annotation) { 
-        $(`[data-name="${GET.annotation}"]`).trigger('click')
+        console.log('clickando')
+        $(`[data-name="${GET.annotation}"]`).click()
       }
     })
   }, [null])
