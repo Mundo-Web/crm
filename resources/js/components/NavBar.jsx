@@ -176,12 +176,12 @@ const NavBar = ({ can, session = {}, title = '', whatsappStatus, businesses, APP
             </div>
 
 
-            <a href="/profile" className="dropdown-item notify-item">
+            <a href={`//${APP_DOMAIN}/profile`} className="dropdown-item notify-item">
               <i className="fe-user"></i>
               <span>Mi perfil</span>
             </a>
 
-            <a href="/account" className="dropdown-item notify-item">
+            <a href={`//${APP_DOMAIN}/account`} className="dropdown-item notify-item">
               <i className="mdi mdi-account-key-outline"></i>
               <span>Mi cuenta</span>
             </a>
