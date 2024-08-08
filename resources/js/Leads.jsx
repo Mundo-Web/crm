@@ -63,6 +63,7 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
     if (!lead) return 
 
     leadsRest.get(lead).then(data => {
+      if (!data) return
       setLeadLoaded(data)
       setNotes([])
       $(modalRef.current).modal('show')
