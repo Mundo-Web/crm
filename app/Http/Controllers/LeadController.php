@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\SaveNotification;
 use App\Jobs\SendNewLeadNotification;
 use App\Models\Atalaya\Business;
 use App\Models\Client;
 use App\Models\ClientNote;
 use App\Models\NoteType;
+use App\Models\Notification;
 use App\Models\Setting;
 use App\Models\Status;
 use App\Models\Task;
@@ -96,6 +98,26 @@ class LeadController extends BasicController
             'status' => 'Pendiente',
             'asignable' => true
         ]);
+
+        if ($jpa->created_by) {
+            SaveNotification::dispatchAfterResponse([
+                'name' => 'Nuevo lead',
+                'message' =>  Auth::user()->service_user->fullname . ' ha creado un nuevo lead.',
+                'module' => 'Leads',
+                'link_to' => '/leads/' . $jpa->id,
+                'created_by' => Auth::user()->service_user->id,
+                'business_id' => $jpa->business_id
+            ]);
+        } else {
+            SaveNotification::dispatchAfterResponse([
+                'icon' => 'fas fa-user-plus',
+                'name' => 'Nuevo lead',
+                'message' =>  'Se ha registrado un nuevo lead desde ' . $jpa->origin,
+                'module' => 'Leads',
+                'link_to' => '/leads/' . $jpa->id,
+                'business_id' => $jpa->business_id
+            ]);
+        }
     }
 
     public function all(Request $request)

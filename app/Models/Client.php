@@ -57,8 +57,12 @@ class Client extends Model
     ];
 
     protected $hidden = [
-        'business_id'
+        // 'business_id'
     ];
+
+    public function creator () {
+        return $this->hasOne(User::class, 'id', 'created_by');
+    }
 
     public function projects()
     {

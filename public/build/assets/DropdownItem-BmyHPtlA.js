@@ -1,1 +1,0 @@
-import{R as e}from"./CreateReactScript-BRq5AIp1.js";const m=({onClick:t,children:o,...r})=>e.createElement("li",{className:"dropdown-item p-0"},e.createElement("a",{className:"dropdown-item px-2 py-1 d-block",style:{cursor:"pointer"},onClick:t,...r},o));export{m as D};

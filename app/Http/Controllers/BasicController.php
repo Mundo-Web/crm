@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Classes\dxResponse;
 use App\Models\Atalaya\Business;
 use App\Models\dxDataGrid;
+use App\Models\Notification;
 use App\Models\View;
 use Exception;
 use Illuminate\Database\Eloquent\Model;
@@ -49,10 +50,12 @@ class BasicController extends Controller
       ->where('services.correlative', env('APP_CORRELATIVE', 'crm'))
       ->where('users_by_services_by_businesses.user_id', Auth::user()->id)
       ->get();
+    $notificationsCount = Notification::where('notify_to', Auth::user()->service_user->id)->orWhereNull('notify_to')->count();
     $properties = [
       'businesses' => $businessesIWork,
       'presets' => $views,
       'session' => Auth::user(),
+      'notificationsCount' => $notificationsCount,
       'WA_URL' => env('WA_URL'),
       'PUBLIC_RSA_KEY' => Controller::$PUBLIC_RSA_KEY,
       'APP_PROTOCOL' => env('APP_PROTOCOL', 'https'),

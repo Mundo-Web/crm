@@ -20,10 +20,15 @@ import TasksRest from './actions/TasksRest.js'
 import TaskCard from './Reutilizables/Tasks/TaskCard.jsx'
 import InputFormGroup from './components/form/InputFormGroup.jsx'
 import TextareaFormGroup from './components/form/TextareaFormGroup.jsx'
+import UsersRest from './actions/UsersRest.js'
+import Quill from 'quill'
+
+import "quill-mention/autoregister";
 
 const leadsRest = new LeadsRest()
 const clientNotesRest = new ClientNotesRest()
 const taskRest = new TasksRest()
+const usetsRest = new UsersRest()
 
 const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, session, can, APP_DOMAIN }) => {
 
@@ -80,8 +85,25 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
     }).disableSelection();
 
     noteTypes.forEach(type => {
-
-      new Quill(`#editor-${type.id}`, { theme: "bubble", modules: { toolbar: [[{ font: [] }, { size: [] }], ["bold", "italic", "underline", "strike"], [{ color: [] }, { background: [] }], [{ script: "super" }, { script: "sub" }], [{ header: [!1, 1, 2, 3, 4, 5, 6] }, "blockquote", "code-block"], [{ list: "ordered" }, { list: "bullet" }, { indent: "-1" }, { indent: "+1" }], ["direction", { align: [] }], ["link", "image", "video"], ["clean"]] } })
+      new Quill(`#editor-${type.id}`, {
+        theme: "bubble",
+        modules: {
+          toolbar: [[{ font: [] }, { size: [] }], ["bold", "italic", "underline", "strike"], [{ color: [] }, { background: [] }], [{ script: "super" }, { script: "sub" }], [{ header: [!1, 1, 2, 3, 4, 5, 6] }, "blockquote", "code-block"], [{ list: "ordered" }, { list: "bullet" }, { indent: "-1" }, { indent: "+1" }], ["direction", { align: [] }], ["link", "image", "video"], ["clean"]],
+          mention: {
+            allowedChars: /^[A-Za-z\sÅÄÖåäö]*$/,
+            mentionDenotationChars: ["@", "#"],
+            source: async function (searchTerm, renderList, ...others) {
+              console.log(others)
+              const { data } = await usetsRest.paginate({ filter: ['fullname', 'contains', searchTerm] });
+              renderList(data.map(({ relative_id, fullname }) => ({
+                id: relative_id,
+                value: fullname
+              })));
+            }
+          }
+        }
+      })
+      $(`#editor-${type.id}`).find('.ql-editor').empty()
     })
 
     setLeads([])
@@ -116,7 +138,7 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
     const editor = $(quill).find('.ql-editor')
     const text = editor.text().trim()
     const content = editor.html()
-    if (!content.trim()) return Swal.fire({
+    if (!text.trim()) return Swal.fire({
       title: 'Ooops!',
       text: 'Ingresa un valor valido',
       timer: 2000
@@ -141,16 +163,21 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
         break
     }
 
+    const mentions = [...new Set([...$(editor).find('.mention')].map(e => e.getAttribute('data-id')))]
+
     const result = await clientNotesRest.save({
       note_type_id: type,
       name: title,
       description: !isTask ? content : undefined,
+      raw: !isTask ? text : undefined,
       client_id: leadLoaded.id,
       tasks: isTask ? [{
         name: taskTitleRef.current.value,
         description: text ? content : undefined,
-        ends_at: taskEndsAtRef.current.value
-      }] : []
+        ends_at: taskEndsAtRef.current.value,
+        mentions
+      }] : [],
+      mentions: !isTask ? mentions: []
     })
     if (!result) return
 
@@ -234,6 +261,18 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
     $(newLeadModalRef.current).modal('hide')
   }
 
+  const onOpenModal = () => {
+    idRef.current.value = null
+    contactNameRef.current.value = null
+    contactEmailRef.current.value = null
+    contactPhoneRef.current.value = null
+    nameRef.current.value = null
+    webUrlRef.current.value = null
+    messageRef.current.value = null
+    
+    $(newLeadModalRef.current).modal('show')
+  }
+
 
   const tasks = []
   notes?.forEach(note => tasks.push(...note.tasks))
@@ -267,7 +306,7 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
                 icon: 'plus',
                 text: 'Nuevo',
                 hint: 'Nuevo registro',
-                onClick: () => $(newLeadModalRef.current).modal('show')
+                onClick: () => onOpenModal()
               }
             });
           }}
@@ -301,8 +340,9 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
               dataField: 'status.name',
               caption: 'Estado del lead',
               dataType: 'string',
+              width: 180,
               cellTemplate: (container, { data }) => {
-                container.attr('style', 'width: max-content')
+                container.attr('style', 'overflow: visible')
                 ReactAppend(container, <Dropdown className='btn btn-xs btn-white rounded-pill' title={data.status.name} icon={{ icon: 'fa fa-circle', color: data.status.color }} tippy='Actualizar estado'>
                   {
                     statuses.map(({ id, name, color }) => {
@@ -320,6 +360,7 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
               dataType: 'string',
               width: 180,
               cellTemplate: (container, { data }) => {
+                container.attr('style', 'overflow: visible')
                 ReactAppend(container, <Dropdown className='btn btn-xs btn-white rounded-pill' title={data?.manage_status?.name} icon={{ icon: 'fa fa-circle', color: data?.manage_status?.color }} tippy='Actualizar estado'>
                   {manageStatuses.map((status, i) => {
                     return <DropdownItem key={`status-${i}`} onClick={() => onManageStatusChange(data, status)}>
@@ -605,7 +646,7 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
                       }
                       <div className="col-12 mb-2">
                         <label className='mb-1' htmlFor="">Contenido</label>
-                        <div ref={typeRefs[type.id]} id={`editor-${type.id}`} style={{ height: '120px' }}> </div>
+                        <div ref={typeRefs[type.id]} id={`editor-${type.id}`} style={{ height: '120px' }}></div>
                       </div>
                       <div className="col-12">
                         <button className='btn btn-sm btn-success' type='button' value={type.id} onClick={onSaveNote}>{type.id == '37b1e8e2-04c4-4246-a8c9-838baa7f8187' ? 'Guardar y enviar' : 'Guardar'}</button>

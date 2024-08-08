@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Classes\dxResponse;
+use App\Jobs\SaveNotification;
 use App\Models\dxDataGrid;
 use App\Models\ClientNote;
 use App\Models\ClientNoteView;
@@ -58,8 +59,24 @@ class ClientNoteController extends BasicController
 
     public function afterSave(Request $request, object $jpa)
     {
-
+        $mentions = $request->mentions;
         $tasks = $request->tasks;
+
+        if (\count($mentions ?? []) > 0) {
+            foreach ($mentions as $mention) {
+                SaveNotification::dispatchAfterResponse([
+                    'icon' => 'fas fa-tag',
+                    'name' => Auth::user()->service_user->fullname . ' te ha etiquetado',
+                    'message' =>  Auth::user()->service_user->fullname . ' te ha etiquetado en ' . $jpa->type->name . ' de ' . $jpa->client->contact_name,
+                    'module' => 'Anotaciones del cliente',
+                    'description' => $request->raw ?? null,
+                    'link_to' => '/leads/' . $jpa->client->id,
+                    'created_by' => Auth::user()->service_user->id,
+                    'business_id' => Auth::user()->business_id
+                ], $mention);
+            }
+        }
+
         if (\count($tasks ?? []) > 0) {
             foreach ($tasks as $task) {
                 Task::create([

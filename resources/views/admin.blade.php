@@ -16,6 +16,7 @@
   {{-- QuillJs Styles --}}
   <link href="/lte/assets/libs/quill/quill.snow.css" rel="stylesheet" type="text/css" />
   <link href="/lte/assets/libs/quill/quill.bubble.css" rel="stylesheet" type="text/css" />
+  <link href="/lte/assets/libs/quill/quill.mention.css" rel="stylesheet" type="text/css">
 
   {{-- DxDataGrid Styles --}}
   <link href="/lte/assets/libs/dxdatagrid/css/dx.light.compact.css?v=06d3ebc8-645c-4d80-a600-c9652743c425"
@@ -49,12 +50,28 @@
       vertical-align: middle;
     }
 
-    .dropdown-menu { 
+    .dropdown-menu {
       box-shadow: 0 0 20px rgba(51, 51, 51, .125)
     }
+
     .dropdown-menu-center {
       left: 50% !important;
       transform: translate(-50%, 0) !important;
+    }
+
+    .mention {
+      color: #71b6f9;
+      background-color: rgba(187, 187, 187, .25)
+    }
+
+    .ql-mention-list-container {
+      width: max-content;
+    }
+
+    .ql-mention-list-item {
+      padding: 8px 16px;
+      line-height: unset;
+
     }
   </style>
 </head>
@@ -78,6 +95,7 @@
     <script src="/lte/assets/libs/jquery-ui/jquery-ui.min.js"></script>
   @endif
   <script src="/lte/assets/libs/quill/quill.min.js"></script>
+  <script src="/lte/assets/libs/quill/quill.mention.min.js"></script>
   <script src="/lte/assets/libs/select2/js/select2.full.min.js"></script>
   <script src="/lte/assets/libs/tippy.js/tippy.all.min.js"></script>
 

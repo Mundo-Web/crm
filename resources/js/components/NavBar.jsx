@@ -1,17 +1,30 @@
-import React, { useEffect } from "react"
+import React, { useEffect, useState } from "react"
 import Logout from "../actions/Logout"
 import WhatsAppStatuses from "../Reutilizables/WhatsApp/WhatsAppStatuses"
 import BusinessCard from "../Reutilizables/Business/BusinessCard"
+import NotificationsRest from "../actions/NotificationsRest"
+import NotificationItem from "./notification/NotificationItem"
 
-const NavBar = ({ can, session = {}, title = '', whatsappStatus, businesses, APP_PROTOCOL, APP_DOMAIN }) => {
+const notificationsRest = new NotificationsRest();
+
+const NavBar = ({ can, session = {}, title = '', whatsappStatus, businesses, APP_PROTOCOL, APP_DOMAIN, notificationsCount }) => {
 
   const { color } = WhatsAppStatuses[whatsappStatus]
+
+  const [notifications, setNotifications] = useState([]);
 
   useEffect(() => {
     document.title = `${title} | Atalaya`
   }, [null])
 
   const otherBusinesses = businesses.filter(({ id }) => session.business_id != id)
+
+  const onNotificationsClicked = async () => {
+    const isVisible = $('#notifications').is(':visible')
+    if (!isVisible) return
+    const { data } = await notificationsRest.paginate()
+    setNotifications(data ?? [])
+  }
 
   return (
     <div className="navbar-custom">
@@ -84,9 +97,9 @@ const NavBar = ({ can, session = {}, title = '', whatsappStatus, businesses, APP
               </div>
             </div>
           </form>
-        </li>
+        </li> */}
 
-        <li className="dropdown d-inline-block d-lg-none">
+        {/* <li className="dropdown d-inline-block d-lg-none">
           <a className="nav-link dropdown-toggle arrow-none waves-effect waves-light" data-bs-toggle="dropdown"
             href="#" role="button" aria-haspopup="false" aria-expanded="false">
             <i className="fe-search noti-icon"></i>
@@ -110,6 +123,42 @@ const NavBar = ({ can, session = {}, title = '', whatsappStatus, businesses, APP
             </span>
           </a>
         </li>}
+
+        <li className="dropdown notification-list topbar-dropdown">
+          <a className="nav-link dropdown-toggle waves-effect waves-light" data-bs-toggle="dropdown" href="#"
+            role="button" aria-haspopup="false" aria-expanded="false" onClick={onNotificationsClicked}>
+            <i className="fe-bell noti-icon"></i>
+            <span className="badge bg-danger rounded-circle noti-icon-badge">{notificationsCount}</span>
+          </a>
+          <div id="notifications" className="dropdown-menu dropdown-menu-end dropdown-lg">
+
+            <div className="dropdown-item noti-title">
+              <h5 className="m-0">
+                {/* <span className="float-end">
+                  <a href="" className="text-dark">
+                    <small>Clear All</small>
+                  </a>
+                </span> */}
+                Notificaciones
+              </h5>
+            </div>
+
+            <div className="noti-scroll" style={{maxHeight: '230px', overflowY: 'auto'}}>
+
+              {
+                notifications.map((notification, i) => {
+                  return <NotificationItem key={`notification-${i}`} {...notification} APP_DOMAIN={APP_DOMAIN} />
+                })
+              }
+            </div>
+            <a href="#"
+              className="dropdown-item text-center text-primary notify-item notify-all">
+              Ver todo
+              <i className="fe-arrow-right"></i>
+            </a>
+
+          </div>
+        </li>
 
         <li className="dropdown notification-list topbar-dropdown">
           <a className="nav-link dropdown-toggle nav-user me-0 waves-effect waves-light" data-bs-toggle="dropdown"

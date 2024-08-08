@@ -7,6 +7,7 @@ use App\Http\Controllers\ClientNoteController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LandingFormController;
 use App\Http\Controllers\LeadController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\RoleController;
@@ -110,16 +111,15 @@ Route::middleware('auth')->group(function () {
     Route::delete('/payments/{id}', [PaymentController::class, 'delete']);
 
     // Statuses routes
-    Route::post('/landing-forms', [LandingFormController::class, 'save']);
-    Route::post('/landing-forms/paginate', [LandingFormController::class, 'paginate']);
-    Route::patch('/landing-forms/status', [LandingFormController::class, 'status']);
-    Route::delete('/landing-forms/{id}', [LandingFormController::class, 'delete']);
-
-    // Statuses routes
     Route::post('/tables', [TableController::class, 'save']);
     Route::post('/tables/paginate', [TableController::class, 'paginate']);
     Route::patch('/tables/status', [TableController::class, 'status']);
     Route::delete('/tables/{id}', [TableController::class, 'delete']);
+
+    // Route::post('/notifications', [NotificationController::class, 'save']);
+    Route::post('/notifications/paginate', [NotificationController::class, 'paginate']);
+    // Route::patch('/notifications/status', [NotificationController::class, 'status']);
+    // Route::delete('/notifications/{id}', [NotificationController::class, 'delete']);
 
     Route::get('/profile/{uuid}', [ProfileController::class, 'full']);
     Route::get('/profile/thumbnail/{uuid}', [ProfileController::class, 'thumbnail']);
