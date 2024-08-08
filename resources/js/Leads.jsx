@@ -59,12 +59,16 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
   })
 
   useEffect(() => {
-    $(modalRef.current).on('hidden.bs.modal', () => setLeadLoaded(null));
+    $(modalRef.current).on('hidden.bs.modal', () => {
+      setLeadLoaded(null)
+      history.pushState(null, null, '/leads')
+    });
     if (!lead) return 
 
     leadsRest.get(lead).then(data => {
       if (!data) return
       setLeadLoaded(data)
+      history.pushState(null, null, `/leads/${data.id}`)
       setNotes([])
       $(modalRef.current).modal('show')
     })
@@ -136,6 +140,7 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
 
   const onLeadClicked = async (lead) => {
     setLeadLoaded(lead)
+    history.pushState(null, null, `/leads/${lead.id}`)
     setNotes([])
     $(modalRef.current).modal('show')
   }
@@ -226,6 +231,7 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
     const newLeadLoaded = structuredClone(lead)
     newLeadLoaded.manage_status = status;
     setLeadLoaded(newLeadLoaded)
+    history.pushState(null, null, `/leads/${newLeadLoaded.id}`)
     if (defaultView == 'kanban') getLeads()
     else $(gridRef.current).dxDataGrid('instance').refresh()
   }
