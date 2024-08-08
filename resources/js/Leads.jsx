@@ -30,7 +30,7 @@ const clientNotesRest = new ClientNotesRest()
 const taskRest = new TasksRest()
 const usetsRest = new UsersRest()
 
-const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, session, can, APP_DOMAIN }) => {
+const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, session, can, APP_DOMAIN, lead }) => {
 
   const modalRef = useRef()
   const newLeadModalRef = useRef()
@@ -47,19 +47,26 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
   const webUrlRef = useRef()
   const messageRef = useRef()
 
-
   const [leads, setLeads] = useState([])
   const [leadLoaded, setLeadLoaded] = useState(null)
   const [notes, setNotes] = useState([]);
   const [defaultView, setDefaultView] = useState(Local.get('default-view') ?? 'kanban')
 
   const typeRefs = {};
+
   noteTypes.forEach(type => {
     typeRefs[type.id] = useRef()
   })
 
   useEffect(() => {
     $(modalRef.current).on('hidden.bs.modal', () => setLeadLoaded(null));
+    if (!lead) return 
+
+    leadsRest.get(lead).then(data => {
+      setLeadLoaded(data)
+      setNotes([])
+      $(modalRef.current).modal('show')
+    })
   }, [null])
 
   useEffect(() => {
@@ -269,10 +276,9 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
     nameRef.current.value = null
     webUrlRef.current.value = null
     messageRef.current.value = null
-    
+
     $(newLeadModalRef.current).modal('show')
   }
-
 
   const tasks = []
   notes?.forEach(note => tasks.push(...note.tasks))

@@ -50,6 +50,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/home', [BasicController::class, 'reactView'])->name('Home.jsx');
     Route::get('/clients', [ClientController::class, 'reactView'])->name('Clients.jsx');
     Route::get('/leads', [LeadController::class, 'reactView'])->name('Leads.jsx');
+    Route::get('/leads/{lead}', [LeadController::class, 'reactView'])->name('Leads.jsx');
     Route::get('/clients/{view}', [ClientController::class, 'reactView'])->name('Clients.jsx');
     Route::get('/views', [ViewController::class, 'reactView'])->name('Views.jsx');
     Route::get('/projects', [ProjectController::class, 'reactView'])->name('Projects.jsx');

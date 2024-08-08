@@ -70,7 +70,7 @@ class ClientNoteController extends BasicController
                     'message' =>  Auth::user()->service_user->fullname . ' te ha etiquetado en ' . $jpa->type->name . ' de ' . $jpa->client->contact_name,
                     'module' => 'Anotaciones del cliente',
                     'description' => $request->raw ?? null,
-                    'link_to' => '/leads/' . $jpa->client->id,
+                    'link_to' => '/leads/' . $jpa->client->id . '?annotation=' . rawurlencode($jpa->type->name),
                     'created_by' => Auth::user()->service_user->id,
                     'business_id' => Auth::user()->business_id
                 ], $mention);

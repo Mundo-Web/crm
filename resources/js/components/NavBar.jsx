@@ -151,11 +151,11 @@ const NavBar = ({ can, session = {}, title = '', whatsappStatus, businesses, APP
                 })
               }
             </div>
-            <a href="#"
+            {/* <a href="#"
               className="dropdown-item text-center text-primary notify-item notify-all">
               Ver todo
               <i className="fe-arrow-right"></i>
-            </a>
+            </a> */}
 
           </div>
         </li>

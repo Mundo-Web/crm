@@ -43,11 +43,29 @@ class LeadController extends BasicController
             ->get();
 
         return [
+            'lead' => $request->lead,
             'manageStatuses' => $manageStatuses,
             'defaultClientStatus' => $defaultClientStatus,
             'statuses' => $statuses,
             'noteTypes' => $noteTypes
         ];
+    }
+
+    public function get(Request $request, string $lead)
+    {
+        $response = Response::simpleTryCatch(function (Response $response) use ($lead) {
+            $data = $this->model::select('clients.*')
+                ->withCount(['notes', 'tasks', 'pendingTasks'])
+                ->with(['status', 'assigned', 'manageStatus'])
+                ->join('statuses AS status', 'status.id', 'status_id')
+                ->leftJoin('statuses AS manage_status', 'manage_status.id', 'manage_status_id')
+                ->where('status.table_id', 'e05a43e5-b3a6-46ce-8d1f-381a73498f33')
+                ->where('clients.business_id', Auth::user()->business_id)
+                ->where('id', $lead)
+                ->first();
+            $response->data = $data;
+        });
+        return response($response->toArray(), $response->status);
     }
 
     public function setPaginationInstance(string $model)

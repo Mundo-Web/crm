@@ -4,6 +4,22 @@ import BasicRest from "./BasicRest";
 class LeadsRest extends BasicRest {
   path = 'leads'
 
+  get = async (lead) => {
+    try {
+      const { status, result } = await Fetch(`/api/${this.path}/${lead}`)
+      if (!status) throw new Error(result?.message || 'Ocurrio un error inesperado')
+      return result.data
+    } catch (error) {
+      Notify.add({
+        icon: '/assets/img/logo-login.svg',
+        title: 'Error',
+        body: error.message,
+        type: 'danger'
+      })
+      return null
+    }
+  }
+
   all = async () => {
     try {
       const { status, result } = await Fetch(`/api/${this.path}`)
