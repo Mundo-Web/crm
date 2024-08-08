@@ -72,6 +72,9 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
       setLeadLoaded(data)
       setNotes([])
       $(modalRef.current).modal('show')
+      if (GET.annotation) { 
+        $(`[data-name="${GET.annotation}"]`).trigger('click')
+      }
     })
   }, [null])
 
@@ -604,7 +607,7 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
                 noteTypes.sort((a, b) => a.order - b.order).map((type, i) => {
                   if (type.name == 'Correos') return
                   return <li key={`note-type-${i}`} className="nav-item">
-                    <a href={`#note-type-${type.id}`} data-bs-toggle="tab" aria-expanded="false" className="nav-link">
+                    <a href={`#note-type-${type.id}`} data-name={type.name} data-bs-toggle="tab" aria-expanded="false" className="nav-link">
                       <i className={type.icon}></i> {type.name}
                     </a>
                   </li>
