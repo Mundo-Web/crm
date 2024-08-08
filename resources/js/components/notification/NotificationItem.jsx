@@ -1,8 +1,8 @@
 import React from "react"
 
-const NotificationItem = ({ name, message, description, created_at, link_to, creator, icon, APP_DOMAIN }) => {
+const NotificationItem = ({ id, name, message, description, created_at, link_to, creator, icon, APP_DOMAIN }) => {
   return <>
-    <a href={link_to || '#'} className="dropdown-item notify-item">
+    <a href={`${link_to}#${id}` || '#'} className="dropdown-item notify-item">
       <div className={`notify-icon ${!creator ? 'bg-primary' : ''}`}>
         {
           creator

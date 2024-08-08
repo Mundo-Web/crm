@@ -70,7 +70,6 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
     leadsRest.get(lead).then(data => {
       if (!data) return
       setLeadLoaded(data)
-      history.pushState(null, null, `/leads/${data.id}`)
       setNotes([])
       $(modalRef.current).modal('show')
     })
