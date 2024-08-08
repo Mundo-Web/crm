@@ -394,6 +394,11 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
               dataType: 'string'
             },
             {
+              dataField: 'triggered_by',
+              caption: 'Disparado por',
+              dataType: 'string'
+            },
+            {
               dataField: 'created_at',
               caption: 'Fecha creacion',
               dataType: 'datetime',

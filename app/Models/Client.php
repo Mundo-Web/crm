@@ -34,6 +34,7 @@ class Client extends Model
         'contact_position',
         'message',
         'web_url',
+        'triggered_by',
         'source',
         'date',
         'time',

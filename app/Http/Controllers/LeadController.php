@@ -245,7 +245,8 @@ class LeadController extends BasicController
                 'workers' => 'nullable|string',
                 'source' => 'nullable|string',
                 'message' => 'required|string',
-                'origin' => 'required|string'
+                'origin' => 'required|string',
+                'triggered_by' => 'nullable|string'
             ], $messages);
 
             $validatedData['business_id'] = $businessJpa->id;
