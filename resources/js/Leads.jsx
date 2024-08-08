@@ -10,7 +10,7 @@ import ClientNotesRest from './actions/ClientNotesRest.js'
 import Swal from 'sweetalert2'
 import ClientNotesCard from './Reutilizables/ClientNotes/ClientNotesCard.jsx'
 import Table from './components/Table.jsx'
-import { Local } from 'sode-extend-react'
+import { GET, Local } from 'sode-extend-react'
 import '../css/leads.css'
 import TippyButton from './components/form/TippyButton.jsx'
 import ReactAppend from './Utils/ReactAppend.jsx'
@@ -31,6 +31,8 @@ const taskRest = new TasksRest()
 const usetsRest = new UsersRest()
 
 const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, session, can, APP_DOMAIN, lead }) => {
+
+  console.log(GET)
 
   const modalRef = useRef()
   const newLeadModalRef = useRef()
