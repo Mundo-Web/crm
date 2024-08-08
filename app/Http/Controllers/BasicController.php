@@ -50,7 +50,11 @@ class BasicController extends Controller
       ->where('services.correlative', env('APP_CORRELATIVE', 'crm'))
       ->where('users_by_services_by_businesses.user_id', Auth::user()->id)
       ->get();
-    $notificationsCount = Notification::where('notify_to', Auth::user()->service_user->id)->orWhereNull('notify_to')->count();
+    $notificationsCount = Notification::where(function ($query) {
+                $query->where('notify_to', Auth::user()->service_user->id);
+                $query->orWhereNull('notify_to');
+            })
+            ->where('business_id', Auth::user()->business_id)->count();
     $properties = [
       'businesses' => $businessesIWork,
       'presets' => $views,
