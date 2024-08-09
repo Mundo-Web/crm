@@ -95,9 +95,9 @@ const Settings = ({ can, constants, statuses }) => {
 
     $(leadStatusModal.current).find('.modal-title').text('Estados de asignacion')
     constantStatusRef.current.value = 'assignation-lead-status'
-    $(leadStatusRef.current).val(value.lead).trigger('change')
-    $(manageStatusRef.current).val(value.manage).trigger('change')
-    $(taskStatusRef.current).val(value.task).trigger('change')
+    $(leadStatusRef.current).val(value?.lead).trigger('change')
+    $(manageStatusRef.current).val(value?.manage).trigger('change')
+    $(taskStatusRef.current).val(value?.task).trigger('change')
 
     $(leadStatusModal.current).modal('show')
   }
@@ -108,9 +108,9 @@ const Settings = ({ can, constants, statuses }) => {
 
     $(leadStatusModal.current).find('.modal-title').text('Estados de reversion')
     constantStatusRef.current.value = 'revertion-lead-status'
-    $(leadStatusRef.current).val(value.lead).trigger('change')
-    $(manageStatusRef.current).val(value.manage).trigger('change')
-    $(taskStatusRef.current).val(value.task).trigger('change')
+    $(leadStatusRef.current).val(value?.lead).trigger('change')
+    $(manageStatusRef.current).val(value?.manage).trigger('change')
+    $(taskStatusRef.current).val(value?.task).trigger('change')
 
     $(leadStatusModal.current).modal('show')
   }
