@@ -124,7 +124,7 @@ const Home = ({session}) => {
       })
       .then(({ data = [], totalCount }) => {
         let conteoEstados = {};
-        data.forEach(({ project_status: { name, color } }) => {
+        data.forEach(({ status: { name, color } }) => {
           let key = name;
           if (conteoEstados[key]) conteoEstados[key].cantidad++;
           else conteoEstados[key] = { estado: name, color: color, cantidad: 1 };
@@ -416,7 +416,7 @@ const Home = ({session}) => {
                           <td>{project.client.tradename}</td>
                           <td>{project.name}</td>
                           <td>{DateRange(project.starts_at, project.ends_at)}</td>
-                          <td><span className='badge' style={{ backgroundColor: project.project_status.color }}>{project.project_status.name}</span></td>
+                          <td><span className='badge' style={{ backgroundColor: project.status.color }}>{project.status.name}</span></td>
                           <td>{Assigneds(relatives)}</td>
                         </tr>
                       })
