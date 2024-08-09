@@ -124,7 +124,7 @@ const Menu = ({ session, can, presets, APP_PROTOCOL, APP_DOMAIN, businesses }) =
 
         <ul id="side-menu">
           <li className="menu-title">Panel de navegacion</li>
-          <MenuItem href="/home" icon='mdi mdi-home'>Inicio</MenuItem>
+          {can('dashboard', 'all', 'list') && <MenuItem href="/home" icon='mdi mdi-home'>Inicio</MenuItem>}
 
           <MenuItem href="/leads" icon='mdi mdi-texture'>Leads</MenuItem>
           {can('clients', 'all', 'list') && <MenuItem href="/clients" icon='mdi mdi-account-group'>Clientes</MenuItem>}
