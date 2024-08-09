@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Builder;
 use SoDe\Extend\JSON;
+use SoDe\Extend\Text;
 
 class dxDataGrid
 {
@@ -40,8 +41,10 @@ class dxDataGrid
             }
         } else {
             $selector = $dxFilter[0];
-            if (!str_contains($selector, '.') && $prefix4undotted) {
+            if (!str_contains($selector, '.') && $prefix4undotted && !Text::startsWith($selector, '!')) {
                 $selector = "{$prefix4undotted}.{$selector}";
+            } else {
+                $selector = str_replace('!', '', $selector);
             }
             if ($flat) $selector = \str_replace('.', '__', $dxFilter[0]);
             switch ($dxFilter[1]) {
