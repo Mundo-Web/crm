@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Classes\dxResponse;
 use App\Models\dxDataGrid;
 use App\Models\Payment;
+use App\Models\Project;
 use Exception;
 use Illuminate\Contracts\Routing\ResponseFactory;
 use Illuminate\Http\Request;
@@ -45,5 +46,13 @@ class PaymentController extends BasicController
         $body = $request->all();
         $body['user_id'] = Auth::user()->service_user->id;
         return $body;
+    }
+
+    public function afterSave(Request $request, object $jpa)
+    {
+        $total_amount = Payment::where('project_id', $jpa->project_id)->sum('amount');
+        $projectJpa = Project::find($jpa->project_id);
+        $projectJpa->remaining_amount = $projectJpa->cost - $total_amount;
+        $projectJpa->save();
     }
 }
