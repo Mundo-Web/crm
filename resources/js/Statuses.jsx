@@ -13,6 +13,8 @@ import SelectAPIFormGroup from './components/form/SelectAPIFormGroup.jsx'
 import TextareaFormGroup from './components/form/TextareaFormGroup.jsx'
 import TippyButton from './components/form/TippyButton.jsx'
 
+const statusesRest = new StatusesRest()
+
 const Statuses = () => {
   const gridRef = useRef()
   const modalRef = useRef()
@@ -50,7 +52,7 @@ const Statuses = () => {
       description: descriptionRef.current.value,
     }
 
-    const result = await StatusesRest.save(request)
+    const result = await statusesRest.save(request)
     if (!result) return
 
     $(gridRef.current).dxDataGrid('instance').refresh()
@@ -58,19 +60,19 @@ const Statuses = () => {
   }
 
   const onStatusChange = async ({ id, status }) => {
-    const result = await StatusesRest.status({ id, status })
+    const result = await statusesRest.status({ id, status })
     if (!result) return
     $(gridRef.current).dxDataGrid('instance').refresh()
   }
 
   const onDeleteClicked = async (id) => {
-    const result = await StatusesRest.delete(id)
+    const result = await statusesRest.delete(id)
     if (!result) return
     $(gridRef.current).dxDataGrid('instance').refresh()
   }
 
   return (<>
-    <Table gridRef={gridRef} title='Estados' rest={StatusesRest}
+    <Table gridRef={gridRef} title='Estados' rest={statusesRest}
       toolBar={(container) => {
         container.unshift({
           widget: 'dxButton', location: 'after',

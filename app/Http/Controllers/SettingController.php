@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Classes\dxResponse;
 use App\Models\dxDataGrid;
 use App\Models\Setting;
+use App\Models\Status;
 use Exception;
 use Illuminate\Contracts\Routing\ResponseFactory;
 use Illuminate\Http\Request;
@@ -18,11 +19,16 @@ class SettingController extends BasicController
     public $model = Setting::class;
     public $reactView = 'Settings';
 
-    static function get($name)
+    public function setReactViewProperties(Request $request)
     {
-        $jpa = Setting::where('name', $name)->first();
-        if (!$jpa) return null;
-        return $jpa->value;
+        $constants = $this->model::select()
+            ->where('business_id', Auth::user()->business_id)
+            ->get();
+        $statuses = Status::where('business_id', Auth::user()->business_id)->get();
+        return [
+            'constants' => $constants,
+            'statuses' => $statuses
+        ];
     }
 
     public function beforeSave(Request $request)

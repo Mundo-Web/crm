@@ -51,10 +51,10 @@ class BasicController extends Controller
       ->where('users_by_services_by_businesses.user_id', Auth::user()->id)
       ->get();
     $notificationsCount = Notification::where(function ($query) {
-                $query->where('notify_to', Auth::user()->service_user->id);
-                $query->orWhereNull('notify_to');
-            })
-            ->where('business_id', Auth::user()->business_id)->count();
+      $query->where('notify_to', Auth::user()->service_user->id);
+      $query->orWhereNull('notify_to');
+    })
+      ->where('business_id', Auth::user()->business_id)->count();
     $properties = [
       'businesses' => $businessesIWork,
       'presets' => $views,
@@ -126,7 +126,11 @@ class BasicController extends Controller
 
       $totalCount = 0;
       if ($request->requireTotalCount) {
-        $totalCount = $instance->count('*');
+        if ($this->prefix4filter) {
+          $totalCount = $instance->count("{$this->prefix4filter}.*");
+        } else {
+          $totalCount = $instance->count('*');
+        }
       }
 
       $jpas = $request->isLoadingAll

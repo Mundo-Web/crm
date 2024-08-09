@@ -81,8 +81,13 @@ class UtilController
 
         if (Text::nullOrEmpty($row[5])) continue;
 
-        Setting::set($row[5], $statusJpa->id, $businessJpa->id);
+        foreach (explode('|', $row[5]) as $name) {
+          Setting::set($name, $statusJpa->id, $businessJpa->id);
+        }
       }
+
+      Setting::set('asignation-lead-status[task]', 'En curso', $businessJpa->id);
+      Setting::set('revertion-lead-status[task]', 'Pendiente', $businessJpa->id);
 
       Setting::set('whatsapp-new-lead-notification-message', File::get('../storage/app/utils/whatsapp-new-lead-notification-message.html'), $businessJpa->id);
       Setting::set('whatsapp-new-lead-notification-message-client', File::get('../storage/app/utils/whatsapp-new-lead-notification-message-client.html'), $businessJpa->id);
