@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use SoDe\Extend\JSON;
 use SoDe\Extend\Response;
+use SoDe\Extend\Text;
 
 class BasicController extends Controller
 {
@@ -83,13 +84,13 @@ class BasicController extends Controller
         [$grouping] = $request->group;
         // $selector = str_replace('.', '__', $grouping['selector']);
         $selector = $grouping['selector'];
-        if (!str_contains($selector, '.') && $this->prefix4filter) {
+        if (!str_contains($selector, '.') && $this->prefix4filter && !Text::startsWith($selector, '!')) {
           $selector = "{$this->prefix4filter}.{$selector}";
         }
         $instance = $this->model::select([
           "{$selector} AS key"
         ])
-          ->groupBy($selector);
+          ->groupBy(str_replace('!', '', $selector));
       }
 
       if ($this->prefix4filter) {
@@ -108,11 +109,11 @@ class BasicController extends Controller
         foreach ($request->sort as $sorting) {
           // $selector = \str_replace('.', '__', $sorting['selector']);
           $selector = $sorting['selector'];
-          if (!str_contains($selector, '.') && $this->prefix4filter) {
+          if (!str_contains($selector, '.') && $this->prefix4filter && !Text::startsWith($selector, '!')) {
             $selector = "{$this->prefix4filter}.{$selector}";
           }
           $instance->orderBy(
-            $selector,
+            str_replace('!', '', $selector),
             $sorting['desc'] ? 'DESC' : 'ASC'
           );
         }
@@ -126,11 +127,11 @@ class BasicController extends Controller
 
       $totalCount = 0;
       if ($request->requireTotalCount) {
-        // if ($this->prefix4filter) {
-        //   $totalCount = $instance->count("{$this->prefix4filter}.*");
-        // } else {
-          $totalCount = $instance->count();
-        // }
+        if ($this->prefix4filter) {
+          $totalCount = $instance->count("{$this->prefix4filter}.*");
+        } else {
+          $totalCount = $instance->count("*");
+        }
       }
 
       $jpas = $request->isLoadingAll

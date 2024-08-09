@@ -169,11 +169,11 @@ const Home = ({session}) => {
 
     ProjectsRest.paginate({
       sort: [{
-        selector: "remaining_amount",
+        selector: "!remaining_amount",
         desc: true
       }],
       isLoadingAll: true,
-      filter: ["remaining_amount", ">", 0]
+      filter: ["!remaining_amount", ">", 0]
     })
       .then(({ data }) => {
         setProjectsRemaining(data || [])
