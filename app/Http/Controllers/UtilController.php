@@ -86,7 +86,7 @@ class UtilController
         }
       }
 
-      Setting::set('asignation-lead-status[task]', 'En curso', $businessJpa->id);
+      Setting::set('assignation-lead-status[task]', 'En curso', $businessJpa->id);
       Setting::set('revertion-lead-status[task]', 'Pendiente', $businessJpa->id);
 
       Setting::set('whatsapp-new-lead-notification-message', File::get('../storage/app/utils/whatsapp-new-lead-notification-message.html'), $businessJpa->id);

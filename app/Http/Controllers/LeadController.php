@@ -17,6 +17,7 @@ use Database\Seeders\ClientSeeder;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use SoDe\Extend\JSON;
 use SoDe\Extend\Response;
 use SoDe\Extend\Text;
 use SoDe\Extend\Trace;
@@ -171,6 +172,16 @@ class LeadController extends BasicController
             $leadJpa = Client::find($request->lead);
             if ($leadJpa->business_id != Auth::user()->business_id) throw new Exception('Este lead no pertenece a tu empresa');
             $leadJpa->status_id = $request->status;
+
+            try {
+                $assignationStatus = JSON::parse(Setting::get('assignation-lead-status') ?? '{}');
+                $revertionStatus = JSON::parse(Setting::get('revertion-lead-status') ?? '{}');
+
+                if ($leadJpa->status_id == ($assignationStatus['lead'] ?? '')) StatusController::updateStatus4Lead($leadJpa, true);
+                if ($leadJpa->status_id == ($revertionStatus['lead'] ?? '')) StatusController::updateStatus4Lead($leadJpa, false);
+            } catch (\Throwable $th) {
+            }
+
             $leadJpa->save();
         });
         return response($response->toArray(), $response->status);
@@ -182,6 +193,16 @@ class LeadController extends BasicController
             $leadJpa = Client::find($request->lead);
             if ($leadJpa->business_id != Auth::user()->business_id) throw new Exception('Este lead no pertenece a tu empresa');
             $leadJpa->manage_status_id = $request->status;
+
+            try {
+                $assignationStatus = JSON::parse(Setting::get('assignation-lead-status') ?? '{}');
+                $revertionStatus = JSON::parse(Setting::get('revertion-lead-status') ?? '{}');
+
+                if ($leadJpa->manage_status_id == ($assignationStatus['manage'] ?? '')) StatusController::updateStatus4Lead($leadJpa, true);
+                if ($leadJpa->manage_status_id == ($revertionStatus['manage'] ?? '')) StatusController::updateStatus4Lead($leadJpa, false);
+            } catch (\Throwable $th) {
+            }
+
             $leadJpa->save();
         });
         return response($response->toArray(), $response->status);
@@ -192,7 +213,9 @@ class LeadController extends BasicController
         $response = Response::simpleTryCatch(function (Response $response) use ($request) {
             $leadJpa = Client::find($request->lead);
             if ($leadJpa->business_id != Auth::user()->business_id) throw new Exception('Este lead no pertenece a tu empresa');
-            $leadJpa->assigned_to = $request->method() == 'DELETE' ? null : Auth::user()->service_user->id;
+
+            StatusController::updateStatus4Lead($leadJpa, $request->method() != 'DELETE');
+
             $leadJpa->save();
         });
         return response($response->toArray(), $response->status);

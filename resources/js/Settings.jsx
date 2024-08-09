@@ -90,11 +90,11 @@ const Settings = ({ can, constants, statuses }) => {
   const leadStatusModal = useRef()
 
   const onAsignationStatusClicked = () => {
-    const constant = getConstant('asignation-lead-status')
+    const constant = getConstant('assignation-lead-status')
     const value = JSON.parse(constant.value)
 
     $(leadStatusModal.current).find('.modal-title').text('Estados de asignacion')
-    constantStatusRef.current.value = 'asignation-lead-status'
+    constantStatusRef.current.value = 'assignation-lead-status'
     $(leadStatusRef.current).val(value.lead).trigger('change')
     $(manageStatusRef.current).val(value.manage).trigger('change')
     $(taskStatusRef.current).val(value.task).trigger('change')
@@ -331,8 +331,8 @@ const Settings = ({ can, constants, statuses }) => {
       ]} /> */}
     <Modal modalRef={leadStatusModal} title='' onSubmit={onLeadStatusSubmit} size='sm'>
       <input ref={constantStatusRef} type="hidden" />
-      <div className='row' id='asignation-status-container'>
-        <SelectFormGroup eRef={leadStatusRef} label='Estado del lead' dropdownParent='#asignation-status-container' required >
+      <div className='row' id='assignation-status-container'>
+        <SelectFormGroup eRef={leadStatusRef} label='Estado del lead' dropdownParent='#assignation-status-container' required >
           <option value>- Sin accion -</option>
           {statuses
             .filter(({ table_id }) => table_id == 'e05a43e5-b3a6-46ce-8d1f-381a73498f33')
@@ -341,7 +341,7 @@ const Settings = ({ can, constants, statuses }) => {
               return <option key={`status-${i}`} value={status.id}>{status.name}</option>
             })}
         </SelectFormGroup>
-        <SelectFormGroup eRef={manageStatusRef} label='Estado de gestion' dropdownParent='#asignation-status-container' required >
+        <SelectFormGroup eRef={manageStatusRef} label='Estado de gestion' dropdownParent='#assignation-status-container' required >
           <option value>- Sin accion -</option>
           {statuses
             .filter(({ table_id }) => table_id == '9c27e649-574a-47eb-82af-851c5d425434')
@@ -350,7 +350,7 @@ const Settings = ({ can, constants, statuses }) => {
               return <option key={`status-${i}`} value={status.id}>{status.name}</option>
             })}
         </SelectFormGroup>
-        <SelectFormGroup eRef={taskStatusRef} label='Estado de la tarea' dropdownParent='#asignation-status-container' required>
+        <SelectFormGroup eRef={taskStatusRef} label='Estado de la tarea' dropdownParent='#assignation-status-container' required>
           <option value>- Sin accion -</option>
           <option value='Pendiente'>Pendiente</option>
           <option value='En curso'>En curso</option>

@@ -126,11 +126,11 @@ class BasicController extends Controller
 
       $totalCount = 0;
       if ($request->requireTotalCount) {
-        if ($this->prefix4filter) {
-          $totalCount = $instance->count("{$this->prefix4filter}.*");
-        } else {
-          $totalCount = $instance->count('*');
-        }
+        // if ($this->prefix4filter) {
+        //   $totalCount = $instance->count("{$this->prefix4filter}.*");
+        // } else {
+          $totalCount = $instance->count();
+        // }
       }
 
       $jpas = $request->isLoadingAll
