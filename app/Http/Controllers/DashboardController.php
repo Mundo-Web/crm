@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Payment;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use SoDe\Extend\Response;
 
@@ -22,6 +23,8 @@ class DashboardController
             DB::raw('IFNULL(DATE(date), DATE(created_at)) as date'),
             DB::raw('SUM(amount) as total')
           ])
+            ->leftJoin('projects AS p', 'p.id', 'payments.project_id')
+            ->where('business_id', Auth::user()->business_id)
             ->groupBy(DB::raw('IFNULL(DATE(date), DATE(created_at))'))
             ->orderBy(DB::raw('IFNULL(DATE(date), DATE(created_at))'), 'desc')
             ->limit(30) // Máximo de 30 registros
@@ -32,6 +35,8 @@ class DashboardController
             DB::raw('IFNULL(YEARWEEK(date), YEARWEEK(created_at)) as week'),
             DB::raw('SUM(amount) as total')
           ])
+            ->leftJoin('projects AS p', 'p.id', 'payments.project_id')
+            ->where('business_id', Auth::user()->business_id)
             ->groupBy(DB::raw('IFNULL(YEARWEEK(date), YEARWEEK(created_at))'))
             ->orderBy(DB::raw('IFNULL(YEARWEEK(date), YEARWEEK(created_at))'), 'desc')
             ->limit(16) // Máximo de 16 registros
@@ -43,6 +48,8 @@ class DashboardController
             DB::raw('IFNULL(MONTH(date), MONTH(created_at)) as month'),
             DB::raw('SUM(amount) as total')
           ])
+            ->leftJoin('projects AS p', 'p.id', 'payments.project_id')
+            ->where('business_id', Auth::user()->business_id)
             ->groupBy(DB::raw('IFNULL(YEAR(date), YEAR(created_at))'), DB::raw('IFNULL(MONTH(date), MONTH(created_at))'))
             ->orderBy(DB::raw('IFNULL(YEAR(date), YEAR(created_at))'), 'desc')
             ->orderBy(DB::raw('IFNULL(MONTH(date), MONTH(created_at))'), 'desc')
@@ -54,6 +61,8 @@ class DashboardController
             DB::raw('IFNULL(YEAR(date), YEAR(created_at)) as year'),
             DB::raw('SUM(amount) as total')
           ])
+            ->leftJoin('projects AS p', 'p.id', 'payments.project_id')
+            ->where('business_id', Auth::user()->business_id)
             ->groupBy(DB::raw('IFNULL(YEAR(date), YEAR(created_at))'))
             ->orderBy(DB::raw('IFNULL(YEAR(date), YEAR(created_at))'), 'desc')
             ->limit(6) // Máximo de 6 registros
@@ -65,6 +74,8 @@ class DashboardController
             DB::raw('IFNULL(YEAR(date), YEAR(created_at)) as year'),
             DB::raw('IFNULL(MONTH(date), MONTH(created_at)) as month')
           ])
+            ->leftJoin('projects AS p', 'p.id', 'payments.project_id')
+            ->where('business_id', Auth::user()->business_id)
             ->groupBy(DB::raw('IFNULL(YEAR(date), YEAR(created_at))'), DB::raw('IFNULL(MONTH(date), MONTH(created_at))'))
             ->orderBy(DB::raw('IFNULL(YEAR(date), YEAR(created_at))'), 'desc')
             ->orderBy(DB::raw('IFNULL(MONTH(date), MONTH(created_at))'), 'desc')
@@ -75,6 +86,8 @@ class DashboardController
             DB::raw('IFNULL(MONTH(date), MONTH(created_at)) as month'),
             DB::raw('SUM(amount) as total')
           ])
+            ->leftJoin('projects AS p', 'p.id', 'payments.project_id')
+            ->where('business_id', Auth::user()->business_id)
             ->where(function ($query) use ($lastTwoMonths) {
               foreach ($lastTwoMonths as $month) {
                 $query->orWhere(function ($query) use ($month) {
@@ -93,6 +106,8 @@ class DashboardController
             DB::raw('IFNULL(MONTH(date), MONTH(created_at)) as month'),
             DB::raw('SUM(amount) as total')
           ])
+            ->leftJoin('projects AS p', 'p.id', 'payments.project_id')
+            ->where('business_id', Auth::user()->business_id)
             ->groupBy(DB::raw('IFNULL(YEAR(date), YEAR(created_at))'), DB::raw('IFNULL(MONTH(date), MONTH(created_at))'))
             ->orderBy(DB::raw('IFNULL(YEAR(date), YEAR(created_at))'), 'desc')
             ->orderBy(DB::raw('IFNULL(MONTH(date), MONTH(created_at))'), 'desc')
