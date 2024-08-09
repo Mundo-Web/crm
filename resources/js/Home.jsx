@@ -116,8 +116,8 @@ const Home = ({session}) => {
           // [
           '!',
           [
-            ['status_id', '=', '01j4ppwztx8t0919ayxans0agz'], 'or',
-            ['status_id', '=', '01j4ppwzv17p8r3rp5avej1t71']
+            ['status_id', '=', '10131f5e-559a-11ef-bfda-26a0a2e74226'], 'or',
+            ['status_id', '=', '10132091-559a-11ef-bfda-26a0a2e74226']
           ]
           // ]
         ]
