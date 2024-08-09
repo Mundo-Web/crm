@@ -433,6 +433,7 @@ const Home = ({session}) => {
 };
 
 CreateReactScript((el, properties) => {
+  if (!properties.can('dashboard', 'root', 'all', 'list')) return location.href = '/leads';
   createRoot(el).render(
     <Adminto {...properties} title={`Dashboard - ${moment().format('MMMM YYYY')}`}>
       <Home {...properties} />
