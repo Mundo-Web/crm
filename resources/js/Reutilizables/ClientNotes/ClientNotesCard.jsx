@@ -2,7 +2,7 @@ import React from "react"
 import HtmlContent from "../../Utils/HtmlContent"
 import TaskCard from "../Tasks/TaskCard"
 
-const ClientNotesCard = ({ type, name, description, created_at, user_id, tasks, onTaskChange, showOptions = true, session }) => {
+const ClientNotesCard = ({ id, type, name, description, created_at, updated_at, user_id, tasks, onTaskChange, showOptions = true, session, onDeleteNote, onUpdateNote }) => {
   if (!type) {
     return <div className="card card-body p-2 mb-2" style={{ border: '1px solid #dee2e6' }}>
       <p className="card-text mb-0">
@@ -10,7 +10,7 @@ const ClientNotesCard = ({ type, name, description, created_at, user_id, tasks, 
         {name}
       </p>
       <p className="card-text">
-        <small className="text-muted">{moment(created_at).format('LLL')}</small>
+        <small className="text-muted">{moment(created_at).format('LLL')} {updated_at != created_at && <span>· <i>Editado</i></span>}</small>
       </p>
     </div>
   }
@@ -25,11 +25,11 @@ const ClientNotesCard = ({ type, name, description, created_at, user_id, tasks, 
               <i className="mdi mdi-dots-vertical"></i>
             </a>
             <div className="dropdown-menu dropdown-menu-end">
-              <a className="dropdown-item" style={{ cursor: 'pointer' }}>
+              <a className="dropdown-item" style={{ cursor: 'pointer' }} onClick={() => onUpdateNote({id, type, name, description, tasks})}>
                 <i className="fa fa-pen me-1"></i>
                 Editar
               </a>
-              <a className="dropdown-item" style={{ cursor: 'pointer' }}>
+              <a className="dropdown-item" style={{ cursor: 'pointer' }} onClick={() => onDeleteNote(id)}>
                 <i className="fa fa-trash me-1"></i>
                 Eliminar
               </a>
@@ -52,7 +52,7 @@ const ClientNotesCard = ({ type, name, description, created_at, user_id, tasks, 
         })
       }
       <p className="card-text">
-        <small className="text-muted">{moment(created_at).format('LLL')}</small>
+        <small className="text-muted">{moment(created_at).format('LLL')} {updated_at != created_at && <span>· <i>Editado</i></span>}</small>
       </p>
     </div>
   </div>

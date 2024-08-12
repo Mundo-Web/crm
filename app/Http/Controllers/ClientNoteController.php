@@ -77,6 +77,7 @@ class ClientNoteController extends BasicController
             }
         }
 
+        Task::where('note_id', $jpa->id)->delete();
         if (\count($tasks ?? []) > 0) {
             foreach ($tasks as $task) {
                 Task::create([

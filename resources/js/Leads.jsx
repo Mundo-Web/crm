@@ -53,9 +53,10 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
   const [defaultView, setDefaultView] = useState(Local.get('default-view') ?? 'kanban')
 
   const typeRefs = {};
-
+  const idRefs = {}
   noteTypes.forEach(type => {
     typeRefs[type.id] = useRef()
+    idRefs[type.id] = useRef()
   })
 
   useEffect(() => {
@@ -182,6 +183,7 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
     const mentions = [...new Set([...$(editor).find('.mention')].map(e => e.getAttribute('data-id')))]
 
     const result = await clientNotesRest.save({
+      id: idRefs[type].current.value || undefined,
       note_type_id: type,
       name: title,
       description: !isTask ? content : undefined,
@@ -198,9 +200,49 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
     if (!result) return
 
     editor.empty()
+    idRefs[type].current.value = null
+    taskTitleRef.current.value = ''
+    taskEndsAtRef.current.value = ''
+
     const newNotes = structuredClone(notes)
-    newNotes.push(result)
+    const index = newNotes.findIndex(x => x.id == result.id)
+    if (index == -1) newNotes.push(result)
+    else newNotes[index] = result
     setNotes(newNotes)
+  }
+
+  const onDeleteNote = async (noteId) => {
+    const { isConfirmed } = await Swal.fire({
+      title: "Estas seguro?",
+      text: `No podras revertir esta accion!`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Continuar",
+      cancelButtonText: `Cancelar`
+    })
+    if (!isConfirmed) return
+    await clientNotesRest.delete(noteId)
+    const newNotes = structuredClone(notes).filter(({ id }) => id != noteId)
+    setNotes(newNotes)
+  }
+
+  const onUpdateNoteClicked = async (note) => {
+    const quill = typeRefs[note.type.id].current
+
+    modalRef.current.scrollTo({ top: 0, behavior: 'smooth' })
+    quill.classList.add('highlight');
+    setTimeout(() => {
+      quill.classList.remove('highlight');
+    }, 2000);
+    
+    idRefs[note.type.id].current.value = note.id || null
+    $(quill).find('.ql-editor').html(note.description)
+
+    if (note.type.id == 'e20c7891-1ef8-4388-8150-4c1028cc4525') {
+      taskTitleRef.current.value = note.name
+      $(quill).find('.ql-editor').html(note.tasks[0].description)
+      taskEndsAtRef.current.value = moment(note.tasks[0].ends_at).format('YYYY-MM-DD')
+    }
   }
 
   const onDefaultViewClicked = (view) => {
@@ -664,7 +706,7 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
               <div key={`tab-note-type-activity`} className='tab-pane active' id={`note-type-activity`}>
                 {
                   notes.sort((a, b) => b.created_at > a.created_at ? 1 : -1).map((note, i) => {
-                    return <ClientNotesCard key={`note-${i}`} {...note} onTaskChange={onTaskStatusChange} showOptions={false} session={session}/>
+                    return <ClientNotesCard key={`note-${i}`} {...note} onTaskChange={onTaskStatusChange} showOptions={false} session={session} />
                   })
                 }
 
@@ -673,6 +715,7 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
                 noteTypes.sort((a, b) => a.order - b.order).map((type, i) => {
                   return <div key={`tab-note-type-${i}`} className='tab-pane' id={`note-type-${type.id}`}>
                     <h4 className='header-title mb-2'>Lista de {type.name}</h4>
+                    <input ref={idRefs[type.id]} type="hidden" />
                     <div className="row">
                       {
                         type.id == '37b1e8e2-04c4-4246-a8c9-838baa7f8187' && <>
@@ -709,7 +752,7 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
                       }
                       <div className="col-12 mb-2">
                         <label className='mb-1' htmlFor="">Contenido</label>
-                        <div ref={typeRefs[type.id]} id={`editor-${type.id}`} style={{ height: '120px' }}></div>
+                        <div ref={typeRefs[type.id]} id={`editor-${type.id}`} style={{ height: '120px', transition: 'transform 0.3s ease, box-shadow 0.3s ease' }}></div>
                       </div>
                       <div className="col-12">
                         <button className='btn btn-sm btn-success' type='button' value={type.id} onClick={onSaveNote}>{type.id == '37b1e8e2-04c4-4246-a8c9-838baa7f8187' ? 'Guardar y enviar' : 'Guardar'}</button>
@@ -718,7 +761,7 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
                     <hr />
                     {
                       notes.filter(x => x.note_type_id == type.id).sort((a, b) => b.created_at > a.created_at ? 1 : -1).map((note, i) => {
-                        return <ClientNotesCard key={`note-${i}`} {...note} session={session} />
+                        return <ClientNotesCard key={`note-${i}`} {...note} session={session} onDeleteNote={onDeleteNote} onUpdateNote={onUpdateNoteClicked} />
                       })
                     }
                   </div>
