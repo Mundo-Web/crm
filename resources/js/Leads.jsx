@@ -297,10 +297,9 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
     e.target.disabled = false
     if (!result) return
     if (result.totalCount > 0) {
-      // Mostrar un mensaje de error que se cierre coon boton y no con timer
       Swal.fire({
-        title: 'Oops',
-        text: 'Este numero de telefono ya esta registrado',
+        title: 'Mmmm!',
+        text: 'Este numero de telefono ha sido registrado anteriormente',
         icon: 'warning',
         confirmButtonText: 'Ok',
       })
