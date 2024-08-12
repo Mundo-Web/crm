@@ -279,7 +279,7 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
   }
 
   const onOpenModal = (data = {}) => {
-    idRef.current.value = data?.id
+    idRef.current.value = data?.id ?? ''
     contactNameRef.current.value = data?.contact_name ?? ''
     contactEmailRef.current.value = data?.contact_email ?? ''
     contactPhoneRef.current.value = data?.contact_phone ?? ''
