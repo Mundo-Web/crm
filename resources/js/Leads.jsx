@@ -263,7 +263,7 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
       contact_name: contactNameRef.current.value || 'Lead anonimo',
       contact_email: contactEmailRef.current.value,
       contact_phone: contactPhoneRef.current.value,
-      name: nameRef.current.value,
+      name: nameRef.current.value || 'Lead anonimo',
       web_url: webUrlRef.current.value,
       message: messageRef.current.value,
       client_width: window.screen.width,
@@ -294,16 +294,25 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
     e.target.disabled = true
     $(newLeadModalRef.current).find('[type="submit"]').prop('disabled', true)
     const phone = contactPhoneRef.current.value
-    const result = await leadsRest.paginate({ filter: ['contact_phone', '=', phone], requireTotalCount: true, requireData: false })
+    const result = await leadsRest.paginate({
+      filter: ['contact_phone', '=', phone],
+      requireTotalCount: true,
+      take: 1,
+      sort: [{
+        selector: "created_at",
+        desc: true
+      }]
+    })
     e.target.disabled = false
     $(newLeadModalRef.current).find('[type="submit"]').prop('disabled', false)
 
     if (!result) return
-    
+
     if (result.totalCount > 0) {
+      const lead = result.data[0]
       Swal.fire({
         title: 'Lead registrado!',
-        text: 'Este numero de telefono ha sido registrado anteriormente',
+        text: lead.creator ? `${lead.creator.fullname} ha registrado este lead anteriormente con el nombre de ${lead.contact_name}` : `Este numero de telefono ha sido registrado anteriormente con el nombre de ${lead.contact_name}`,
         icon: 'warning',
         confirmButtonText: 'Ok',
       })

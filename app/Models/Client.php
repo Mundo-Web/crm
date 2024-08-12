@@ -61,7 +61,8 @@ class Client extends Model
         // 'business_id'
     ];
 
-    public function creator () {
+    public function creator()
+    {
         return $this->hasOne(User::class, 'id', 'created_by');
     }
 
@@ -90,7 +91,8 @@ class Client extends Model
         return $this->hasMany(ClientNote::class, 'client_id', 'id');
     }
 
-    public function tasks() {
+    public function tasks()
+    {
         return $this->hasManyThrough(Task::class, ClientNote::class, 'client_id', 'note_id', 'id', 'id');
     }
 
