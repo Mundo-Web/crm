@@ -538,8 +538,7 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
                                   </li>
                                   <li className="list-inline-item">
                                     <Tippy content={`${lead.pending_tasks_count} tareas pendientes`}>
-                                      <span style={{ position: 'relative' }}
-                                        title="5 Tasks">
+                                      <span style={{ position: 'relative' }}>
                                         <i className="mdi mdi-format-align-left"></i>
                                         {
                                           lead.notes_count > 0 &&
@@ -570,7 +569,7 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
                                   <li className="list-inline-item">
                                     <Tippy content={`Eliminar lead`}>
                                       <b style={{ cursor: 'pointer' }} onClick={() => onDeleteClicked(lead)}>
-                                        <i className="mdi mdi-trash-can-outline text-danger"></i>
+                                        <i className="fa fa-trash text-danger"></i>
                                       </b>
                                     </Tippy>
                                   </li>
