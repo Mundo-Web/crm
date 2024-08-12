@@ -171,12 +171,14 @@ class BasicController extends Controller
       $body['business_id'] = Auth::user()->business_id;
 
       if (!$jpa) {
+        $isNew = true;
         $jpa = $this->model::create($body);
       } else {
+        $isNew = false;
         $jpa->update($body);
       }
 
-      $data = $this->afterSave($request, $jpa);
+      $data = $this->afterSave($request, $jpa, $isNew);
       if ($data) {
         $response->data = $data;
       }
@@ -194,7 +196,7 @@ class BasicController extends Controller
     }
   }
 
-  public function afterSave(Request $request, object $jpa)
+  public function afterSave(Request $request, object $jpa, ?bool $isNew)
   {
     return null;
   }

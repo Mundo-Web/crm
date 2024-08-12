@@ -95,8 +95,15 @@ class LeadController extends BasicController
         return $body;
     }
 
-    public function afterSave(Request $request, object $jpa)
+    public function afterSave(Request $request, object $jpa, ?bool $isNew)
     {
+        if (!$isNew) {
+            ClientNote::create([
+                'client_id' => $jpa->id,
+                'name' => Auth::user()->name . ' actualizo datos del lead',
+            ]);
+            return;
+        }
         $noteJpa = ClientNote::create([
             'note_type_id' => '8e895346-3d87-4a87-897a-4192b917c211',
             'client_id' => $jpa->id,
@@ -282,7 +289,7 @@ class LeadController extends BasicController
 
             $leadJpa = Client::create($validatedData);
 
-            $this->afterSave($request, $leadJpa);
+            $this->afterSave($request, $leadJpa, true);
 
             SendNewLeadNotification::dispatchAfterResponse($leadJpa, $businessJpa);
 

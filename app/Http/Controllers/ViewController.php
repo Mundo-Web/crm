@@ -36,7 +36,7 @@ class ViewController extends BasicController
         ];
     }
     
-    public function afterSave(Request $request, object $jpa)
+    public function afterSave(Request $request, object $jpa, ?bool $isNew)
     {
         $statuses = $request->statuses;
         foreach ($statuses as $status) {

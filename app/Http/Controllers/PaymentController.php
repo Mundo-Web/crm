@@ -48,7 +48,7 @@ class PaymentController extends BasicController
         return $body;
     }
 
-    public function afterSave(Request $request, object $jpa)
+    public function afterSave(Request $request, object $jpa, ?bool $isNew)
     {
         $total_amount = Payment::where('project_id', $jpa->project_id)->sum('amount');
         $projectJpa = Project::find($jpa->project_id);

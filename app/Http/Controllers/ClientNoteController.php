@@ -57,7 +57,7 @@ class ClientNoteController extends BasicController
         return $body;
     }
 
-    public function afterSave(Request $request, object $jpa)
+    public function afterSave(Request $request, object $jpa, ?bool $isNew)
     {
         $mentions = $request->mentions;
         $tasks = $request->tasks;
