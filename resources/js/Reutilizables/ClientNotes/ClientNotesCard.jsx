@@ -4,7 +4,7 @@ import TaskCard from "../Tasks/TaskCard"
 
 const ClientNotesCard = ({ type, name, description, created_at, tasks, onTaskChange }) => {
   if (!type) {
-    return <div className="card card-body p-2" style={{ border: '1px solid #dee2e6' }}>
+    return <div className="card card-body p-2 mb-2" style={{ border: '1px solid #dee2e6' }}>
       <p className="card-text mb-0">
         <i className='mdi mdi-clock me-1'></i>
         {name}
