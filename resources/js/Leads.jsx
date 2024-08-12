@@ -260,7 +260,7 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
 
     const request = {
       id: idRef.current.value,
-      contact_name: contactNameRef.current.value,
+      contact_name: contactNameRef.current.value || 'Lead anonimo',
       contact_email: contactEmailRef.current.value,
       contact_phone: contactPhoneRef.current.value,
       name: nameRef.current.value,
@@ -293,10 +293,18 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
   const onPhoneChange = async (e) => {
     e.target.disabled = true
     const phone = contactPhoneRef.current.value
-    const result = await leadsRest.paginate({ filter: ['contact_phone', '=', phone], requireData: false})
+    const result = await leadsRest.paginate({ filter: ['contact_phone', '=', phone], requireTotalCount: true, requireData: false })
     e.target.disabled = false
     if (!result) return
-    console.log(result)
+    if (result.totalCount > 0) {
+      // Mostrar un mensaje de error que se cierre coon boton y no con timer
+      Swal.fire({
+        title: 'Oops',
+        text: 'Este numero de telefono ya esta registrado',
+        icon: 'warn',
+        confirmButtonText: 'Ok',
+      })
+    }
   }
 
   const tasks = []
@@ -725,12 +733,12 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
     <Modal modalRef={newLeadModalRef} title='Nuevo lead' btnSubmitText='Guardar' onSubmit={onModalSubmit}>
       <div className="row mb-0">
         <input ref={idRef} type="hidden" />
-        <InputFormGroup eRef={contactNameRef} label='Nombre completo' required />
+        <InputFormGroup eRef={contactNameRef} label='Nombre completo' />
         <InputFormGroup eRef={contactEmailRef} label='Correo electronico' type="email" col='col-md-6' />
         <InputFormGroup eRef={contactPhoneRef} label='Telefono' type="tel" col='col-md-6' required onBlur={onPhoneChange} />
-        <InputFormGroup eRef={nameRef} label='Empresa / Marca' col='col-md-6' required />
+        <InputFormGroup eRef={nameRef} label='Empresa / Marca' col='col-md-6' />
         <InputFormGroup eRef={webUrlRef} label='Link de WEB' col='col-md-6' />
-        <TextareaFormGroup eRef={messageRef} label='Mensaje' placeholder='Ingresa tu mensaje' rows={4} required />
+        <TextareaFormGroup eRef={messageRef} label='Mensaje' placeholder='Ingresa tu mensaje' rows={4} />
       </div>
     </Modal>
 

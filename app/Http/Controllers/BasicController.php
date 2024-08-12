@@ -130,7 +130,7 @@ class BasicController extends Controller
         $totalCount = $instance->count();
       }
 
-      $jpas = null;
+      $jpas = [];
       if ($request->requireData !== false) {
         $jpas = $request->isLoadingAll
           ? $instance->get()
