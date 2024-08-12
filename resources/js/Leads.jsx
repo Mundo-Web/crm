@@ -301,7 +301,7 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
       Swal.fire({
         title: 'Oops',
         text: 'Este numero de telefono ya esta registrado',
-        icon: 'warn',
+        icon: 'warning',
         confirmButtonText: 'Ok',
       })
     }
