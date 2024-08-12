@@ -32,8 +32,6 @@ const usetsRest = new UsersRest()
 
 const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, session, can, APP_DOMAIN, lead }) => {
 
-  console.log(GET)
-
   const modalRef = useRef()
   const newLeadModalRef = useRef()
   const gridRef = useRef()
@@ -280,14 +278,14 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
     $(newLeadModalRef.current).modal('hide')
   }
 
-  const onOpenModal = () => {
-    idRef.current.value = null
-    contactNameRef.current.value = null
-    contactEmailRef.current.value = null
-    contactPhoneRef.current.value = null
-    nameRef.current.value = null
-    webUrlRef.current.value = null
-    messageRef.current.value = null
+  const onOpenModal = (data = {}) => {
+    idRef.current.value = data?.id
+    contactNameRef.current.value = data?.contact_name ?? ''
+    contactEmailRef.current.value = data?.contact_email ?? ''
+    contactPhoneRef.current.value = data?.contact_phone ?? ''
+    nameRef.current.value = data?.name ?? ''
+    webUrlRef.current.value = data?.web_url ?? ''
+    messageRef.current.value = data?.message ?? ''
 
     $(newLeadModalRef.current).modal('show')
   }
@@ -412,6 +410,10 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
               width: 240,
               cellTemplate: (container, { data }) => {
                 container.attr('style', 'display: flex; gap: 4px; overflow: visible')
+
+                ReactAppend(container, <TippyButton className='btn btn-xs btn-soft-warning' title='Editar lead' onClick={() => onOpenModal(data)}>
+                  <i className='fa fa-pencil'></i>
+                </TippyButton>)
 
                 ReactAppend(container, <TippyButton className='btn btn-xs btn-soft-primary' title='Ver detalles' onClick={() => onLeadClicked(data)}>
                   <i className='fa fa-eye'></i>
