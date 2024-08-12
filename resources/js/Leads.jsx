@@ -258,10 +258,6 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
   const onModalSubmit = async (e) => {
     e.preventDefault()
 
-    const isConfirmed = await onPhoneChange(true)
-
-    if (!isConfirmed) return
-
     const request = {
       id: idRef.current.value,
       contact_name: contactNameRef.current.value || 'Lead anonimo',
@@ -273,6 +269,11 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
       client_width: window.screen.width,
       client_height: window.screen.height,
       client_system: navigator.platform ?? 'Linux'
+    }
+
+    if (!request.id) {
+      const isConfirmed = await onPhoneChange(true)
+      if (!isConfirmed) return
     }
 
     const result = await leadsRest.save(request)
