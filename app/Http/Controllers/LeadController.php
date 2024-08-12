@@ -88,6 +88,7 @@ class LeadController extends BasicController
         $body['manage_status_id'] = $manage_status;
         $body['source'] = env('APP_NAME');
         $body['origin'] = env('APP_NAME');
+        $body['triggered_by'] = 'Formulario';
         $body['date'] = Trace::getDate('date');
         $body['time'] = Trace::getDate('time');
         $body['ip'] = $request->ip();
