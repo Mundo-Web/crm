@@ -538,7 +538,7 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
                                   </li>
                                   <li className="list-inline-item">
                                     <Tippy content={`${lead.pending_tasks_count} tareas pendientes`}>
-                                      <span style={{ position: 'relative' }}>
+                                      <span style={{ position: 'relative', cursor: 'pointer' }}>
                                         <i className="mdi mdi-format-align-left"></i>
                                         {
                                           lead.notes_count > 0 &&
@@ -553,7 +553,7 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
                                   </li>
                                   <li className="list-inline-item">
                                     <Tippy content={`${lead.notes_count} registros de actividad`}>
-                                      <span style={{ position: 'relative' }}>
+                                      <span style={{ position: 'relative', cursor: 'pointer' }}>
                                         <i className="mdi mdi-comment-outline"></i>
                                         {
                                           lead.notes_count > 0 &&
