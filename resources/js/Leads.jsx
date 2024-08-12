@@ -296,7 +296,6 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
     const phone = contactPhoneRef.current.value.keep('0-9')
 
     contactPhoneRef.current.disabled = true
-    $(newLeadModalRef.current).find('[type="submit"]').prop('disabled', true)
     const result = await leadsRest.paginate({
       filter: ['contact_phone', '=', phone],
       requireTotalCount: true,
@@ -307,7 +306,6 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
       }]
     })
     contactPhoneRef.current.disabled = false
-    $(newLeadModalRef.current).find('[type="submit"]').prop('disabled', false)
 
     if (result?.totalCount > 0) {
       const lead = result.data[0]
