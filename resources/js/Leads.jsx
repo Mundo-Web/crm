@@ -265,7 +265,7 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
       contact_phone: contactPhoneRef.current.value.keep('0-9'),
       name: nameRef.current.value || 'Lead anonimo',
       web_url: webUrlRef.current.value,
-      message: messageRef.current.value,
+      message: messageRef.current.value || 'Sin mensaje',
       client_width: window.screen.width,
       client_height: window.screen.height,
       client_system: navigator.platform ?? 'Linux'
