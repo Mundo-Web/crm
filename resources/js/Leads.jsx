@@ -1,29 +1,29 @@
+import Tippy from '@tippyjs/react'
+import Quill from 'quill'
 import React, { useEffect, useRef, useState } from 'react'
 import { createRoot } from 'react-dom/client'
+import { GET, Local } from 'sode-extend-react'
+import Swal from 'sweetalert2'
+import '../css/leads.css'
+import ClientNotesCard from './Reutilizables/ClientNotes/ClientNotesCard.jsx'
+import TaskCard from './Reutilizables/Tasks/TaskCard.jsx'
+import Correlative from './Utils/Correlative.js'
 import CreateReactScript from './Utils/CreateReactScript.jsx'
+import ReactAppend from './Utils/ReactAppend.jsx'
+import ClientNotesRest from './actions/ClientNotesRest.js'
+import LeadsRest from './actions/LeadsRest.js'
+import TasksRest from './actions/TasksRest.js'
+import UsersRest from './actions/UsersRest.js'
 import Adminto from './components/Adminto.jsx'
 import Modal from './components/Modal.jsx'
-import LeadsRest from './actions/LeadsRest.js'
-import Tippy from '@tippyjs/react'
-import Correlative from './Utils/Correlative.js'
-import ClientNotesRest from './actions/ClientNotesRest.js'
-import Swal from 'sweetalert2'
-import ClientNotesCard from './Reutilizables/ClientNotes/ClientNotesCard.jsx'
 import Table from './components/Table.jsx'
-import { GET, Local } from 'sode-extend-react'
-import '../css/leads.css'
-import TippyButton from './components/form/TippyButton.jsx'
-import ReactAppend from './Utils/ReactAppend.jsx'
 import Dropdown from './components/dropdown/DropDown.jsx'
 import DropdownItem from './components/dropdown/DropdownItem.jsx'
-import TasksRest from './actions/TasksRest.js'
-import TaskCard from './Reutilizables/Tasks/TaskCard.jsx'
 import InputFormGroup from './components/form/InputFormGroup.jsx'
 import TextareaFormGroup from './components/form/TextareaFormGroup.jsx'
-import UsersRest from './actions/UsersRest.js'
-import Quill from 'quill'
+import TippyButton from './components/form/TippyButton.jsx'
 
-import "quill-mention/autoregister";
+import "quill-mention/autoregister"
 
 const leadsRest = new LeadsRest()
 const clientNotesRest = new ClientNotesRest()
@@ -288,6 +288,10 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
     messageRef.current.value = data?.message ?? ''
 
     $(newLeadModalRef.current).modal('show')
+  }
+
+  const onPhoneChange = async (e) => {
+    console.log('hola mundo')
   }
 
   const tasks = []
@@ -718,7 +722,7 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
         <input ref={idRef} type="hidden" />
         <InputFormGroup eRef={contactNameRef} label='Nombre completo' required />
         <InputFormGroup eRef={contactEmailRef} label='Correo electronico' type="email" col='col-md-6' />
-        <InputFormGroup eRef={contactPhoneRef} label='Telefono' type="tel" col='col-md-6' required />
+        <InputFormGroup eRef={contactPhoneRef} label='Telefono' type="tel" col='col-md-6' required onBlur={onPhoneChange} />
         <InputFormGroup eRef={nameRef} label='Empresa / Marca' col='col-md-6' required />
         <InputFormGroup eRef={webUrlRef} label='Link de WEB' col='col-md-6' />
         <TextareaFormGroup eRef={messageRef} label='Mensaje' placeholder='Ingresa tu mensaje' rows={4} required />
