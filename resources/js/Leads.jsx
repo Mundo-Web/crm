@@ -412,7 +412,7 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
                 container.attr('style', 'display: flex; gap: 4px; overflow: visible')
 
                 ReactAppend(container, <TippyButton className='btn btn-xs btn-soft-warning' title='Editar lead' onClick={() => onOpenModal(data)}>
-                  <i className='fa fa-pencil'></i>
+                  <i className='fa fa-pen'></i>
                 </TippyButton>)
 
                 ReactAppend(container, <TippyButton className='btn btn-xs btn-soft-primary' title='Ver detalles' onClick={() => onLeadClicked(data)}>
