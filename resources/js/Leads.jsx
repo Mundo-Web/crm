@@ -63,14 +63,14 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
       setLeadLoaded(null)
       history.pushState(null, null, '/leads')
     });
-    if (!lead) return 
+    if (!lead) return
 
     leadsRest.get(lead).then(data => {
       if (!data) return
       setLeadLoaded(data)
       setNotes([])
       $(modalRef.current).modal('show')
-      if (GET.annotation) { 
+      if (GET.annotation) {
         console.log('clickando')
         $(`[data-name="${GET.annotation}"]`).click()
       }
@@ -193,7 +193,7 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
         ends_at: taskEndsAtRef.current.value,
         mentions
       }] : [],
-      mentions: !isTask ? mentions: []
+      mentions: !isTask ? mentions : []
     })
     if (!result) return
 
@@ -463,6 +463,8 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
                     <ul className="sortable-list list-unstyled taskList" id={`status-${correlative}`} data-id={status.id}>
                       {
                         leads.filter(x => x.status_id == status.id).sort((a, b) => {
+                          return a.created_at > b.created_at ? -1 : 1
+                        }).sort((a, b) => {
                           return a.assigned_to == session.service_user.id ? -1 : 1
                         }).map((lead, i) => {
                           return <li id={`${lead.id}`} key={`lead-${i}`} style={{ cursor: 'move' }} className={lead.assigned_to == session.service_user.id ? 'border border-primary' : ''}>
