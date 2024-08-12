@@ -542,6 +542,9 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
                                     </Tippy>
                                   </li>
                                 </ul>
+                                <div>
+                                  <small className='text-muted'>{moment(lead.created_at).format('LLL')}</small>
+                                </div>
                               </div>
                             </div>
                           </li>
