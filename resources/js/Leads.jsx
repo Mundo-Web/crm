@@ -479,7 +479,7 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
                                     {lead.contact_name}
                                   </a>
                                 </h5>
-                                <ul className="list-inline d-flex align-items-center gap-1">
+                                <ul className="list-inline d-flex align-items-center gap-1 mb-2">
                                   <li className="list-inline-item">
                                     {
                                       !lead.assigned_to
