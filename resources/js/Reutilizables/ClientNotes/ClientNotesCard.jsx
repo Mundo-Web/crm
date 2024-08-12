@@ -3,6 +3,17 @@ import HtmlContent from "../../Utils/HtmlContent"
 import TaskCard from "../Tasks/TaskCard"
 
 const ClientNotesCard = ({ type, name, description, created_at, tasks, onTaskChange }) => {
+  if (!type) {
+    return <div className="card card-body">
+      <p className="card-text">
+        <i className='mdi mdi-clock me-1'></i>
+        {name}
+      </p>
+      <p className="card-text">
+        <small className="text-muted">{moment(created_at).format('LLLL')}</small>
+      </p>
+    </div>
+  }
   return <div className="card border border-primary mb-2">
     {
       name &&
