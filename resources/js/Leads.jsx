@@ -2,7 +2,7 @@ import Tippy from '@tippyjs/react'
 import Quill from 'quill'
 import React, { useEffect, useRef, useState } from 'react'
 import { createRoot } from 'react-dom/client'
-import { GET, Local } from 'sode-extend-react'
+import { GET, Local, String } from 'sode-extend-react'
 import Swal from 'sweetalert2'
 import '../css/leads.css'
 import ClientNotesCard from './Reutilizables/ClientNotes/ClientNotesCard.jsx'
@@ -262,7 +262,7 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
       id: idRef.current.value,
       contact_name: contactNameRef.current.value || 'Lead anonimo',
       contact_email: contactEmailRef.current.value,
-      contact_phone: contactPhoneRef.current.value,
+      contact_phone: contactPhoneRef.current.value.keep('0-9'),
       name: nameRef.current.value || 'Lead anonimo',
       web_url: webUrlRef.current.value,
       message: messageRef.current.value,
@@ -293,7 +293,7 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
   const onPhoneChange = async (e) => {
     e.target.disabled = true
     $(newLeadModalRef.current).find('[type="submit"]').prop('disabled', true)
-    const phone = contactPhoneRef.current.value
+    const phone = contactPhoneRef.current.value.keep('0-9')
     const result = await leadsRest.paginate({
       filter: ['contact_phone', '=', phone],
       requireTotalCount: true,
