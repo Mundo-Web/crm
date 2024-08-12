@@ -73,7 +73,7 @@ class LeadController extends BasicController
     {
         return $model::select('clients.*')
             ->withCount(['notes', 'tasks', 'pendingTasks'])
-            ->with(['status', 'assigned', 'manageStatus'])
+            ->with(['status', 'assigned', 'manageStatus', 'creator'])
             ->join('statuses AS status', 'status.id', 'status_id')
             ->leftJoin('statuses AS manage_status', 'manage_status.id', 'manage_status_id')
             ->where('status.table_id', 'e05a43e5-b3a6-46ce-8d1f-381a73498f33')
