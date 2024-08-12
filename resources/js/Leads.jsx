@@ -664,7 +664,7 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
               <div key={`tab-note-type-activity`} className='tab-pane active' id={`note-type-activity`}>
                 {
                   notes.sort((a, b) => b.created_at > a.created_at ? 1 : -1).map((note, i) => {
-                    return <ClientNotesCard key={`note-${i}`} {...note} onTaskChange={onTaskStatusChange} />
+                    return <ClientNotesCard key={`note-${i}`} {...note} onTaskChange={onTaskStatusChange} showOptions={false} session={session}/>
                   })
                 }
 
@@ -718,7 +718,7 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
                     <hr />
                     {
                       notes.filter(x => x.note_type_id == type.id).sort((a, b) => b.created_at > a.created_at ? 1 : -1).map((note, i) => {
-                        return <ClientNotesCard key={`note-${i}`} {...note} />
+                        return <ClientNotesCard key={`note-${i}`} {...note} session={session} />
                       })
                     }
                   </div>

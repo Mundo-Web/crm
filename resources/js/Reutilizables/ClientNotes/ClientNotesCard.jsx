@@ -2,7 +2,7 @@ import React from "react"
 import HtmlContent from "../../Utils/HtmlContent"
 import TaskCard from "../Tasks/TaskCard"
 
-const ClientNotesCard = ({ type, name, description, created_at, tasks, onTaskChange }) => {
+const ClientNotesCard = ({ type, name, description, created_at, user_id, tasks, onTaskChange, showOptions = true, session }) => {
   if (!type) {
     return <div className="card card-body p-2 mb-2" style={{ border: '1px solid #dee2e6' }}>
       <p className="card-text mb-0">
@@ -10,23 +10,40 @@ const ClientNotesCard = ({ type, name, description, created_at, tasks, onTaskCha
         {name}
       </p>
       <p className="card-text">
-        <small className="text-muted">{moment(created_at).format('LLLL')}</small>
+        <small className="text-muted">{moment(created_at).format('LLL')}</small>
       </p>
     </div>
   }
   return <div className="card border border-primary mb-2">
     {
       name &&
-      <div className="card-header p-2">
+      <div className="card-header p-2 d-flex justify-content-between align-items-center">
         <h5 className='card-title mb-0'><i className={`${type?.icon ?? 'mdi mdi-clock'} me-1`}></i> {name}</h5>
+        {
+          (showOptions && user_id == session.service_user.id) && <div className="dropdown">
+            <a className="dropdown-toggle arrow-none card-drop" data-bs-toggle="dropdown" aria-expanded="false" style={{ cursor: 'pointer' }}>
+              <i className="mdi mdi-dots-vertical"></i>
+            </a>
+            <div className="dropdown-menu dropdown-menu-end">
+              <a className="dropdown-item" style={{ cursor: 'pointer' }}>
+                <i className="fa fa-pen me-1"></i>
+                Editar
+              </a>
+              <a className="dropdown-item" style={{ cursor: 'pointer' }}>
+                <i className="fa fa-trash me-1"></i>
+                Eliminar
+              </a>
+            </div>
+          </div>
+        }
       </div>
     }
     <div className='card-body p-2'>
       {
         description &&
-        <p className="card-text">
+        <div className="card-text">
           <HtmlContent html={description} />
-        </p>
+        </div>
       }
       {
         tasks.length > 0 &&
@@ -35,7 +52,7 @@ const ClientNotesCard = ({ type, name, description, created_at, tasks, onTaskCha
         })
       }
       <p className="card-text">
-        <small className="text-muted">{moment(created_at).format('LLLL')}</small>
+        <small className="text-muted">{moment(created_at).format('LLL')}</small>
       </p>
     </div>
   </div>
