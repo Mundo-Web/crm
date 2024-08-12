@@ -130,12 +130,15 @@ class BasicController extends Controller
         $totalCount = $instance->count();
       }
 
-      $jpas = $request->isLoadingAll
-        ? $instance->get()
-        : $instance
-        ->skip($request->skip ?? 0)
-        ->take($request->take ?? 10)
-        ->get();
+      $jpas = null;
+      if ($request->requireData != false) {
+        $jpas = $request->isLoadingAll
+          ? $instance->get()
+          : $instance
+          ->skip($request->skip ?? 0)
+          ->take($request->take ?? 10)
+          ->get();
+      } 
 
       $response->status = 200;
       $response->message = 'Operación correcta';
