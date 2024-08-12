@@ -258,7 +258,9 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
   const onModalSubmit = async (e) => {
     e.preventDefault()
 
-    await onPhoneChange()
+    const isConfirmed = await onPhoneChange(true)
+
+    if (!isConfirmed) return
 
     const request = {
       id: idRef.current.value,
@@ -292,7 +294,7 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
     $(newLeadModalRef.current).modal('show')
   }
 
-  const onPhoneChange = async () => {
+  const onPhoneChange = async (saving = false) => {
     const phone = contactPhoneRef.current.value.keep('0-9')
 
     contactPhoneRef.current.disabled = true
@@ -309,13 +311,16 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
 
     if (result?.totalCount > 0) {
       const lead = result.data[0]
-      await Swal.fire({
+      const { isConfirmed } = await Swal.fire({
         title: 'Lead registrado!',
         text: lead.creator ? `${lead.creator.fullname} ha registrado este lead anteriormente con el nombre de ${lead.contact_name}` : `Este numero de telefono ha sido registrado anteriormente con el nombre de ${lead.contact_name}`,
         icon: 'warning',
-        confirmButtonText: 'Ok',
+        confirmButtonText: saving ? 'Continuar de todos modos' : 'Ok',
+        cancelButtonText: 'Cancelar',
+        showCancelButton: saving,
       })
-    }
+      return isConfirmed
+    } return true
   }
 
   const tasks = []
