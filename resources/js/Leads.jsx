@@ -258,6 +258,8 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
   const onModalSubmit = async (e) => {
     e.preventDefault()
 
+    await onPhoneChange()
+
     const request = {
       id: idRef.current.value,
       contact_name: contactNameRef.current.value || 'Lead anonimo',
@@ -290,10 +292,11 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
     $(newLeadModalRef.current).modal('show')
   }
 
-  const onPhoneChange = async (e) => {
-    e.target.disabled = true
-    $(newLeadModalRef.current).find('[type="submit"]').prop('disabled', true)
+  const onPhoneChange = async () => {
     const phone = contactPhoneRef.current.value.keep('0-9')
+
+    contactPhoneRef.current.disabled = true
+    $(newLeadModalRef.current).find('[type="submit"]').prop('disabled', true)
     const result = await leadsRest.paginate({
       filter: ['contact_phone', '=', phone],
       requireTotalCount: true,
@@ -303,14 +306,12 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
         desc: true
       }]
     })
-    e.target.disabled = false
+    contactPhoneRef.current.disabled = false
     $(newLeadModalRef.current).find('[type="submit"]').prop('disabled', false)
 
-    if (!result) return
-
-    if (result.totalCount > 0) {
+    if (result?.totalCount > 0) {
       const lead = result.data[0]
-      Swal.fire({
+      await Swal.fire({
         title: 'Lead registrado!',
         text: lead.creator ? `${lead.creator.fullname} ha registrado este lead anteriormente con el nombre de ${lead.contact_name}` : `Este numero de telefono ha sido registrado anteriormente con el nombre de ${lead.contact_name}`,
         icon: 'warning',
