@@ -291,7 +291,11 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
   }
 
   const onPhoneChange = async (e) => {
-    console.log('hola mundo')
+    e.target.disabled = true
+    const phone = contactPhoneRef.current.value
+    const result = await leadsRest.paginate({ filter: ['contact_phone', '=', phone]})
+    e.target.disabled = false
+    console.log(result)
   }
 
   const tasks = []
