@@ -292,13 +292,17 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
 
   const onPhoneChange = async (e) => {
     e.target.disabled = true
+    $(newLeadModalRef.current).find('[type="submit"]').prop('disabled', true)
     const phone = contactPhoneRef.current.value
     const result = await leadsRest.paginate({ filter: ['contact_phone', '=', phone], requireTotalCount: true, requireData: false })
     e.target.disabled = false
+    $(newLeadModalRef.current).find('[type="submit"]').prop('disabled', false)
+
     if (!result) return
+    
     if (result.totalCount > 0) {
       Swal.fire({
-        title: 'Mmmm!',
+        title: 'Lead registrado!',
         text: 'Este numero de telefono ha sido registrado anteriormente',
         icon: 'warning',
         confirmButtonText: 'Ok',
