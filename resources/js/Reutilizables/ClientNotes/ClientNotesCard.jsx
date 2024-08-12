@@ -7,7 +7,7 @@ const ClientNotesCard = ({ type, name, description, created_at, tasks, onTaskCha
     {
       name &&
       <div className="card-header p-2">
-        <h5 className='card-title mb-0'><i className={`${type?.icon} me-1`}></i> {name}</h5>
+        <h5 className='card-title mb-0'><i className={`${type?.icon ?? 'mdi mdi-clock'} me-1`}></i> {name}</h5>
       </div>
     }
     <div className='card-body p-2'>
