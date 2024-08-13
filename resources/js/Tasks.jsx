@@ -146,7 +146,7 @@ const Tasks = () => {
             ReactAppend(container, <>
               <b className="d-block my-0">{client.contact_name}</b>
               <small>
-                <i className="mdi mdi-phone"></i>
+                <i className="mdi mdi-phone me-1"></i>
                 {client.country_prefix || ''}{client.contact_phone}
               </small>
             </>)
@@ -163,73 +163,22 @@ const Tasks = () => {
             </>)
           }
         },
-        {
-          dataField: 'description',
-          caption: 'Tarea',
-          cellTemplate: (container, { data }) => {
-            const html = $(`<div>${data.description}</div>`);
-            container.text(html.text());
-          }
-        },
-        {
-          dataField: 'color',
-          caption: 'Color',
-          cellTemplate: (container, { data }) => {
-            ReactAppend(container, <span className={`badge rounded-pill`} style={{ backgroundColor: data.color || '#343a40' }}>{data.color}</span>)
-          }
-        },
-        {
-          dataField: 'description',
-          caption: 'Descripcion',
-          cellTemplate: (container, { value }) => {
-            if (!value) ReactAppend(container, <i className='text-muted'>- Sin descripcion -</i>)
-            else ReactAppend(container, value)
-          }
-        },
-        {
-          dataField: 'status',
-          caption: 'Estado',
-          dataType: 'boolean',
-          cellTemplate: (container, { data }) => {
-            switch (data.status) {
-              case 1:
-                ReactAppend(container, <span className='badge bg-success rounded-pill'>Activo</span>)
-                break
-              case 0:
-                ReactAppend(container, <span className='badge bg-danger rounded-pill'>Inactivo</span>)
-                break
-              default:
-                ReactAppend(container, <span className='badge bg-dark rounded-pill'>Eliminado</span>)
-                break
-            }
-          }
-        },
-        {
-          caption: 'Acciones',
-          cellTemplate: (container, { data }) => {
-            container.attr('style', 'display: flex; gap: 4px; overflow: unset')
+        // {
+        //   caption: 'Acciones',
+        //   cellTemplate: (container, { data }) => {
+        //     container.attr('style', 'display: flex; gap: 4px; overflow: unset')
 
-            ReactAppend(container, <TippyButton className='btn btn-xs btn-soft-primary' title='Editar' onClick={() => onModalOpen(data)}>
-              <i className='fa fa-pen'></i>
-            </TippyButton>)
+        //     ReactAppend(container, <TippyButton className='btn btn-xs btn-soft-primary' title='Editar' onClick={() => onModalOpen(data)}>
+        //       <i className='fa fa-pen'></i>
+        //     </TippyButton>)
 
-            ReactAppend(container, <TippyButton className='btn btn-xs btn-light' title={data.status === null ? 'Restaurar' : 'Cambiar estado'} onClick={() => onStatusChange(data)}>
-              {
-                data.status === 1
-                  ? <i className='fa fa-toggle-on text-success' />
-                  : data.status === 0 ?
-                    <i className='fa fa-toggle-off text-danger' />
-                    : <i className='fas fa-trash-restore' />
-              }
-            </TippyButton>)
-
-            ReactAppend(container, <TippyButton className='btn btn-xs btn-soft-danger' title='Eliminar' onClick={() => onDeleteClicked(data.id)}>
-              <i className='fa fa-trash-alt'></i>
-            </TippyButton>)
-          },
-          allowFiltering: false,
-          allowExporting: false
-        }
+        //     ReactAppend(container, <TippyButton className='btn btn-xs btn-soft-danger' title='Eliminar' onClick={() => onDeleteClicked(data.id)}>
+        //       <i className='fa fa-trash-alt'></i>
+        //     </TippyButton>)
+        //   },
+        //   allowFiltering: false,
+        //   allowExporting: false
+        // }
       ]} />
   </>
 }
