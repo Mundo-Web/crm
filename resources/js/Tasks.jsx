@@ -141,15 +141,16 @@ const Tasks = () => {
         {
           dataField: 'client_note.client.contact_name',
           caption: 'Contacto asociado',
+          width: '185px',
           cellTemplate: (container, { data }) => {
             const client = data.client_note.client
-            ReactAppend(container, <>
-              <b className="d-block my-0">{client.contact_name}</b>
+            ReactAppend(container, <div style={{ width: '185px' }}>
+              <b className="d-block my-0 text-truncate">{client.contact_name}</b>
               <small>
                 <i className="mdi mdi-phone me-1"></i>
                 {client.country_prefix || ''}{client.contact_phone}
               </small>
-            </>)
+            </div>)
           }
         },
         {
