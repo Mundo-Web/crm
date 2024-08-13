@@ -1,12 +1,13 @@
 import React, { useEffect, useRef } from "react"
 
-const SelectFormGroup = ({ col, label, eRef, required = false, children, dropdownParent }) => {
+const SelectFormGroup = ({ col, label, eRef, required = false, children, dropdownParent, minimumResultsForSearch }) => {
 
   if (!eRef) eRef = useRef()
 
   useEffect(() => {
     $(eRef.current).select2({
-      dropdownParent
+      dropdownParent,
+      minimumResultsForSearch
     })
   }, [dropdownParent])
 

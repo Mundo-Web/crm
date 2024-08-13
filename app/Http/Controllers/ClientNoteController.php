@@ -25,7 +25,7 @@ class ClientNoteController extends BasicController
     {
         $response =  new dxResponse();
         try {
-            $notes = $this->model::with(['type', 'user', 'tasks'])
+            $notes = $this->model::with(['type', 'user', 'tasks', 'tasks.assigned'])
                 ->where('client_id', $client)
                 ->get();
 
@@ -83,16 +83,22 @@ class ClientNoteController extends BasicController
                 Task::create([
                     'model_id' => ClientNote::class,
                     'note_id' => $jpa->id,
+                    'type' => $task['type'],
+                    'priority' => $task['priority'],
                     'name' => $task['name'],
                     'description' => $task['description'] ?? null,
-                    'ends_at' => $task['ends_at']
+                    'ends_at' => $task['ends_at'],
+                    'assigned_to' => $task['assigned_to']
                 ]);
             }
         }
 
-        $jpa->type = $jpa->type()->first();
-        $jpa->user = $jpa->user()->first();
-        $jpa->tasks = $jpa->tasks()->get();
-        return $jpa;
+        $newJpa = ClientNote::where('id', $jpa->id)->with(['type', 'user', 'tasks', 'tasks.assigned'])->first();
+
+        // $jpa->type = $jpa->type()->first();
+        // $jpa->user = $jpa->user()->first();
+        // $jpa->tasks = $jpa->tasks()->get();
+        // $jpa->tasks->assigned = $jpa->tasks()->assigned()->first();
+        return $newJpa;
     }
 }

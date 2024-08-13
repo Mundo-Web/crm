@@ -7,6 +7,7 @@ import Adminto from './components/Adminto.jsx'
 import Modal from './components/Modal.jsx'
 import QuillFormGroup from './components/form/QuillFormGroup.jsx'
 import '../css/settings.css'
+import '../css/coming-soon.css'
 import SelectFormGroup from './components/form/SelectFormGroup.jsx'
 import { Editor } from '@tinymce/tinymce-react'
 import TextareaFormGroup from './components/form/TextareaFormGroup.jsx'
@@ -40,7 +41,6 @@ const Settings = ({ can, constants, statuses }) => {
         tinyRef.current.setContent(constant.value)
         break;
       default:
-        console.log(constant.value)
         valueRef.current.value = constant.value
         break;
     }

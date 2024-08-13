@@ -1,0 +1,1 @@
+import{C as r,c,R as e}from"./CreateReactScript-Cr76lECz.js";import{A as m}from"./Adminto-D9Qh2p9j.js";/* empty css                    */const n=()=>e.createElement(e.Fragment,null,e.createElement("div",{className:"row coming-soon",style:{height:"calc(100vh - 165px)"}}));r((a,t)=>{c(a).render(e.createElement(m,{...t,title:"Tareas"},e.createElement(n,{...t})))});

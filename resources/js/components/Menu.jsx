@@ -126,20 +126,13 @@ const Menu = ({ session, can, presets, APP_PROTOCOL, APP_DOMAIN, businesses }) =
           <li className="menu-title">Panel de navegacion</li>
           {can('dashboard', 'all', 'list') && <MenuItem href="/home" icon='mdi mdi-home'>Inicio</MenuItem>}
 
+          {/* <MenuItem href="/calendar" icon='mdi mdi-calendar'>Calendario</MenuItem> */}
+          <MenuItem href="/tasks" icon='mdi mdi-clipboard'>Tareas</MenuItem>
+
           <MenuItem href="/leads" icon='mdi mdi-texture'>Leads</MenuItem>
           {can('clients', 'all', 'list') && <MenuItem href="/clients" icon='mdi mdi-account-group'>Clientes</MenuItem>}
 
-          {
-            can('projects', 'root', 'all', 'list') &&
-            <MenuItemContainer title='Proyectos' icon='mdi mdi-page-next'>
-              <MenuItem href="/projects" icon='mdi mdi-page-layout-sidebar-left'>Todos</MenuItem>
-              {
-                presets.filter(x => x.table.name == 'Proyectos').map((view, i) => {
-                  return <MenuItem key={`menu-${i}`} href={`/projects/${view.id}`} icon='mdi mdi-page-layout-sidebar-left'>{view.name}</MenuItem>
-                })
-              }
-            </MenuItemContainer>
-          }
+          {can('projects', 'root', 'all', 'list') && <MenuItem href="/projects" icon='mdi mdi-page-next'>Proyectos</MenuItem>}
           {
             (can('users', 'root', 'all', 'list') || can('roles', 'root', 'all', 'list') || can('permissions', 'root', 'all', 'list')) &&
             <MenuItemContainer title='Usuarios y roles' icon='mdi mdi-account-lock'>

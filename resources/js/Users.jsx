@@ -10,8 +10,6 @@ const usersRest = new UsersRest()
 
 const Users = ({ can, users, roles, APP_DOMAIN }) => {
 
-  console.log(users)
-
   const onDeleteClicked = async (id) => {
     const result = await UsersRest.delete(id)
     if (!result) return

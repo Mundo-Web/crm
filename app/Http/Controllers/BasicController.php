@@ -61,6 +61,14 @@ class BasicController extends Controller
       'presets' => $views,
       'session' => Auth::user(),
       'notificationsCount' => $notificationsCount,
+      'global' => [
+        'WA_URL' => env('WA_URL'),
+        'PUBLIC_RSA_KEY' => Controller::$PUBLIC_RSA_KEY,
+        'APP_PROTOCOL' => env('APP_PROTOCOL', 'https'),
+        'APP_URL' => env('APP_URL'),
+        'APP_DOMAIN' => env('APP_DOMAIN', 'atalaya.localhost'),
+        'APP_CORRELATIVE' => env('APP_CORRELATIVE', 'crm'),
+      ],
       'WA_URL' => env('WA_URL'),
       'PUBLIC_RSA_KEY' => Controller::$PUBLIC_RSA_KEY,
       'APP_PROTOCOL' => env('APP_PROTOCOL', 'https'),
@@ -138,7 +146,7 @@ class BasicController extends Controller
           ->skip($request->skip ?? 0)
           ->take($request->take ?? 10)
           ->get();
-      } 
+      }
 
       $response->status = 200;
       $response->message = 'Operación correcta';

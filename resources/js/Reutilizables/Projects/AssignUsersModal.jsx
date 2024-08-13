@@ -41,8 +41,6 @@ const AssignUsersModal = ({ dataLoaded, setDataLoaded, grid2refresh }) => {
       project_id: idRef.current.value,
       users: $(usersRef.current).val()
     }
-
-    console.log(request)
     
     const result = await UsersByProjectsRest.massiveByProject(request)
     if (!result) return

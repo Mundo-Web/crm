@@ -1,5 +1,6 @@
 import { createInertiaApp } from '@inertiajs/react'
 import { Cookies, FetchParams } from 'sode-extend-react'
+import Global from './Global';
 
 const CreateReactScript = (render) => {
 
@@ -7,6 +8,11 @@ const CreateReactScript = (render) => {
     resolve: name => `/${name}.jsx`,
     setup: ({ el, props }) => {
       const properties = props.initialPage.props
+      if (properties?.global) {
+        for (const name in properties.global) {
+          Global.set(name, properties.global[name])
+        }
+      }
       const can = (page, ...keys) => {
         if (properties?.session?.is_owner) return true
         keys = keys.map(x => `${page}.${x}`)

@@ -8,6 +8,7 @@ use SoDe\Extend\Response;
 
 class TaskController extends BasicController
 {
+    public $reactView = 'Tasks';
     public $model = Task::class;
 
     public function status(Request $request)

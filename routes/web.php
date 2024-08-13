@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ApikeyController;
 use App\Http\Controllers\BasicController;
+use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\LeadController;
@@ -9,9 +10,9 @@ use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SettingController;
 use App\Http\Controllers\StatusController;
+use App\Http\Controllers\TaskController;
 use App\Http\Controllers\TypeController;
 use App\Http\Controllers\UserController;
-use App\Http\Controllers\UtilController;
 use App\Http\Controllers\ViewController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -28,8 +29,6 @@ use Inertia\Inertia;
 | be assigned to the "web" middleware group. Make something great!
 |
 */
-
-require __DIR__ . '/router.php';
 
 Route::get(
     'login',
@@ -49,6 +48,8 @@ Route::get('/', function (Request $request) {
 Route::middleware('auth')->group(function () {
     Route::get('/home', [BasicController::class, 'reactView'])->name('Home.jsx');
     Route::get('/clients', [ClientController::class, 'reactView'])->name('Clients.jsx');
+    // Route::get('/calendar', [CalendarController::class, 'reactView'])->name('Calendar.jsx');
+    Route::get('/tasks', [TaskController::class, 'reactView'])->name('Tasks.jsx');
     Route::get('/leads', [LeadController::class, 'reactView'])->name('Leads.jsx');
     Route::get('/leads/{lead}', [LeadController::class, 'reactView'])->name('Leads.jsx');
     Route::get('/clients/{view}', [ClientController::class, 'reactView'])->name('Clients.jsx');

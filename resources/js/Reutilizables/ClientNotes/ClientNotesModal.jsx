@@ -46,8 +46,6 @@ const ClientNotesModal = ({ can, client, setClient, grid2refresh, page }) => {
     $(modalNoteRef.current).modal('show')
   }
 
-  console.log(client)
-
   const onNoteSubmit = async (e) => {
     e.preventDefault()
     const request = {

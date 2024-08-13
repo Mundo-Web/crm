@@ -21,10 +21,18 @@ class Task extends Model
         'description',
         'ends_at',
         'status',
-        'asignable'
+        'asignable',
+        'type',
+        'priority',
+        'assigned_to'
     ];
 
     public function clientNote() {
         return $this->hasOne(ClientNote::class, 'id', 'note_id');
+    }
+
+    public function assigned()
+    {
+        return $this->hasOne(User::class, 'id', 'assigned_to');
     }
 }

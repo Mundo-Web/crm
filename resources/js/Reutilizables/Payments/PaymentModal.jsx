@@ -88,8 +88,6 @@ const PaymentModal = ({ can, dataLoaded, setDataLoaded, grid2refresh }) => {
     setIsEditing(true)
   }
 
-  console.log(maxAmount)
-
   const onDeletePayment = async (payment_id) => {
     const { isConfirmed } = await Swal.fire({
       title: "Estas seguro de eliminar este pago?",

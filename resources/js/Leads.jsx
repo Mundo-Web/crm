@@ -21,9 +21,12 @@ import Dropdown from './components/dropdown/DropDown.jsx'
 import DropdownItem from './components/dropdown/DropdownItem.jsx'
 import InputFormGroup from './components/form/InputFormGroup.jsx'
 import TextareaFormGroup from './components/form/TextareaFormGroup.jsx'
+import SelectFormGroup from './components/form/SelectFormGroup.jsx'
 import TippyButton from './components/form/TippyButton.jsx'
 
 import "quill-mention/autoregister"
+import SelectAPIFormGroup from './components/form/SelectAPIFormGroup.jsx'
+import SetSelectValue from './Utils/SetSelectValue.jsx'
 
 const leadsRest = new LeadsRest()
 const clientNotesRest = new ClientNotesRest()
@@ -35,8 +38,14 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
   const modalRef = useRef()
   const newLeadModalRef = useRef()
   const gridRef = useRef()
+
   const taskTitleRef = useRef()
-  const taskEndsAtRef = useRef()
+  // const taskEndsAtRef = useRef()
+  const taskTypeRef = useRef()
+  const taskPriorityRef = useRef()
+  const taskAssignedToRef = useRef()
+  const taskEndsAtDateRef = useRef()
+  const taskEndsAtTimeRef = useRef()
 
   // Form Ref
   const idRef = useRef()
@@ -72,7 +81,6 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
       setNotes([])
       $(modalRef.current).modal('show')
       if (GET.annotation) {
-        console.log('clickando')
         $(`[data-name="${GET.annotation}"]`).click()
       }
     })
@@ -109,7 +117,6 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
             allowedChars: /^[A-Za-z\sÅÄÖåäö]*$/,
             mentionDenotationChars: ["@", "#"],
             source: async function (searchTerm, renderList, ...others) {
-              console.log(others)
               const { data } = await usetsRest.paginate({ filter: ['fullname', 'contains', searchTerm] });
               renderList(data.map(({ relative_id, fullname }) => ({
                 id: relative_id,
@@ -169,7 +176,7 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
       case 'e20c7891-1ef8-4388-8150-4c1028cc4525':
         isTask = true
         title = `Nueva tarea`
-        if (!taskEndsAtRef.current.value) return Swal.fire({
+        if (!taskEndsAtDateRef.current.value || !taskEndsAtTimeRef.current.value) return Swal.fire({
           title: 'Oops',
           text: 'Ingresa la fecha de finalizacion de la tarea',
           timer: 2000
@@ -191,8 +198,11 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
       client_id: leadLoaded.id,
       tasks: isTask ? [{
         name: taskTitleRef.current.value,
+        type: taskTypeRef.current.value,
+        priority: taskPriorityRef.current.value,
         description: text ? content : undefined,
-        ends_at: taskEndsAtRef.current.value,
+        ends_at: `${taskEndsAtDateRef.current.value} ${taskEndsAtTimeRef.current.value}`,
+        assigned_to: taskAssignedToRef.current.value,
         mentions
       }] : [],
       mentions: !isTask ? mentions : []
@@ -202,7 +212,11 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
     editor.empty()
     idRefs[type].current.value = null
     taskTitleRef.current.value = ''
-    taskEndsAtRef.current.value = ''
+    $(taskTypeRef.current).val('Por hacer').trigger('change')
+    $(taskPriorityRef.current).val('Media').trigger('change')
+    $(taskAssignedToRef.current).val('').trigger('change')
+    taskEndsAtDateRef.current.value = ''
+    taskEndsAtTimeRef.current.value = ''
 
     const newNotes = structuredClone(notes)
     const index = newNotes.findIndex(x => x.id == result.id)
@@ -234,14 +248,19 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
     setTimeout(() => {
       quill.classList.remove('highlight');
     }, 2000);
-    
+
     idRefs[note.type.id].current.value = note.id || null
     $(quill).find('.ql-editor').html(note.description)
 
     if (note.type.id == 'e20c7891-1ef8-4388-8150-4c1028cc4525') {
-      taskTitleRef.current.value = note.name
-      $(quill).find('.ql-editor').html(note.tasks[0].description)
-      taskEndsAtRef.current.value = moment(note.tasks[0].ends_at).format('YYYY-MM-DD')
+      const task = note.tasks[0] ?? {}
+      taskTitleRef.current.value = task?.name
+      $(taskTypeRef.current).val(task?.type).trigger('change')
+      $(taskPriorityRef.current).val(task?.priority).trigger('change')
+      SetSelectValue(taskAssignedToRef.current, task?.assigned?.id, task?.assigned?.fullname)
+      $(quill).find('.ql-editor').html(task?.description)
+      taskEndsAtDateRef.current.value = moment(task?.ends_at).format('YYYY-MM-DD')
+      taskEndsAtTimeRef.current.value = moment(task?.ends_at).format('HH:mm')
     }
   }
 
@@ -740,14 +759,21 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
                       {
                         type.id == 'e20c7891-1ef8-4388-8150-4c1028cc4525' &&
                         <>
-                          <div className="col-lg-7 col-md-12 form-group mb-2">
-                            <label className='mb-1' htmlFor="task-title">Titulo de la tarea</label>
-                            <input ref={taskTitleRef} id='task-title' type="text" className='form-control' />
-                          </div>
-                          <div className="col-lg-5 col-md-12 form-group mb-2">
-                            <label className='mb-1' htmlFor="task-ends-at">Fecha finalización <b className='text-danger'>*</b></label>
-                            <input ref={taskEndsAtRef} id='task-ends-at' type="date" className='form-control' />
-                          </div>
+                          <InputFormGroup eRef={taskTitleRef} label='Titulo de la tarea' col='col-12' required/>
+                          <SelectFormGroup eRef={taskTypeRef} label="Tipo de tarea" col="col-lg-4 col-md-12" required dropdownParent={`#note-type-${type.id}`} minimumResultsForSearch={Infinity} >
+                            <option value="Llamada">Llamada</option>
+                            <option value="Correo">Correo</option>
+                            <option value="Por hacer">Por hacer</option>
+                          </SelectFormGroup>
+                          <SelectFormGroup eRef={taskPriorityRef} label="Prioridad" col="col-lg-3 col-md-12" required dropdownParent={`#note-type-${type.id}`} minimumResultsForSearch={Infinity}>
+                            <option value="Baja">Baja</option>
+                            <option value="Media">Media</option>
+                            <option value="Alta">Alta</option>
+                            <option value="Urgente">Urgente</option>
+                          </SelectFormGroup>
+                          <SelectAPIFormGroup eRef={taskAssignedToRef} label='Asignado a' col='col-lg-5 col-md-12' dropdownParent={`#note-type-${type.id}`} searchAPI='/api/users/paginate' searchBy='fullname' required/>
+                          <InputFormGroup eRef={taskEndsAtDateRef} label='Fecha finalización' type='date' col='col-lg-6 col-md-12' required />
+                          <InputFormGroup eRef={taskEndsAtTimeRef} label='Hora finalización' type='time' col='col-lg-6 col-md-12' required />
                         </>
                       }
                       <div className="col-12 mb-2">
