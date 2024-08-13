@@ -108,8 +108,8 @@ const Tasks = () => {
           caption: 'Titulo',
           dataType: 'string',
           width: '250px',
-          cellTemplate: (container, {data}) => {
-            ReactAppend(container, <div style={{width: '240px'}}>
+          cellTemplate: (container, { data }) => {
+            ReactAppend(container, <div style={{ width: '240px' }}>
               <b className="d-block my-0">{data.name}</b>
               <div className="mb-0">
                 <span class="badge bg-light text-dark me-1"><i className={types[data.type].icon}></i> {data.type}</span>
@@ -141,10 +141,14 @@ const Tasks = () => {
         {
           dataField: 'client_note.client.contact_name',
           caption: 'Contacto asociado',
-          cellTemplate: (container, {data}) => {
+          cellTemplate: (container, { data }) => {
+            const client = data.client_note.client
             ReactAppend(container, <>
-              <b className="d-block my-0">{data.client_note.client.contact_name}</b>
-              <small>{data.client_note.client.contact_phone}</small>
+              <b className="d-block my-0">{client.contact_name}</b>
+              <small>
+                <i className="mdi mdi-phone"></i>
+                {client.country_prefix || ''}{client.contact_phone}
+              </small>
             </>)
           }
         },
