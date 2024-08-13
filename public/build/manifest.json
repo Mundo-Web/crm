@@ -13,8 +13,8 @@
       "assets/Adminto-BfiZgK1t.css"
     ]
   },
-  "_AssignUsersModal-C5-eAq3v.js": {
-    "file": "assets/AssignUsersModal-C5-eAq3v.js",
+  "_AssignUsersModal-COWIPRHD.js": {
+    "file": "assets/AssignUsersModal-COWIPRHD.js",
     "name": "AssignUsersModal",
     "imports": [
       "_CreateReactScript-Cr76lECz.js",
@@ -24,16 +24,18 @@
       "_Table-BOyMB7KG.js",
       "_Dropdown-zA_zAB67.js",
       "_DropdownItem-Dd6zonp_.js",
-      "_Assigneds-D2Wd3Uy2.js",
+      "_Assigneds-BQczORkW.js",
+      "_server.browser-Dt1gYAOJ.js",
       "_SetSelectValue-CfjBp_ib.js"
     ]
   },
-  "_Assigneds-D2Wd3Uy2.js": {
-    "file": "assets/Assigneds-D2Wd3Uy2.js",
+  "_Assigneds-BQczORkW.js": {
+    "file": "assets/Assigneds-BQczORkW.js",
     "name": "Assigneds",
     "imports": [
       "_CreateReactScript-Cr76lECz.js",
-      "_Adminto-D9Qh2p9j.js"
+      "_Adminto-D9Qh2p9j.js",
+      "_server.browser-Dt1gYAOJ.js"
     ]
   },
   "_CreateReactScript-Cr76lECz.js": {
@@ -139,13 +141,20 @@
       "_Adminto-D9Qh2p9j.js"
     ]
   },
-  "_coming-soon-!~{00C}~.js": {
+  "_coming-soon-!~{00D}~.js": {
     "file": "assets/coming-soon-DjdwHcvt.css",
-    "src": "_coming-soon-!~{00C}~.js"
+    "src": "_coming-soon-!~{00D}~.js"
   },
   "_index-ED7l9UKr.js": {
     "file": "assets/index-ED7l9UKr.js",
     "name": "index",
+    "imports": [
+      "_CreateReactScript-Cr76lECz.js"
+    ]
+  },
+  "_server.browser-Dt1gYAOJ.js": {
+    "file": "assets/server.browser-Dt1gYAOJ.js",
+    "name": "server.browser",
     "imports": [
       "_CreateReactScript-Cr76lECz.js"
     ]
@@ -183,7 +192,7 @@
     ]
   },
   "resources/js/Clients.jsx": {
-    "file": "assets/Clients-Bw20nZm7.js",
+    "file": "assets/Clients-BPX0N8Q8.js",
     "name": "Clients",
     "src": "resources/js/Clients.jsx",
     "isEntry": true,
@@ -196,15 +205,16 @@
       "_SetSelectValue-CfjBp_ib.js",
       "_DropdownItem-Dd6zonp_.js",
       "_DropdownEnd-CXnHC35Z.js",
-      "_AssignUsersModal-C5-eAq3v.js",
+      "_AssignUsersModal-COWIPRHD.js",
       "_ReactAppend-BUdEshxq.js",
-      "_Assigneds-D2Wd3Uy2.js",
+      "_Assigneds-BQczORkW.js",
       "_Table-BOyMB7KG.js",
-      "_Dropdown-zA_zAB67.js"
+      "_Dropdown-zA_zAB67.js",
+      "_server.browser-Dt1gYAOJ.js"
     ]
   },
   "resources/js/Home.jsx": {
-    "file": "assets/Home-4j4v8nPk.js",
+    "file": "assets/Home-CUeNGgvw.js",
     "name": "Home",
     "src": "resources/js/Home.jsx",
     "isEntry": true,
@@ -213,11 +223,12 @@
       "_Adminto-D9Qh2p9j.js",
       "_DropdownEnd-CXnHC35Z.js",
       "_DropdownItem-Dd6zonp_.js",
-      "_Assigneds-D2Wd3Uy2.js"
+      "_Assigneds-BQczORkW.js",
+      "_server.browser-Dt1gYAOJ.js"
     ]
   },
   "resources/js/Leads.jsx": {
-    "file": "assets/Leads-DjrqV8e5.js",
+    "file": "assets/Leads-B2jrClsj.js",
     "name": "Leads",
     "src": "resources/js/Leads.jsx",
     "isEntry": true,
@@ -281,22 +292,23 @@
     ]
   },
   "resources/js/Projects.jsx": {
-    "file": "assets/Projects-Br8-Z8He.js",
+    "file": "assets/Projects-Brl_N_Hy.js",
     "name": "Projects",
     "src": "resources/js/Projects.jsx",
     "isEntry": true,
     "imports": [
       "_CreateReactScript-Cr76lECz.js",
       "_Adminto-D9Qh2p9j.js",
-      "_AssignUsersModal-C5-eAq3v.js",
-      "_Assigneds-D2Wd3Uy2.js",
+      "_AssignUsersModal-COWIPRHD.js",
+      "_Assigneds-BQczORkW.js",
       "_SetSelectValue-CfjBp_ib.js",
       "_TextareaFormGroup-DpQiZCGF.js",
       "_Table-BOyMB7KG.js",
       "_InputFormGroup-DfllSyoc.js",
       "_SelectFormGroup-8kFfSArR.js",
       "_Dropdown-zA_zAB67.js",
-      "_DropdownItem-Dd6zonp_.js"
+      "_DropdownItem-Dd6zonp_.js",
+      "_server.browser-Dt1gYAOJ.js"
     ]
   },
   "resources/js/Roles.jsx": {
@@ -361,7 +373,7 @@
     ]
   },
   "resources/js/Tasks.jsx": {
-    "file": "assets/Tasks-GNt-Sa8X.js",
+    "file": "assets/Tasks-suVZfoNU.js",
     "name": "Tasks",
     "src": "resources/js/Tasks.jsx",
     "isEntry": true,
@@ -370,7 +382,8 @@
       "_TasksRest-C2SmZ9uv.js",
       "_Adminto-D9Qh2p9j.js",
       "_Table-BOyMB7KG.js",
-      "_ReactAppend-BUdEshxq.js"
+      "_ReactAppend-BUdEshxq.js",
+      "_server.browser-Dt1gYAOJ.js"
     ],
     "css": [
       "assets/coming-soon-DjdwHcvt.css"

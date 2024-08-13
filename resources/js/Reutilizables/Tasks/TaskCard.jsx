@@ -63,13 +63,10 @@ const TaskCard = ({ id, status, name, description, assigned, priority, type, onC
           </div>
           <small className="text-muted ms-1">vence {moment(ends_at).fromNow()}</small>
         </div>
-        {
-          (type || priority) &&
-          <div className="mb-1">
-            {type && <span class="badge bg-light text-dark me-1"><i className={types[type].icon}></i> {type}</span>}
-            {priority && <span class={`badge ${priorities[priority].color}`}>{priority}</span>}
-          </div>
-        }
+        <div className="mb-1">
+          <span class="badge bg-light text-dark me-1"><i className={types[type].icon}></i> {type}</span>
+          <span class={`badge ${priorities[priority].color}`}>{priority}</span>
+        </div>
         <h5 className="mt-0">{name}</h5>
         {
           description &&

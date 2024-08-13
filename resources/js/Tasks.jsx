@@ -7,6 +7,8 @@ import TippyButton from "./components/form/TippyButton";
 import Table from "./components/Table";
 import CreateReactScript from "./Utils/CreateReactScript";
 import ReactAppend from "./Utils/ReactAppend";
+import Global from "./Utils/Global";
+import DxBox from "./components/dx/DxBox";
 
 const tasksRest = new TasksRest();
 
@@ -56,7 +58,7 @@ const Tasks = () => {
   }
 
   return <>
-    <Table className="coming-soon" gridRef={gridRef} title='Tareas' rest={tasksRest}
+    <Table gridRef={gridRef} title='Tareas' rest={tasksRest}
       toolBar={(container) => {
         container.unshift({
           widget: 'dxButton', location: 'after',
@@ -82,9 +84,39 @@ const Tasks = () => {
           visible: false
         },
         {
+          dataField: 'status',
+          caption: 'Estado',
+          width: '120px',
+          cellTemplate: (container, { data }) => {
+            container.attr('style', 'overflow: unset')
+            ReactAppend(container, <div>
+              <button className={`btn btn-xs ${statuses[data.status].color} btn-sm dropdown-toggle`} type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                <i className={statuses[data.status].icon}></i> {data.status} <i className="mdi mdi-chevron-down"></i>
+              </button>
+              <div className="dropdown-menu">
+                {Object.keys(statuses).map((statusName, i) => {
+                  return <span key={`status-${i}`} className="dropdown-item" style={{ cursor: 'pointer' }} onClick={() => onChange(id, statusName)}>
+                    <i className={statuses[statusName].icon}></i> {statusName}
+                  </span>
+                })}
+              </div>
+            </div>)
+          }
+        },
+        {
           dataField: 'name',
           caption: 'Titulo',
-          dataType: 'string'
+          dataType: 'string',
+          width: '250px',
+          cellTemplate: (container, {data}) => {
+            ReactAppend(container, <div style={{width: '240px'}}>
+              <b className="d-block my-0">{data.name}</b>
+              <div className="mb-0">
+                <span class="badge bg-light text-dark me-1"><i className={types[data.type].icon}></i> {data.type}</span>
+                <span class={`badge ${priorities[data.priority].color}`}>{data.priority}</span>
+              </div>
+            </div>)
+          }
         },
         {
           dataField: 'type',
@@ -93,7 +125,8 @@ const Tasks = () => {
           cellTemplate: (container, { data }) => {
             container.text(data.type)
             container.prepend(`<i class="${types[data.type].icon} me-1"></i>`)
-          }
+          },
+          visible: false
         },
         {
           dataField: 'priority',
@@ -102,6 +135,28 @@ const Tasks = () => {
           alignment: 'center',
           cellTemplate: (container, { data }) => {
             ReactAppend(container, <span className={`badge ${priorities[data.priority].color}`}>{data.priority}</span>)
+          },
+          visible: false
+        },
+        {
+          dataField: 'client_note.client.contact_name',
+          caption: 'Contacto asociado',
+          cellTemplate: (container, {data}) => {
+            ReactAppend(container, <>
+              <b className="d-block my-0">{data.name}</b>
+              <small>{data.contact_phone}</small>
+            </>)
+          }
+        },
+        {
+          dataField: 'assigned.fullname',
+          caption: 'Asignado a',
+          cellTemplate: (container, { data }) => {
+            if (!data.assigned) return
+            ReactAppend(container, <>
+              <img src={`//${Global.APP_DOMAIN}/api/profile/thumbnail/${data.assigned.relative_id}`} alt={data.assigned.fullname} class="img-fluid avatar-xs rounded-circle me-1"></img>
+              <b>{data.assigned.fullname}</b>
+            </>)
           }
         },
         {

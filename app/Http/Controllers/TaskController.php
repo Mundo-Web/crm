@@ -17,7 +17,7 @@ class TaskController extends BasicController
     public function setPaginationInstance(string $model)
     {
         return $model::select('tasks.*')
-            ->with(['clientNote'])
+            ->with(['clientNote', 'assigned', 'clientNote', 'clientNote.client'])
             ->join('client_notes AS client_note', 'client_note.id', 'tasks.note_id')
             ->join('clients AS client', 'client.id', 'client_note.client_id')
             ->where('client.business_id', Auth::user()->business_id);
