@@ -73,6 +73,10 @@
       line-height: unset;
 
     }
+
+    .ql-editor {
+      color: #6c757d;
+    }
   </style>
 </head>
 
@@ -91,6 +95,9 @@
 
   @if ($route == 'Home.jsx')
     <script src="/lte/assets/libs/jquery-knob/jquery.knob.min.js"></script>
+  @elseif($route == 'Calendar.jsx')
+    <link href="/lte/assets/libs/fullcalendar/main.min.css" rel="stylesheet" type="text/css" />
+    <script src="/lte/assets/libs/fullcalendar/main.min.js"></script>
   @elseif ($route == 'Leads.jsx')
     <script src="/lte/assets/libs/jquery-ui/jquery-ui.min.js"></script>
   @endif

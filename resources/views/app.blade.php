@@ -1,8 +1,3 @@
-@php
-  $route = Route::currentRouteName();
-  $component = Router::components[$route];
-@endphp
-
 <!DOCTYPE html>
 <html lang="es">
 
@@ -12,7 +7,7 @@
   <title>Login | Atalaya</title>
   <link rel="shortcut icon" href="/assets/img/icon.svg" type="image/png">
 
-  @vite('resources/js/' . $component['component'])
+  @vite('resources/js/' . Route::currentRouteName())
   @inertiaHead
 
   <style>
