@@ -144,7 +144,7 @@ const Tasks = () => {
           cellTemplate: (container, {data}) => {
             ReactAppend(container, <>
               <b className="d-block my-0">{data.client_note.client.contact_name}</b>
-              <small>{data.contact_phone}</small>
+              <small>{data.client_note.client.contact_phone}</small>
             </>)
           }
         },
