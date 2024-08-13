@@ -140,7 +140,7 @@
     ]
   },
   "_coming-soon-!~{00C}~.js": {
-    "file": "assets/coming-soon-BmvEEP_X.css",
+    "file": "assets/coming-soon-DjdwHcvt.css",
     "src": "_coming-soon-!~{00C}~.js"
   },
   "_index-ED7l9UKr.js": {
@@ -315,7 +315,7 @@
     ]
   },
   "resources/js/Settings.jsx": {
-    "file": "assets/Settings-B74Kze6k.js",
+    "file": "assets/Settings-nWq0QSUA.js",
     "name": "Settings",
     "src": "resources/js/Settings.jsx",
     "isEntry": true,
@@ -328,7 +328,7 @@
     ],
     "css": [
       "assets/Settings-36rm-KiB.css",
-      "assets/coming-soon-BmvEEP_X.css"
+      "assets/coming-soon-DjdwHcvt.css"
     ]
   },
   "resources/js/Statuses.jsx": {
@@ -361,7 +361,7 @@
     ]
   },
   "resources/js/Tasks.jsx": {
-    "file": "assets/Tasks-CLkk-d2Z.js",
+    "file": "assets/Tasks-GNt-Sa8X.js",
     "name": "Tasks",
     "src": "resources/js/Tasks.jsx",
     "isEntry": true,
@@ -373,7 +373,7 @@
       "_ReactAppend-BUdEshxq.js"
     ],
     "css": [
-      "assets/coming-soon-BmvEEP_X.css"
+      "assets/coming-soon-DjdwHcvt.css"
     ]
   },
   "resources/js/Types.jsx": {
