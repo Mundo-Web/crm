@@ -143,7 +143,7 @@ const Tasks = () => {
           caption: 'Contacto asociado',
           cellTemplate: (container, {data}) => {
             ReactAppend(container, <>
-              <b className="d-block my-0">{data.client_note.client_.contact_name}</b>
+              <b className="d-block my-0">{data.client_note.client.contact_name}</b>
               <small>{data.contact_phone}</small>
             </>)
           }
