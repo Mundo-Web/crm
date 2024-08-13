@@ -13,15 +13,15 @@
       "assets/Adminto-BfiZgK1t.css"
     ]
   },
-  "_AssignUsersModal-XoNXSJIi.js": {
-    "file": "assets/AssignUsersModal-XoNXSJIi.js",
+  "_AssignUsersModal-C5-eAq3v.js": {
+    "file": "assets/AssignUsersModal-C5-eAq3v.js",
     "name": "AssignUsersModal",
     "imports": [
       "_CreateReactScript-Cr76lECz.js",
       "_TextareaFormGroup-DpQiZCGF.js",
       "_InputFormGroup-DfllSyoc.js",
       "_Adminto-D9Qh2p9j.js",
-      "_Table-B0CA4qfB.js",
+      "_Table-BOyMB7KG.js",
       "_Dropdown-zA_zAB67.js",
       "_DropdownItem-Dd6zonp_.js",
       "_Assigneds-D2Wd3Uy2.js",
@@ -109,11 +109,18 @@
       "_CreateReactScript-Cr76lECz.js"
     ]
   },
-  "_Table-B0CA4qfB.js": {
-    "file": "assets/Table-B0CA4qfB.js",
+  "_Table-BOyMB7KG.js": {
+    "file": "assets/Table-BOyMB7KG.js",
     "name": "Table",
     "imports": [
       "_CreateReactScript-Cr76lECz.js",
+      "_Adminto-D9Qh2p9j.js"
+    ]
+  },
+  "_TasksRest-C2SmZ9uv.js": {
+    "file": "assets/TasksRest-C2SmZ9uv.js",
+    "name": "TasksRest",
+    "imports": [
       "_Adminto-D9Qh2p9j.js"
     ]
   },
@@ -132,9 +139,9 @@
       "_Adminto-D9Qh2p9j.js"
     ]
   },
-  "_coming-soon-!~{00B}~.js": {
+  "_coming-soon-!~{00C}~.js": {
     "file": "assets/coming-soon-BmvEEP_X.css",
-    "src": "_coming-soon-!~{00B}~.js"
+    "src": "_coming-soon-!~{00C}~.js"
   },
   "_index-ED7l9UKr.js": {
     "file": "assets/index-ED7l9UKr.js",
@@ -176,7 +183,7 @@
     ]
   },
   "resources/js/Clients.jsx": {
-    "file": "assets/Clients-Ct8ULuCM.js",
+    "file": "assets/Clients-Bw20nZm7.js",
     "name": "Clients",
     "src": "resources/js/Clients.jsx",
     "isEntry": true,
@@ -189,10 +196,10 @@
       "_SetSelectValue-CfjBp_ib.js",
       "_DropdownItem-Dd6zonp_.js",
       "_DropdownEnd-CXnHC35Z.js",
-      "_AssignUsersModal-XoNXSJIi.js",
+      "_AssignUsersModal-C5-eAq3v.js",
       "_ReactAppend-BUdEshxq.js",
       "_Assigneds-D2Wd3Uy2.js",
-      "_Table-B0CA4qfB.js",
+      "_Table-BOyMB7KG.js",
       "_Dropdown-zA_zAB67.js"
     ]
   },
@@ -210,7 +217,7 @@
     ]
   },
   "resources/js/Leads.jsx": {
-    "file": "assets/Leads-BJoAE4Ej.js",
+    "file": "assets/Leads-DjrqV8e5.js",
     "name": "Leads",
     "src": "resources/js/Leads.jsx",
     "isEntry": true,
@@ -219,9 +226,10 @@
       "_CreateReactScript-Cr76lECz.js",
       "_ReactAppend-BUdEshxq.js",
       "_LeadsRest-zLJrik4X.js",
+      "_TasksRest-C2SmZ9uv.js",
       "_UsersRest-NWAXFaoc.js",
       "_TextareaFormGroup-DpQiZCGF.js",
-      "_Table-B0CA4qfB.js",
+      "_Table-BOyMB7KG.js",
       "_Dropdown-zA_zAB67.js",
       "_DropdownItem-Dd6zonp_.js",
       "_InputFormGroup-DfllSyoc.js",
@@ -247,7 +255,7 @@
     ]
   },
   "resources/js/Permissions.jsx": {
-    "file": "assets/Permissions-BdG-cUdr.js",
+    "file": "assets/Permissions-CWCRh3JV.js",
     "name": "Permissions",
     "src": "resources/js/Permissions.jsx",
     "isEntry": true,
@@ -257,7 +265,7 @@
       "_PermissionsRest-qOlT1YHC.js",
       "_Adminto-D9Qh2p9j.js",
       "_TextareaFormGroup-DpQiZCGF.js",
-      "_Table-B0CA4qfB.js",
+      "_Table-BOyMB7KG.js",
       "_InputFormGroup-DfllSyoc.js"
     ]
   },
@@ -273,18 +281,18 @@
     ]
   },
   "resources/js/Projects.jsx": {
-    "file": "assets/Projects-CAAVZyyO.js",
+    "file": "assets/Projects-Br8-Z8He.js",
     "name": "Projects",
     "src": "resources/js/Projects.jsx",
     "isEntry": true,
     "imports": [
       "_CreateReactScript-Cr76lECz.js",
       "_Adminto-D9Qh2p9j.js",
-      "_AssignUsersModal-XoNXSJIi.js",
+      "_AssignUsersModal-C5-eAq3v.js",
       "_Assigneds-D2Wd3Uy2.js",
       "_SetSelectValue-CfjBp_ib.js",
       "_TextareaFormGroup-DpQiZCGF.js",
-      "_Table-B0CA4qfB.js",
+      "_Table-BOyMB7KG.js",
       "_InputFormGroup-DfllSyoc.js",
       "_SelectFormGroup-8kFfSArR.js",
       "_Dropdown-zA_zAB67.js",
@@ -292,7 +300,7 @@
     ]
   },
   "resources/js/Roles.jsx": {
-    "file": "assets/Roles-D14kyOPf.js",
+    "file": "assets/Roles-M1_wm-8v.js",
     "name": "Roles",
     "src": "resources/js/Roles.jsx",
     "isEntry": true,
@@ -302,7 +310,7 @@
       "_PermissionsRest-qOlT1YHC.js",
       "_Adminto-D9Qh2p9j.js",
       "_TextareaFormGroup-DpQiZCGF.js",
-      "_Table-B0CA4qfB.js",
+      "_Table-BOyMB7KG.js",
       "_InputFormGroup-DfllSyoc.js"
     ]
   },
@@ -324,7 +332,7 @@
     ]
   },
   "resources/js/Statuses.jsx": {
-    "file": "assets/Statuses-CiTcjCon.js",
+    "file": "assets/Statuses-CXxTjCNq.js",
     "name": "Statuses",
     "src": "resources/js/Statuses.jsx",
     "isEntry": true,
@@ -334,12 +342,12 @@
       "_SetSelectValue-CfjBp_ib.js",
       "_Adminto-D9Qh2p9j.js",
       "_TextareaFormGroup-DpQiZCGF.js",
-      "_Table-B0CA4qfB.js",
+      "_Table-BOyMB7KG.js",
       "_InputFormGroup-DfllSyoc.js"
     ]
   },
   "resources/js/Tables.jsx": {
-    "file": "assets/Tables-PY_9y0A3.js",
+    "file": "assets/Tables-BGHpTn0J.js",
     "name": "Tables",
     "src": "resources/js/Tables.jsx",
     "isEntry": true,
@@ -348,25 +356,28 @@
       "_ReactAppend-BUdEshxq.js",
       "_Adminto-D9Qh2p9j.js",
       "_TextareaFormGroup-DpQiZCGF.js",
-      "_Table-B0CA4qfB.js",
+      "_Table-BOyMB7KG.js",
       "_InputFormGroup-DfllSyoc.js"
     ]
   },
   "resources/js/Tasks.jsx": {
-    "file": "assets/Tasks-Ch4ugqsQ.js",
+    "file": "assets/Tasks-CLkk-d2Z.js",
     "name": "Tasks",
     "src": "resources/js/Tasks.jsx",
     "isEntry": true,
     "imports": [
       "_CreateReactScript-Cr76lECz.js",
-      "_Adminto-D9Qh2p9j.js"
+      "_TasksRest-C2SmZ9uv.js",
+      "_Adminto-D9Qh2p9j.js",
+      "_Table-BOyMB7KG.js",
+      "_ReactAppend-BUdEshxq.js"
     ],
     "css": [
       "assets/coming-soon-BmvEEP_X.css"
     ]
   },
   "resources/js/Types.jsx": {
-    "file": "assets/Types-CfRtuCMF.js",
+    "file": "assets/Types-BAwOH6LS.js",
     "name": "Types",
     "src": "resources/js/Types.jsx",
     "isEntry": true,
@@ -376,7 +387,7 @@
       "_SetSelectValue-CfjBp_ib.js",
       "_Adminto-D9Qh2p9j.js",
       "_TextareaFormGroup-DpQiZCGF.js",
-      "_Table-B0CA4qfB.js",
+      "_Table-BOyMB7KG.js",
       "_InputFormGroup-DfllSyoc.js"
     ]
   },

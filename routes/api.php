@@ -121,10 +121,12 @@ Route::middleware('auth')->group(function () {
     // Route::patch('/notifications/status', [NotificationController::class, 'status']);
     // Route::delete('/notifications/{id}', [NotificationController::class, 'delete']);
 
-    Route::get('/profile/{uuid}', [ProfileController::class, 'full']);
-    Route::get('/profile/thumbnail/{uuid}', [ProfileController::class, 'thumbnail']);
-    Route::post('/profile', [ProfileController::class, 'saveProfile']);
-    Route::patch('/profile', [ProfileController::class, 'save']);
+    // Route::get('/profile/{uuid}', [ProfileController::class, 'full']);
+    // Route::get('/profile/thumbnail/{uuid}', [ProfileController::class, 'thumbnail']);
+    // Route::post('/profile', [ProfileController::class, 'saveProfile']);
+    // Route::patch('/profile', [ProfileController::class, 'save']);
+
+    Route::post('/tasks/paginate', [TaskController::class, 'paginate']);
 
     Route::patch('/account/email', [AccountController::class, 'email']);
     Route::patch('/account/password', [AccountController::class, 'password']);

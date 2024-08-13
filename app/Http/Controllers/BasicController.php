@@ -26,7 +26,7 @@ class BasicController extends Controller
   public $reactView = 'Home';
   public $reactRootView = 'admin';
   public $prefix4filter = null;
-
+  public $filterBusiness = true;
 
   public function setPaginationInstance(string $model)
   {
@@ -101,10 +101,12 @@ class BasicController extends Controller
           ->groupBy(str_replace('!', '', $selector));
       }
 
-      if ($this->prefix4filter) {
-        $instance->where("{$this->prefix4filter}.business_id", Auth::user()->business_id);
-      } else {
-        $instance->where('business_id', Auth::user()->business_id);
+      if ($this->filterBusiness) {
+        if ($this->prefix4filter) {
+          $instance->where("{$this->prefix4filter}.business_id", Auth::user()->business_id);
+        } else {
+          $instance->where('business_id', Auth::user()->business_id);
+        }
       }
 
       if ($request->filter) {

@@ -1,8 +1,8 @@
 import React from 'react'
 import DataGrid from './DataGrid'
 
-const Table = ({ title, gridRef, rest, columns, toolBar, masterDetail, filterValue = [], defaultRows, selection }) => {
-  return (<div className="row">
+const Table = ({ title, gridRef, rest, columns, toolBar, masterDetail, filterValue = [], defaultRows, selection, className = '' }) => {
+  return (<div className={`row ${className}`}>
     <div className="col-12">
       <div className="card">
         <div className="card-body">
