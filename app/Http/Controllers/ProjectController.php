@@ -40,6 +40,7 @@ class ProjectController extends BasicController
         ])
             ->leftJoin('clients AS client', 'client.id', 'projects.id')
             ->leftJoin('payments', 'payments.project_id', 'projects.id')
+            ->leftJoin('statuses AS status', 'status.id', 'projects.status_id')
             ->groupBy('projects.id', 'projects.type_id', 'projects.status_id', 'projects.client_id', 'projects.name', 'projects.description', 'projects.cost', 'projects.signed_at', 'projects.starts_at', 'projects.ends_at', 'projects.visible', 'projects.status', 'projects.created_at', 'projects.updated_at', 'projects.business_id');
     }
 
