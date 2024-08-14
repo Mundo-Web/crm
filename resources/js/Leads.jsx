@@ -551,13 +551,13 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
               allowExporting: false
             }
           ]} />
-        : (<div className="d-flex gap-2" style={{ overflowX: 'auto', minHeight: 'calc(100vh - 135px)' }}>
+        : (<div className="d-flex gap-1" style={{ overflowX: 'auto', minHeight: 'calc(100vh - 135px)' }}>
           {
             statuses.sort((a, b) => a.order - b.order).map((status, i) => {
               const correlative = Correlative(status.name)
-              return (<div key={`status-${i}`} style={{ minWidth: '360px', maxWidth: '360px' }}>
+              return (<div key={`status-${i}`} style={{ minWidth: '300px', maxWidth: '300px' }}>
                 <div className="card">
-                  <div className="card-body taskboard-box" style={{ minHeight: '200px' }}>
+                  <div className="card-body taskboard-box p-2" style={{ minHeight: '200px' }}>
                     <h4 className="header-title mt-0 mb-3" style={{ color: status.color }}>{status.name}</h4>
                     <ul className="sortable-list list-unstyled taskList" id={`status-${correlative}`} data-id={status.id}>
                       {
