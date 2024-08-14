@@ -84,7 +84,7 @@ class PermissionController extends Controller
     public function byRole(Request $request, $role): HttpResponse|ResponseFactory
     {
         $response = Response::simpleTryCatch(function (Response $response) use ($role) {
-            $permissions = Permission::select()
+            $permissions = Permission::select('permissions.*')
                 ->join('role_has_permissions AS rhp', 'rhp.permission_id', 'permissions.id')
                 ->where('rhp.role_id', $role)
                 ->get();
