@@ -179,15 +179,19 @@ const Roles = ({ permissions }) => {
         <TextareaFormGroup eRef={descriptionRef} label='Descripcion' col='col-12' />
       </div>
     </Modal>
-    <Modal modalRef={modalPermissionRef} title={`Permisos para ${rolActive.name}`} btnSubmitText='Guardar' onSubmit={onPermissionsModalSubmit} size='sm'>
-      <Accordion id='permissions'>
+    <Modal modalRef={modalPermissionRef} title={`Permisos para ${rolActive.name}`} btnSubmitText='Guardar' onSubmit={onPermissionsModalSubmit} size='lg'>
+      {/* <Accordion id='permissions'> */}
+      <div className='row'>
         {permissions.map((children, i) => {
           const origin = children[0].origin
-          return <AccordionCard key={`accordion-${i}`} id={`permission-${origin}`} title={origin} parent='permissions' className='d-flex gap-2 flex-wrap flex-row'>
-            {children.map(({ id, name, description }) => <CheckboxFormGroup key={`permission-${id}`} className='mb-0' id={`permission-ck-${id}`} label={name.replace(`${origin}.`, '')} name={name} value={id} title={description} style={{ width: 'max-content' }} rounded />)}
-          </AccordionCard>
+          return <div className="col-lg-4 col-md-6 col-sm-12">
+            <AccordionCard key={`accordion-${i}`} id={`permission-${origin}`} title={origin} parent='permissions' className='d-flex gap-2 flex-wrap flex-row' isOpened>
+              {children.map(({ id, name, description }) => <CheckboxFormGroup key={`permission-${id}`} className='mb-0' id={`permission-ck-${id}`} label={name.replace(`${origin}.`, '')} name={name} value={id} title={description} style={{ width: 'max-content' }} rounded />)}
+            </AccordionCard>
+          </div>
         })}
-      </Accordion>
+      </div>
+      {/* </Accordion> */}
     </Modal>
   </>
   )

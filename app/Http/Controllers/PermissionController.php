@@ -83,38 +83,14 @@ class PermissionController extends Controller
 
     public function byRole(Request $request, $role): HttpResponse|ResponseFactory
     {
-        $response =  new dxResponse();
-        try {
-            $permissions = PermissionsByRole::select([
-                'permission__id AS id',
-                'permission__name AS name',
-                'permission__description AS description',
-                'role__id',
-                'role__name',
-                'role__description'
-
-            ])
-                ->where('role__id', $role)
+        $response = Response::simpleTryCatch(function (Response $response) use ($role) {
+            $permissions = Permission::select()
+                ->join('role_has_permissions AS rhp', 'rhp.permission_id', 'permissions.id')
+                ->where('rhp.role_id', $role)
                 ->get();
-
-            $results = [];
-
-            foreach ($permissions as $permission) {
-                $results[] = JSON::unflatten($permission->toArray(), '__');
-            }
-
-            $response->status = 200;
-            $response->message = 'Operación correcta';
-            $response->data = $results;
-        } catch (\Throwable $th) {
-            $response->status = 400;
-            $response->message = $th->getMessage() . ' Ln.' . $th->getLine();
-        } finally {
-            return response(
-                $response->toArray(),
-                $response->status
-            );
-        }
+            return $permissions;
+        });
+        return response($response->toArray(), $response->status);
     }
 
     public function massiveByRole(Request $request): HttpResponse|ResponseFactory

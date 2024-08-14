@@ -1,7 +1,7 @@
 import React from "react";
 
 const AccordionCard = ({ title, id, parent, children, className, isOpened }) => {
-  return <div className="card mb-1">
+  return <div className="card mb-1 border">
     <div className="card-header p-0" id={`heading-${id}`}>
       <h5 className="m-0">
         <a className={`d-block text-dark ${!isOpened && 'collapsed'} p-2`} data-bs-toggle="collapse" href={`#${id}`} aria-expanded="false">
