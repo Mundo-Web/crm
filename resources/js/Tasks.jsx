@@ -88,7 +88,7 @@ const Tasks = () => {
           caption: 'Estado',
           width: '120px',
           cellTemplate: (container, { data }) => {
-            container.attr('style', 'overflow: unset')
+            container.attr('style', 'display: flex; overflow: unset')
             ReactAppend(container, <div>
               <button className={`btn btn-xs ${statuses[data.status].color} btn-sm dropdown-toggle`} type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                 <i className={statuses[data.status].icon}></i> {data.status} <i className="mdi mdi-chevron-down"></i>
