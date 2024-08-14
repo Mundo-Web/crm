@@ -555,10 +555,10 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
           {
             statuses.sort((a, b) => a.order - b.order).map((status, i) => {
               const correlative = Correlative(status.name)
-              return (<div key={`status-${i}`} style={{ minWidth: '300px', maxWidth: '300px' }}>
+              return (<div key={`status-${i}`} style={{ minWidth: '240px', maxWidth: '240px' }}>
                 <div className="card">
                   <div className="card-body taskboard-box p-2" style={{ minHeight: '200px' }}>
-                    <h4 className="header-title mt-0 mb-3" style={{ color: status.color }}>{status.name}</h4>
+                    <h4 className="header-title mt-0 mb-2" style={{ color: status.color }}>{status.name}</h4>
                     <ul className="sortable-list list-unstyled taskList" id={`status-${correlative}`} data-id={status.id}>
                       {
                         leads.filter(x => x.status_id == status.id).sort((a, b) => {
@@ -566,7 +566,7 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
                         }).sort((a, b) => {
                           return a.assigned_to == session.service_user.id ? -1 : 1
                         }).map((lead, i) => {
-                          return <li id={`${lead.id}`} key={`lead-${i}`} style={{ cursor: 'move' }} className={lead.assigned_to == session.service_user.id ? 'border border-primary' : ''}>
+                          return <li id={`${lead.id}`} key={`lead-${i}`} style={{ cursor: 'move' }} className={`p-2 ${lead.assigned_to == session.service_user.id ? 'border border-primary' : ''}`}>
                             <div className="kanban-box" >
                               <div className="kanban-detail ms-0">
                                 <span className="badge float-end" style={{
