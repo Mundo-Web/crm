@@ -340,8 +340,10 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
     const result = await leadsRest.save(request)
     if (!result) return
 
-    $(gridRef.current).dxDataGrid('instance').refresh()
     $(newLeadModalRef.current).modal('hide')
+    if (defaultView == 'kanban') getLeads()
+    else $(gridRef.current).dxDataGrid('instance').refresh()
+
   }
 
   const onOpenModal = (data = {}) => {
@@ -662,9 +664,9 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
               src={`//${APP_DOMAIN}/api/profile/null`} />
             <div className="flex-grow-1">
               <h4 className="media-heading mt-0">
-                <i className='mdi mdi-lead-pencil me-1' style={{cursor: 'pointer'}} onClick={() => onOpenModal(leadLoaded)}></i>
+                <i className='mdi mdi-lead-pencil me-1' style={{ cursor: 'pointer' }} onClick={() => onOpenModal(leadLoaded)}></i>
                 {leadLoaded?.contact_name}
-                </h4>
+              </h4>
               <span className="badge bg-primary me-1">{leadLoaded?.contact_position || 'Trabajador'}</span> <small className='text-muted'>desde <b>{leadLoaded?.origin}</b></small>
             </div>
           </div>
@@ -762,7 +764,7 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
                       {
                         type.id == 'e20c7891-1ef8-4388-8150-4c1028cc4525' &&
                         <>
-                          <InputFormGroup eRef={taskTitleRef} label='Titulo de la tarea' col='col-12' required/>
+                          <InputFormGroup eRef={taskTitleRef} label='Titulo de la tarea' col='col-12' required />
                           <SelectFormGroup eRef={taskTypeRef} label="Tipo de tarea" col="col-lg-4 col-md-12" required dropdownParent={`#note-type-${type.id}`} minimumResultsForSearch={Infinity} >
                             <option value="Llamada">Llamada</option>
                             <option value="Correo">Correo</option>
@@ -774,7 +776,7 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
                             <option value="Alta">Alta</option>
                             <option value="Urgente">Urgente</option>
                           </SelectFormGroup>
-                          <SelectAPIFormGroup eRef={taskAssignedToRef} label='Asignado a' col='col-lg-5 col-md-12' dropdownParent={`#note-type-${type.id}`} searchAPI='/api/users/paginate' searchBy='fullname'/>
+                          <SelectAPIFormGroup eRef={taskAssignedToRef} label='Asignado a' col='col-lg-5 col-md-12' dropdownParent={`#note-type-${type.id}`} searchAPI='/api/users/paginate' searchBy='fullname' />
                           <InputFormGroup eRef={taskEndsAtDateRef} label='Fecha finalización' type='date' col='col-lg-6 col-md-12' required />
                           <InputFormGroup eRef={taskEndsAtTimeRef} label='Hora finalización' type='time' col='col-lg-6 col-md-12' required />
                         </>
