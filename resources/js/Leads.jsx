@@ -763,11 +763,11 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
                           <SelectFormGroup eRef={taskTypeRef} label="Tipo de tarea" col="col-lg-4 col-md-12" required dropdownParent={`#note-type-${type.id}`} minimumResultsForSearch={Infinity} >
                             <option value="Llamada">Llamada</option>
                             <option value="Correo">Correo</option>
-                            <option value="Por hacer">Por hacer</option>
+                            <option value="Por hacer" selected>Por hacer</option>
                           </SelectFormGroup>
-                          <SelectFormGroup eRef={taskPriorityRef} label="Prioridad" col="col-lg-3 col-md-12" required dropdownParent={`#note-type-${type.id}`} minimumResultsForSearch={Infinity}>
+                          <SelectFormGroup eRef={taskPriorityRef} label="Prioridad" col="col-lg-3 col-md-12" required dropdownParent={`#note-type-${type.id}`} minimumResultsForSearch={Infinity} >
                             <option value="Baja">Baja</option>
-                            <option value="Media">Media</option>
+                            <option value="Media" selected>Media</option>
                             <option value="Alta">Alta</option>
                             <option value="Urgente">Urgente</option>
                           </SelectFormGroup>

@@ -80,7 +80,7 @@ class ClientNoteController extends BasicController
         Task::where('note_id', $jpa->id)->delete();
         if (\count($tasks ?? []) > 0) {
             foreach ($tasks as $task) {
-                Task::create([
+                $object = [
                     'model_id' => ClientNote::class,
                     'note_id' => $jpa->id,
                     'type' => $task['type'],
@@ -89,7 +89,11 @@ class ClientNoteController extends BasicController
                     'description' => $task['description'] ?? null,
                     'ends_at' => $task['ends_at'],
                     'assigned_to' => $task['assigned_to']
-                ]);
+                ];
+                if (!$object['assigned_to'] && Auth::check()) {
+                    $object['assigned_to'] = Auth::user()->service_user->id;
+                }
+                Task::create($object);
             }
         }
 
