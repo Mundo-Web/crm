@@ -556,9 +556,11 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
             statuses.sort((a, b) => a.order - b.order).map((status, i) => {
               const correlative = Correlative(status.name)
               return (<div key={`status-${i}`} style={{ minWidth: '270px', maxWidth: '270px' }}>
-                <div className="card">
+                <div className="card mb-0">
+                  <div className="card-header">
+                    <h4 className="header-title my-0" style={{ color: status.color }}>{status.name}</h4>
+                  </div>
                   <div className="card-body taskboard-box p-2" style={{ minHeight: '200px', maxHeight: 'calc(100vh - 165px)', overflow: 'auto' }}>
-                    <h4 className="header-title mt-0 mb-2" style={{ color: status.color }}>{status.name}</h4>
                     <ul className="sortable-list list-unstyled taskList" id={`status-${correlative}`} data-id={status.id}>
                       {
                         leads.filter(x => x.status_id == status.id).sort((a, b) => {
