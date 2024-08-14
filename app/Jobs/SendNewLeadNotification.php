@@ -124,7 +124,7 @@ class SendNewLeadNotification implements ShouldQueue
 
       sleep(5);
 
-      $message = Setting::get('whatsapp-new-lead-notification-message-client');
+      $message = Setting::get('whatsapp-new-lead-notification-message-client', $business->id);
 
       $message = Text::replaceData($message, $client->toArray());
 
