@@ -557,7 +557,7 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
               const correlative = Correlative(status.name)
               return (<div key={`status-${i}`} style={{ minWidth: '270px', maxWidth: '270px' }}>
                 <div className="card">
-                  <div className="card-body taskboard-box p-2" style={{ minHeight: '200px' }}>
+                  <div className="card-body taskboard-box p-2" style={{ minHeight: '200px', maxHeight: 'calc(100vh - 165px)', overflow: 'auto' }}>
                     <h4 className="header-title mt-0 mb-2" style={{ color: status.color }}>{status.name}</h4>
                     <ul className="sortable-list list-unstyled taskList" id={`status-${correlative}`} data-id={status.id}>
                       {
