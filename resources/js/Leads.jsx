@@ -555,7 +555,7 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
           {
             statuses.sort((a, b) => a.order - b.order).map((status, i) => {
               const correlative = Correlative(status.name)
-              return (<div key={`status-${i}`} style={{ minWidth: '240px', maxWidth: '240px' }}>
+              return (<div key={`status-${i}`} style={{ minWidth: '270px', maxWidth: '270px' }}>
                 <div className="card">
                   <div className="card-body taskboard-box p-2" style={{ minHeight: '200px' }}>
                     <h4 className="header-title mt-0 mb-2" style={{ color: status.color }}>{status.name}</h4>
@@ -596,7 +596,7 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
                                               <a href="" data-bs-toggle="tooltip" data-bs-placement="top"
                                                 title="Username">
                                                 <img src={`//${APP_DOMAIN}/api/profile/${lead?.assigned?.relative_id}`} alt="img"
-                                                  className="avatar-sm rounded-circle" />
+                                                  className="avatar-xs rounded-circle" />
                                               </a>
                                             </Tippy>
                                         )
