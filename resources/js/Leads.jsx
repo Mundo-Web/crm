@@ -662,7 +662,7 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
               src={`//${APP_DOMAIN}/api/profile/null`} />
             <div className="flex-grow-1">
               <h4 className="media-heading mt-0">
-                <i className='fa fa-pen me-1' style={{cursor: 'pointer'}} onClick={() => onOpenModal(leadLoaded)}></i>
+                <i className='mdi-lead-pencil me-1' style={{cursor: 'pointer'}} onClick={() => onOpenModal(leadLoaded)}></i>
                 {leadLoaded?.contact_name}
                 </h4>
               <span className="badge bg-primary me-1">{leadLoaded?.contact_position || 'Trabajador'}</span> <small className='text-muted'>desde <b>{leadLoaded?.origin}</b></small>
