@@ -94,7 +94,7 @@ const Tasks = () => {
         {
           dataField: 'status',
           caption: 'Estado',
-          width: '120px',
+          // width: '120px',
           cellTemplate: (container, { data }) => {
             container.attr('style', 'overflow: visible')
             container.append(DxBox([
@@ -127,9 +127,11 @@ const Tasks = () => {
           dataField: 'name',
           caption: 'Titulo',
           dataType: 'string',
-          width: '250px',
+          // width: '250px',
           cellTemplate: (container, { data }) => {
-            ReactAppend(container, <div style={{ width: '240px' }}>
+            ReactAppend(container, <div
+            // style={{ width: '240px' }}
+            >
               <b className="d-block my-0">{data.name}</b>
               <div className="mb-0">
                 <span class="badge bg-light text-dark me-1"><i className={types[data.type].icon}></i> {data.type}</span>
@@ -176,7 +178,7 @@ const Tasks = () => {
         {
           dataField: 'ends_at',
           caption: 'Fecha de vencimiento',
-          cellTemplate: (container, {data}) => {
+          cellTemplate: (container, { data }) => {
             container.text(moment(data.ends_at).format('LLL'))
           }
         },
