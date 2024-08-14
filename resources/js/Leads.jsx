@@ -389,6 +389,18 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
     } return true
   }
 
+  const onMakeLeadClient = async (data) => {
+    const { isConfirmed } = await Swal.fire({
+      title: "Estas seguro?",
+      text: `${data.contact_name} pasara a ser un cliente!`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Continuar",
+      cancelButtonText: `Cancelar`
+    })
+    if (isConfirmed) onClientStatusClicked(data.id, defaultClientStatus)
+  }
+
   const tasks = []
   notes?.forEach(note => tasks.push(...note.tasks))
 
@@ -530,17 +542,7 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
                   </TippyButton>)
                 }
 
-                ReactAppend(container, <TippyButton className='btn btn-xs btn-soft-success' title='Convertir en cliente' onClick={async () => {
-                  const { isConfirmed } = await Swal.fire({
-                    title: "Estas seguro?",
-                    text: `${data.contact_name} pasara a ser un cliente!`,
-                    icon: "warning",
-                    showCancelButton: true,
-                    confirmButtonText: "Continuar",
-                    cancelButtonText: `Cancelar`
-                  })
-                  if (isConfirmed) onClientStatusClicked(data.id, defaultClientStatus)
-                }}>
+                ReactAppend(container, <TippyButton className='btn btn-xs btn-soft-success' title='Convertir en cliente' onClick={async () => onMakeLeadClient(data)}>
                   <i className='fa fa-user-plus'></i>
                 </TippyButton>)
                 ReactAppend(container, <TippyButton className='btn btn-xs btn-soft-danger' title='Eliminar lead' onClick={() => onDeleteClicked(data)}>
@@ -571,16 +573,41 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
                           return <li id={`${lead.id}`} key={`lead-${i}`} style={{ cursor: 'move' }} className={`p-2 ${lead.assigned_to == session.service_user.id ? 'border border-primary' : ''}`}>
                             <div className="kanban-box" >
                               <div className="kanban-detail ms-0">
-                                <span className="badge float-end" style={{
-                                  backgroundColor: lead?.manage_status?.color || '#6c757d'
-                                }}>{lead?.manage_status?.name ?? 'Sin estado'}</span>
-                                <h5 className="mt-0">
-                                  <a href="#" onClick={() => onLeadClicked(lead)}
-                                    className="text-dark">
-                                    {lead.contact_name}
+                                <div class="dropdown float-end">
+                                  <a href="#" class="dropdown-toggle arrow-none card-drop" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="mdi mdi-dots-vertical"></i>
                                   </a>
+                                  <div class="dropdown-menu dropdown-menu-end">
+                                    <a class="dropdown-item" style={{ cursor: 'pointer' }} onClick={() => onLeadClicked(lead)}>
+                                      <i className='fa fa-eye me-1'></i>
+                                      Ver detalles
+                                    </a>
+                                    <a class="dropdown-item" style={{ cursor: 'pointer' }} onClick={() => onOpenModal(lead)}>
+                                      <i className='fa fa-pen me-1'></i>
+                                      Editar lead
+                                    </a>
+                                    <a class="dropdown-item" style={{ cursor: 'pointer' }} onClick={() => onMakeLeadClient(lead)}>
+                                      <i className='fa fa-user-plus me-1'></i>
+                                      Convertir en cliente
+                                    </a>
+                                    <a class="dropdown-item" style={{ cursor: 'pointer' }} onClick={() => onDeleteClicked(lead)}>
+                                      <i className='fa fa-trash me-1'></i>
+                                      Eliminar lead
+                                    </a>
+                                  </div>
+                                </div>
+                                {/* <span className="badge float-end" style={{
+                                  backgroundColor: lead?.manage_status?.color || '#6c757d'
+                                }}>{lead?.manage_status?.name ?? 'Sin estado'}</span> */}
+                                <h5 className="mt-0 text-truncate">
+                                  <Tippy content='Ver detalles'>
+                                    <a href="#" onClick={() => onLeadClicked(lead)}
+                                      className="text-dark">
+                                      {lead.contact_name}
+                                    </a>
+                                  </Tippy>
                                 </h5>
-                                <ul className="list-inline d-flex align-items-center gap-1 mb-1">
+                                <ul className="list-inline d-flex align-items-center gap-1 mb-0">
                                   <li className="list-inline-item">
                                     {
                                       !lead.assigned_to
@@ -605,6 +632,13 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
                                     }
                                   </li>
                                   <li className="list-inline-item">
+                                    <span className="badge d-block" style={{
+                                      backgroundColor: lead?.manage_status?.color || '#6c757d',
+                                      width: 'max-content'
+                                    }}>{lead?.manage_status?.name ?? 'Sin estado'}</span>
+                                    <small className='text-muted'>{moment(lead.created_at).format('LLL')}</small>
+                                  </li>
+                                  {/* <li className="list-inline-item">
                                     <Tippy content={`${lead.pending_tasks_count} tareas pendientes`}>
                                       <span style={{ position: 'relative' }}>
                                         <i className="mdi mdi-format-align-left"></i>
@@ -640,11 +674,11 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
                                         <i className="fa fa-trash text-danger"></i>
                                       </b>
                                     </Tippy>
-                                  </li>
+                                  </li> */}
                                 </ul>
-                                <div>
+                                {/* <div>
                                   <small className='text-muted'>{moment(lead.created_at).format('LLL')}</small>
-                                </div>
+                                </div> */}
                               </div>
                             </div>
                           </li>
