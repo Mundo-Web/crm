@@ -560,7 +560,7 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
                   <div className="card-header">
                     <h4 className="header-title my-0" style={{ color: status.color }}>{status.name}</h4>
                   </div>
-                  <div className="card-body taskboard-box p-2" style={{ minHeight: '200px', maxHeight: 'calc(100vh - 165px)', overflow: 'auto' }}>
+                  <div className="card-body taskboard-box p-2" style={{ minHeight: '200px', maxHeight: 'calc(100vh - 180px)', overflow: 'auto' }}>
                     <ul className="sortable-list list-unstyled taskList" id={`status-${correlative}`} data-id={status.id}>
                       {
                         leads.filter(x => x.status_id == status.id).sort((a, b) => {
