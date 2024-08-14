@@ -340,6 +340,8 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
     const result = await leadsRest.save(request)
     if (!result) return
 
+    console.log(result)
+
     $(newLeadModalRef.current).modal('hide')
     if (defaultView == 'kanban') getLeads()
     else $(gridRef.current).dxDataGrid('instance').refresh()

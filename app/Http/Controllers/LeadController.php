@@ -143,6 +143,12 @@ class LeadController extends BasicController
                 'business_id' => $jpa->business_id
             ]);
         }
+
+        $newJpa = Client::with(['status', 'assigned', 'manageStatus', 'creator'])
+            ->where('id', $jpa->id)
+            ->first();
+
+        return $newJpa;
     }
 
     public function all(Request $request)
