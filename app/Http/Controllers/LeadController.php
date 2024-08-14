@@ -102,7 +102,10 @@ class LeadController extends BasicController
                 'client_id' => $jpa->id,
                 'name' => Auth::user()->name . ' actualizo datos del lead',
             ]);
-            return;
+            $newJpa = Client::with(['status', 'assigned', 'manageStatus', 'creator'])
+            ->where('id', $jpa->id)
+            ->first();
+            return $newJpa;
         }
         $noteJpa = ClientNote::create([
             'note_type_id' => '8e895346-3d87-4a87-897a-4192b917c211',
