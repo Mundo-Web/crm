@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react'
 import { Local } from 'sode-extend-react'
 
-const DataGrid = ({ gridRef: dataGridRef, rest, columns, toolBar, masterDetail, filterValue, defaultRows, selection }) => {
+const DataGrid = ({ gridRef: dataGridRef, rest, columns, toolBar, masterDetail, filterValue, defaultRows, selection, allowedPageSizes = [5, 10, 25, 50, 100], pageSize = 100 }) => {
   useEffect(() => {
     DevExpress.localization.locale(navigator.language);
     $(dataGridRef.current).dxDataGrid({
@@ -85,11 +85,11 @@ const DataGrid = ({ gridRef: dataGridRef, rest, columns, toolBar, masterDetail, 
         },
       },
       paging: {
-        pageSize: 10,
+        pageSize,
       },
       pager: {
         visible: true,
-        allowedPageSizes: [5, 10, 25, 50, 100],
+        allowedPageSizes,
         showPageSizeSelector: true,
         showInfo: true,
         showNavigationButtons: true,
