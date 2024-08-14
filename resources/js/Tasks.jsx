@@ -59,6 +59,12 @@ const Tasks = () => {
     }
   }
 
+  const onTaskStatusChange = async (id, status) => {
+    const result = await tasksRest.status({ id, status })
+    if (!result) return
+    $(gridRef.current).dxDataGrid('instance').refresh()
+  }
+
   return <>
     <Table gridRef={gridRef} title='Tareas' rest={tasksRest}
       toolBar={(container) => {
@@ -96,7 +102,7 @@ const Tasks = () => {
                 height: '28px',
                 children: <Dropdown className={`btn btn-xs ${statuses[data.status].color} rounded-pill`} title={data.status} tippy='Actualizar estado' icon={{ icon: statuses[data.status].icon, color: '#ffffff' }}>
                   {Object.keys(statuses).map((statusName, i) => {
-                    return <DropdownItem key={`item-${i}`}>
+                    return <DropdownItem key={`item-${i}`} onClick={() => onTaskStatusChange(data.id, statusName)}>
                       <i className={statuses[statusName].icon}></i> {statusName}
                     </DropdownItem>
                   })}
