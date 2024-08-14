@@ -173,7 +173,13 @@ const Tasks = () => {
             </div>)
           }
         },
-        
+        {
+          dataField: 'ends_at',
+          caption: 'Fecha de vencimiento',
+          cellTemplate: (container, {data}) => {
+            container.text(moment(data.ends_at).format('LLL'))
+          }
+        },
         // {
         //   dataField: 'assigned.fullname',
         //   caption: 'Asignado a',
