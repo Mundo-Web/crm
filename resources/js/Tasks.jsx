@@ -94,10 +94,10 @@ const Tasks = () => {
             container.append(DxBox([
               {
                 height: '28px',
-                children: <Dropdown className='btn btn-xs btn-light rounded-pill' title={data.status} tippy='Actualizar estado' icon={{ icon: 'fa fa-circle', color: statuses[data.status].color }}>
+                children: <Dropdown className={`btn btn-xs ${statuses[data.status].color} rounded-pill`} title={data.status} tippy='Actualizar estado' icon={{ icon: statuses[data.status].icon }}>
                   {Object.keys(statuses).map((statusName, i) => {
                     return <DropdownItem key={`item-${i}`}>
-                      <i className='fa fa-circle' style={{ color: statuses[statusName].color }}></i> {statusName}
+                      <i className={statuses[data.status].icon}></i> {statusName}
                     </DropdownItem>
                   })}
                 </Dropdown>
