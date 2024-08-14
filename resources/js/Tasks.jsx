@@ -94,7 +94,7 @@ const Tasks = () => {
         {
           dataField: 'status',
           caption: 'Estado',
-          // width: '120px',
+          width: '120px',
           cellTemplate: (container, { data }) => {
             container.attr('style', 'overflow: visible')
             container.append(DxBox([
