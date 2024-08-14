@@ -771,7 +771,7 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
                             <option value="Alta">Alta</option>
                             <option value="Urgente">Urgente</option>
                           </SelectFormGroup>
-                          <SelectAPIFormGroup eRef={taskAssignedToRef} label='Asignado a' col='col-lg-5 col-md-12' dropdownParent={`#note-type-${type.id}`} searchAPI='/api/users/paginate' searchBy='fullname' required/>
+                          <SelectAPIFormGroup eRef={taskAssignedToRef} label='Asignado a' col='col-lg-5 col-md-12' dropdownParent={`#note-type-${type.id}`} searchAPI='/api/users/paginate' searchBy='fullname'/>
                           <InputFormGroup eRef={taskEndsAtDateRef} label='Fecha finalización' type='date' col='col-lg-6 col-md-12' required />
                           <InputFormGroup eRef={taskEndsAtTimeRef} label='Hora finalización' type='time' col='col-lg-6 col-md-12' required />
                         </>
