@@ -9,6 +9,8 @@ import CreateReactScript from "./Utils/CreateReactScript";
 import ReactAppend from "./Utils/ReactAppend";
 import Global from "./Utils/Global";
 import DxBox from "./components/dx/DxBox";
+import Dropdown from "./components/dropdown/DropDown";
+import DropdownItem from "./components/dropdown/DropdownItem";
 
 const tasksRest = new TasksRest();
 
@@ -89,18 +91,30 @@ const Tasks = () => {
           width: '120px',
           cellTemplate: (container, { data }) => {
             container.attr('style', 'overflow: visible')
-            ReactAppend(container, <div>
-              <button className={`btn btn-xs ${statuses[data.status].color} btn-sm dropdown-toggle`} type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                <i className={statuses[data.status].icon}></i> {data.status} <i className="mdi mdi-chevron-down"></i>
-              </button>
-              <div className="dropdown-menu">
-                {Object.keys(statuses).map((statusName, i) => {
-                  return <span key={`status-${i}`} className="dropdown-item" style={{ cursor: 'pointer' }} onClick={() => onChange(id, statusName)}>
-                    <i className={statuses[statusName].icon}></i> {statusName}
-                  </span>
-                })}
-              </div>
-            </div>)
+            container.append(DxBox([
+              {
+                height: '28px',
+                children: <Dropdown className='btn btn-xs btn-light rounded-pill' title={data.status.name} tippy='Actualizar estado' icon={{ icon: 'fa fa-circle', color: data.status.color }}>
+                  {Object.keys(statuses).map((statusName, i) => {
+                    return <DropdownItem key={`item-${i}`}>
+                      <i className='fa fa-circle' style={{ color: statuses[statusName].color }}></i> {statusName}
+                    </DropdownItem>
+                  })}
+                </Dropdown>
+              }
+            ]))
+            // ReactAppend(container, <div>
+            //   <button className={`btn btn-xs ${statuses[data.status].color} btn-sm dropdown-toggle`} type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            //     <i className={statuses[data.status].icon}></i> {data.status} <i className="mdi mdi-chevron-down"></i>
+            //   </button>
+            //   <div className="dropdown-menu">
+            //     {Object.keys(statuses).map((statusName, i) => {
+            //       return <span key={`status-${i}`} className="dropdown-item" style={{ cursor: 'pointer' }} onClick={() => onChange(id, statusName)}>
+            //         <i className={statuses[statusName].icon}></i> {statusName}
+            //       </span>
+            //     })}
+            //   </div>
+            // </div>)
           }
         },
         {
