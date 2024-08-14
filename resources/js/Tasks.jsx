@@ -173,17 +173,18 @@ const Tasks = () => {
             </div>)
           }
         },
-        {
-          dataField: 'assigned.fullname',
-          caption: 'Asignado a',
-          cellTemplate: (container, { data }) => {
-            if (!data.assigned) return
-            ReactAppend(container, <>
-              <img src={`//${Global.APP_DOMAIN}/api/profile/thumbnail/${data.assigned.relative_id}`} alt={data.assigned.fullname} class="img-fluid avatar-xs rounded-circle me-1"></img>
-              <b>{data.assigned.fullname}</b>
-            </>)
-          }
-        },
+        
+        // {
+        //   dataField: 'assigned.fullname',
+        //   caption: 'Asignado a',
+        //   cellTemplate: (container, { data }) => {
+        //     if (!data.assigned) return
+        //     ReactAppend(container, <>
+        //       <img src={`//${Global.APP_DOMAIN}/api/profile/thumbnail/${data.assigned.relative_id}`} alt={data.assigned.fullname} class="img-fluid avatar-xs rounded-circle me-1"></img>
+        //       <b>{data.assigned.fullname}</b>
+        //     </>)
+        //   }
+        // },
         // {
         //   caption: 'Acciones',
         //   cellTemplate: (container, { data }) => {
