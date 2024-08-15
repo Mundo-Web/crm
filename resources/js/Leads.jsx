@@ -446,7 +446,7 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
           columns={[
             {
               dataField: 'contact_name',
-              caption: 'Cliente',
+              caption: 'Lead',
               width: 250,
               cellTemplate: (container, { data }) => {
                 ReactAppend(container, <div className='d-flex align-items-center' style={{ cursor: 'pointer' }} onClick={() => onLeadClicked(data)}>
