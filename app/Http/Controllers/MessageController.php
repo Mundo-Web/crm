@@ -32,6 +32,13 @@ class MessageController extends BasicController
             $clientExists = Client::where('contact_phone', $waId)->where('business_id', $businessJpa->id)->exists();
             if ($clientExists) throw new Exception('El cliente ya ha sido registrado en Atalaya');
 
+            $needsExecutive = Message::where('business_id', $businessJpa->id)
+                ->where('wa_id', $waId)
+                ->where('message', ':STOP')
+                ->where('role', 'AI')
+                ->exists();
+            if ($needsExecutive) throw new Exception('Esta persona requiere la atencion de un ejecutivo');
+
             $messages = Message::select()
                 ->where('business_id', $businessJpa->id)
                 ->where('wa_id', $waId)
