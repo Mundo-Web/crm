@@ -181,7 +181,7 @@ const Roles = ({ permissions }) => {
     </Modal>
     <Modal modalRef={modalPermissionRef} title={`Permisos para ${rolActive.name}`} btnSubmitText='Guardar' onSubmit={onPermissionsModalSubmit} size='lg'>
       {/* <Accordion id='permissions'> */}
-      <div className='row'>
+      <div id="permissions" className='row'>
         {permissions.map((children, i) => {
           const origin = children[0].origin
           return <div className="col-lg-4 col-md-6 col-sm-12">
