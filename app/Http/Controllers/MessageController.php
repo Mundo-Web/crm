@@ -9,7 +9,9 @@ use App\Models\Client;
 use App\Models\Setting;
 use Exception;
 use Illuminate\Http\Request;
+use SoDe\Extend\Fetch;
 use SoDe\Extend\File;
+use SoDe\Extend\Response;
 use SoDe\Extend\Text;
 
 class MessageController extends BasicController
@@ -20,10 +22,10 @@ class MessageController extends BasicController
     {
         $response = dxResponse::simpleTryCatch(function ($response) use ($sessionId, $waId) {
             [, $businessUUID] = \explode('-', $sessionId, 2);
-            
+
             $businessJpa = Business::where('uuid', $businessUUID)->first();
             if (!$businessJpa) throw new Exception('No existe una empresa vinculada a esta sesion');
-            
+
             $businessApiKey = Setting::get('gemini-api-key', $businessJpa->id);
             if (!$businessApiKey) throw new Exception('Esta empresa no tiene integracion con AI');
 
@@ -49,6 +51,7 @@ class MessageController extends BasicController
             ];
             return $messages;
         });
+        dump($response->toArray());
         return response($response->toArray(), $response->status);
     }
 
@@ -60,5 +63,29 @@ class MessageController extends BasicController
         if (!$businessJpa) throw new Exception('No existe una empresa vinculada a esta sesion');
         $body['business_id'] = $businessJpa->id;
         return $body;
+    }
+
+    public function help(Request $request)
+    {
+        $response = Response::simpleTryCatch(function () use ($request) {
+            [, $businessUUID] = \explode('-', $request->session_id, 2);
+            $businessJpa = Business::where('uuid', $businessUUID)->first();
+            if (!$businessJpa) throw new Exception('No existe una empresa vinculada a esta sesion');
+
+            $to = Text::keep(Setting::get('whatsapp-new-lead-notification-waid', $businessJpa->id), '0123456789@gc.us');
+
+            new Fetch(env('WA_URL') . '/api/send', [
+                'method' => 'POST',
+                'headers' => [
+                    'Content-Type' => 'application/json'
+                ],
+                'body' => [
+                    'from' => 'atalaya-' . $businessJpa->uuid,
+                    'to' => [$to],
+                    'content' => $request->message
+                ]
+            ]);
+        });
+        return response($response->toArray(), $response->status);
     }
 }

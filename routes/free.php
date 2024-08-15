@@ -12,3 +12,4 @@ Route::post('/leads', [LeadController::class, 'external']);
 
 Route::get('/messages/{session_id}/{wa_id}', [MessageController::class, 'byPhone']);
 Route::post('/messages', [MessageController::class, 'save']);
+Route::post('/messages/help', [MessageController::class, 'help']);

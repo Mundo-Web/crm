@@ -305,7 +305,6 @@ class LeadController extends BasicController
 
             $response->message = 'Se ha creado el lead correctamente';
         });
-        dump($response->toArray());
         return response($response->toArray(), $response->status);
     }
 }
