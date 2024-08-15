@@ -178,7 +178,9 @@ class BasicController extends Controller
       $body = $this->beforeSave($request);
       $jpa = $this->model::find(isset($body['id']) ? $body['id'] : null);
 
-      $body['business_id'] = Auth::user()->business_id;
+      if (!isset($body['business_id'])) {
+        $body['business_id'] = Auth::user()->business_id;
+      }
 
       if (!$jpa) {
         $isNew = true;

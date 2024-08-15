@@ -19,7 +19,7 @@ const WhatsAppModal = ({ status: whatsappStatus, setStatus, WA_URL, APP_URL, ses
     if (whatsappStatus == 'verifying') {
       const searchParams = new URLSearchParams({
         session: businessSession,
-        redirect_to: APP_URL
+        redirect_to: `${APP_URL}/free/leads`
       })
 
       let eventSource = new EventSource(`${WA_URL}/api/session/verify?${searchParams}`)

@@ -91,7 +91,7 @@ const Apikeys = ({ can, apikey, APP_DOMAIN, APP_CORRELATIVE }) => {
   "contact_phone": "123456789",                 --Requerido
   "contact_email": "janedoe@example.com",       --Requerido
   "contact_position": "Manager",
-  "tradename": "Example Corp",                  --Requerido
+  "tradename": "Example Corp",
   "workers": "5-10",
   "message": "Este es un mensaje de prueba.",   --Requerido
   "origin": "Landing Page"                      --Requerido

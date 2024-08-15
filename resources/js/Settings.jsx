@@ -160,6 +160,9 @@ const Settings = ({ can, constants, statuses }) => {
                   <a className="nav-link mb-1" id="v-whatsapp-tab" data-bs-toggle="pill" href="#v-whatsapp" role="tab" aria-controls="v-whatsapp" aria-selected="false">
                     WhatsApp
                   </a>
+                  <a className="nav-link mb-1" id="v-generativeai-tab" data-bs-toggle="pill" href="#v-generativeai" role="tab" aria-controls="v-generativeai" aria-selected="false">
+                    IA <i className='mdi mdi-star-four-points'></i>
+                  </a>
                 </div>
               </div>
               <div className="col-sm-9">
@@ -255,7 +258,7 @@ const Settings = ({ can, constants, statuses }) => {
                         </div>
                       </div>
                       <div className="col-md-4 col-sm-6 col-xs-12">
-                        <div className="card card-body border p-2" onClick={(e) => onModalOpen(e, 'whatsapp-new-lead-notification-waid','Grupo/Persona encargado', 'text')}>
+                        <div className="card card-body border p-2" onClick={(e) => onModalOpen(e, 'whatsapp-new-lead-notification-waid', 'Grupo/Persona encargado', 'text')}>
                           <h5 className="card-title mb-1">Grupo/Persona encargado</h5>
                           <p className="card-text mb-1">A quien(es) debemos notificar cuando se registre un nuevo lead?</p>
                           <p className="card-text">
@@ -267,6 +270,29 @@ const Settings = ({ can, constants, statuses }) => {
                         <div className="card card-body border p-2" onClick={(e) => onModalOpen(e, 'whatsapp-new-lead-notification-message-client', 'Notificacion al lead', 'simpleHTML')}>
                           <h5 className="card-title mb-1">Notificacion al lead</h5>
                           <p className="card-text mb-1">Que mensaje le llegara al lead cuando sea registrado en el sistema?</p>
+                          <p className="card-text">
+                            <small className="text-muted">Click para modificar</small>
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="tab-pane fade" id="v-generativeai" role="tabpanel" aria-labelledby="v-generativeai-tab">
+                    <h4>IA <i className='mdi mdi-star-four-points'></i></h4>
+                    <div className="row">
+                      <div className="col-md-4 col-sm-6 col-xs-12">
+                        <div className="card card-body border p-2" onClick={(e) => onModalOpen(e, 'gemini-api-key', 'API Key - Gemini', 'text')}>
+                          <h5 className="card-title mb-1">API Key - Gemini</h5>
+                          <p className="card-text mb-1">Configura un API key para que <b>Gemini</b> interactue con nuevos clientes.</p>
+                          <p className="card-text">
+                            <small className="text-muted">Click para modificar</small>
+                          </p>
+                        </div>
+                      </div>
+                      <div className="col-md-4 col-sm-6 col-xs-12">
+                        <div className="card card-body border p-2" onClick={(e) => onModalOpen(e, 'gemini-what-business-do', 'Que hace tu empresa [Separado por comas]', 'text')}>
+                          <h5 className="card-title mb-1">Que hace tu empresa</h5>
+                          <p className="card-text mb-1">Ayuda a Gemini a saber que productos/servicios buscan los clientes en tu empresa</p>
                           <p className="card-text">
                             <small className="text-muted">Click para modificar</small>
                           </p>
