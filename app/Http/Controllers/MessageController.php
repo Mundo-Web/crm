@@ -51,7 +51,6 @@ class MessageController extends BasicController
             ];
             return $messages;
         });
-        dump($response->toArray());
         return response($response->toArray(), $response->status);
     }
 
