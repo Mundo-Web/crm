@@ -95,7 +95,10 @@ class SendNewLeadNotification implements ShouldQueue
 
     $html = Text::replaceData(
       Setting::get('email-new-lead-notification-message-client', $business->id),
-      $client->toArray()
+      $client->toArray(),
+      [
+        'name' => fn($name) => explode(' ', $name)[0]
+      ]
     );
 
     try {
