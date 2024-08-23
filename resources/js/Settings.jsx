@@ -389,10 +389,10 @@ const Settings = ({ can, constants, statuses }) => {
         <input ref={nameRef} type='hidden' />
         <input ref={typeRef} type='hidden' />
         <div style={{ display: (constantType == 'text' || constantType == '' || constantType == null) ? 'block' : 'none' }}>
-          <TextareaFormGroup eRef={valueRef} label='Valor' col='col-12' required />
+          <TextareaFormGroup eRef={valueRef} label='Valor' col='col-12'  />
         </div>
         <div style={{ display: constantType == 'simpleHTML' ? 'block' : 'none' }}>
-          <QuillFormGroup eRef={quillRef} label='Valor' col='col-12' theme='bubble' required />
+          <QuillFormGroup eRef={quillRef} label='Valor' col='col-12' theme='bubble'  />
         </div>
         <div className='col-12' style={{ display: constantType == 'HTML' ? 'block' : 'none' }}>
           <label htmlFor="">Valor de la variable</label>

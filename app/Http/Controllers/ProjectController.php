@@ -38,9 +38,9 @@ class ProjectController extends BasicController
             DB::raw('COALESCE(SUM(payments.amount), 0) AS total_payments'),
             DB::raw('MAX(payments.created_at) AS last_payment_date'),
         ])
-            // ->leftJoin('clients AS client', 'client.id', 'projects.id')
-            // ->leftJoin('payments', 'payments.project_id', 'projects.id')
-            // ->leftJoin('statuses AS status', 'status.id', 'projects.status_id')
+            ->leftJoin('clients AS client', 'client.id', 'projects.id')
+            ->leftJoin('payments', 'payments.project_id', 'projects.id')
+            ->leftJoin('statuses AS status', 'status.id', 'projects.status_id')
             ->groupBy('projects.id');
     }
 
