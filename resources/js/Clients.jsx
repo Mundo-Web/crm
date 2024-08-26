@@ -28,7 +28,7 @@ import LeadsRest from './actions/LeadsRest.js'
 const clientsRest = new ClientsRest()
 const leadsRest = new LeadsRest()
 
-const Clients = ({ projectStatuses, clientStatuses, manageStatuses, session, can }) => {
+const Clients = ({ projectStatuses, clientStatuses, manageStatuses, session, can, defaultClientStatus }) => {
   const gridRef = useRef()
   const modalRef = useRef()
 
@@ -92,7 +92,7 @@ const Clients = ({ projectStatuses, clientStatuses, manageStatuses, session, can
       contact_phone: contactPhoneRef.current.value ?? '',
       contact_email: contactEmailRef.current.value ?? '',
       contact_address: contactAddressRef.current.value ?? '',
-      status_id: !idRef.current.value ? 12 : undefined
+      status_id: !idRef.current.value ? defaultClientStatus : undefined
     }
 
     const result = await clientsRest.save(request)

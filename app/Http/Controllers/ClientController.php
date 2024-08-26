@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Client;
+use App\Models\Setting;
 use App\Models\Status;
 use App\Models\View;
 use Illuminate\Http\Request;
@@ -19,7 +20,10 @@ class ClientController extends BasicController
 
     public function setReactViewProperties(Request $request)
     {
-        $properties = [];
+        $defaultClientStatus = Setting::get('default-client-status');
+        $properties = [
+            'defaultClientStatus' => $defaultClientStatus
+        ];
         if ($request->view) {
             $view = View::with(['statuses'])
                 ->where('id', $request->view)
