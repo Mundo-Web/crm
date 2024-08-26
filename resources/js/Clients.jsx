@@ -149,14 +149,14 @@ const Clients = ({ projectStatuses, clientStatuses, manageStatuses, session, can
             onClick: () => $(gridRef.current).dxDataGrid('instance').refresh()
           }
         });
-        // can('clients', 'root', 'all', 'create') && container.unshift({
-        //   widget: 'dxButton', location: 'after',
-        //   options: {
-        //     icon: 'plus',
-        //     hint: 'Nuevo registro',
-        //     onClick: () => onModalOpen()
-        //   }
-        // });
+        can('clients', 'root', 'all', 'create') && container.unshift({
+          widget: 'dxButton', location: 'after',
+          options: {
+            icon: 'plus',
+            hint: 'Nuevo registro',
+            onClick: () => onModalOpen()
+          }
+        });
       }}
       columns={[
         can('projects', 'root', 'all', 'list') ? {
