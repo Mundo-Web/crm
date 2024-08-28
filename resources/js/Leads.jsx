@@ -27,8 +27,10 @@ import TippyButton from './components/form/TippyButton.jsx'
 import "quill-mention/autoregister"
 import SelectAPIFormGroup from './components/form/SelectAPIFormGroup.jsx'
 import SetSelectValue from './Utils/SetSelectValue.jsx'
+import ClientsRest from './actions/ClientsRest.js'
 
 const leadsRest = new LeadsRest()
+const clientsRest = new ClientsRest()
 const clientNotesRest = new ClientNotesRest()
 const taskRest = new TasksRest()
 const usetsRest = new UsersRest()
@@ -300,6 +302,22 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
     else $(gridRef.current).dxDataGrid('instance').refresh()
   }
 
+  const onArchiveClicked = async (data) => {
+    const { isConfirmed } = await Swal.fire({
+      title: "Este lead sera archivado",
+      text: `Podras verlo en el menu de archivados`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Continuar",
+      cancelButtonText: `Cancelar`
+    })
+    if (!isConfirmed) return
+    await clientsRest.delete(data.id)
+    if (defaultView == 'kanban') {
+      $(`[id="${data.id}"]`).remove()
+    } else $(gridRef.current).dxDataGrid('instance').refresh()
+  }
+
   const onDeleteClicked = async (data) => {
     const { isConfirmed } = await Swal.fire({
       title: "Estas seguro de eliminar este lead?",
@@ -547,6 +565,9 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
                 ReactAppend(container, <TippyButton className='btn btn-xs btn-soft-success' title='Convertir en cliente' onClick={async () => onMakeLeadClient(data)}>
                   <i className='fa fa-user-plus'></i>
                 </TippyButton>)
+                ReactAppend(container, <TippyButton className='btn btn-xs btn-soft-dark' title='Archivar lead' onClick={() => onArchiveClicked(data)}>
+                  <i className='mdi mdi-archive'></i>
+                </TippyButton>)
                 ReactAppend(container, <TippyButton className='btn btn-xs btn-soft-danger' title='Eliminar lead' onClick={() => onDeleteClicked(data)}>
                   <i className='fa fa-trash'></i>
                 </TippyButton>)
@@ -591,6 +612,10 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
                                     <a class="dropdown-item" style={{ cursor: 'pointer' }} onClick={() => onMakeLeadClient(lead)}>
                                       <i className='fa fa-user-plus me-1'></i>
                                       Convertir en cliente
+                                    </a>
+                                    <a class="dropdown-item" style={{ cursor: 'pointer' }} onClick={() => onArchiveClicked(lead)}>
+                                      <i className='mdi mdi-archive me-1'></i>
+                                      Archivar lead
                                     </a>
                                     <a class="dropdown-item" style={{ cursor: 'pointer' }} onClick={() => onDeleteClicked(lead)}>
                                       <i className='fa fa-trash me-1'></i>

@@ -129,8 +129,11 @@ const Menu = ({ session, can, presets, APP_PROTOCOL, APP_DOMAIN, businesses }) =
           {/* <MenuItem href="/calendar" icon='mdi mdi-calendar'>Calendario</MenuItem> */}
           <MenuItem href="/tasks" icon='mdi mdi-clipboard'>Tareas</MenuItem>
 
-          <MenuItem href="/leads" icon='mdi mdi-texture'>Leads</MenuItem>
-          {can('clients', 'all', 'list') && <MenuItem href="/clients" icon='mdi mdi-account-group'>Clientes</MenuItem>}
+          <MenuItemContainer title='Personas' icon='mdi mdi-account-multiple'>
+            <MenuItem href="/leads" icon='mdi mdi-texture'>Leads</MenuItem>
+            {can('clients', 'all', 'list') && <MenuItem href="/clients" icon='mdi mdi-account-group'>Clientes</MenuItem>}
+            <MenuItem href="/archived" icon='mdi mdi-archive'>Archivados</MenuItem>
+          </MenuItemContainer>
 
           {can('projects', 'root', 'all', 'list') && <MenuItem href="/projects" icon='mdi mdi-page-next'>Proyectos</MenuItem>}
           {

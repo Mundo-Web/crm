@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ApikeyController;
+use App\Http\Controllers\ArchivedController;
 use App\Http\Controllers\BasicController;
 use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\ClientController;
@@ -53,6 +54,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/leads', [LeadController::class, 'reactView'])->name('Leads.jsx');
     Route::get('/leads/{lead}', [LeadController::class, 'reactView'])->name('Leads.jsx');
     Route::get('/clients/{view}', [ClientController::class, 'reactView'])->name('Clients.jsx');
+    Route::get('/archived', [ArchivedController::class, 'reactView'])->name('Archived.jsx');
     Route::get('/views', [ViewController::class, 'reactView'])->name('Views.jsx');
     Route::get('/projects', [ProjectController::class, 'reactView'])->name('Projects.jsx');
     Route::get('/users', [UserController::class, 'reactView'])->name('Users.jsx');

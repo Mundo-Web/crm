@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AccountController;
+use App\Http\Controllers\ArchivedController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\ClientNoteController;
@@ -76,6 +77,10 @@ Route::middleware('auth')->group(function () {
     Route::patch('/clients/status', [ClientController::class, 'status']);
     Route::patch('/clients/client-status', [ClientController::class, 'clientStatus']);
     Route::delete('/clients/{id}', [ClientController::class, 'delete']);
+
+    Route::post('/archived/paginate', [ArchivedController::class, 'paginate']);
+    Route::patch('/archived/status', [ArchivedController::class, 'status']);
+    Route::delete('/archived/{id}', [ArchivedController::class, 'delete']);
 
     // ClientNotes routes
     Route::post('/client-notes', [ClientNoteController::class, 'save']);
