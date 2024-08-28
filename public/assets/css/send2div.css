@@ -1,0 +1,46 @@
+#icon-2-send {
+  display: none;
+  position: absolute;
+  transition: all .25s;
+  transform: translate(-50%, -50%);
+  z-index: 99999999999;
+}
+
+#icon-2-send::before {
+  content: "\f007";
+  height: 20px;
+  width: 20px;
+  font-size: x-large;
+}
+
+.sending-to-div {
+  z-index: 99999999999;
+  display: block !important;
+  animation: xAxis 1s forwards cubic-bezier(1.000, 0.440, 0.840, 0.165);
+}
+
+.sending-to-div::before {
+  animation: yAxis 1s alternate forwards cubic-bezier(0.165, 0.840, 0.440, 1.000);
+}
+
+.shake {
+  animation: shakeCart .4s ease-in-out forwards;
+}
+
+@keyframes shakeCart {
+  25% {
+    transform: translateX(6px)
+  }
+
+  50% {
+    transform: translateX(-4px);
+  }
+
+  75% {
+    transform: translateX(2px);
+  }
+
+  100% {
+    transform: translateX(0);
+  }
+}

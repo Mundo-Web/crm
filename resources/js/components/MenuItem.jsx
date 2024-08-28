@@ -1,9 +1,9 @@
 import React from 'react'
 
-const MenuItem = ({ href, icon, children }) => {
+const MenuItem = ({id, href, icon, children }) => {
   return (
     <li className={location.pathname.startsWith(href) ? 'menuitem-active' : ''}>
-      <a href={href} className={location.pathname.startsWith(href) ? 'active' : ''}>
+      <a id={id} href={href} className={location.pathname.startsWith(href) ? 'active' : ''}>
         <i className={icon}></i>
         <span> {children} </span>
       </a>

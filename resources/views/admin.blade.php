@@ -78,11 +78,15 @@
       color: #6c757d;
     }
   </style>
+  <link rel="stylesheet" href="/assets/css/send2div.css">
+  <link rel="stylesheet" id="send-to-div-style" href="" />
 </head>
 
 <body class="loading"
   data-layout='{"mode": "horizontal", "width": "fluid", "menuPosition": "fixed", "sidebar": { "color": "light", "size": "default", "showuser": true}, "topbar": {"color": "light"}, "showRightSidebarOnPageLoad": false}'>
   @inertia
+
+  <span id="icon-2-send" class="fas"></span>
 
   <div class="rightbar-overlay"></div>
   <script src="/lte/assets/libs/qrcodejs/qrcode.min.js"></script>

@@ -28,6 +28,8 @@ import "quill-mention/autoregister"
 import SelectAPIFormGroup from './components/form/SelectAPIFormGroup.jsx'
 import SetSelectValue from './Utils/SetSelectValue.jsx'
 import ClientsRest from './actions/ClientsRest.js'
+import Prepare2Send from './Utils/Prepare2Send.js'
+import Send2Div from './Utils/Send2Div.js'
 
 const leadsRest = new LeadsRest()
 const clientsRest = new ClientsRest()
@@ -302,7 +304,10 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
     else $(gridRef.current).dxDataGrid('instance').refresh()
   }
 
-  const onArchiveClicked = async (data) => {
+  const onArchiveClicked = async (data, e = null) => {
+    const from = e ? e.target : $(`[id="${data.id}"]`).get(0);
+    const to = document.getElementById('archived-item')
+    Prepare2Send(from, to)
     const { isConfirmed } = await Swal.fire({
       title: "Este lead sera archivado",
       text: `Podras verlo en el menu de archivados`,
@@ -312,10 +317,13 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
       cancelButtonText: `Cancelar`
     })
     if (!isConfirmed) return
-    await clientsRest.delete(data.id)
+    const deleted = await clientsRest.delete(data.id)
+    if (!deleted) return
     if (defaultView == 'kanban') {
       $(`[id="${data.id}"]`).remove()
     } else $(gridRef.current).dxDataGrid('instance').refresh()
+
+    Send2Div(to)
   }
 
   const onDeleteClicked = async (data) => {
@@ -565,7 +573,7 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
                 ReactAppend(container, <TippyButton className='btn btn-xs btn-soft-success' title='Convertir en cliente' onClick={async () => onMakeLeadClient(data)}>
                   <i className='fa fa-user-plus'></i>
                 </TippyButton>)
-                ReactAppend(container, <TippyButton className='btn btn-xs btn-soft-dark' title='Archivar lead' onClick={() => onArchiveClicked(data)}>
+                ReactAppend(container, <TippyButton className='btn btn-xs btn-soft-dark' title='Archivar lead' onClick={(e) => onArchiveClicked(data, e)}>
                   <i className='mdi mdi-archive'></i>
                 </TippyButton>)
                 ReactAppend(container, <TippyButton className='btn btn-xs btn-soft-danger' title='Eliminar lead' onClick={() => onDeleteClicked(data)}>

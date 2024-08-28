@@ -25,9 +25,8 @@ import DropdownItem from './components/dropdown/DropdownItem.jsx'
 import Swal from 'sweetalert2'
 import LeadsRest from './actions/LeadsRest.js'
 import ArchivedRest from './actions/ArchivedRest.js'
+import Global from './Utils/Global.js'
 
-const clientsRest = new ClientsRest()
-const leadsRest = new LeadsRest()
 const archivedRest = new ArchivedRest()
 
 const Archived = ({ projectStatuses, can }) => {
@@ -75,7 +74,7 @@ const Archived = ({ projectStatuses, can }) => {
             ReactAppend(container, <div className='d-flex align-items-center' >
               <b>{data.contact_name}</b>
               {data.assigned_to && <Tippy content={`Atendido por ${data.assigned.name} ${data.assigned.lastname}`}>
-                <img className='avatar-xs rounded-circle ms-1' src={`//${APP_DOMAIN}/api/profile/thumbnail/${data.assigned.relative_id}`} alt={data.assigned.name} />
+                <img className='avatar-xs rounded-circle ms-1' src={`//${Global.APP_DOMAIN}/api/profile/thumbnail/${data.assigned.relative_id}`} alt={data.assigned.name} />
               </Tippy>}
             </div>)
           }
