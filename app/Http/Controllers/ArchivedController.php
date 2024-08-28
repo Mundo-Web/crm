@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Client;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use SoDe\Extend\Response;
 
 class ArchivedController extends BasicController
 {
@@ -22,5 +23,16 @@ class ArchivedController extends BasicController
             ->leftJoin('statuses AS manage_status', 'status.id', 'manage_status_id')
             ->whereNull('clients.status')
             ->where('clients.business_id', Auth::user()->business_id);
+    }
+
+    public function status(Request $request)
+    {
+        $response = Response::simpleTryCatch(function (Response $response) use ($request) {
+            $this->model::where('id', $request->id)
+                ->update([
+                    'status' => 1
+                ]);
+        });
+        return response($response->toArray(), $response->status);
     }
 }
