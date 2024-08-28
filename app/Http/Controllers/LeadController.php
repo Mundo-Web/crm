@@ -75,6 +75,7 @@ class LeadController extends BasicController
             ->join('statuses AS status', 'status.id', 'status_id')
             ->leftJoin('statuses AS manage_status', 'manage_status.id', 'manage_status_id')
             ->where('status.table_id', 'e05a43e5-b3a6-46ce-8d1f-381a73498f33')
+            ->where('status', true)
             ->where('clients.business_id', Auth::user()->business_id);
     }
 
