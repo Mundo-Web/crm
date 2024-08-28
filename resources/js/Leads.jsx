@@ -437,8 +437,8 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
               }
             });
           }}
-          pageSize={100}
-          allowedPageSizes={[100]}
+          pageSize={50}
+          allowedPageSizes={[50, 100]}
           // selection={{
           //   mode: 'multiple',
           //   selectAllMode: 'page'
