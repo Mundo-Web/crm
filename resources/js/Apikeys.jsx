@@ -2,15 +2,13 @@
 import React, { useEffect, useRef } from 'react'
 import { createRoot } from 'react-dom/client'
 import CreateReactScript from './Utils/CreateReactScript.jsx'
-import UsersRest from './actions/UsersRest.js'
 import Adminto from './components/Adminto'
 import Tippy from '@tippyjs/react'
 import { Clipboard } from 'sode-extend-react'
 import Swal from 'sweetalert2'
+import Global from './Utils/Global.js'
 
-const usersRest = new UsersRest()
-
-const Apikeys = ({ can, apikey, APP_DOMAIN, APP_CORRELATIVE }) => {
+const Apikeys = ({ apikey }) => {
 
   const keyRef = useRef()
 
@@ -73,7 +71,7 @@ const Apikeys = ({ can, apikey, APP_DOMAIN, APP_CORRELATIVE }) => {
 
             <div className="mb-3">
               <h5>URL:</h5>
-              <span className='badge bg-danger'>POST</span> <code>https://{APP_CORRELATIVE}.{APP_DOMAIN}/free/leads</code>
+              <span className='badge bg-danger'>POST</span> <code>https://{Global.APP_CORRELATIVE}.{Global.APP_DOMAIN}/free/leads</code>
             </div>
 
             <div className="mb-3">
