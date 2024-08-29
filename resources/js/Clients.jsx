@@ -196,6 +196,10 @@ const Clients = ({ projectStatuses, clientStatuses, manageStatuses, session, can
           visible: false
         },
         {
+          dataField: 'contact_name',
+          caption: 'Nombre de contacto'
+        },
+        {
           dataField: 'contact_phone',
           caption: 'Telefono'
         },
