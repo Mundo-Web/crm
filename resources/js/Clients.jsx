@@ -187,7 +187,7 @@ const Clients = ({ projectStatuses, clientStatuses, manageStatuses, session, can
               {data.assigned_to && <Tippy content={`Atendido por ${data.assigned.name} ${data.assigned.lastname}`}>
                 <img className='avatar-xs rounded-circle me-1' src={`//${Global.APP_DOMAIN}/api/profile/thumbnail/${data.assigned.relative_id}`} alt={data.assigned.name} />
               </Tippy>}
-              <div>{data.tradename}</div>
+              <div>{data.tradename || <i className='text-muted'>- Sin nombre -</i>}</div>
             </div>)
           }
         },
