@@ -178,7 +178,7 @@ const Clients = ({ projectStatuses, clientStatuses, manageStatuses, session, can
           dataField: 'ruc',
           caption: 'RUC',
           cellTemplate: (container, {data}) => {
-            container.text(data.ruc || `<i class="text-muted">- Sin RUC -</i>`)
+            container.html(data.ruc || `<i class="text-muted">- Sin RUC -</i>`)
           }
         },
         {
