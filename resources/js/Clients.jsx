@@ -176,7 +176,10 @@ const Clients = ({ projectStatuses, clientStatuses, manageStatuses, session, can
         } : null,
         {
           dataField: 'ruc',
-          caption: 'RUC'
+          caption: 'RUC',
+          cellTemplate: (container, {data}) => {
+            container.text(data.ruc || `<i class="text-muted">- Sin RUC -</i>`)
+          }
         },
         {
           dataField: 'tradename',
