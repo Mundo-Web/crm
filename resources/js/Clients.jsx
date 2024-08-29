@@ -238,7 +238,7 @@ const Clients = ({ projectStatuses, clientStatuses, manageStatuses, session, can
             </Dropdown>)
           }
         } : null,
-        can('projects', 'root', 'all', 'list', 'update', 'changestatus', 'delete') ? {
+        can('clients', 'root', 'all', 'list', 'update', 'changestatus', 'delete') ? {
           caption: 'Acciones',
           width: 235,
           cellTemplate: (container, { data }) => {
