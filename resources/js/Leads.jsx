@@ -30,6 +30,7 @@ import SetSelectValue from './Utils/SetSelectValue.jsx'
 import ClientsRest from './actions/ClientsRest.js'
 import Prepare2Send from './Utils/Prepare2Send.js'
 import Send2Div from './Utils/Send2Div.js'
+import Global from './Utils/Global.js'
 
 const leadsRest = new LeadsRest()
 const clientsRest = new ClientsRest()
@@ -37,7 +38,7 @@ const clientNotesRest = new ClientNotesRest()
 const taskRest = new TasksRest()
 const usetsRest = new UsersRest()
 
-const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, session, can, APP_DOMAIN, lead }) => {
+const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, session, can, lead }) => {
 
   const modalRef = useRef()
   const newLeadModalRef = useRef()
@@ -478,7 +479,7 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
                 ReactAppend(container, <div className='d-flex align-items-center' style={{ cursor: 'pointer' }} onClick={() => onLeadClicked(data)}>
                   <b>{data.contact_name}</b>
                   {data.assigned_to && <Tippy content={`Atendido por ${data.assigned.name} ${data.assigned.lastname}`}>
-                    <img className='avatar-xs rounded-circle ms-1' src={`//${APP_DOMAIN}/api/profile/thumbnail/${data.assigned.relative_id}`} alt={data.assigned.name} />
+                    <img className='avatar-xs rounded-circle ms-1' src={`//${Global.APP_DOMAIN}/api/profile/thumbnail/${data.assigned.relative_id}`} alt={data.assigned.name} />
                   </Tippy>}
                 </div>)
               }
@@ -659,7 +660,7 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
                                             : <Tippy content={`Atendido por ${lead?.assigned?.fullname}`}>
                                               <a href="" data-bs-toggle="tooltip" data-bs-placement="top"
                                                 title="Username">
-                                                <img src={`//${APP_DOMAIN}/api/profile/${lead?.assigned?.relative_id}`} alt="img"
+                                                <img src={`//${Global.APP_DOMAIN}/api/profile/${lead?.assigned?.relative_id}`} alt="img"
                                                   className="avatar-xs rounded-circle" />
                                               </a>
                                             </Tippy>
@@ -734,7 +735,7 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
         <div className="col-lg-3 col-md-4 col-sm-6 col-xs-12">
           <div className="d-flex mb-3">
             <img className="flex-shrink-0 me-3 rounded-circle avatar-md" alt={leadLoaded?.contact_name}
-              src={`//${APP_DOMAIN}/api/profile/null`} />
+              src={`//${Global.APP_DOMAIN}/api/profile/null`} />
             <div className="flex-grow-1">
               <h4 className="media-heading mt-0">
                 <i className='mdi mdi-lead-pencil me-1' style={{ cursor: 'pointer' }} onClick={() => onOpenModal(leadLoaded)}></i>
