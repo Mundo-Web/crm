@@ -188,7 +188,7 @@ const Projects = ({ statuses, can }) => {
           }
         },
         {
-          dataField: 'starts_at',
+          dataField: 'ends_at',
           caption: 'Fecha de desarrollo',
           dataType: 'date',
           cellTemplate: (container, { data }) => {
