@@ -138,6 +138,7 @@ class BasicController extends Controller
       $totalCount = 0;
       if ($request->requireTotalCount) {
         $instance4count = clone $instance;
+        $instance4count->getQuery()->groups = null;
         // $totalCount = $instance->count();
         if ($this->prefix4filter) {
           $totalCount = $instance4count->select(DB::raw("COUNT(DISTINCT({$this->prefix4filter}.id)) as total_count"))->value('total_count');
