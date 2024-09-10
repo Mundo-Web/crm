@@ -208,6 +208,8 @@ const Projects = ({ statuses, can }) => {
         {
           dataField: 'last_payment_date',
           caption: 'Fecha ultimo pago',
+          dataType: 'datetime',
+          format: 'yyyy-MM-dd'
           visible: false
         },
         // {
