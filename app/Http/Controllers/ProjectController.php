@@ -15,6 +15,7 @@ class ProjectController extends BasicController
     public $model = Project::class;
     public $reactView = 'Projects';
     public $prefix4filter = 'projects';
+    public $ignorePrefix = ['remaining_amount', 'total_payments', 'last_payment_date'];
 
     public function setReactViewProperties(Request $request)
     {

@@ -25,6 +25,7 @@ class BasicController extends Controller
   public $reactView = 'Home';
   public $reactRootView = 'admin';
   public $prefix4filter = null;
+  public $ignorePrefix = [];
   public $filterBusiness = true;
 
   public function setPaginationInstance(string $model)
@@ -91,7 +92,7 @@ class BasicController extends Controller
         [$grouping] = $request->group;
         // $selector = str_replace('.', '__', $grouping['selector']);
         $selector = $grouping['selector'];
-        if (!str_contains($selector, '.') && $this->prefix4filter && !Text::startsWith($selector, '!')) {
+        if (!str_contains($selector, '.') && $this->prefix4filter && !Text::startsWith($selector, '!') && !in_array($selector, $this->ignorePrefix)) {
           $selector = "{$this->prefix4filter}.{$selector}";
         }
         // $instance = $this->model::select(DB::raw("{$selector} AS key"))
@@ -100,7 +101,7 @@ class BasicController extends Controller
       }
 
       if ($this->filterBusiness) {
-        if ($this->prefix4filter) {
+        if ($this->prefix4filter && !in_array($selector, $this->ignorePrefix)) {
           $instance->where("{$this->prefix4filter}.business_id", Auth::user()->business_id);
         } else {
           $instance->where('business_id', Auth::user()->business_id);
@@ -109,7 +110,7 @@ class BasicController extends Controller
 
       if ($request->filter) {
         $instance->where(function ($query) use ($request) {
-          dxDataGrid::filter($query, $request->filter ?? [], false, $this->prefix4filter);
+          dxDataGrid::filter($query, $request->filter ?? [], false, $this->prefix4filter, $this->ignorePrefix);
         });
       }
 
@@ -117,7 +118,7 @@ class BasicController extends Controller
         foreach ($request->sort as $sorting) {
           // $selector = \str_replace('.', '__', $sorting['selector']);
           $selector = $sorting['selector'];
-          if (!str_contains($selector, '.') && $this->prefix4filter && !Text::startsWith($selector, '!')) {
+          if (!str_contains($selector, '.') && $this->prefix4filter && !Text::startsWith($selector, '!') && !in_array($selector, $this->ignorePrefix)) {
             $selector = "{$this->prefix4filter}.{$selector}";
           }
           $instance->orderBy(
@@ -126,7 +127,7 @@ class BasicController extends Controller
           );
         }
       } else {
-        if ($this->prefix4filter) {
+        if ($this->prefix4filter && !in_array($selector, $this->ignorePrefix)) {
           $instance->orderBy("{$this->prefix4filter}.id", 'DESC');
         } else {
           $instance->orderBy('id', 'DESC');
@@ -138,7 +139,7 @@ class BasicController extends Controller
         $instance4count = clone $instance;
         $instance4count->getQuery()->groups = null;
         // $totalCount = $instance->count();
-        if ($this->prefix4filter) {
+        if ($this->prefix4filter && !in_array($selector, $this->ignorePrefix)) {
           $totalCount = $instance4count->select(DB::raw("COUNT(DISTINCT({$this->prefix4filter}.id)) as total_count"))->value('total_count');
         } else {
           $totalCount = $instance4count->select(DB::raw('COUNT(DISTINCT(id)) as total_count'))->value('total_count');
