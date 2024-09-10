@@ -139,7 +139,8 @@ const Projects = ({ statuses, can }) => {
         },
         {
           dataField: 'type.name',
-          caption: 'Tipo'
+          caption: 'Tipo',
+          visible: false
         },
         {
           dataField: 'name',
@@ -153,7 +154,8 @@ const Projects = ({ statuses, can }) => {
           cellTemplate: (container, { data }) => {
             const relatives = (data.users || '').split('|').filter(Boolean)
             container.append(DxBox([Assigneds(relatives)]))
-          }
+          },
+          visible: false
         },
         {
           dataField: 'cost',
@@ -192,7 +194,9 @@ const Projects = ({ statuses, can }) => {
           caption: 'Fecha inicio proyecto',
           dataType: 'date',
           format: 'yyyy-MM-dd',
-          visible: false
+          cellTemplate: (container, { data }) => {
+            container.text(moment(data.starts_at).format('ll'))
+          }
         },
         {
           dataField: 'ends_at',
@@ -212,7 +216,9 @@ const Projects = ({ statuses, can }) => {
           caption: 'Fecha ultimo pago',
           dataType: 'datetime',
           format: 'yyyy-MM-dd HH:mm:ss',
-          visible: false
+          cellTemplate: (container, {data}) => {
+            container.text(moment(data.last_payment_date).format('lll'))
+          }
         },
         // {
         //   dataField: 'ends_at',
