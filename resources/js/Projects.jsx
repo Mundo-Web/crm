@@ -188,8 +188,10 @@ const Projects = ({ statuses, can }) => {
           }
         },
         {
-          dataField: 'start_at',
+          dataField: 'starts_at',
           caption: 'Fecha inicio proyecto',
+          dataType: 'date',
+          format: 'yyyy-MM-dd',
           visible: false
         },
         {
