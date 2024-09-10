@@ -101,7 +101,7 @@ class BasicController extends Controller
       }
 
       if ($this->filterBusiness) {
-        if ($this->prefix4filter && !in_array($selector, $this->ignorePrefix)) {
+        if ($this->prefix4filter) {
           $instance->where("{$this->prefix4filter}.business_id", Auth::user()->business_id);
         } else {
           $instance->where('business_id', Auth::user()->business_id);
@@ -127,7 +127,7 @@ class BasicController extends Controller
           );
         }
       } else {
-        if ($this->prefix4filter && !in_array($selector, $this->ignorePrefix)) {
+        if ($this->prefix4filter) {
           $instance->orderBy("{$this->prefix4filter}.id", 'DESC');
         } else {
           $instance->orderBy('id', 'DESC');
@@ -139,7 +139,7 @@ class BasicController extends Controller
         $instance4count = clone $instance;
         $instance4count->getQuery()->groups = null;
         // $totalCount = $instance->count();
-        if ($this->prefix4filter && !in_array($selector, $this->ignorePrefix)) {
+        if ($this->prefix4filter) {
           $totalCount = $instance4count->select(DB::raw("COUNT(DISTINCT({$this->prefix4filter}.id)) as total_count"))->value('total_count');
         } else {
           $totalCount = $instance4count->select(DB::raw('COUNT(DISTINCT(id)) as total_count'))->value('total_count');
