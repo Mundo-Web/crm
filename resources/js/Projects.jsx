@@ -195,7 +195,7 @@ const Projects = ({ statuses, can }) => {
           dataType: 'date',
           format: 'yyyy-MM-dd',
           cellTemplate: (container, { data }) => {
-            container.text(moment(data.starts_at).format('ll'))
+            container.text(moment(data.starts_at).format('LL'))
           }
         },
         {
@@ -217,7 +217,7 @@ const Projects = ({ statuses, can }) => {
           dataType: 'datetime',
           format: 'yyyy-MM-dd HH:mm:ss',
           cellTemplate: (container, {data}) => {
-            container.text(moment(data.last_payment_date).format('lll'))
+            container.text(moment(data.last_payment_date).format('LLL'))
           }
         },
         // {
