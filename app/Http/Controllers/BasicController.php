@@ -94,7 +94,8 @@ class BasicController extends Controller
         if (!str_contains($selector, '.') && $this->prefix4filter && !Text::startsWith($selector, '!')) {
           $selector = "{$this->prefix4filter}.{$selector}";
         }
-        $instance = $this->model::select(DB::raw("{$selector} AS key"))
+        // $instance = $this->model::select(DB::raw("{$selector} AS key"))
+        $instance = $instance::select(DB::raw("{$selector} AS key"))
           ->groupBy(str_replace('!', '', $selector));
       }
 
