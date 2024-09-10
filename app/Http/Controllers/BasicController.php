@@ -95,7 +95,7 @@ class BasicController extends Controller
           $selector = "{$this->prefix4filter}.{$selector}";
         }
         // $instance = $this->model::select(DB::raw("{$selector} AS key"))
-        $instance = $instance::select(DB::raw("{$selector} AS key"))
+        $instance = $instance->select(DB::raw("{$selector} AS key"))
           ->groupBy(str_replace('!', '', $selector));
       }
 
