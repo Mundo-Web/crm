@@ -15,7 +15,6 @@ use Illuminate\Routing\ResponseFactory;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
-use SoDe\Extend\JSON;
 use SoDe\Extend\Response;
 use SoDe\Extend\Text;
 
@@ -95,9 +94,7 @@ class BasicController extends Controller
         if (!str_contains($selector, '.') && $this->prefix4filter && !Text::startsWith($selector, '!')) {
           $selector = "{$this->prefix4filter}.{$selector}";
         }
-        $instance = $this->model::select([
-          "{$selector} AS key"
-        ])
+        $instance = $this->model::select(DB::raw("{$selector} AS key"))
           ->groupBy(str_replace('!', '', $selector));
       }
 
