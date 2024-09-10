@@ -188,8 +188,13 @@ const Projects = ({ statuses, can }) => {
           }
         },
         {
+          dataField: 'start_at',
+          caption: 'Fecha inicio proyecto',
+          visible: false
+        },
+        {
           dataField: 'ends_at',
-          caption: 'Fecha de desarrollo',
+          caption: 'Fecha fin proyecto',
           dataType: 'date',
           cellTemplate: (container, { data }) => {
             container.append(DxBox([{
@@ -199,6 +204,11 @@ const Projects = ({ statuses, can }) => {
             }]))
           },
           sortOrder: 'asc'
+        },
+        {
+          dataField: 'last_payment_date',
+          caption: 'Fecha ultimo pago',
+          visible: false
         },
         // {
         //   dataField: 'ends_at',
