@@ -204,6 +204,7 @@ const Projects = ({ statuses, can }) => {
           dataField: 'ends_at',
           caption: 'Fecha fin proyecto',
           dataType: 'date',
+          format: 'yyyy-MM-dd',
           cellTemplate: (container, { data }) => {
             container.append(DxBox([{
               width: '200px',
