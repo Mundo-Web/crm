@@ -18,6 +18,11 @@
   <link href="/lte/assets/libs/quill/quill.bubble.css" rel="stylesheet" type="text/css" />
   <link href="/lte/assets/libs/quill/quill.mention.css" rel="stylesheet" type="text/css">
 
+  {{-- Exportable Scripts --}}
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.1.1/exceljs.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.2/FileSaver.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
+
   {{-- DxDataGrid Styles --}}
   <link href="/lte/assets/libs/dxdatagrid/css/dx.light.compact.css?v=06d3ebc8-645c-4d80-a600-c9652743c425"
     rel="stylesheet" type="text/css" id="dg-default-stylesheet" />
