@@ -1,7 +1,6 @@
 import React, { useEffect } from 'react'
-import { Local } from 'sode-extend-react'
 
-const DataGrid = ({ gridRef: dataGridRef, rest, columns, toolBar, masterDetail, filterValue, defaultRows, selection, allowedPageSizes = [5, 10, 25, 50, 100], pageSize = 100 }) => {
+const DataGrid = ({ gridRef: dataGridRef, rest, columns, toolBar, masterDetail, filterValue, defaultRows, selection, allowedPageSizes = [5, 10, 25, 50, 100], pageSize = 100, exportable, exportableName, customizeCell = () => { } }) => {
   useEffect(() => {
     DevExpress.localization.locale(navigator.language);
     $(dataGridRef.current).dxDataGrid({
@@ -54,24 +53,29 @@ const DataGrid = ({ gridRef: dataGridRef, rest, columns, toolBar, masterDetail, 
       height: 'calc(100vh - 185px)',
       filterValue,
       selection,
-      // export: {
-      //   enabled: true
-      // },
-      // onExporting: function (e) {
-      //   var workbook = new ExcelJS.Workbook();
-      //   var worksheet = workbook.addWorksheet('Main sheet');
-      //   DevExpress.excelExporter.exportDataGrid({
-      //     worksheet: worksheet,
-      //     component: e.component,
-      //     customizeCell: function (options) {
-      //       options.excelCell.alignment = { horizontal: 'left' };
-      //     }
-      //   }).then(function () {
-      //     workbook.xlsx.writeBuffer().then(function (buffer) {
-      //       saveAs(new Blob([buffer], { type: 'application/octet-stream' }), `types.${SERVICE}.xlsx`);
-      //     });
-      //   });
-      // },
+      export: {
+        enabled: exportable
+      },
+      onExporting: function (e) {
+        var workbook = new ExcelJS.Workbook();
+        var worksheet = workbook.addWorksheet('Main sheet');
+        DevExpress.excelExporter.exportDataGrid({
+          worksheet: worksheet,
+          component: e.component,
+          customizeCell: function (options) {
+            customizeCell(options)
+            options.excelCell.alignment = {
+              horizontal: 'left',
+              vertical: 'top',
+              ...options.excelCell.alignment
+            };
+          }
+        }).then(function () {
+          workbook.xlsx.writeBuffer().then(function (buffer) {
+            saveAs(new Blob([buffer], { type: 'application/octet-stream' }), `${exportableName}.xlsx`);
+          });
+        });
+      },
       rowAlternationEnabled: true,
       showBorders: true,
       filterRow: {

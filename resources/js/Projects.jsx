@@ -109,7 +109,7 @@ const Projects = ({ statuses, can }) => {
   }
 
   return (<>
-    <Table gridRef={gridRef} title='Proyectos' rest={ProjectsRest}
+    <Table gridRef={gridRef} title='Proyectos' rest={ProjectsRest} exportable
       toolBar={(container) => {
         container.unshift({
           widget: 'dxButton', location: 'after',
@@ -155,7 +155,8 @@ const Projects = ({ statuses, can }) => {
             const relatives = (data.users || '').split('|').filter(Boolean)
             container.append(DxBox([Assigneds(relatives)]))
           },
-          visible: false
+          visible: false,
+          allowExporting: false,
         },
         {
           dataField: 'cost',
@@ -187,7 +188,8 @@ const Projects = ({ statuses, can }) => {
                 </div>
               </>
             ], false))
-          }
+          },
+          allowExporting: false,
         },
         {
           dataField: 'starts_at',
