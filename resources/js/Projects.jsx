@@ -160,7 +160,7 @@ const Projects = ({ statuses, can }) => {
         },
         {
           dataField: 'cost',
-          caption: 'Costo',
+          caption: 'Costo total',
           dataType: 'number',
           cellTemplate: (container, { data }) => {
             container.text(`S/. ${Number2Currency(data.cost)}`)
@@ -168,7 +168,7 @@ const Projects = ({ statuses, can }) => {
         },
         {
           dataField: 'remaining_amount',
-          caption: 'Pagos',
+          caption: 'Debe',
           dataType: 'number',
           cellTemplate: (container, { data }) => {
             const percent = ((data.total_payments / data.cost) * 100).toFixed(2)
