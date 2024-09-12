@@ -81,12 +81,15 @@ class LeadController extends BasicController
 
     public function beforeSave(Request $request)
     {
-        $status = Setting::get('default-lead-status');
-        $manage_status = Setting::get('default-manage-lead-status');
         $body = $request->all();
+        $exists = Client::where('id', $request->id)->exists();
+        if (!$exists) {
+            $status = Setting::get('default-lead-status');
+            $manage_status = Setting::get('default-manage-lead-status');
+            $body['status_id'] = $status;
+            $body['manage_status_id'] = $manage_status;
+        }
         $body['created_by'] = Auth::user()->service_user->id;
-        $body['status_id'] = $status;
-        $body['manage_status_id'] = $manage_status;
         $body['source'] = env('APP_NAME');
         $body['origin'] = env('APP_NAME');
         $body['triggered_by'] = 'Formulario';
