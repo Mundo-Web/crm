@@ -69,7 +69,10 @@ class SendNewLeadNotification implements ShouldQueue
           'whatsapp-new-lead-notification-message',
           $business->id
         ),
-        $client->toArray()
+        $client->toArray(),
+        [
+          'name' => fn($name) => explode(' ', $name)[0]
+        ]
       );
 
       new Fetch(env('WA_URL') . '/api/send', [
