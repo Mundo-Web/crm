@@ -18,9 +18,9 @@ class MessageController extends BasicController
 {
     public $model = Message::class;
 
-    public function byPhone(Request $request, string $sessionId, string $waId)
+    public function byPhone(Request $request, string $sessionId)
     {
-        $response = dxResponse::simpleTryCatch(function ($response) use ($sessionId, $waId) {
+        $response = dxResponse::simpleTryCatch(function ($response) use ($sessionId, $request) {
             [, $businessUUID] = \explode('-', $sessionId, 2);
 
             $businessJpa = Business::where('uuid', $businessUUID)->first();
@@ -29,11 +29,11 @@ class MessageController extends BasicController
             $businessApiKey = Setting::get('gemini-api-key', $businessJpa->id);
             if (!$businessApiKey) throw new Exception('Esta empresa no tiene integracion con AI');
 
-            $clientExists = Client::where('contact_phone', $waId)->where('business_id', $businessJpa->id)->exists();
+            $clientExists = Client::where('contact_phone', $request->waId)->where('business_id', $businessJpa->id)->exists();
             if ($clientExists) throw new Exception('El cliente ya ha sido registrado en Atalaya');
 
             $needsExecutive = Message::where('business_id', $businessJpa->id)
-                ->where('wa_id', $waId)
+                ->where('wa_id', $request->waId)
                 ->where('message', ':STOP')
                 ->where('role', 'AI')
                 ->exists();
@@ -41,7 +41,7 @@ class MessageController extends BasicController
 
             $messages = Message::select()
                 ->where('business_id', $businessJpa->id)
-                ->where('wa_id', $waId)
+                ->where('wa_id', $request->waId)
                 ->orderBy('created_at', 'DESC')
                 ->limit(20)
                 ->get();
@@ -54,7 +54,11 @@ class MessageController extends BasicController
                     'nombreEmpresa' => $businessJpa->name,
                     'correoEmpresa' => $businessEmail ?? 'hola@mundoweb.pe',
                     'servicios' => $businessServices ?? 'algunos servicios',
-                ])
+                ]),
+                'alreadySent' => Message::where('wa_id', $request->waId)
+                    ->where('message', $request->message)
+                    ->where('role', 'AI')
+                    ->exists()
             ];
             return $messages;
         });
