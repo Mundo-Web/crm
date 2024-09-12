@@ -35,7 +35,7 @@ class ProjectController extends BasicController
     {
         return $model::with(['client', 'type', 'status'])->select([
             'projects.*',
-            DB::raw('COALESCE(projects.cost - SUM(payments.amount), projects.cost) AS remaining_amount'),
+            // DB::raw('COALESCE(projects.cost - SUM(payments.amount), projects.cost) AS remaining_amount'),
             DB::raw('COALESCE(SUM(payments.amount), 0) AS total_payments'),
             DB::raw('MAX(payments.created_at) AS last_payment_date'),
         ])
