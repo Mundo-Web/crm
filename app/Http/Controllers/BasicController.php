@@ -8,6 +8,7 @@ use App\Models\dxDataGrid;
 use App\Models\Notification;
 use App\Models\View;
 use Exception;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response as HttpResponse;
@@ -31,6 +32,11 @@ class BasicController extends Controller
   public function setPaginationInstance(string $model)
   {
     return $model::select();
+  }
+
+  public function setPaginationSummary(string $model, Builder $query)
+  {
+    return [];
   }
 
   public function setReactViewProperties(Request $request)
@@ -149,6 +155,8 @@ class BasicController extends Controller
           //throw $th;
         }
       }
+
+      $response->summary = $this->setPaginationSummary($this->model, clone $instance);
 
       $jpas = [];
       if ($request->requireData !== false) {

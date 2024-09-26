@@ -49,8 +49,8 @@ const Projects = ({ statuses, can }) => {
     if (data?.id) setIsEditing(true)
     else setIsEditing(false)
 
-    $(statusRef.current).val(null).trigger('change')
     idRef.current.value = data?.id || null
+    SetSelectValue(statusRef.current, data?.status?.id, data?.status?.name)
     SetSelectValue(clientRef.current, data?.client?.id, data?.client?.name)
     SetSelectValue(typeRef.current, data?.type?.id, data?.type?.name)
     nameRef.current.value = data?.name || null
