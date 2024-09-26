@@ -50,7 +50,7 @@ const Projects = ({ statuses, can }) => {
     else setIsEditing(false)
 
     idRef.current.value = data?.id || null
-    SetSelectValue(statusRef.current, data?.status?.id, data?.status?.name)
+    $(statusRef.current).val(data?.status?.id ?? null).trigger('change')
     SetSelectValue(clientRef.current, data?.client?.id, data?.client?.name)
     SetSelectValue(typeRef.current, data?.type?.id, data?.type?.name)
     nameRef.current.value = data?.name || null
@@ -219,7 +219,7 @@ const Projects = ({ statuses, can }) => {
           caption: 'Fecha ultimo pago',
           dataType: 'datetime',
           format: 'yyyy-MM-dd HH:mm:ss',
-          cellTemplate: (container, {data}) => {
+          cellTemplate: (container, { data }) => {
             container.text(moment(data.last_payment_date).format('LLL'))
           }
         },
