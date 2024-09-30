@@ -31,6 +31,8 @@ import ClientsRest from './actions/ClientsRest.js'
 import Prepare2Send from './Utils/Prepare2Send.js'
 import Send2Div from './Utils/Send2Div.js'
 import Global from './Utils/Global.js'
+import { renderToString } from 'react-dom/server'
+import DxPanelButton from './components/dx/DxPanelButton.jsx'
 
 const leadsRest = new LeadsRest()
 const clientsRest = new ClientsRest()
@@ -445,24 +447,20 @@ const Leads = ({ statuses, defaultClientStatus, defaultLeadStatus, manageStatuse
       defaultView == 'table' ?
         <Table gridRef={gridRef} title='Leads' rest={leadsRest}
           toolBar={(container) => {
-            container.unshift({
-              widget: 'dxButton', location: 'after',
-              options: {
-                icon: 'refresh',
-                text: 'Actualizar leads',
-                hint: 'Refrescar tabla',
-                onClick: () => $(gridRef.current).dxDataGrid('instance').refresh()
-              }
-            });
-            can('leads', 'all', 'create') && container.unshift({
-              widget: 'dxButton', location: 'after',
-              options: {
-                icon: 'plus',
-                text: 'Nuevo',
-                hint: 'Nuevo registro',
-                onClick: () => onOpenModal()
-              }
-            });
+            container.unshift(DxPanelButton({
+              className: 'btn btn-xs btn-dark rounded-pill',
+              text: 'Actualizar',
+              title: 'Refrescar tabla',
+              icon: 'fas fa-undo-alt',
+              onClick: () => $(gridRef.current).dxDataGrid('instance').refresh()
+            }))
+            can('leads', 'all', 'create') && container.unshift(DxPanelButton({
+              className: 'btn btn-xs btn-primary rounded-pill',
+              text: 'Nuevo',
+              title: 'Agregar registro',
+              icon: 'fa fa-plus',
+              onClick: () => onOpenModal()
+            }))
           }}
           pageSize={50}
           allowedPageSizes={[50, 100]}
