@@ -18,6 +18,7 @@ class NotificationController extends BasicController
                 $query->where('notify_to', Auth::user()->service_user->id);
                 $query->orWhereNull('notify_to');
             })
-            ->where('business_id', Auth::user()->business_id);
+            ->where('business_id', Auth::user()->business_id)
+            ->where('module', '<>', 'Leads');
     }
 }
