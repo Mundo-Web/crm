@@ -1,0 +1,1 @@
+import{R as t}from"./CreateReactScript-Cr76lECz.js";import{i as c}from"./Adminto-CJ9X6TCa.js";const s=({title:e,className:r,onClick:o,children:n,eRef:a,...m})=>t.createElement(c,{content:e,arrow:!0},t.createElement("button",{ref:a,className:r,onClick:o,...m},n));export{s as T};

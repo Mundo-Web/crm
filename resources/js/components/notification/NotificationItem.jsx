@@ -31,8 +31,8 @@ const NotificationItem = ({ id, name, message, description, created_at, link_to,
         }
 
       </div>
-      <p className="notify-details mb-0">{name}</p>
-      <p className={`text-muted mb-1 user-msg`}>
+      <p className="notify-details mb-0" style={{paddingLeft: '8px'}}>{name}</p>
+      <p className={`text-muted mb-1 user-msg`} style={{paddingLeft: '8px'}}>
         {message}
       </p>
       {description && <p className="notify-details mb-1 border py-1 px-2" style={{ borderRadius: '4px', textWrap: 'wrap', maxHeight: '48px', overflow: 'hidden', lineClamp: 2, textOverflow: 'ellipsis', WebkitLineClamp: 2, display: '-webkit-box', WebkitBoxOrient: 'vertical' }}>
