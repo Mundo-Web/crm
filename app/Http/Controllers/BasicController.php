@@ -63,6 +63,8 @@ class BasicController extends Controller
     })
       ->where('business_id', Auth::user()->business_id)
       ->where('module', '<>', 'Leads')
+      ->where('seen', false)
+      ->where('status', true)
       ->count();
     $properties = [
       'businesses' => $businessesIWork,
