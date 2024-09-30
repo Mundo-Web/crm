@@ -6,7 +6,7 @@ const MenuItem = ({id, href, icon, children, badge }) => {
       <a id={id} href={href} className={location.pathname.startsWith(href) ? 'active' : ''}>
         <i className={icon}></i>
         {
-          badge && <span class="badge bg-info float-end">{badge}</span>
+          badge && <span className="badge bg-info float-end">{badge}</span>
         }
         <span> {children} </span>
       </a>

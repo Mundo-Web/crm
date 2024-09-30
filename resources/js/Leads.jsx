@@ -38,7 +38,7 @@ const clientNotesRest = new ClientNotesRest()
 const taskRest = new TasksRest()
 const usetsRest = new UsersRest()
 
-const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, session, can, lead }) => {
+const Leads = ({ statuses, defaultClientStatus, defaultLeadStatus, manageStatuses, noteTypes, session, can, lead }) => {
 
   const modalRef = useRef()
   const newLeadModalRef = useRef()
@@ -477,7 +477,12 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
               width: 250,
               cellTemplate: (container, { data }) => {
                 ReactAppend(container, <div className='d-flex align-items-center' style={{ cursor: 'pointer' }} onClick={() => onLeadClicked(data)}>
-                  <b>{data.contact_name}</b>
+                  {
+                    data.status_id == defaultLeadStatus
+                      ? <b>{data.contact_name}</b>
+                      : <span>{data.contact_name}</span>
+                  }
+
                   {data.assigned_to && <Tippy content={`Atendido por ${data.assigned.name} ${data.assigned.lastname}`}>
                     <img className='avatar-xs rounded-circle ms-1' src={`//${Global.APP_DOMAIN}/api/profile/thumbnail/${data.assigned.relative_id}`} alt={data.assigned.name} />
                   </Tippy>}

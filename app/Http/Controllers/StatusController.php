@@ -6,6 +6,7 @@ use App\Models\Client;
 use App\Models\ClientNote;
 use App\Models\Setting;
 use App\Models\Status;
+use App\Models\Table;
 use App\Models\Task;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -18,6 +19,19 @@ class StatusController extends BasicController
     public $softDeletion = true;
     public $reactView = 'Statuses';
     public $prefix4filter = 'statuses';
+
+    public function setReactViewProperties(Request $request)
+    {
+        $statuses = Status::with(['table'])
+            ->where('business_id', Auth::user()->business_id)
+            ->whereNotNull('status')
+            ->get();
+            $tables = Table::where('configurable', true)->get();
+        return [
+            'statuses' => $statuses,
+            'tables' => $tables,
+        ];
+    }
 
     public function setPaginationInstance(string $model)
     {
@@ -50,6 +64,7 @@ class StatusController extends BasicController
                 ->update([
                     'tasks.status' => $status['task']
                 ]);
-        } catch (\Throwable $th) {}
+        } catch (\Throwable $th) {
+        }
     }
 }

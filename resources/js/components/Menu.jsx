@@ -6,7 +6,7 @@ import Tippy from '@tippyjs/react'
 import 'tippy.js/dist/tippy.css';
 import BusinessCard from '../Reutilizables/Business/BusinessCard'
 
-const Menu = ({ session, can, presets, APP_PROTOCOL, APP_DOMAIN, businesses }) => {
+const Menu = ({ session, can, presets, APP_PROTOCOL, APP_DOMAIN, leadsCount, businesses }) => {
   let mainRole = {}
   if (session.is_owner) {
     mainRole = {
@@ -130,7 +130,7 @@ const Menu = ({ session, can, presets, APP_PROTOCOL, APP_DOMAIN, businesses }) =
           <MenuItem href="/tasks" icon='mdi mdi-clipboard'>Tareas</MenuItem>
 
           <MenuItemContainer title='Personas' icon='mdi mdi-account-multiple'>
-            <MenuItem href="/leads" icon='mdi mdi-texture'>Leads</MenuItem>
+            <MenuItem href="/leads" icon='mdi mdi-texture' badge={leadsCount}>Leads</MenuItem>
             {can('clients', 'all', 'list') && <MenuItem href="/clients" icon='mdi mdi-account-group'>Clientes</MenuItem>}
             <MenuItem id='archived-item' href="/archived" icon='mdi mdi-archive'>Archivados</MenuItem>
           </MenuItemContainer>

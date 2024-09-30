@@ -12,10 +12,12 @@ import InputFormGroup from './components/form/InputFormGroup.jsx'
 import SelectAPIFormGroup from './components/form/SelectAPIFormGroup.jsx'
 import TextareaFormGroup from './components/form/TextareaFormGroup.jsx'
 import TippyButton from './components/form/TippyButton.jsx'
+import Tippy from '@tippyjs/react'
+import Swal from 'sweetalert2'
 
 const statusesRest = new StatusesRest()
 
-const Statuses = () => {
+const Statuses = ({ statuses, tables }) => {
   const gridRef = useRef()
   const modalRef = useRef()
 
@@ -34,6 +36,11 @@ const Statuses = () => {
 
     idRef.current.value = data?.id || null
     SetSelectValue(tableRef.current, data?.table?.id, data?.table?.name)
+    if (data?.table?.id) {
+      $(tableRef.current).parents('.form-group').hide();
+    } else {
+      $(tableRef.current).parents('.form-group').show();
+    }
     nameRef.current.value = data?.name || null
     colorRef.current.value = data?.color || '#343a40'
     descriptionRef.current.value = data?.description || null
@@ -66,13 +73,23 @@ const Statuses = () => {
   }
 
   const onDeleteClicked = async (id) => {
+    const { isConfirmed } = await Swal.fire({
+      title: "Estas seguro de eliminar este estado?",
+      text: `No podras revertir esta accion!`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Continuar",
+      cancelButtonText: `Cancelar`
+    })
+
+    if (!isConfirmed) return
     const result = await statusesRest.delete(id)
     if (!result) return
     $(gridRef.current).dxDataGrid('instance').refresh()
   }
 
   return (<>
-    <Table gridRef={gridRef} title='Estados' rest={statusesRest}
+    {/* <Table gridRef={gridRef} title='Estados' rest={statusesRest}
       toolBar={(container) => {
         container.unshift({
           widget: 'dxButton', location: 'after',
@@ -165,11 +182,50 @@ const Statuses = () => {
           allowFiltering: false,
           allowExporting: false
         }
-      ]} />
-    <Modal modalRef={modalRef} title={isEditing ? 'Editar estado de proyecto' : 'Agregar estado de proyecto'} onSubmit={onModalSubmit} size='sm'>
+      ]} /> */}
+    <div className="container">
+      <div className='text-center'>
+        <button className="btn btn-primary mb-4 rounded-pill" onClick={() => onModalOpen()}>Nuevo Estado</button>
+      </div>
+
+      <div className="row align-items-center justify-content-center">
+        {tables.map((table, index) => (
+          <div key={index} className="col-md-4">
+            <div className="card">
+              <div className="card-header">
+                <div className='d-flex align-items-center justify-content-between'>
+                  <h5 className="my-0 text-capitalize">{table.name}</h5>
+                  <button className='btn btn-xs btn-primary rounded-pill' onClick={() => onModalOpen({ table })}>Nuevo estado</button>
+                </div>
+              </div>
+              <div className="card-body d-flex align-items-center justify-content-center gap-2" style={{ flexWrap: 'wrap' }}>
+                {statuses.filter(status => status.table_id === table.id).map((status, index) => (
+                  <>
+                    <div key={index} class="btn-group dropup col-auto">
+                      <span type="button" class="btn btn-sm btn-white" style={{ cursor: 'default' }}>
+                        <i className='mdi mdi-circle me-1' style={{ color: status.color }}></i>
+                        {status.name}
+                      </span>
+                      <button type="button" class="btn btn-sm btn-white dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <i class="mdi mdi-dots-vertical"></i>
+                      </button>
+                      <div class="dropdown-menu">
+                        <a class="dropdown-item" href="javascript:void(0)" onClick={() => onModalOpen(status)}>Editar</a>
+                        <a class="dropdown-item" href="javascript:void(0)" onClick={() => onDeleteClicked(status.id)}>Eliminar</a>
+                      </div>
+                    </div>
+                  </>
+                ))}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+    <Modal modalRef={modalRef} title={isEditing ? 'Editar estado' : 'Agregar estado'} onSubmit={onModalSubmit} size='sm'>
       <div className='row' id='status-crud-container'>
         <input ref={idRef} type='hidden' />
-        <InputFormGroup eRef={nameRef} label='Estado de proyecto' col='col-12' required />
+        <InputFormGroup eRef={nameRef} label='Nombre de estado' col='col-12' required />
         <SelectAPIFormGroup eRef={tableRef} label='Tabla' col='col-12' dropdownParent='#status-crud-container' searchAPI='/api/tables/paginate' searchBy='name' required />
         <InputFormGroup eRef={colorRef} type='color' label='Color' col='col-12' required />
         <TextareaFormGroup eRef={descriptionRef} label='Descripcion' col='col-12' />
@@ -182,7 +238,7 @@ const Statuses = () => {
 CreateReactScript((el, properties) => {
   if (!properties.can('statuses', 'root', 'all', 'list')) return location.href = '/';
   createRoot(el).render(
-    <Adminto {...properties} title='Estados'>
+    <Adminto {...properties} title='Gestor de estados'>
       <Statuses {...properties} />
     </Adminto>
   );

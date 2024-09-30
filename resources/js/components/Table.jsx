@@ -2,7 +2,6 @@ import React from 'react'
 import DataGrid from './DataGrid'
 
 const Table = ({ title, gridRef, rest, columns, toolBar, masterDetail, filterValue = [], defaultRows, selection, className = '', allowedPageSizes, pageSize, exportable = false, customizeCell}) => {
-  console.log(exportable)
   return (<div className={`row ${className}`}>
     <div className="col-12">
       <div className="card">

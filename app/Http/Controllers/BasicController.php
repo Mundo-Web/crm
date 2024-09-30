@@ -7,6 +7,7 @@ use App\Models\Atalaya\Business;
 use App\Models\Client;
 use App\Models\dxDataGrid;
 use App\Models\Notification;
+use App\Models\Setting;
 use App\Models\View;
 use Exception;
 use Illuminate\Database\Eloquent\Builder;
@@ -68,16 +69,19 @@ class BasicController extends Controller
       ->where('status', true)
       ->count();
 
-    // $leadsCount = Client::where('business_id', Auth::user()->business_id)
-    //   ->where()
-    //   ->count();
+    $defaultStatus = Setting::get('default-lead-status');
+
+    $leadsCount = Client::where('business_id', Auth::user()->business_id)
+      ->where('status_id', $defaultStatus)
+      ->where('status', true)
+      ->count();
 
     $properties = [
       'businesses' => $businessesIWork,
       // 'presets' => $views,
       'session' => Auth::user(),
       'notificationsCount' => $notificationsCount,
-      // 'leadsCount' => $leadsCount,
+      'leadsCount' => $leadsCount,
       'global' => [
         'WA_URL' => env('WA_URL'),
         'PUBLIC_RSA_KEY' => Controller::$PUBLIC_RSA_KEY,

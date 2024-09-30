@@ -34,6 +34,7 @@ class LeadController extends BasicController
             ->where('business_id', Auth::user()->business_id)
             ->get();
         $defaultClientStatus = Setting::get('default-client-status');
+        $defaultLeadStatus = Setting::get('default-lead-status');
         $noteTypes = NoteType::all();
 
         $manageStatuses = Status::select()
@@ -45,6 +46,7 @@ class LeadController extends BasicController
             'lead' => $request->lead,
             'manageStatuses' => $manageStatuses,
             'defaultClientStatus' => $defaultClientStatus,
+            'defaultLeadStatus' => $defaultLeadStatus,
             'statuses' => $statuses,
             'noteTypes' => $noteTypes
         ];
