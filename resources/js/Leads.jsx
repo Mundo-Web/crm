@@ -487,7 +487,9 @@ const Leads = ({ statuses, defaultClientStatus, defaultLeadStatus, manageStatuse
                     <img className='avatar-xs rounded-circle ms-1' src={`//${Global.APP_DOMAIN}/api/profile/thumbnail/${data.assigned.relative_id}`} alt={data.assigned.name} />
                   </Tippy>}
                 </div>)
-              }
+              },
+              fixed: true,
+              fixedPosition: 'left'
             },
             {
               dataField: 'contact_email',
