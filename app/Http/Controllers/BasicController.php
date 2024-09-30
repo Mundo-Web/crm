@@ -68,16 +68,16 @@ class BasicController extends Controller
       ->where('status', true)
       ->count();
 
-    $leadsCount = Client::where('business_id', Auth::user()->business_id)
-      ->where()
-      ->count();
+    // $leadsCount = Client::where('business_id', Auth::user()->business_id)
+    //   ->where()
+    //   ->count();
 
     $properties = [
       'businesses' => $businessesIWork,
       // 'presets' => $views,
       'session' => Auth::user(),
       'notificationsCount' => $notificationsCount,
-      'leadsCount' => $leadsCount,
+      // 'leadsCount' => $leadsCount,
       'global' => [
         'WA_URL' => env('WA_URL'),
         'PUBLIC_RSA_KEY' => Controller::$PUBLIC_RSA_KEY,
