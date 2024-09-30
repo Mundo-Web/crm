@@ -473,8 +473,8 @@ const Leads = ({ statuses, defaultClientStatus, defaultLeadStatus, manageStatuse
               dataField: 'contact_name',
               caption: 'Lead',
               width: 250,
-              height: 40,
               cellTemplate: (container, { data }) => {
+                container.attr('style', 'height: 40px')
                 ReactAppend(container, <div className='d-flex align-items-center' style={{ cursor: 'pointer' }} onClick={() => onLeadClicked(data)}>
                   {
                     data.status_id == defaultLeadStatus
