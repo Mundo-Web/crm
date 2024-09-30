@@ -112,14 +112,14 @@ const Projects = ({ statuses, can }) => {
     <Table gridRef={gridRef} title='Proyectos' rest={ProjectsRest} exportable
       toolBar={(container) => {
         container.unshift(DxPanelButton({
-          className: 'btn btn-xs btn-dark rounded-pill',
+          className: 'btn btn-xs btn-dark',
           text: 'Actualizar',
           title: 'Refrescar tabla',
           icon: 'fas fa-undo-alt',
           onClick: () => $(gridRef.current).dxDataGrid('instance').refresh()
         }))
         can('projects', 'all', 'create') && container.unshift(DxPanelButton({
-          className: 'btn btn-xs btn-primary rounded-pill',
+          className: 'btn btn-xs btn-primary',
           text: 'Nuevo',
           title: 'Agregar registro',
           icon: 'fa fa-plus',

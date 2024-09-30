@@ -448,14 +448,14 @@ const Leads = ({ statuses, defaultClientStatus, defaultLeadStatus, manageStatuse
         <Table gridRef={gridRef} title='Leads' rest={leadsRest}
           toolBar={(container) => {
             container.unshift(DxPanelButton({
-              className: 'btn btn-xs btn-dark rounded-pill',
+              className: 'btn btn-xs btn-dark',
               text: 'Actualizar',
               title: 'Refrescar tabla',
               icon: 'fas fa-undo-alt',
               onClick: () => $(gridRef.current).dxDataGrid('instance').refresh()
             }))
             can('leads', 'all', 'create') && container.unshift(DxPanelButton({
-              className: 'btn btn-xs btn-primary rounded-pill',
+              className: 'btn btn-xs btn-primary',
               text: 'Nuevo',
               title: 'Agregar registro',
               icon: 'fa fa-plus',
