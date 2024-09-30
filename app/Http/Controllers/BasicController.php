@@ -255,6 +255,29 @@ class BasicController extends Controller
     }
   }
 
+  public function boolean(Request $request)
+  {
+    $response = new Response();
+    try {
+      $data = [];
+      $data[$request->field] = $request->value;
+
+      $this->model::where('id', $request->id)
+        ->update($data);
+
+      $response->status = 200;
+      $response->message = 'Operacion correcta';
+    } catch (\Throwable $th) {
+      $response->status = 400;
+      $response->message = $th->getMessage();
+    } finally {
+      return response(
+        $response->toArray(),
+        $response->status
+      );
+    }
+  }
+
   public function delete(Request $request, string $id)
   {
     $response = new Response();

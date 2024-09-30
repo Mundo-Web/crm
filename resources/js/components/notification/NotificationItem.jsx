@@ -1,8 +1,23 @@
 import React from "react"
+import NotificationsRest from "../../actions/NotificationsRest"
+import { Notify } from "sode-extend-react"
+
+const notificationsRest = new NotificationsRest()
 
 const NotificationItem = ({ id, name, message, description, created_at, link_to, creator, icon, APP_DOMAIN }) => {
+
+  const onNotificationClicked = async () => {
+    const result = await notificationsRest.boolean({
+      id,
+      field: 'seen',
+      value: true
+    }, false)
+    if (!result) return
+    location.href = `${link_to}#${id}`;
+  }
+
   return <>
-    <a href={`${link_to}#${id}` || '#'} className="dropdown-item notify-item">
+    <a href='javascript:void(0)' className="dropdown-item notify-item" onClick={onNotificationClicked}>
       <div className={`notify-icon ${!creator ? 'bg-primary' : ''}`}>
         {
           creator

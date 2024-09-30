@@ -23,6 +23,8 @@ class Notification extends Model
         'created_by',
         'notify_to',
         'business_id',
+        'seen',
+        'status'
     ];
 
     protected $hidden = [

@@ -123,6 +123,7 @@ Route::middleware('auth')->group(function () {
 
     // Route::post('/notifications', [NotificationController::class, 'save']);
     Route::post('/notifications/paginate', [NotificationController::class, 'paginate']);
+    Route::patch('/notifications/boolean', [NotificationController::class, 'boolean']);
     // Route::patch('/notifications/status', [NotificationController::class, 'status']);
     // Route::delete('/notifications/{id}', [NotificationController::class, 'delete']);
 
