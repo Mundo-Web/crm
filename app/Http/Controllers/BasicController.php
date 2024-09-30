@@ -61,7 +61,9 @@ class BasicController extends Controller
       $query->where('notify_to', Auth::user()->service_user->id);
       $query->orWhereNull('notify_to');
     })
-      ->where('business_id', Auth::user()->business_id)->count();
+      ->where('business_id', Auth::user()->business_id)
+      ->where('module', '<>', 'Leads')
+      ->count();
     $properties = [
       'businesses' => $businessesIWork,
       'presets' => $views,

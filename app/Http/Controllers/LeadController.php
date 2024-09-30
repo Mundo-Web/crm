@@ -131,25 +131,25 @@ class LeadController extends BasicController
             'asignable' => true
         ]);
 
-        if ($jpa->created_by) {
-            SaveNotification::dispatchAfterResponse([
-                'name' => 'Nuevo lead',
-                'message' =>  Auth::user()->service_user->fullname . ' ha creado un nuevo lead.',
-                'module' => 'Leads',
-                'link_to' => '/leads/' . $jpa->id,
-                'created_by' => Auth::user()->service_user->id,
-                'business_id' => $jpa->business_id
-            ]);
-        } else {
-            SaveNotification::dispatchAfterResponse([
-                'icon' => 'fas fa-user-plus',
-                'name' => 'Nuevo lead',
-                'message' =>  'Se ha registrado un nuevo lead desde ' . $jpa->origin,
-                'module' => 'Leads',
-                'link_to' => '/leads/' . $jpa->id,
-                'business_id' => $jpa->business_id
-            ]);
-        }
+        // if ($jpa->created_by) {
+        //     SaveNotification::dispatchAfterResponse([
+        //         'name' => 'Nuevo lead',
+        //         'message' =>  Auth::user()->service_user->fullname . ' ha creado un nuevo lead.',
+        //         'module' => 'Leads',
+        //         'link_to' => '/leads/' . $jpa->id,
+        //         'created_by' => Auth::user()->service_user->id,
+        //         'business_id' => $jpa->business_id
+        //     ]);
+        // } else {
+        //     SaveNotification::dispatchAfterResponse([
+        //         'icon' => 'fas fa-user-plus',
+        //         'name' => 'Nuevo lead',
+        //         'message' =>  'Se ha registrado un nuevo lead desde ' . $jpa->origin,
+        //         'module' => 'Leads',
+        //         'link_to' => '/leads/' . $jpa->id,
+        //         'business_id' => $jpa->business_id
+        //     ]);
+        // }
 
         $newJpa = Client::with(['status', 'assigned', 'manageStatus', 'creator'])
             ->where('id', $jpa->id)
