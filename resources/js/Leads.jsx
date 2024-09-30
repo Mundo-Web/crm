@@ -494,7 +494,7 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
             },
             {
               dataField: 'status.name',
-              caption: 'Estado del lead',
+              caption: 'Estado de gestión',
               dataType: 'string',
               width: 180,
               cellTemplate: (container, { data }) => {
@@ -512,7 +512,7 @@ const Leads = ({ statuses, defaultClientStatus, manageStatuses, noteTypes, sessi
             },
             {
               dataField: 'manage_status.name',
-              caption: 'Estado de gestion',
+              caption: 'Estado del lead',
               dataType: 'string',
               width: 180,
               cellTemplate: (container, { data }) => {

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Classes\dxResponse;
 use App\Models\Atalaya\Business;
+use App\Models\Client;
 use App\Models\dxDataGrid;
 use App\Models\Notification;
 use App\Models\View;
@@ -46,7 +47,7 @@ class BasicController extends Controller
 
   public function reactView(Request $request)
   {
-    $views = View::with(['table'])->where('business_id', Auth::user()->business_id)->get();
+    // $views = View::with(['table'])->where('business_id', Auth::user()->business_id)->get();
     $businessesIWork = Business::select([
       DB::raw('DISTINCT businesses.*')
     ])
@@ -66,11 +67,17 @@ class BasicController extends Controller
       ->where('seen', false)
       ->where('status', true)
       ->count();
+
+    $leadsCount = Client::where('business_id', Auth::user()->business_id)
+      ->where()
+      ->count();
+
     $properties = [
       'businesses' => $businessesIWork,
-      'presets' => $views,
+      // 'presets' => $views,
       'session' => Auth::user(),
       'notificationsCount' => $notificationsCount,
+      'leadsCount' => $leadsCount,
       'global' => [
         'WA_URL' => env('WA_URL'),
         'PUBLIC_RSA_KEY' => Controller::$PUBLIC_RSA_KEY,
