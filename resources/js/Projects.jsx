@@ -8,7 +8,6 @@ import PaymentModal from './Reutilizables/Payments/PaymentModal.jsx'
 import ProjectStatusDropdown from './Reutilizables/Projects/ProjectStatusDropdown.jsx'
 import CreateReactScript from './Utils/CreateReactScript.jsx'
 import Number2Currency from './Utils/Number2Currency.jsx'
-import ReactAppend from './Utils/ReactAppend.jsx'
 import SetSelectValue from './Utils/SetSelectValue.jsx'
 import ProjectsRest from './actions/ProjectsRest.js'
 import Adminto from './components/Adminto.jsx'
@@ -23,6 +22,7 @@ import AssignUsersModal from './Reutilizables/Projects/AssignUsersModal.jsx'
 import DateRange from './Reutilizables/Projects/DateRange.jsx'
 import Assigneds from './Reutilizables/Projects/Assigneds.jsx'
 import SelectFormGroup from './components/form/SelectFormGroup.jsx'
+import DxPanelButton from './components/dx/DxPanelButton.jsx'
 
 const Projects = ({ statuses, can }) => {
 

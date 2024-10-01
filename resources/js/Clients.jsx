@@ -25,6 +25,7 @@ import DropdownItem from './components/dropdown/DropdownItem.jsx'
 import Swal from 'sweetalert2'
 import LeadsRest from './actions/LeadsRest.js'
 import Global from './Utils/Global.js'
+import DxPanelButton from './components/dx/DxPanelButton.jsx'
 
 const clientsRest = new ClientsRest()
 const leadsRest = new LeadsRest()
@@ -142,22 +143,20 @@ const Clients = ({ projectStatuses, clientStatuses, manageStatuses, session, can
   return (<>
     <Table gridRef={gridRef} title='Clientes' rest={clientsRest}
       toolBar={(container) => {
-        container.unshift({
-          widget: 'dxButton', location: 'after',
-          options: {
-            icon: 'refresh',
-            hint: 'Refrescar tabla',
-            onClick: () => $(gridRef.current).dxDataGrid('instance').refresh()
-          }
-        });
-        can('clients', 'root', 'all', 'create') && container.unshift({
-          widget: 'dxButton', location: 'after',
-          options: {
-            icon: 'plus',
-            hint: 'Nuevo registro',
-            onClick: () => onModalOpen()
-          }
-        });
+        container.unshift(DxPanelButton({
+          className: 'btn btn-xs btn-soft-dark',
+          text: 'Actualizar',
+          title: 'Refrescar tabla',
+          icon: 'fas fa-undo-alt',
+          onClick: () => $(gridRef.current).dxDataGrid('instance').refresh()
+        }))
+        can('clients', 'all', 'create') && container.unshift(DxPanelButton({
+          className: 'btn btn-xs btn-soft-primary',
+          text: 'Nuevo',
+          title: 'Agregar registro',
+          icon: 'fa fa-plus',
+          onClick: () => onOpenModal()
+        }))
       }}
       columns={[
         can('projects', 'root', 'all', 'list') ? {
@@ -211,7 +210,7 @@ const Clients = ({ projectStatuses, clientStatuses, manageStatuses, session, can
           dataField: 'contact_email',
           caption: 'Correo'
         },
-        can('leads', 'root', 'all', 'changestatus') ? {
+        can('clients', 'root', 'all', 'changestatus') ? {
           dataField: 'status.name',
           caption: 'Estado del cliente',
           dataType: 'string',
@@ -226,7 +225,7 @@ const Clients = ({ projectStatuses, clientStatuses, manageStatuses, session, can
             </Dropdown>)
           }
         } : null,
-        can('leads', 'root', 'all', 'changestatus') ? {
+        can('clients', 'root', 'all', 'changestatus') ? {
           dataField: 'manage_status.name',
           caption: 'Estado de gestion',
           dataType: 'string',
@@ -266,26 +265,6 @@ const Clients = ({ projectStatuses, clientStatuses, manageStatuses, session, can
                 <i className='fas fa-hands-wash'></i>
               </TippyButton>)
             }
-
-            // can('leads', 'root', 'all', 'addnotes') && ReactAppend(container, <TippyButton className="btn btn-xs btn-soft-primary position-relative" title="Ver/Agregar notas" onClick={() => setClientLoaded(data)}>
-            //   <i className="fas fa-sticky-note" />
-            //   {
-            //     data.notes > 0 && <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-            //       {data.notes}
-            //       <span className="visually-hidden">Notas de {data.name}</span>
-            //     </span>
-            //   }
-            // </TippyButton>)
-
-            // can('clients', 'root', 'all', 'changestatus') && ReactAppend(container, <TippyButton className='btn btn-xs btn-light' title={data.status === null ? 'Restaurar' : 'Cambiar estado'} onClick={() => onStatusChange(data)}>
-            //   {
-            //     data.status === 1
-            //       ? <i className='fa fa-toggle-on text-success' />
-            //       : data.status === 0 ?
-            //         <i className='fa fa-toggle-off text-danger' />
-            //         : <i className='fas fa-trash-restore' />
-            //   }
-            // </TippyButton>)
 
             can('clients', 'root', 'all', 'delete') && ReactAppend(container, <TippyButton className='btn btn-xs btn-soft-danger' title='Eliminar' onClick={() => onDeleteClicked(data.id)}>
               <i className='fa fa-trash-alt'></i>

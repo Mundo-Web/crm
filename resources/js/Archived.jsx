@@ -26,6 +26,7 @@ import Swal from 'sweetalert2'
 import LeadsRest from './actions/LeadsRest.js'
 import ArchivedRest from './actions/ArchivedRest.js'
 import Global from './Utils/Global.js'
+import DxPanelButton from './components/dx/DxPanelButton.jsx'
 
 const archivedRest = new ArchivedRest()
 
@@ -56,14 +57,13 @@ const Archived = ({ projectStatuses, can }) => {
   return (<>
     <Table gridRef={gridRef} title='Archivados' rest={archivedRest}
       toolBar={(container) => {
-        container.unshift({
-          widget: 'dxButton', location: 'after',
-          options: {
-            icon: 'refresh',
-            hint: 'Refrescar tabla',
-            onClick: () => $(gridRef.current).dxDataGrid('instance').refresh()
-          }
-        });
+        container.unshift(DxPanelButton({
+          className: 'btn btn-xs btn-soft-dark',
+          text: 'Actualizar',
+          title: 'Refrescar tabla',
+          icon: 'fas fa-undo-alt',
+          onClick: () => $(gridRef.current).dxDataGrid('instance').refresh()
+        }))
       }}
       columns={[
         {

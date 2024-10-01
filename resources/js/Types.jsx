@@ -12,6 +12,7 @@ import InputFormGroup from './components/form/InputFormGroup.jsx'
 import SelectAPIFormGroup from './components/form/SelectAPIFormGroup.jsx'
 import TextareaFormGroup from './components/form/TextareaFormGroup.jsx'
 import TippyButton from './components/form/TippyButton.jsx'
+import DxPanelButton from './components/dx/DxPanelButton.jsx'
 
 const Types = () => {
   const gridRef = useRef()
@@ -69,22 +70,20 @@ const Types = () => {
   return (<>
     <Table gridRef={gridRef} title='Tipos' rest={TypesRest}
       toolBar={(container) => {
-        container.unshift({
-          widget: 'dxButton', location: 'after',
-          options: {
-            icon: 'refresh',
-            hint: 'Refrescar tabla',
-            onClick: () => $(gridRef.current).dxDataGrid('instance').refresh()
-          }
-        });
-        container.unshift({
-          widget: 'dxButton', location: 'after',
-          options: {
-            icon: 'plus',
-            hint: 'Nuevo registro',
-            onClick: () => onModalOpen()
-          }
-        });
+        container.unshift(DxPanelButton({
+          className: 'btn btn-xs btn-soft-dark',
+          text: 'Actualizar',
+          title: 'Refrescar tabla',
+          icon: 'fas fa-undo-alt',
+          onClick: () => $(gridRef.current).dxDataGrid('instance').refresh()
+        }))
+        container.unshift(DxPanelButton({
+          className: 'btn btn-xs btn-soft-primary',
+          text: 'Nuevo',
+          title: 'Agregar registro',
+          icon: 'fa fa-plus',
+          onClick: () => onOpenModal()
+        }))
       }}
       columns={[
         {

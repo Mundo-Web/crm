@@ -11,6 +11,7 @@ import Global from "./Utils/Global";
 import DxBox from "./components/dx/DxBox";
 import Dropdown from "./components/dropdown/DropDown";
 import DropdownItem from "./components/dropdown/DropdownItem";
+import DxPanelButton from "./components/dx/DxPanelButton";
 
 const tasksRest = new TasksRest();
 
@@ -68,22 +69,20 @@ const Tasks = () => {
   return <>
     <Table gridRef={gridRef} title='Tareas' rest={tasksRest}
       toolBar={(container) => {
-        container.unshift({
-          widget: 'dxButton', location: 'after',
-          options: {
-            icon: 'refresh',
-            hint: 'Refrescar tabla',
-            onClick: () => $(gridRef.current).dxDataGrid('instance').refresh()
-          }
-        });
-        container.unshift({
-          widget: 'dxButton', location: 'after',
-          options: {
-            icon: 'plus',
-            hint: 'Nuevo registro',
-            onClick: () => onModalOpen()
-          }
-        });
+        container.unshift(DxPanelButton({
+          className: 'btn btn-xs btn-soft-dark',
+          text: 'Actualizar',
+          title: 'Refrescar tabla',
+          icon: 'fas fa-undo-alt',
+          onClick: () => $(gridRef.current).dxDataGrid('instance').refresh()
+        }))
+        container.unshift(DxPanelButton({
+          className: 'btn btn-xs btn-soft-primary',
+          text: 'Nuevo',
+          title: 'Agregar registro',
+          icon: 'fa fa-plus',
+          onClick: () => onOpenModal()
+        }))
       }}
       columns={[
         {

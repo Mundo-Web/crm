@@ -14,6 +14,7 @@ import CheckboxFormGroup from './components/form/CheckboxFormGroup.jsx'
 import InputFormGroup from './components/form/InputFormGroup.jsx'
 import TextareaFormGroup from './components/form/TextareaFormGroup.jsx'
 import TippyButton from './components/form/TippyButton.jsx'
+import DxPanelButton from './components/dx/DxPanelButton.jsx'
 
 const Roles = ({ permissions }) => {
   permissions = Object.values(permissions.map((x) => {
@@ -107,22 +108,20 @@ const Roles = ({ permissions }) => {
   return (<>
     <Table gridRef={gridRef} title='Roles' rest={RolesRest}
       toolBar={(container) => {
-        container.unshift({
-          widget: 'dxButton', location: 'after',
-          options: {
-            icon: 'refresh',
-            hint: 'Refrescar tabla',
-            onClick: () => $(gridRef.current).dxDataGrid('instance').refresh()
-          }
-        });
-        container.unshift({
-          widget: 'dxButton', location: 'after',
-          options: {
-            icon: 'plus',
-            hint: 'Nuevo registro',
-            onClick: () => onModalOpen()
-          }
-        });
+        container.unshift(DxPanelButton({
+          className: 'btn btn-xs btn-soft-dark',
+          text: 'Actualizar',
+          title: 'Refrescar tabla',
+          icon: 'fas fa-undo-alt',
+          onClick: () => $(gridRef.current).dxDataGrid('instance').refresh()
+        }))
+        can('roles', 'all', 'create') && container.unshift(DxPanelButton({
+          className: 'btn btn-xs btn-soft-primary',
+          text: 'Nuevo',
+          title: 'Agregar registro',
+          icon: 'fa fa-plus',
+          onClick: () => onOpenModal()
+        }))
       }}
       columns={[
         {
