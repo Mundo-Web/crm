@@ -52,7 +52,7 @@ const DataGrid = ({ gridRef: dataGridRef, rest, columns, toolBar, masterDetail, 
       headerFilter: { visible: true, search: { enabled: true } },
       height: 'calc(100vh - 185px)',
       filterValue,
-      selection,
+      selection: selection || null,
       export: {
         enabled: exportable
       },
