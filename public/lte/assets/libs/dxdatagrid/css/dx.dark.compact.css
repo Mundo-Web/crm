@@ -13719,7 +13719,7 @@
   padding: 5px 35px 5px 5px;
 }
 .dx-datagrid .dx-row > td {
-  padding: 5px;
+  padding: 5px 10px;
 }
 .dx-datagrid .dx-datagrid-content .dx-datagrid-table .dx-row .dx-command-edit-with-icons .dx-link {
   width: 14px;
