@@ -490,7 +490,7 @@ const Leads = ({ statuses, defaultClientStatus, defaultLeadStatus, manageStatuse
                   {data.assigned_to
                     ? <>
                       <Tippy content={`Atendido por ${data.assigned.name} ${data.assigned.lastname}`}>
-                        <img className='avatar-xs rounded-circle ms-1' src={`//${Global.APP_DOMAIN}/api/profile/thumbnail/${data.assigned.relative_id}`} alt={data.assigned.name} />
+                        <img className='avatar-xs rounded-circle' src={`//${Global.APP_DOMAIN}/api/profile/thumbnail/${data.assigned.relative_id}`} alt={data.assigned.name} />
                       </Tippy>
                       <span>{data.assigned?.name?.split(' ')[0]} {data.assigned?.lastname?.split(' ')[0]}</span>
                     </>
