@@ -24,9 +24,9 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
 
   {{-- DxDataGrid Styles --}}
-  <link href="/lte/assets/libs/dxdatagrid/css/dx.light.compact.css?v=06d3ebc8-645c-4d80-a600-c9652743c425"
+  <link href="/lte/assets/libs/dxdatagrid/css/dx.light.compact.css?v=06d3ebc8-645c-4d80-a600-c9652743c426"
     rel="stylesheet" type="text/css" id="dg-default-stylesheet" />
-  <link href="/lte/assets/libs/dxdatagrid/css/dx.dark.compact.css?v=06d3ebc8-645c-4d80-a600-c9652743c425"
+  <link href="/lte/assets/libs/dxdatagrid/css/dx.dark.compact.css?v=06d3ebc8-645c-4d80-a600-c9652743c426"
     rel="stylesheet" type="text/css" id="dg-dark-stylesheet" disabled="disabled" />
 
   {{-- Bootstrap Styles --}}
