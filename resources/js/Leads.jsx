@@ -511,7 +511,8 @@ const Leads = ({ statuses, defaultClientStatus, defaultLeadStatus, manageStatuse
               caption: 'Estado de gestión',
               dataType: 'string',
               width: 180,
-              cellClass: (...props) => {
+              // cellClass: 'p-0',
+              containerClass: (...props) => {
                 console.log(props)
                 return 'p-0'
               },
