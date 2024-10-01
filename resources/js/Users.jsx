@@ -32,7 +32,7 @@ const Users = ({ can, users, roles, APP_DOMAIN }) => {
         {
           users.map((user, i) => {
             const role = user.service_user?.roles?.[0] ?? {
-              name: 'Sin rol',
+              name: 'Owner',
               description: 'El usuario no tiene un rol asignado'
             }
             return <div key={`user-${i}`} className="card mb-0" style={{ width: '360px' }}>
