@@ -118,7 +118,7 @@ const NavBar = ({ can, session = {}, title = '', whatsappStatus, businesses, APP
           </div>
         </li> */}
 
-        <li className="dropdown notification-list">
+        <li className="dropdown notification-list d-none d-lg-block">
           <div className="nav-link">
             <label htmlFor="light-mode-check" type="button" class={`btn btn-xs ${theme == 'dark' ? 'btn-secondary' : 'btn-secondary'} rounded-pill waves-effect waves-light`}>
               {theme == 'dark'
