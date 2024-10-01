@@ -511,7 +511,10 @@ const Leads = ({ statuses, defaultClientStatus, defaultLeadStatus, manageStatuse
               caption: 'Estado de gestión',
               dataType: 'string',
               width: 180,
-              cellClass: 'p-0',
+              cellClass: (...props) => {
+                console.log(props)
+                return 'p-0'
+              },
               cellTemplate: (container, { data }) => {
                 container.attr('style', 'overflow: visible')
                 ReactAppend(container, <Dropdown className='btn btn-xs btn-white rounded-pill' title={data.status.name} icon={{ icon: 'fa fa-circle', color: data.status.color }} tippy='Actualizar estado'>
