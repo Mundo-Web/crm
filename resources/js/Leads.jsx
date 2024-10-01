@@ -475,20 +475,32 @@ const Leads = ({ statuses, defaultClientStatus, defaultLeadStatus, manageStatuse
               width: 250,
               cellTemplate: (container, { data }) => {
                 container.attr('style', 'height: 40px')
-                ReactAppend(container, <div className='d-flex align-items-center' style={{ cursor: 'pointer' }} onClick={() => onLeadClicked(data)}>
+                ReactAppend(container, <div style={{ cursor: 'pointer' }} onClick={() => onLeadClicked(data)}>
                   {
                     data.status_id == defaultLeadStatus
                       ? <b>{data.contact_name}</b>
                       : <span>{data.contact_name}</span>
                   }
-
-                  {data.assigned_to && <Tippy content={`Atendido por ${data.assigned.name} ${data.assigned.lastname}`}>
-                    <img className='avatar-xs rounded-circle ms-1' src={`//${Global.APP_DOMAIN}/api/profile/thumbnail/${data.assigned.relative_id}`} alt={data.assigned.name} />
-                  </Tippy>}
                 </div>)
               },
               fixed: true,
               fixedPosition: 'left'
+            },
+            {
+              dataField: 'assigned.name',
+              caption: 'Asignado a',
+              cellTemplate: (container, { data }) => {
+                ReactAppend(container, <div className='d-flex align-items-center'>
+                  {data.assigned_to
+                    ? <>
+                      <Tippy content={`Atendido por ${data.assigned.name} ${data.assigned.lastname}`}>
+                        <img className='avatar-xs rounded-circle ms-1' src={`//${Global.APP_DOMAIN}/api/profile/thumbnail/${data.assigned.relative_id}`} alt={data.assigned.name} />
+                      </Tippy>
+                      <span>{data.assigned.name}</span>
+                    </>
+                    : <i className='text-muted'>- Sin asignar -</i>}
+                </div>)
+              }
             },
             {
               dataField: 'contact_email',
