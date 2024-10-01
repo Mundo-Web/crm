@@ -515,10 +515,10 @@ const Leads = ({ statuses, defaultClientStatus, defaultLeadStatus, manageStatuse
                 container.addClass('p-0')
                 container.attr('style', 'overflow: visible')
                 ReactAppend(container, <Dropdown className='btn btn-xs btn-white rounded-pill' title={data.status.name} icon={{ icon: 'fa fa-circle', color: data.status.color }} tippy='Actualizar estado' style={{
-                  borderRadius: 0,
+                  borderRadius: '0 !important',
                   border: 'none',
                   width: '179px',
-                  height: '39px',
+                  height: '32px',
                 }}>
                   {
                     statuses.sort((a, b) => a.order - b.order).map(({ id, name, color }) => {
@@ -538,10 +538,10 @@ const Leads = ({ statuses, defaultClientStatus, defaultLeadStatus, manageStatuse
               cellTemplate: (container, { data }) => {
                 container.attr('style', 'overflow: visible')
                 ReactAppend(container, <Dropdown className='btn btn-xs btn-white rounded-pill' title={data?.manage_status?.name} icon={{ icon: 'fa fa-circle', color: data?.manage_status?.color }} tippy='Actualizar estado' style={{
-                  borderRadius: 0,
+                  borderRadius: '0 !important',
                   border: 'none',
                   width: '179px',
-                  height: '39px',
+                  height: '32px',
                 }}>
                   {manageStatuses.sort((a, b) => a.order - b.order).map((status, i) => {
                     return <DropdownItem key={`status-${i}`} onClick={() => onManageStatusChange(data, status)}>
