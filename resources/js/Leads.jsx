@@ -474,14 +474,9 @@ const Leads = ({ statuses, defaultClientStatus, defaultLeadStatus, manageStatuse
               caption: 'Lead',
               width: 250,
               cellTemplate: (container, { data }) => {
-                container.attr('style', 'height: 40px')
-                ReactAppend(container, <div style={{ cursor: 'pointer' }} onClick={() => onLeadClicked(data)}>
-                  {
-                    data.status_id == defaultLeadStatus
-                      ? <b>{data.contact_name}</b>
-                      : <span>{data.contact_name}</span>
-                  }
-                </div>)
+                container.attr('style', 'height: 40px; cursor: pointer')
+                container.on('click', onLeadClicked(data))
+                container.html(data.status_id == defaultLeadStatus ? `<b>${data.contact_name}</b>`: data.contact_name)
               },
               fixed: true,
               fixedPosition: 'left'
