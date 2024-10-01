@@ -16,7 +16,7 @@ import TextareaFormGroup from './components/form/TextareaFormGroup.jsx'
 import TippyButton from './components/form/TippyButton.jsx'
 import DxPanelButton from './components/dx/DxPanelButton.jsx'
 
-const Roles = ({ permissions }) => {
+const Roles = ({ permissions, can }) => {
   permissions = Object.values(permissions.map((x) => {
     const [origin] = x.name.split('.')
     return { ...x, origin }
