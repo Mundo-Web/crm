@@ -979,10 +979,10 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
     <StatusModal dataLoaded={statusLoaded} setDataLoaded={setStatusLoaded} afterSave={(newStatus, loaded) => {
       if (newStatus.table_id == '9c27e649-574a-47eb-82af-851c5d425434') { // Manage status
         setManageStatuses(old => [...old, newStatus])
-        onManageStatusChange(loaded.client_id, newStatus.id)
+        // onManageStatusChange(loaded.client_id, newStatus.id)
       } else { // Lead status 
         setStatuses(old => [...old, newStatus])
-        onClientStatusClicked(loaded.client_id, newStatus.id)
+        // onClientStatusClicked(loaded.client_id, newStatus.id)
       }
     }} />
 
