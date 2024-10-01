@@ -9,12 +9,18 @@ const notificationsRest = new NotificationsRest();
 
 const NavBar = ({ can, session = {}, title = '', whatsappStatus, businesses, APP_PROTOCOL, APP_DOMAIN, notificationsCount }) => {
 
+  const settings = Local.get('adminto_settings') ?? {}
+
   const { color } = WhatsAppStatuses[whatsappStatus]
 
   const [notifications, setNotifications] = useState([]);
+  const [theme, setTheme] = useState(settings.theme ?? 'ligth');
 
   useEffect(() => {
     document.title = `${title} | Atalaya`
+    $(document).on('change', '#light-mode-check', (e) => {
+      setTheme(e.target.checked ? 'dark' : 'ligth')
+    })
   }, [null])
 
   const otherBusinesses = businesses.filter(({ id }) => session.business_id != id)
@@ -112,6 +118,27 @@ const NavBar = ({ can, session = {}, title = '', whatsappStatus, businesses, APP
           </div>
         </li> */}
 
+        <li className="dropdown notification-list">
+          <div className="nav-link">
+            <label htmlFor="light-mode-check" type="button" class={`btn btn-xs ${theme == 'dark' ? 'btn-secondary' : 'btn-secondary'} rounded-pill waves-effect waves-light`}>
+              {theme == 'dark'
+                ? <>
+                  Ligth
+                  <span class="btn-label-right ms-1" style={{ paddingLeft: '6px' }}>
+                    <i class="mdi mdi-weather-sunny"></i>
+                  </span>
+                </>
+                : <>
+                  <span class="btn-label me-1" style={{ paddingRight: '6px' }}>
+                    <i class="mdi mdi-moon-waning-crescent"></i>
+                  </span>
+                  Dark
+                </>
+              }
+            </label>
+          </div>
+        </li>
+
         {can('whatsapp', 'root', 'all') && <li className="notification-list topbar-dropdown">
           <a className="nav-link waves-effect waves-light" data-bs-toggle="modal" data-bs-target="#whatsapp-modal">
             <span className="position-relative">
@@ -143,7 +170,7 @@ const NavBar = ({ can, session = {}, title = '', whatsappStatus, businesses, APP
               </h5>
             </div>
 
-            <div className="noti-scroll" style={{maxHeight: '230px', overflowY: 'auto'}}>
+            <div className="noti-scroll" style={{ maxHeight: '230px', overflowY: 'auto' }}>
 
               {
                 notifications.map((notification, i) => {
