@@ -31,8 +31,8 @@ import ClientsRest from './actions/ClientsRest.js'
 import Prepare2Send from './Utils/Prepare2Send.js'
 import Send2Div from './Utils/Send2Div.js'
 import Global from './Utils/Global.js'
-import { renderToString } from 'react-dom/server'
 import DxPanelButton from './components/dx/DxPanelButton.jsx'
+import StatusModal from './Reutilizables/Statuses/StatusModal.jsx'
 
 const leadsRest = new LeadsRest()
 const clientsRest = new ClientsRest()
@@ -40,7 +40,7 @@ const clientNotesRest = new ClientNotesRest()
 const taskRest = new TasksRest()
 const usetsRest = new UsersRest()
 
-const Leads = ({ statuses, defaultClientStatus, defaultLeadStatus, manageStatuses, noteTypes, session, can, lead }) => {
+const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatus, manageStatuses: manageStatusesFromDB, noteTypes, session, can, lead }) => {
 
   const modalRef = useRef()
   const newLeadModalRef = useRef()
@@ -63,10 +63,14 @@ const Leads = ({ statuses, defaultClientStatus, defaultLeadStatus, manageStatuse
   const webUrlRef = useRef()
   const messageRef = useRef()
 
+  const [statuses, setStatuses] = useState(statusesFromDB);
+  const [manageStatuses, setManageStatuses] = useState(manageStatusesFromDB)
+
   const [leads, setLeads] = useState([])
   const [leadLoaded, setLeadLoaded] = useState(null)
   const [notes, setNotes] = useState([]);
   const [defaultView, setDefaultView] = useState(Local.get('default-view') ?? 'kanban')
+  const [statusLoaded, setStatusLoaded] = useState(null);
 
   const typeRefs = {};
   const idRefs = {}
@@ -476,13 +480,13 @@ const Leads = ({ statuses, defaultClientStatus, defaultLeadStatus, manageStatuse
               cellTemplate: (container, { data }) => {
                 container.attr('style', 'height: 40px; cursor: pointer')
                 container.on('click', () => onLeadClicked(data))
-                container.html(data.status_id == defaultLeadStatus ? `<b>${data.contact_name}</b>`: data.contact_name)
+                container.html(data.status_id == defaultLeadStatus ? `<b>${data.contact_name}</b>` : data.contact_name)
               },
               fixed: true,
               fixedPosition: 'left'
             },
             {
-              dataField: 'assigned.name',
+              dataField: 'assigned.fullname',
               caption: 'Asignado a',
               width: 200,
               cellTemplate: (container, { data }) => {
@@ -514,10 +518,14 @@ const Leads = ({ statuses, defaultClientStatus, defaultLeadStatus, manageStatuse
               cellTemplate: (container, { data }) => {
                 container.addClass('p-0')
                 container.attr('style', 'overflow: visible')
-                ReactAppend(container, <Dropdown className='btn btn-xs btn-white' title={data.status.name} icon={{ icon: 'fa fa-circle', color: data.status.color }} tippy='Actualizar estado' style={{
+                ReactAppend(container, <Dropdown className='btn btn-white text-truncate' title={data.status.name} tippy='Actualizar estado' style={{
                   border: 'none',
+                  borderRadius: '0',
                   width: '179px',
                   height: '39px',
+                  color: '#fff',
+                  fontWeight: 'bolder',
+                  backgroundColor: data.status.color
                 }}>
                   {
                     statuses.sort((a, b) => a.order - b.order).map(({ id, name, color }) => {
@@ -525,6 +533,22 @@ const Leads = ({ statuses, defaultClientStatus, defaultLeadStatus, manageStatuse
                         <i className='fa fa-circle' style={{ color }}></i> {name}
                       </DropdownItem>
                     })
+                  }
+                  {
+                    can('statuses', 'all', 'create') &&
+                    <>
+                      <div class="dropdown-divider"></div>
+                      <DropdownItem onClick={() => setStatusLoaded({
+                        table: {
+                          id: 'e05a43e5-b3a6-46ce-8d1f-381a73498f33',
+                          name: 'Leads'
+                        },
+                        client_id: data.id
+                      })}>
+                        <i className='fa fa-plus me-1'></i>
+                        Agregar
+                      </DropdownItem>
+                    </>
                   }
                 </Dropdown>)
               }
@@ -537,16 +561,38 @@ const Leads = ({ statuses, defaultClientStatus, defaultLeadStatus, manageStatuse
               cellTemplate: (container, { data }) => {
                 container.addClass('p-0')
                 container.attr('style', 'overflow: visible')
-                ReactAppend(container, <Dropdown className='btn btn-xs btn-white' title={data?.manage_status?.name} icon={{ icon: 'fa fa-circle', color: data?.manage_status?.color }} tippy='Actualizar estado' style={{
+                ReactAppend(container, <Dropdown className='btn btn-white' title={data?.manage_status?.name} tippy='Actualizar estado' style={{
                   border: 'none',
+                  borderRadius: '0',
                   width: '179px',
                   height: '39px',
+                  color: '#fff',
+                  fontWeight: 'bolder',
+                  backgroundColor: data.manage_status.color
                 }}>
-                  {manageStatuses.sort((a, b) => a.order - b.order).map((status, i) => {
-                    return <DropdownItem key={`status-${i}`} onClick={() => onManageStatusChange(data, status)}>
-                      <i className='fa fa-circle' style={{ color: status.color }}></i> {status.name}
-                    </DropdownItem>
-                  })}
+                  {
+                    manageStatuses.sort((a, b) => a.order - b.order).map((status, i) => {
+                      return <DropdownItem key={`status-${i}`} onClick={() => onManageStatusChange(data, status)}>
+                        <i className='fa fa-circle' style={{ color: status.color }}></i> {status.name}
+                      </DropdownItem>
+                    })
+                  }
+                  {
+                    can('statuses', 'all', 'create') &&
+                    <>
+                      <div class="dropdown-divider"></div>
+                      <DropdownItem onClick={() => setStatusLoaded({
+                        table: {
+                          id: '9c27e649-574a-47eb-82af-851c5d425434',
+                          name: 'Gestión de clientes'
+                        },
+                        client_id: data.id
+                      })}>
+                        <i className='fa fa-plus me-1'></i>
+                        Agregar
+                      </DropdownItem>
+                    </>
+                  }
                 </Dropdown>)
               }
             },
@@ -929,6 +975,16 @@ const Leads = ({ statuses, defaultClientStatus, defaultLeadStatus, manageStatuse
         <TextareaFormGroup eRef={messageRef} label='Mensaje' placeholder='Ingresa tu mensaje' rows={4} />
       </div>
     </Modal>
+
+    <StatusModal dataLoaded={statusLoaded} setDataLoaded={setStatusLoaded} afterSave={(newStatus, loaded) => {
+      if (newStatus.table_id == '9c27e649-574a-47eb-82af-851c5d425434') { // Manage status
+        setManageStatuses(old => [...old, newStatus])
+        onManageStatusChange(loaded.client_id, newStatus.id)
+      } else { // Lead status 
+        setStatuses(old => [...old, newStatus])
+        onClientStatusClicked(loaded.client_id, newStatus.id)
+      }
+    }} />
 
   </>
   )

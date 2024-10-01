@@ -29,6 +29,7 @@ const Statuses = ({ statuses, tables }) => {
   const descriptionRef = useRef()
 
   const [isEditing, setIsEditing] = useState(false)
+  const [statusLoaded, setStatusLoaded] = useState(null)
 
   const onModalOpen = (data) => {
     if (data?.id) setIsEditing(true)

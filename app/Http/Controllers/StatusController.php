@@ -67,4 +67,9 @@ class StatusController extends BasicController
         } catch (\Throwable $th) {
         }
     }
+
+    public function afterSave(Request $request, object $jpa, ?bool $isNew)
+    {
+        return $jpa;
+    }
 }

@@ -36,8 +36,8 @@
     id="bs-dark-stylesheet" disabled="disabled" />
 
   {{-- App Styles --}}
-  <link href="/lte/assets/css/config/default/app.css" rel="stylesheet" type="text/css" id="app-default-stylesheet" />
-  <link href="/lte/assets/css/config/default/app-dark.css" rel="stylesheet" type="text/css" id="app-dark-stylesheet"
+  <link href="/lte/assets/css/config/default/app.css?v=06d3ebc8-645c-4d80-a600-c9652743c426" rel="stylesheet" type="text/css" id="app-default-stylesheet" />
+  <link href="/lte/assets/css/config/default/app-dark.css?v=06d3ebc8-645c-4d80-a600-c9652743c426" rel="stylesheet" type="text/css" id="app-dark-stylesheet"
     disabled="disabled" />
 
   {{-- icons --}}
@@ -47,6 +47,13 @@
   @inertiaHead
 
   <style>
+    body * {
+      font-family: 'Comfortaa', sans-serif;
+    }
+    body code,
+    body pre {
+      font-family: monospace;
+    }
     .tippy-tooltip {
       padding: 0;
     }

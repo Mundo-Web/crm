@@ -130,7 +130,7 @@ const Menu = ({ session, can, presets, APP_PROTOCOL, APP_DOMAIN, leadsCount, bus
           <MenuItem href="/tasks" icon='mdi mdi-clipboard'>Tareas</MenuItem>
 
           <MenuItemContainer title='Personas' icon='mdi mdi-account-multiple'>
-            <MenuItem href="/leads" icon='mdi mdi-texture' badge={leadsCount}>Leads</MenuItem>
+            <MenuItem href="/leads" icon='mdi mdi-texture' badge={leadsCount > 0 ? leadsCount: ''}>Leads</MenuItem>
             {can('clients', 'all', 'list') && <MenuItem href="/clients" icon='mdi mdi-account-group'>Clientes</MenuItem>}
             <MenuItem id='archived-item' href="/archived" icon='mdi mdi-archive'>Archivados</MenuItem>
           </MenuItemContainer>
