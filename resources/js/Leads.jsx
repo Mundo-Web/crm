@@ -489,6 +489,7 @@ const Leads = ({ statuses, defaultClientStatus, defaultLeadStatus, manageStatuse
             {
               dataField: 'assigned.name',
               caption: 'Asignado a',
+              width: 200,
               cellTemplate: (container, { data }) => {
                 ReactAppend(container, <div className='d-flex align-items-center gap-1'>
                   {data.assigned_to
