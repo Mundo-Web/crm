@@ -32,6 +32,7 @@ class LeadController extends BasicController
         $statuses = Status::select()
             ->where('table_id', 'e05a43e5-b3a6-46ce-8d1f-381a73498f33')
             ->where('business_id', Auth::user()->business_id)
+            ->where('status', true)
             ->get();
         $defaultClientStatus = Setting::get('default-client-status');
         $defaultLeadStatus = Setting::get('default-lead-status');
@@ -40,6 +41,7 @@ class LeadController extends BasicController
         $manageStatuses = Status::select()
             ->where('table_id', '9c27e649-574a-47eb-82af-851c5d425434')
             ->where('business_id', Auth::user()->business_id)
+            ->where('status', true)
             ->get();
 
         return [

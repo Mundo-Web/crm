@@ -449,7 +449,7 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
     </div>
     {
       defaultView == 'table' ?
-        <Table gridRef={gridRef} title='Leads' rest={leadsRest}
+        <Table gridRef={gridRef} title='Leads' rest={leadsRest} reloadWith={[statuses, manageStatuses]}
           toolBar={(container) => {
             container.unshift(DxPanelButton({
               className: 'btn btn-xs btn-soft-dark',
@@ -984,6 +984,7 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
         setStatuses(old => [...old, newStatus])
         // onClientStatusClicked(loaded.client_id, newStatus.id)
       }
+      $(gridRef.current).dxDataGrid('instance').refresh()
     }} />
 
   </>

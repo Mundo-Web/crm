@@ -17,7 +17,10 @@ import Swal from 'sweetalert2'
 
 const statusesRest = new StatusesRest()
 
-const Statuses = ({ statuses, tables }) => {
+const Statuses = ({ statuses: statusesFromDB, tables }) => {
+
+  const [statuses, setStatuses] = useState(statusesFromDB);
+
   const gridRef = useRef()
   const modalRef = useRef()
 
@@ -63,7 +66,18 @@ const Statuses = ({ statuses, tables }) => {
     const result = await statusesRest.save(request)
     if (!result) return
 
-    $(gridRef.current).dxDataGrid('instance').refresh()
+    if (statuses.find(x => x.id == result.id)) {
+      setStatuses(old => {
+        const index = old.findIndex(x => x.id == result.id)
+        console.log(index)
+        old[index] = result
+        return [...old]
+      })
+    } else {
+      setStatuses(old => [...old, result])
+    }
+
+    // $(gridRef.current).dxDataGrid('instance').refresh()
     $(modalRef.current).modal('hide')
   }
 
@@ -86,7 +100,8 @@ const Statuses = ({ statuses, tables }) => {
     if (!isConfirmed) return
     const result = await statusesRest.delete(id)
     if (!result) return
-    $(gridRef.current).dxDataGrid('instance').refresh()
+    setStatuses(old => [...old.filter(x => x.id != id)])
+    // $(gridRef.current).dxDataGrid('instance').refresh()
   }
 
   return (<>
@@ -187,17 +202,17 @@ const Statuses = ({ statuses, tables }) => {
         <button className="btn btn-primary mb-4 rounded-pill" onClick={() => onModalOpen()}>Nuevo Estado</button>
       </div>
 
-      <div className="row align-items-center justify-content-center">
+      <div className="row align-items-start justify-content-center">
         {tables.map((table, index) => (
-          <div key={index} className="col-md-4">
+          <div key={index} className="col-md-6">
             <div className="card">
               <div className="card-header">
                 <div className='d-flex align-items-center justify-content-between'>
-                  <h5 className="my-0 text-capitalize">{table.name}</h5>
+                  <h5 className="my-0 text-capitalize">Estados de {table.name}</h5>
                   <button className='btn btn-xs btn-primary rounded-pill' onClick={() => onModalOpen({ table })}>Nuevo estado</button>
                 </div>
               </div>
-              <div className="card-body d-flex align-items-center justify-content-center gap-2" style={{ flexWrap: 'wrap' }}>
+              <div className="card-body d-flex align-items-start justify-content-center gap-2" style={{ flexWrap: 'wrap', minHeight: '200px' }}>
                 {statuses.filter(status => status.table_id === table.id).map((status, index) => (
                   <>
                     <div key={index} class="btn-group dropup col-auto">

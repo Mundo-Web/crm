@@ -1,8 +1,11 @@
 import React, { useEffect } from 'react'
 
-const DataGrid = ({ gridRef: dataGridRef, rest, columns, toolBar, masterDetail, filterValue, defaultRows, selection, allowedPageSizes = [5, 10, 25, 50, 100], pageSize = 100, exportable, exportableName, customizeCell = () => { } }) => {
+const DataGrid = ({ gridRef: dataGridRef, rest, columns, toolBar, masterDetail, filterValue, defaultRows, selection, allowedPageSizes = [5, 10, 25, 50, 100], pageSize = 100, exportable, exportableName, customizeCell = () => { }, reloadWith = [null] }) => {
   useEffect(() => {
     DevExpress.localization.locale(navigator.language);
+    if ($(dataGridRef.current).data('dxDataGrid')) {
+      $(dataGridRef.current)?.dxDataGrid('instance')?.dispose()
+    }
     $(dataGridRef.current).dxDataGrid({
       language: "es",
       dataSource: {
@@ -140,7 +143,7 @@ const DataGrid = ({ gridRef: dataGridRef, rest, columns, toolBar, masterDetail, 
     // if (dxSettings[location.pathname]) {
     //   $(dataGridRef.current).dxDataGrid('instance').state(dxSettings[location.pathname])
     // }
-  }, [null])
+  }, reloadWith)
 
   return (
     <div ref={dataGridRef}></div>
