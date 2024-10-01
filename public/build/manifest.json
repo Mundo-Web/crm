@@ -39,8 +39,8 @@
     "file": "assets/CreateReactScript-Cr76lECz.js",
     "name": "CreateReactScript"
   },
-  "_Dropdown-yQ5uBWxJ.js": {
-    "file": "assets/Dropdown-yQ5uBWxJ.js",
+  "_Dropdown-QGTg3-mx.js": {
+    "file": "assets/Dropdown-QGTg3-mx.js",
     "name": "Dropdown",
     "imports": [
       "_Adminto-DTaYUp-d.js",
@@ -103,12 +103,12 @@
       "_CreateReactScript-Cr76lECz.js"
     ]
   },
-  "_ProjectStatusDropdown-BYrKXNVG.js": {
-    "file": "assets/ProjectStatusDropdown-BYrKXNVG.js",
+  "_ProjectStatusDropdown-DLxFkUUw.js": {
+    "file": "assets/ProjectStatusDropdown-DLxFkUUw.js",
     "name": "ProjectStatusDropdown",
     "imports": [
       "_CreateReactScript-Cr76lECz.js",
-      "_Dropdown-yQ5uBWxJ.js",
+      "_Dropdown-QGTg3-mx.js",
       "_DropdownItem-Dd6zonp_.js",
       "_Assigneds-DnQIzw0F.js"
     ]
@@ -205,7 +205,7 @@
     ]
   },
   "resources/js/Archived.jsx": {
-    "file": "assets/Archived-B4Vyrq1-.js",
+    "file": "assets/Archived-D9S5-_7l.js",
     "name": "Archived",
     "src": "resources/js/Archived.jsx",
     "isEntry": true,
@@ -213,12 +213,12 @@
       "_Adminto-DTaYUp-d.js",
       "_CreateReactScript-Cr76lECz.js",
       "_TippyButton-BLnRwznp.js",
-      "_ProjectStatusDropdown-BYrKXNVG.js",
+      "_ProjectStatusDropdown-DLxFkUUw.js",
       "_ReactAppend-BUdEshxq.js",
       "_Assigneds-DnQIzw0F.js",
       "_DxPanelButton-Clycaf3l.js",
       "_DxBox-CyhaKWwR.js",
-      "_Dropdown-yQ5uBWxJ.js",
+      "_Dropdown-QGTg3-mx.js",
       "_DropdownItem-Dd6zonp_.js",
       "_server.browser-Dt1gYAOJ.js"
     ]
@@ -234,7 +234,7 @@
     ]
   },
   "resources/js/Clients.jsx": {
-    "file": "assets/Clients-BShp1kMW.js",
+    "file": "assets/Clients-C-NZWdHh.js",
     "name": "Clients",
     "src": "resources/js/Clients.jsx",
     "isEntry": true,
@@ -248,13 +248,13 @@
       "_DropdownItem-Dd6zonp_.js",
       "_DropdownEnd-CXnHC35Z.js",
       "_AssignUsersModal-CTHRaZhU.js",
-      "_ProjectStatusDropdown-BYrKXNVG.js",
+      "_ProjectStatusDropdown-DLxFkUUw.js",
       "_ReactAppend-BUdEshxq.js",
       "_Assigneds-DnQIzw0F.js",
       "_DxPanelButton-Clycaf3l.js",
       "_TippyButton-BLnRwznp.js",
       "_DxBox-CyhaKWwR.js",
-      "_Dropdown-yQ5uBWxJ.js",
+      "_Dropdown-QGTg3-mx.js",
       "_server.browser-Dt1gYAOJ.js"
     ]
   },
@@ -273,7 +273,7 @@
     ]
   },
   "resources/js/Leads.jsx": {
-    "file": "assets/Leads-CAPeG4Cd.js",
+    "file": "assets/Leads-Cj2LBTPA.js",
     "name": "Leads",
     "src": "resources/js/Leads.jsx",
     "isEntry": true,
@@ -286,7 +286,7 @@
       "_UsersRest-D2n0aEcp.js",
       "_TextareaFormGroup-DpQiZCGF.js",
       "_DxPanelButton-Clycaf3l.js",
-      "_Dropdown-yQ5uBWxJ.js",
+      "_Dropdown-QGTg3-mx.js",
       "_DropdownItem-Dd6zonp_.js",
       "_InputFormGroup-DfllSyoc.js",
       "_SelectFormGroup-8kFfSArR.js",
@@ -341,7 +341,7 @@
     ]
   },
   "resources/js/Projects.jsx": {
-    "file": "assets/Projects-BgZGjxpe.js",
+    "file": "assets/Projects-CMKk3E_5.js",
     "name": "Projects",
     "src": "resources/js/Projects.jsx",
     "isEntry": true,
@@ -349,7 +349,7 @@
       "_CreateReactScript-Cr76lECz.js",
       "_Adminto-DTaYUp-d.js",
       "_AssignUsersModal-CTHRaZhU.js",
-      "_ProjectStatusDropdown-BYrKXNVG.js",
+      "_ProjectStatusDropdown-DLxFkUUw.js",
       "_Assigneds-DnQIzw0F.js",
       "_SetSelectValue-CfjBp_ib.js",
       "_TextareaFormGroup-DpQiZCGF.js",
@@ -358,7 +358,7 @@
       "_DxBox-CyhaKWwR.js",
       "_SelectFormGroup-8kFfSArR.js",
       "_TippyButton-BLnRwznp.js",
-      "_Dropdown-yQ5uBWxJ.js",
+      "_Dropdown-QGTg3-mx.js",
       "_DropdownItem-Dd6zonp_.js",
       "_server.browser-Dt1gYAOJ.js"
     ]
@@ -427,7 +427,7 @@
     ]
   },
   "resources/js/Tasks.jsx": {
-    "file": "assets/Tasks-FqtRj8kE.js",
+    "file": "assets/Tasks-CKj5VU-B.js",
     "name": "Tasks",
     "src": "resources/js/Tasks.jsx",
     "isEntry": true,
@@ -438,7 +438,7 @@
       "_DxPanelButton-Clycaf3l.js",
       "_ReactAppend-BUdEshxq.js",
       "_DxBox-CyhaKWwR.js",
-      "_Dropdown-yQ5uBWxJ.js",
+      "_Dropdown-QGTg3-mx.js",
       "_DropdownItem-Dd6zonp_.js",
       "_server.browser-Dt1gYAOJ.js"
     ],

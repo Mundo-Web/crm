@@ -1,7 +1,7 @@
 import Tippy from "@tippyjs/react"
 import React from "react"
 
-const Dropdown = ({ className, title, icon = {}, children, tippy, show = true }, style) => {
+const Dropdown = ({ className, title, icon = {}, children, tippy, show = true, style = {} }) => {
   const dropdown = <div className="btn-group">
     <button className={`${className} dropdown-toggle tippy-here`} data-bs-toggle={show && "dropdown"} style={style}>
       {icon?.icon ? <i className={icon?.icon} style={{ color: icon?.color ?? '#343a40' }}></i> : ''} {title}
