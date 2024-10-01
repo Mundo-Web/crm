@@ -139,7 +139,7 @@ const NavBar = ({ can, session = {}, title = '', whatsappStatus, businesses, APP
           </div>
         </li>
 
-        {can('whatsapp', 'root', 'all') && <li className="notification-list topbar-dropdown">
+        {can('whatsapp', 'root', 'all') && <li className="notification-list topbar-dropdown d-none d-lg-block">
           <a className="nav-link waves-effect waves-light" data-bs-toggle="modal" data-bs-target="#whatsapp-modal">
             <span className="position-relative">
               <i className="mdi mdi-whatsapp noti-icon"></i>
