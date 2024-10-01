@@ -515,8 +515,8 @@ const Leads = ({ statuses, defaultClientStatus, defaultLeadStatus, manageStatuse
                 container.addClass('p-0')
                 container.attr('style', 'overflow: visible')
                 ReactAppend(container, <Dropdown className='btn btn-xs btn-white rounded-pill' title={data.status.name} icon={{ icon: 'fa fa-circle', color: data.status.color }} tippy='Actualizar estado' style={{
-                  'border-radius': '0px !important',
                   border: 'none',
+                  borderRadius: '0 !important',
                   width: '179px',
                   height: '39px',
                 }}>
@@ -539,8 +539,8 @@ const Leads = ({ statuses, defaultClientStatus, defaultLeadStatus, manageStatuse
                 container.addClass('p-0')
                 container.attr('style', 'overflow: visible')
                 ReactAppend(container, <Dropdown className='btn btn-xs btn-white rounded-pill' title={data?.manage_status?.name} icon={{ icon: 'fa fa-circle', color: data?.manage_status?.color }} tippy='Actualizar estado' style={{
-                  'border-radius': '0px !important',
                   border: 'none',
+                  borderRadius: '0 !important',
                   width: '179px',
                   height: '39px',
                 }}>
