@@ -490,13 +490,13 @@ const Leads = ({ statuses, defaultClientStatus, defaultLeadStatus, manageStatuse
               dataField: 'assigned.name',
               caption: 'Asignado a',
               cellTemplate: (container, { data }) => {
-                ReactAppend(container, <div className='d-flex align-items-center'>
+                ReactAppend(container, <div className='d-flex align-items-center gap-1'>
                   {data.assigned_to
                     ? <>
                       <Tippy content={`Atendido por ${data.assigned.name} ${data.assigned.lastname}`}>
                         <img className='avatar-xs rounded-circle ms-1' src={`//${Global.APP_DOMAIN}/api/profile/thumbnail/${data.assigned.relative_id}`} alt={data.assigned.name} />
                       </Tippy>
-                      <span>{data.assigned.name}</span>
+                      <span>{data.assigned?.name?.split(' ')[0]} {data.assigned?.lastname?.split(' ')[0]}</span>
                     </>
                     : <i className='text-muted'>- Sin asignar -</i>}
                 </div>)
