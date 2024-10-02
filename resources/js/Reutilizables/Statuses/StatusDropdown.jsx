@@ -86,12 +86,11 @@ export default function StatusDropdown({
   }
 
   const onItemSave = async (item) => {
-    const request = {
+    const result = await statusesRest.save({
       id: item.id ?? undefined,
       name: nameRef.current.value,
       color: colorRef.current.value
-    }
-    const result = await statusesRest.save(request)
+    })
 
     if (!result) return
 
@@ -104,7 +103,7 @@ export default function StatusDropdown({
     } else {
       setItems(old => [...old.filter(x => x.id), result])
     }
-    setDropdownHasChanges(true)
+    setDropdownHasChanges(item.name != result.name || item.color != result.color)
   }
 
   const onItemCancel = (item) => {
