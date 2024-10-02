@@ -120,17 +120,17 @@ const NavBar = ({ can, session = {}, title = '', whatsappStatus, businesses, APP
 
         <li className="dropdown notification-list d-none d-lg-block">
           <div className="nav-link">
-            <label htmlFor="light-mode-check" type="button" class={`btn btn-xs ${theme == 'dark' ? 'btn-secondary' : 'btn-secondary'} rounded-pill waves-effect waves-light`}>
+            <label htmlFor="light-mode-check" type="button" className={`btn btn-xs ${theme == 'dark' ? 'btn-secondary' : 'btn-secondary'} rounded-pill waves-effect waves-light`}>
               {theme == 'dark'
                 ? <>
                   Ligth
-                  <span class="btn-label-right ms-1" style={{ paddingLeft: '6px' }}>
-                    <i class="mdi mdi-weather-sunny"></i>
+                  <span className="btn-label-right ms-1" style={{ paddingLeft: '6px' }}>
+                    <i className="mdi mdi-weather-sunny"></i>
                   </span>
                 </>
                 : <>
-                  <span class="btn-label me-1" style={{ paddingRight: '6px' }}>
-                    <i class="mdi mdi-moon-waning-crescent"></i>
+                  <span className="btn-label me-1" style={{ paddingRight: '6px' }}>
+                    <i className="mdi mdi-moon-waning-crescent"></i>
                   </span>
                   Dark
                 </>

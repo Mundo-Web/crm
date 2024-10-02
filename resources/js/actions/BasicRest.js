@@ -22,11 +22,11 @@ class BasicRest {
     return await res.json()
   }
 
-  save = async (client) => {
+  save = async (data) => {
     try {
       const { status, result } = await Fetch(`/api/${this.path}`, {
         method: 'POST',
-        body: JSON.stringify(client)
+        body: JSON.stringify(data)
       })
 
       if (!status) throw new Error(result?.message || 'Ocurrio un error inesperado')

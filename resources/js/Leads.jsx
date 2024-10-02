@@ -524,7 +524,12 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
                   defaultValue={data.status}
                   onItemClick={(status) => onClientStatusClicked(data.id, status.id)}
                   canCreate={can('statuses', 'all', 'create')}
-                  />)
+                  canUpdate={can('statuses', 'all', 'update')}
+                  onDropdownClose={(hasChanges, items) => {
+                    if (!hasChanges) return
+                    setStatuses(items)
+                  }}
+                />)
               }
             },
             {
@@ -535,39 +540,50 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
               cellTemplate: (container, { data }) => {
                 container.addClass('p-0')
                 container.attr('style', 'overflow: visible')
-                ReactAppend(container, <Dropdown className='btn btn-white' title={data?.manage_status?.name} tippy='Actualizar estado' style={{
-                  border: 'none',
-                  borderRadius: '0',
-                  width: '179px',
-                  height: '39px',
-                  color: '#fff',
-                  fontWeight: 'bolder',
-                  backgroundColor: data.manage_status.color
-                }}>
-                  {
-                    manageStatuses.sort((a, b) => a.order - b.order).map((status, i) => {
-                      return <DropdownItem key={`status-${i}`} onClick={() => onManageStatusChange(data, status)}>
-                        <i className='fa fa-circle' style={{ color: status.color }}></i> {status.name}
-                      </DropdownItem>
-                    })
-                  }
-                  {
-                    can('statuses', 'all', 'create') &&
-                    <>
-                      <div class="dropdown-divider"></div>
-                      <DropdownItem onClick={() => setStatusLoaded({
-                        table: {
-                          id: '9c27e649-574a-47eb-82af-851c5d425434',
-                          name: 'Gestión de clientes'
-                        },
-                        client_id: data.id
-                      })}>
-                        <i className='fa fa-plus me-1'></i>
-                        Agregar
-                      </DropdownItem>
-                    </>
-                  }
-                </Dropdown>)
+                ReactAppend(container, <StatusDropdown
+                  items={manageStatuses}
+                  defaultValue={data.manage_status}
+                  onItemClick={(status) => onManageStatusChange(data.id, status.id)}
+                  canCreate={can('statuses', 'all', 'create')}
+                  canUpdate={can('statuses', 'all', 'update')}
+                  onDropdownClose={(hasChanges, items) => {
+                    if (!hasChanges) return
+                    setManageStatuses(items)
+                  }}
+                />)
+                // ReactAppend(container, <Dropdown className='btn btn-white' title={data?.manage_status?.name} tippy='Actualizar estado' style={{
+                //   border: 'none',
+                //   borderRadius: '0',
+                //   width: '179px',
+                //   height: '39px',
+                //   color: '#fff',
+                //   fontWeight: 'bolder',
+                //   backgroundColor: data.manage_status.color
+                // }}>
+                //   {
+                //     manageStatuses.sort((a, b) => a.order - b.order).map((status, i) => {
+                //       return <DropdownItem key={`status-${i}`} onClick={() => onManageStatusChange(data, status)}>
+                //         <i className='fa fa-circle' style={{ color: status.color }}></i> {status.name}
+                //       </DropdownItem>
+                //     })
+                //   }
+                //   {
+                //     can('statuses', 'all', 'create') &&
+                //     <>
+                //       <div class="dropdown-divider"></div>
+                //       <DropdownItem onClick={() => setStatusLoaded({
+                //         table: {
+                //           id: '9c27e649-574a-47eb-82af-851c5d425434',
+                //           name: 'Gestión de clientes'
+                //         },
+                //         client_id: data.id
+                //       })}>
+                //         <i className='fa fa-plus me-1'></i>
+                //         Agregar
+                //       </DropdownItem>
+                //     </>
+                //   }
+                // </Dropdown>)
               }
             },
             {
