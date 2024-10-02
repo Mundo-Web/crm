@@ -33,6 +33,7 @@ import Send2Div from './Utils/Send2Div.js'
 import Global from './Utils/Global.js'
 import DxPanelButton from './components/dx/DxPanelButton.jsx'
 import StatusModal from './Reutilizables/Statuses/StatusModal.jsx'
+import StatusDropdown from './Reutilizables/Statuses/StatusDropdown.jsx'
 
 const leadsRest = new LeadsRest()
 const clientsRest = new ClientsRest()
@@ -518,39 +519,12 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
               cellTemplate: (container, { data }) => {
                 container.addClass('p-0')
                 container.attr('style', 'overflow: visible')
-                ReactAppend(container, <Dropdown className='btn btn-white text-truncate' title={data.status.name} tippy='Actualizar estado' style={{
-                  border: 'none',
-                  borderRadius: '0',
-                  width: '179px',
-                  height: '39px',
-                  color: '#fff',
-                  fontWeight: 'bolder',
-                  backgroundColor: data.status.color
-                }}>
-                  {
-                    statuses.sort((a, b) => a.order - b.order).map(({ id, name, color }) => {
-                      return <DropdownItem key={id} onClick={() => onClientStatusClicked(data.id, id)}>
-                        <i className='fa fa-circle' style={{ color }}></i> {name}
-                      </DropdownItem>
-                    })
-                  }
-                  {
-                    can('statuses', 'all', 'create') &&
-                    <>
-                      <div class="dropdown-divider"></div>
-                      <DropdownItem onClick={() => setStatusLoaded({
-                        table: {
-                          id: 'e05a43e5-b3a6-46ce-8d1f-381a73498f33',
-                          name: 'Leads'
-                        },
-                        client_id: data.id
-                      })}>
-                        <i className='fa fa-plus me-1'></i>
-                        Agregar
-                      </DropdownItem>
-                    </>
-                  }
-                </Dropdown>)
+                ReactAppend(container, <StatusDropdown
+                  items={statuses}
+                  defaultValue={data.status}
+                  onItemClick={(status) => onClientStatusClicked(data.id, status.id)}
+                  canCreate={can('statuses', 'all', 'create')}
+                  />)
               }
             },
             {

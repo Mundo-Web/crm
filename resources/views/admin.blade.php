@@ -36,9 +36,10 @@
     id="bs-dark-stylesheet" disabled="disabled" />
 
   {{-- App Styles --}}
-  <link href="/lte/assets/css/config/default/app.css?v=06d3ebc8-645c-4d80-a600-c9652743c426" rel="stylesheet" type="text/css" id="app-default-stylesheet" />
-  <link href="/lte/assets/css/config/default/app-dark.css?v=06d3ebc8-645c-4d80-a600-c9652743c426" rel="stylesheet" type="text/css" id="app-dark-stylesheet"
-    disabled="disabled" />
+  <link href="/lte/assets/css/config/default/app.css?v=06d3ebc8-645c-4d80-a600-c9652743c426" rel="stylesheet"
+    type="text/css" id="app-default-stylesheet" />
+  <link href="/lte/assets/css/config/default/app-dark.css?v=06d3ebc8-645c-4d80-a600-c9652743c426" rel="stylesheet"
+    type="text/css" id="app-dark-stylesheet" disabled="disabled" />
 
   {{-- icons --}}
   <link href="/lte/assets/css/icons.min.css" rel="stylesheet" type="text/css" />
@@ -50,10 +51,20 @@
     body * {
       font-family: 'Comfortaa', sans-serif;
     }
+
     body code,
     body pre {
       font-family: monospace;
     }
+
+    .show-button-child button {
+      display: none;
+    }
+
+    .show-button-child:hover button {
+      display: block;
+    }
+
     .tippy-tooltip {
       padding: 0;
     }

@@ -1,11 +1,9 @@
 import React from "react";
 
-const DropdownItem = ({ onClick, children, ...props }) => {
-  return <li className="dropdown-item p-0">
-    <a className="dropdown-item px-2 d-block" style={{
+const DropdownItem = ({ onClick, children, className = 'p-2', ...props }) => {
+  return <li className="dropdown-item p-0 position-relative">
+    <a className={`dropdown-item ${className} d-block`} style={{
       cursor: 'pointer',
-      paddingTop: '8px',
-      paddingBottom: '8px'
     }} onClick={onClick} {...props}>{children}</a>
   </li>
 }
