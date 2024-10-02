@@ -13,7 +13,7 @@ export default function StatusDropdown({
   canUpdate = false,
   onItemClick = () => { },
   afterSave = () => { },
-  onDropdownClose = () => {}
+  onDropdownClose = () => { }
 }) {
   const dropdownRef = useRef()
   const nameRef = useRef()
@@ -57,13 +57,18 @@ export default function StatusDropdown({
   useEffect(() => {
     const dropdownElement = $(dropdownRef.current);
     const handleDropdownHidden = () => {
-      onDropdownClose(dropdownHasChanges, structuredClone(items))
+      const cleanItems = structuredClone(items).filter(x => x.id).map(x => {
+        x.editing = false
+        return x
+      })
+      setItems(cleanItems)
+      onDropdownClose(dropdownHasChanges, cleanItems)
     };
     dropdownElement.on('hidden.bs.dropdown', handleDropdownHidden);
     return () => {
       dropdownElement.off('hidden.bs.dropdown', handleDropdownHidden);
     };
-  }, [dropdownHasChanges, items]);
+  }, [dropdownHasChanges]);
 
   const onAddStatusClicked = (e) => {
     e.stopPropagation()
