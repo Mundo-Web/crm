@@ -20,6 +20,7 @@
         "quill": "^2.0.2",
         "quill-mention": "^6.0.1",
         "react": "^18.3.1",
+        "react-beautiful-dnd": "^13.1.1",
         "react-dom": "^18.3.1",
         "react-google-recaptcha": "^3.1.0",
         "sode-extend-react": "^1.1.111",

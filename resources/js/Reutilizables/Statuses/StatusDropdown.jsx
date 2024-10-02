@@ -72,6 +72,12 @@ export default function StatusDropdown({
     };
   }, [dropdownHasChanges, items]);
 
+  // useEffect(() => {
+  //   $(containerRef.current).sortable({
+  //     forcePlaceholderSize: true,
+  //   }).disableSelection()
+  // }, [null])
+
   const onAddStatusClicked = (e) => {
     e.stopPropagation()
     setItems(old => [...old.map(x => {
@@ -173,7 +179,18 @@ export default function StatusDropdown({
           return (
             <DropdownItem
               key={index}
-              onClick={(e) => editing ? e.stopPropagation() : onItemClick(item)}
+              onClick={(e) => {
+                if (editing) {
+                  e.stopPropagation()
+                } else {
+                  setItems(old => [...old.map(x => {
+                    if (!x.id) return
+                    x.editing = false
+                    return x
+                  }).filter(Boolean)])
+                  onItemClick(item)
+                }
+              }}
               className={editing ? 'p-0' : 'p-2 show-button-child'}
             >
               {editing ? (
@@ -219,7 +236,7 @@ export default function StatusDropdown({
                     {
                       canUpdate &&
                       <Tippy content='Editar'>
-                        <a href="javascript:void(0)" className="" onClick={e => onUpdateStatusClicked(e, item)} type='button'>
+                        <a href="javascript:void(0)" className="btn btn-xs btn-soft-primary " onClick={e => onUpdateStatusClicked(e, item)} type='button'>
                           <i className="fa fa-pen" aria-hidden="true"></i>
                           <span className="sr-only">Editar</span>
                         </a>
@@ -228,7 +245,7 @@ export default function StatusDropdown({
                     {
                       canDelete &&
                       <Tippy content='Eliminar'>
-                        <a href="javascript:void(0)" className="text-danger" onClick={e => onDeleteStatusClicked(e, item)} type='button'>
+                        <a href="javascript:void(0)" className="btn btn-xs btn-soft-danger" onClick={e => onDeleteStatusClicked(e, item)} type='button'>
                           <i className="fa fa-trash" aria-hidden="true"></i>
                           <span className="sr-only">Eliminar</span>
                         </a>
