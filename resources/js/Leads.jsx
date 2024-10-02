@@ -522,6 +522,9 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
                 ReactAppend(container, <StatusDropdown
                   items={statuses}
                   defaultValue={data.status}
+                  base={{
+                    table_id: 'e05a43e5-b3a6-46ce-8d1f-381a73498f33'
+                  }}
                   onItemClick={(status) => onClientStatusClicked(data.id, status.id)}
                   canCreate={can('statuses', 'all', 'create')}
                   canUpdate={can('statuses', 'all', 'update')}
@@ -543,6 +546,9 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
                 ReactAppend(container, <StatusDropdown
                   items={manageStatuses}
                   defaultValue={data.manage_status}
+                  base={{
+                    table_id: '9c27e649-574a-47eb-82af-851c5d425434'
+                  }}
                   onItemClick={(status) => onManageStatusChange(data.id, status.id)}
                   canCreate={can('statuses', 'all', 'create')}
                   canUpdate={can('statuses', 'all', 'update')}

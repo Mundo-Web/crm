@@ -91,7 +91,7 @@ const Home = ({session}) => {
         }
         data.forEach(x => {
           if (x.month == moment().month() + 1) lastRevenues.actual = Number(x.total)
-          else {
+          else if (x.month == moment().month()) {
             setLastMonth(moment({ month: x.month - 1 }).format('MMMM Y'))
             lastRevenues.last = Number(x.total)
           }

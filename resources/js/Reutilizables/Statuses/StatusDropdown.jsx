@@ -9,11 +9,11 @@ const statusesRest = new StatusesRest();
 export default function StatusDropdown({
   defaultValue,
   items: propItems = [],
+  base = {},
   canCreate = false,
   canUpdate = false,
   onItemClick = () => { },
-  afterSave = () => { },
-  onDropdownClose = () => { }
+  onDropdownClose = () => { },
 }) {
   const dropdownRef = useRef()
   const nameRef = useRef()
@@ -68,7 +68,7 @@ export default function StatusDropdown({
     return () => {
       dropdownElement.off('hidden.bs.dropdown', handleDropdownHidden);
     };
-  }, [dropdownHasChanges]);
+  }, [dropdownHasChanges, items]);
 
   const onAddStatusClicked = (e) => {
     e.stopPropagation()
@@ -90,8 +90,10 @@ export default function StatusDropdown({
     })
   }
 
-  const onItemSave = async (item) => {
+  const onItemSave = async (e, item) => {
+    e.preventDefault()
     const result = await statusesRest.save({
+      ...structuredClone(base),
       id: item.id ?? undefined,
       name: nameRef.current.value,
       color: colorRef.current.value
@@ -148,7 +150,7 @@ export default function StatusDropdown({
               className={editing ? 'p-0' : 'p-2 show-button-child'}
             >
               {editing ? (
-                <div className="input-group">
+                <form className="input-group" onSubmit={(e) => onItemSave(e, item)}>
                   <label htmlFor={uuid} className="input-group-text p-0 d-flex align-items-center" style={{ cursor: 'pointer' }}>
                     <input
                       ref={colorRef}
@@ -168,18 +170,18 @@ export default function StatusDropdown({
                   </label>
                   <input ref={nameRef} className="form-control" type="text" defaultValue={name} />
                   <Tippy content="Guardar">
-                    <button className="btn input-group-text btn-xs btn-success waves-effect waves-light" type="button" onClick={() => onItemSave(item)}>
+                    <button className="btn input-group-text btn-xs btn-success waves-effect waves-light" type="submit">
                       <i className="fa fa-check" aria-hidden="true"></i>
                       <span className="sr-only">Guardar</span>
                     </button>
                   </Tippy>
                   <Tippy content="Cancelar">
-                    <button className="btn input-group-text btn-xs btn-danger waves-effect waves-light px-[10px]" type="button" onClick={() => onItemCancel(item)}>
+                    <button className="btn input-group-text btn-xs btn-danger waves-effect waves-light" type="button" onClick={() => onItemCancel(item)}>
                       <i className="fa fa-times" aria-hidden="true"></i>
                       <span className="sr-only">Cancelar</span>
                     </button>
                   </Tippy>
-                </div>
+                </form>
               ) : (
                 <>
                   {
