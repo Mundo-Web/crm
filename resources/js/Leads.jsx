@@ -558,39 +558,6 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
                     setManageStatuses(items)
                   }}
                 />)
-                // ReactAppend(container, <Dropdown className='btn btn-white' title={data?.manage_status?.name} tippy='Actualizar estado' style={{
-                //   border: 'none',
-                //   borderRadius: '0',
-                //   width: '179px',
-                //   height: '39px',
-                //   color: '#fff',
-                //   fontWeight: 'bolder',
-                //   backgroundColor: data.manage_status.color
-                // }}>
-                //   {
-                //     manageStatuses.sort((a, b) => a.order - b.order).map((status, i) => {
-                //       return <DropdownItem key={`status-${i}`} onClick={() => onManageStatusChange(data, status)}>
-                //         <i className='fa fa-circle' style={{ color: status.color }}></i> {status.name}
-                //       </DropdownItem>
-                //     })
-                //   }
-                //   {
-                //     can('statuses', 'all', 'create') &&
-                //     <>
-                //       <div class="dropdown-divider"></div>
-                //       <DropdownItem onClick={() => setStatusLoaded({
-                //         table: {
-                //           id: '9c27e649-574a-47eb-82af-851c5d425434',
-                //           name: 'Gestión de clientes'
-                //         },
-                //         client_id: data.id
-                //       })}>
-                //         <i className='fa fa-plus me-1'></i>
-                //         Agregar
-                //       </DropdownItem>
-                //     </>
-                //   }
-                // </Dropdown>)
               }
             },
             {
@@ -616,7 +583,7 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
               caption: 'Acciones',
               width: 240,
               cellTemplate: (container, { data }) => {
-                container.attr('style', 'display: flex; gap: 4px; height: 49px; overflow: visible')
+                container.attr('style', 'display: flex; gap: 4px; height: 47px; overflow: visible')
 
                 ReactAppend(container, <TippyButton className='btn btn-xs btn-soft-warning' title='Editar lead' onClick={() => onOpenModal(data)}>
                   <i className='fa fa-pen'></i>
