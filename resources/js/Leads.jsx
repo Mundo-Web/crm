@@ -528,6 +528,7 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
                   onItemClick={(status) => onClientStatusClicked(data.id, status.id)}
                   canCreate={can('statuses', 'all', 'create')}
                   canUpdate={can('statuses', 'all', 'update')}
+                  canDelete={can('statuses', 'all', 'delete')}
                   onDropdownClose={(hasChanges, items) => {
                     if (!hasChanges) return
                     setStatuses(items)
@@ -552,6 +553,7 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
                   onItemClick={(status) => onManageStatusChange(data.id, status.id)}
                   canCreate={can('statuses', 'all', 'create')}
                   canUpdate={can('statuses', 'all', 'update')}
+                  canDelete={can('statuses', 'all', 'delete')}
                   onDropdownClose={(hasChanges, items) => {
                     if (!hasChanges) return
                     setManageStatuses(items)

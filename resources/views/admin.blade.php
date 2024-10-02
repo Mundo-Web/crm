@@ -57,11 +57,13 @@
       font-family: monospace;
     }
 
-    .show-button-child button {
+    .show-button-child button,
+    .show-button-child [type='button'] {
       display: none;
     }
 
-    .show-button-child:hover button {
+    .show-button-child:hover button,
+    .show-button-child:hover [type='button'] {
       display: block;
     }
 

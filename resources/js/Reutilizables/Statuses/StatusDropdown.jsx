@@ -3,6 +3,7 @@ import Dropdown from "../../components/dropdown/DropDown"
 import DropdownItem from "../../components/dropdown/DropdownItem"
 import Tippy from "@tippyjs/react"
 import StatusesRest from "../../actions/StatusesRest"
+import Swal from "sweetalert2"
 
 const statusesRest = new StatusesRest();
 
@@ -12,6 +13,7 @@ export default function StatusDropdown({
   base = {},
   canCreate = false,
   canUpdate = false,
+  canDelete = false,
   onItemClick = () => { },
   onDropdownClose = () => { },
 }) {
@@ -88,6 +90,31 @@ export default function StatusDropdown({
         return x
       }).filter(Boolean)
     })
+  }
+
+  const onDeleteStatusClicked = async (e, item) => {
+    e.stopPropagation()
+    const { isConfirmed } = await Swal.fire({
+      title: "Estas seguro de eliminar este estado?",
+      text: `No podras revertir esta accion!`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Continuar",
+      cancelButtonText: `Cancelar`
+    })
+    if (!isConfirmed) return
+    const result = await statusesRest.delete(item.id)
+    console.log(result)
+    if (!result) return
+    const cleanItems = structuredClone(items).map(x => {
+      if (!x.id) return
+      if (x.id == item.id) return
+      x.editing = x.id === item.id
+      return x
+    }).filter(Boolean)
+    setItems(cleanItems)
+    setDropdownHasChanges(true)
+    onDropdownClose(true, cleanItems)
   }
 
   const onItemSave = async (e, item) => {
@@ -184,23 +211,30 @@ export default function StatusDropdown({
                 </form>
               ) : (
                 <>
-                  {
-                    canUpdate &&
-                    <Tippy content='Editar'>
-                      <button
-                        className="position-absolute btn btn-xs btn-soft-primary"
-                        style={{
-                          top: '50%',
-                          right: '8px',
-                          transform: 'translateY(-50%)'
-                        }}
-                        onClick={e => onUpdateStatusClicked(e, item)}
-                      >
-                        <i className="fa fa-pen" aria-hidden="true"></i>
-                        <span className="sr-only">Editar</span>
-                      </button>
-                    </Tippy>
-                  }
+                  <div className="position-absolute d-flex gap-1" style={{
+                    top: '50%',
+                    right: '8px',
+                    transform: 'translateY(-50%)'
+                  }}>
+                    {
+                      canUpdate &&
+                      <Tippy content='Editar'>
+                        <a href="javascript:void(0)" className="" onClick={e => onUpdateStatusClicked(e, item)} type='button'>
+                          <i className="fa fa-pen" aria-hidden="true"></i>
+                          <span className="sr-only">Editar</span>
+                        </a>
+                      </Tippy>
+                    }
+                    {
+                      canDelete &&
+                      <Tippy content='Eliminar'>
+                        <a href="javascript:void(0)" className="text-danger" onClick={e => onDeleteStatusClicked(e, item)} type='button'>
+                          <i className="fa fa-trash" aria-hidden="true"></i>
+                          <span className="sr-only">Eliminar</span>
+                        </a>
+                      </Tippy>
+                    }
+                  </div>
                   <i className='fa fa-circle me-2' style={{ color }} aria-hidden="true"></i>
                   <span>{name}</span>
                 </>
