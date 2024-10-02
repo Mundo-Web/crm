@@ -616,7 +616,7 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
               caption: 'Acciones',
               width: 240,
               cellTemplate: (container, { data }) => {
-                container.attr('style', 'display: flex; gap: 4px; overflow: visible')
+                container.attr('style', 'display: flex; gap: 4px; height: 49px; overflow: visible')
 
                 ReactAppend(container, <TippyButton className='btn btn-xs btn-soft-warning' title='Editar lead' onClick={() => onOpenModal(data)}>
                   <i className='fa fa-pen'></i>
