@@ -496,7 +496,7 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
                         <img className='avatar-sm rounded-circle' src={`//${Global.APP_DOMAIN}/api/profile/thumbnail/${data.assigned.relative_id}`} alt={data.assigned.name} />
                       </Tippy>
                     </>
-                    : <i className='text-muted'>-</i>}
+                    : ''}
                 </div>)
               },
               fixed: true,
