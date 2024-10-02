@@ -73,10 +73,33 @@ export default function StatusDropdown({
   }, [dropdownHasChanges, items]);
 
   // useEffect(() => {
-  //   $(containerRef.current).sortable({
-  //     forcePlaceholderSize: true,
-  //   }).disableSelection()
-  // }, [null])
+  //   const container = $(containerRef.current);
+
+  //   container.sortable({
+  //     placeholder: 'sortable-placeholder', // Clase para el placeholder
+  //     forcePlaceholderSize: true, // Asegurar que el espacio placeholder tenga tamaño
+  //     receive: async function (event, ui) {
+  //       const ul = event.target;
+  //       const li = ui.item.get(0);
+  //       const items = $(ul).sortable('toArray');
+
+  //       console.log({ items, li });
+
+  //       // if (!items.includes(li.id)) return;
+  //       // const result = await leadsRest.leadStatus({ status: ul.getAttribute('data-id'), lead: li.id });
+  //       // if (!result) return;
+  //       // await getLeads();
+  //     },
+  //     update: function (event, ui) {
+  //       if (this === ui.item.parent()[0]) {
+  //         return;
+  //       }
+  //     }
+  //   }).disableSelection();
+  //   return () => {
+  //     container.sortable("destroy");
+  //   };
+  // }, [items]);
 
   const onAddStatusClicked = (e) => {
     e.stopPropagation()
@@ -160,7 +183,7 @@ export default function StatusDropdown({
         border: 'none',
         borderRadius: '0',
         width: '179px',
-        height: '39px',
+        height: '47px',
         color: '#fff',
         fontWeight: 'bolder',
         backgroundColor: defaultValue.color

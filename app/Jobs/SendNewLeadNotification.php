@@ -40,26 +40,26 @@ class SendNewLeadNotification implements ShouldQueue
     $client = $this->client;
     $business = $this->business;
 
-    try {
-      $html = Text::replaceData(
-        Setting::get(
-          'email-new-lead-notification-message',
-          $business->id
-        ),
-        $client->toArray()
-      );
-      $to = Setting::get(
-        'email-new-lead-notification-owneremail',
-        $business->id
-      );
-      $mail = EmailConfig::config($business->name);
-      $mail->addAddress($to);
-      $mail->Body = $html;
-      $mail->isHTML(true);
-      $mail->send();
-    } catch (\Throwable $th) {
-      dump("EmailError: " . $th->getMessage());
-    }
+    // try {
+    //   $html = Text::replaceData(
+    //     Setting::get(
+    //       'email-new-lead-notification-message',
+    //       $business->id
+    //     ),
+    //     $client->toArray()
+    //   );
+    //   $to = Setting::get(
+    //     'email-new-lead-notification-owneremail',
+    //     $business->id
+    //   );
+    //   $mail = EmailConfig::config($business->name);
+    //   $mail->addAddress($to);
+    //   $mail->Body = $html;
+    //   $mail->isHTML(true);
+    //   $mail->send();
+    // } catch (\Throwable $th) {
+    //   dump("EmailError: " . $th->getMessage());
+    // }
 
     try {
       $to = Text::keep(Setting::get('whatsapp-new-lead-notification-waid', $business->id), '0123456789@gc.us');

@@ -17,8 +17,6 @@ import UsersRest from './actions/UsersRest.js'
 import Adminto from './components/Adminto.jsx'
 import Modal from './components/Modal.jsx'
 import Table from './components/Table.jsx'
-import Dropdown from './components/dropdown/DropDown.jsx'
-import DropdownItem from './components/dropdown/DropdownItem.jsx'
 import InputFormGroup from './components/form/InputFormGroup.jsx'
 import TextareaFormGroup from './components/form/TextareaFormGroup.jsx'
 import SelectFormGroup from './components/form/SelectFormGroup.jsx'
@@ -71,7 +69,6 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
   const [leadLoaded, setLeadLoaded] = useState(null)
   const [notes, setNotes] = useState([]);
   const [defaultView, setDefaultView] = useState(Local.get('default-view') ?? 'kanban')
-  const [statusLoaded, setStatusLoaded] = useState(null);
 
   const typeRefs = {};
   const idRefs = {}
@@ -479,7 +476,7 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
               caption: 'Lead',
               width: 250,
               cellTemplate: (container, { data }) => {
-                container.attr('style', 'height: 40px; cursor: pointer')
+                container.attr('style', 'height: 48px; cursor: pointer')
                 container.on('click', () => onLeadClicked(data))
                 container.html(data.status_id == defaultLeadStatus ? `<b>${data.contact_name}</b>` : data.contact_name)
               },
@@ -488,20 +485,22 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
             },
             {
               dataField: 'assigned.fullname',
-              caption: 'Asignado a',
-              width: 200,
+              caption: 'Usuario',
+              width: 58,
               cellTemplate: (container, { data }) => {
+                container.attr('style', 'height: 48px')
                 ReactAppend(container, <div className='d-flex align-items-center gap-1'>
                   {data.assigned_to
                     ? <>
                       <Tippy content={`Atendido por ${data.assigned.name} ${data.assigned.lastname}`}>
-                        <img className='avatar-xs rounded-circle' src={`//${Global.APP_DOMAIN}/api/profile/thumbnail/${data.assigned.relative_id}`} alt={data.assigned.name} />
+                        <img className='avatar-sm rounded-circle' src={`//${Global.APP_DOMAIN}/api/profile/thumbnail/${data.assigned.relative_id}`} alt={data.assigned.name} />
                       </Tippy>
-                      <span>{data.assigned?.name?.split(' ')[0]} {data.assigned?.lastname?.split(' ')[0]}</span>
                     </>
-                    : <i className='text-muted'>- Sin asignar -</i>}
+                    : <i className='text-muted'>-</i>}
                 </div>)
-              }
+              },
+              fixed: true,
+              fixedPosition: 'left'
             },
             {
               dataField: 'contact_email',
@@ -973,17 +972,6 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
         <TextareaFormGroup eRef={messageRef} label='Mensaje' placeholder='Ingresa tu mensaje' rows={4} />
       </div>
     </Modal>
-
-    <StatusModal dataLoaded={statusLoaded} setDataLoaded={setStatusLoaded} afterSave={(newStatus, loaded) => {
-      if (newStatus.table_id == '9c27e649-574a-47eb-82af-851c5d425434') { // Manage status
-        setManageStatuses(old => [...old, newStatus])
-        // onManageStatusChange(loaded.client_id, newStatus.id)
-      } else { // Lead status 
-        setStatuses(old => [...old, newStatus])
-        // onClientStatusClicked(loaded.client_id, newStatus.id)
-      }
-      $(gridRef.current).dxDataGrid('instance').refresh()
-    }} />
 
   </>
   )
