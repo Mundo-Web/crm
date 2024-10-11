@@ -549,7 +549,7 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
                   base={{
                     table_id: '9c27e649-574a-47eb-82af-851c5d425434'
                   }}
-                  onItemClick={(status) => onManageStatusChange(data.id, status.id)}
+                  onItemClick={(status) => onManageStatusChange(data, status)}
                   canCreate={can('statuses', 'all', 'create')}
                   canUpdate={can('statuses', 'all', 'update')}
                   canDelete={can('statuses', 'all', 'delete')}

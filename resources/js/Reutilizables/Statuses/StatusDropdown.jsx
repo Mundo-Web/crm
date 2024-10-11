@@ -4,6 +4,7 @@ import DropdownItem from "../../components/dropdown/DropdownItem"
 import Tippy from "@tippyjs/react"
 import StatusesRest from "../../actions/StatusesRest"
 import Swal from "sweetalert2"
+import { Local } from "sode-extend-react"
 
 const statusesRest = new StatusesRest();
 
@@ -46,6 +47,10 @@ export default function StatusDropdown({
     }
 
     requestAnimationFrame(animateScroll)
+
+    Local.onchange('statuses', (e) => {
+      console.log(e)
+    })
   }, [])
 
   useEffect(() => {
@@ -54,6 +59,7 @@ export default function StatusDropdown({
       smoothScroll(containerRef.current, scrollTarget, 300) // 300ms duration for the animation
       setShouldScroll(false)
     }
+    Local.set('statuses', items)
   }, [items, shouldScroll, smoothScroll])
 
   useEffect(() => {

@@ -1,0 +1,1 @@
+import{R as e}from"./CreateReactScript-CFX3eQQt.js";const s=({onClick:t,children:o,className:r="p-2",...a})=>e.createElement("li",{className:"dropdown-item p-0 position-relative"},e.createElement("a",{className:`dropdown-item ${r} d-block`,style:{cursor:"pointer",width:"260px"},onClick:t,...a},o));export{s as D};

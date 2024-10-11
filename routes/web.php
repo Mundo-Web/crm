@@ -6,6 +6,8 @@ use App\Http\Controllers\BasicController;
 use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\KPILeadsController;
+use App\Http\Controllers\KPIProjectsController;
 use App\Http\Controllers\LeadController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\RoleController;
@@ -47,7 +49,8 @@ Route::get('/', function (Request $request) {
 });
 
 Route::middleware('auth')->group(function () {
-    Route::get('/home', [BasicController::class, 'reactView'])->name('Home.jsx');
+    Route::get('/home', [KPILeadsController::class, 'reactView'])->name('KPILeads.jsx');
+    Route::get('/home/projects', [KPIProjectsController::class, 'reactView'])->name('KPIProjects.jsx');
     Route::get('/clients', [ClientController::class, 'reactView'])->name('Clients.jsx');
     // Route::get('/calendar', [CalendarController::class, 'reactView'])->name('Calendar.jsx');
     Route::get('/tasks', [TaskController::class, 'reactView'])->name('Tasks.jsx');

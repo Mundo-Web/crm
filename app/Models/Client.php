@@ -3,9 +3,11 @@
 namespace App\Models;
 
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Auth;
 
 class Client extends Model
 {
@@ -99,5 +101,23 @@ class Client extends Model
     public function pendingTasks()
     {
         return $this->hasManyThrough(Task::class, ClientNote::class, 'client_id', 'note_id', 'id', 'id')->whereNot('status', 'Realizado');
+    }
+
+    static function lastMonth()
+    {
+        $previousMonth = Carbon::now()->subMonth()->format('m');
+        $previousYear = Carbon::now()->subMonth()->format('Y');
+        return Client::where('clients.business_id', Auth::user()->business_id)
+            ->whereMonth('clients.created_at', $previousMonth)
+            ->whereYear('clients.created_at', $previousYear);
+    }
+
+    static function thisMonth()
+    {
+        $currentMonth = date('m');
+        $currentYear = date('Y');
+        return Client::where('clients.business_id', Auth::user()->business_id)
+            ->whereMonth('clients.created_at', $currentMonth)
+            ->whereYear('clients.created_at', $currentYear);
     }
 }
