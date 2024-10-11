@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import Adminto from './components/Adminto'
 import CreateReactScript from './Utils/CreateReactScript'
 import { Math } from 'sode-extend-react';
+import SelectFormGroup from './components/form/SelectFormGroup';
 
 const KPILeads = ({ grouped = [], currentMonth, currentYear, totalCount, clientsCount, archivedCount, managingCount, groupedByManageStatus }) => {
   const totalQuantity = grouped.reduce((acc, kpi) => acc + kpi.quantity, 0);
@@ -16,12 +17,21 @@ const KPILeads = ({ grouped = [], currentMonth, currentYear, totalCount, clients
 
   return (
     <>
-      <div class="row">
-        <div class="col-xl-3 col-md-6">
-          <div class="card">
-            <div class="card-body widget-user">
-              <div class="text-center">
-                <h2 class="fw-normal text-info" data-plugin="counterup">{totalCount}</h2>
+      <div className="row">
+        <SelectFormGroup>
+          <option value=""></option>
+          <option value=""></option>
+          <option value=""></option>
+          <option value=""></option>
+          <option value=""></option>
+        </SelectFormGroup>
+      </div>
+      <div className="row">
+        <div className="col-xl-3 col-md-6">
+          <div className="card">
+            <div className="card-body widget-user">
+              <div className="text-center">
+                <h2 className="fw-normal text-info" data-plugin="counterup">{totalCount}</h2>
                 <h5>Leads - {prettyMonth}</h5>
               </div>
             </div>
@@ -29,11 +39,11 @@ const KPILeads = ({ grouped = [], currentMonth, currentYear, totalCount, clients
 
         </div>
 
-        <div class="col-xl-3 col-md-6">
-          <div class="card">
-            <div class="card-body widget-user">
-              <div class="text-center">
-                <h2 class="fw-normal text-success" data-plugin="counterup">{clientsCount}</h2>
+        <div className="col-xl-3 col-md-6">
+          <div className="card">
+            <div className="card-body widget-user">
+              <div className="text-center">
+                <h2 className="fw-normal text-success" data-plugin="counterup">{clientsCount}</h2>
                 <h5>Convertidos</h5>
               </div>
             </div>
@@ -41,11 +51,11 @@ const KPILeads = ({ grouped = [], currentMonth, currentYear, totalCount, clients
 
         </div>
 
-        <div class="col-xl-3 col-md-6">
-          <div class="card">
-            <div class="card-body widget-user">
-              <div class="text-center">
-                <h2 class="fw-normal text-danger" data-plugin="counterup">{archivedCount}</h2>
+        <div className="col-xl-3 col-md-6">
+          <div className="card">
+            <div className="card-body widget-user">
+              <div className="text-center">
+                <h2 className="fw-normal text-danger" data-plugin="counterup">{archivedCount}</h2>
                 <h5>No convertidos</h5>
               </div>
             </div>
@@ -53,11 +63,11 @@ const KPILeads = ({ grouped = [], currentMonth, currentYear, totalCount, clients
 
         </div>
 
-        <div class="col-xl-3 col-md-6">
-          <div class="card">
-            <div class="card-body widget-user">
-              <div class="text-center">
-                <h2 class="fw-normal text-primary" data-plugin="counterup">{managingCount}</h2>
+        <div className="col-xl-3 col-md-6">
+          <div className="card">
+            <div className="card-body widget-user">
+              <div className="text-center">
+                <h2 className="fw-normal text-primary" data-plugin="counterup">{managingCount}</h2>
                 <h5>En gestion</h5>
               </div>
             </div>
@@ -86,10 +96,10 @@ const KPILeads = ({ grouped = [], currentMonth, currentYear, totalCount, clients
                   <div className="card-body">
                     <div className='d-flex gap-3 flex-column'>
                       {
-                        groupedByManageStatus.filter(({ status_id }) => status_id == kpi.id).map((row, index) => {
+                        groupedByManageStatus.filter(({ status_id }) => status_id == kpi.id).sort((a,b) => b.quantity - a.quantity).map((row, index) => {
                           const percent = ((row.quantity / kpi.quantity) * 100).toFixed(2);
                           return <div key={index}>
-                            <h5 className="my-0">{row.manage_status_name} <span className="float-end" style={{color: row.manage_status_color}}>{row.quantity}</span></h5>
+                            <h5 className="my-0">{row.manage_status_name} <span className="float-end" style={{ color: row.manage_status_color }}>{row.quantity}</span></h5>
                             <div className="progress progress-bar-alt-primary progress-sm mt-0" style={{
                               backgroundColor: `${row.manage_status_color}44`
                             }}>

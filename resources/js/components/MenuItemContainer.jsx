@@ -11,6 +11,9 @@ const MenuItemContainer = ({ title, icon, children }) => {
   const isExpanded = refs.filter(Boolean).some(x => location.pathname.includes(x))
   
   const id = `item-${crypto.randomUUID()}`
+
+  console.log(typeof children)
+
   return (
     <li>
       <a href={`#${id}`} data-bs-toggle="collapse" aria-expanded={isExpanded} >

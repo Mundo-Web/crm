@@ -128,7 +128,7 @@ const Menu = ({ session, can, presets, APP_PROTOCOL, APP_DOMAIN, leadsCount, bus
           <li className="menu-title">Panel de navegacion</li>
           <MenuItemContainer title='KPIs' icon='mdi mdi-view-dashboard'>
             <MenuItem href="/home" icon='mdi mdi-account-multiple'>Leads</MenuItem>
-            {can('dashboard', 'all', 'list') && <MenuItem href="/home/projects" icon='mdi mdi-page-next'>Proyectos</MenuItem>}
+            {/* {can('dashboard', 'all', 'list') && <MenuItem href="/home/projects" icon='mdi mdi-page-next'>Proyectos</MenuItem>} */}
           </MenuItemContainer>
 
           {/* {can('dashboard', 'all', 'list') && <MenuItem href="/home" icon='mdi mdi-home'>Inicio</MenuItem>} */}
