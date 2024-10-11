@@ -26,6 +26,8 @@ export default function StatusDropdown({
   const [items, setItems] = useState(propItems)
   const [shouldScroll, setShouldScroll] = useState(false)
   const [dropdownHasChanges, setDropdownHasChanges] = useState(false)
+  
+  const selected = items.find(x => x.id == defaultValue.id)
 
   const smoothScroll = useCallback((element, target, duration) => {
     const start = element.scrollTop
@@ -183,7 +185,7 @@ export default function StatusDropdown({
     <Dropdown
       ddRef={dropdownRef}
       className='btn btn-white text-truncate'
-      title={defaultValue.name}
+      title={selected.name}
       tippy='Actualizar estado'
       style={{
         border: 'none',
@@ -192,7 +194,7 @@ export default function StatusDropdown({
         height: '47px',
         color: '#fff',
         fontWeight: 'bolder',
-        backgroundColor: defaultValue.color
+        backgroundColor: selected.color
       }}
     >
       <div

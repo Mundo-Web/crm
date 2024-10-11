@@ -4,6 +4,22 @@ import BasicRest from "./BasicRest"
 class ClientsRest extends BasicRest {
   path = 'clients'
 
+  get = async (client) => {
+    try {
+      const { status, result } = await Fetch(`/api/${this.path}/${client}`)
+      if (!status) throw new Error(result?.message || 'Ocurrio un error inesperado')
+      return result.data
+    } catch (error) {
+      Notify.add({
+        icon: '/assets/img/logo-login.svg',
+        title: 'Error',
+        body: error.message,
+        type: 'danger'
+      })
+      return null
+    }
+  }
+
   static assign = async (client_id, assign) => {
     try {
       const { status: fetchStatus, result } = await Fetch('/api/clients/assign', {

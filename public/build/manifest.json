@@ -35,6 +35,14 @@
       "_server.browser-BzA2yPSr.js"
     ]
   },
+  "_ClientNotesCard-CHOAOy9f.js": {
+    "file": "assets/ClientNotesCard-CHOAOy9f.js",
+    "name": "ClientNotesCard",
+    "imports": [
+      "_CreateReactScript-DiMSE74L.js",
+      "_Adminto-Cg0uEWCF.js"
+    ]
+  },
   "_CreateReactScript-DiMSE74L.js": {
     "file": "assets/CreateReactScript-DiMSE74L.js",
     "name": "CreateReactScript"
@@ -87,14 +95,6 @@
   "_JSEncrypt-D3I3x59l.js": {
     "file": "assets/JSEncrypt-D3I3x59l.js",
     "name": "JSEncrypt"
-  },
-  "_LeadsRest-Cekl7OXN.js": {
-    "file": "assets/LeadsRest-Cekl7OXN.js",
-    "name": "LeadsRest",
-    "imports": [
-      "_CreateReactScript-DiMSE74L.js",
-      "_Adminto-Cg0uEWCF.js"
-    ]
   },
   "_PermissionsRest-DgI3IJWq.js": {
     "file": "assets/PermissionsRest-DgI3IJWq.js",
@@ -241,7 +241,7 @@
     ]
   },
   "resources/js/Clients.jsx": {
-    "file": "assets/Clients-a9-5hpI8.js",
+    "file": "assets/Clients-C2SHs0Tc.js",
     "name": "Clients",
     "src": "resources/js/Clients.jsx",
     "isEntry": true,
@@ -249,7 +249,7 @@
       "_Adminto-Cg0uEWCF.js",
       "_CreateReactScript-DiMSE74L.js",
       "_TextareaFormGroup-5IfCmnyj.js",
-      "_LeadsRest-Cekl7OXN.js",
+      "_ClientNotesCard-CHOAOy9f.js",
       "_InputFormGroup-TM-cwmw7.js",
       "_SetSelectValue-CewST6hL.js",
       "_DropdownItem-DL6JiDl9.js",
@@ -292,15 +292,15 @@
     ]
   },
   "resources/js/Leads.jsx": {
-    "file": "assets/Leads-B6TGlTSZ.js",
+    "file": "assets/Leads-D---tO5P.js",
     "name": "Leads",
     "src": "resources/js/Leads.jsx",
     "isEntry": true,
     "imports": [
       "_Adminto-Cg0uEWCF.js",
       "_CreateReactScript-DiMSE74L.js",
+      "_ClientNotesCard-CHOAOy9f.js",
       "_ReactAppend-BsJVsMpn.js",
-      "_LeadsRest-Cekl7OXN.js",
       "_TasksRest-EtGivD-l.js",
       "_UsersRest-Dh2gjxxF.js",
       "_TextareaFormGroup-5IfCmnyj.js",

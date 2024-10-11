@@ -72,6 +72,7 @@ Route::middleware('auth')->group(function () {
     Route::delete('/permissions/{id}', [PermissionController::class, 'delete']);
 
     // Clients routes
+    Route::get('/clients/{client}', [ClientController::class, 'get']);
     Route::post('/clients', [ClientController::class, 'save']);
     Route::put('/clients/assign', [ClientController::class, 'assign']);
     Route::delete('/clients/assign', [ClientController::class, 'assign']);

@@ -56,7 +56,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/tasks', [TaskController::class, 'reactView'])->name('Tasks.jsx');
     Route::get('/leads', [LeadController::class, 'reactView'])->name('Leads.jsx');
     Route::get('/leads/{lead}', [LeadController::class, 'reactView'])->name('Leads.jsx');
-    Route::get('/clients/{view}', [ClientController::class, 'reactView'])->name('Clients.jsx');
+    Route::get('/clients/{client}', [ClientController::class, 'reactView'])->name('Clients.jsx');
     Route::get('/archived', [ArchivedController::class, 'reactView'])->name('Archived.jsx');
     Route::get('/views', [ViewController::class, 'reactView'])->name('Views.jsx');
     Route::get('/projects', [ProjectController::class, 'reactView'])->name('Projects.jsx');

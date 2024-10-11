@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Client;
+use App\Models\NoteType;
 use App\Models\Setting;
 use App\Models\Status;
 use App\Models\View;
@@ -21,9 +22,14 @@ class ClientController extends BasicController
     public function setReactViewProperties(Request $request)
     {
         $defaultClientStatus = Setting::get('default-client-status');
+        $noteTypes = NoteType::all();
+
         $properties = [
+            'client' => $request->client,
+            'noteTypes' => $noteTypes,
             'defaultClientStatus' => $defaultClientStatus
         ];
+
         if ($request->view) {
             $view = View::with(['statuses'])
                 ->where('id', $request->view)
@@ -45,6 +51,23 @@ class ClientController extends BasicController
             ->where('business_id', Auth::user()->business_id)
             ->get();
         return $properties;
+    }
+
+    public function get(Request $request, string $lead)
+    {
+        $response = Response::simpleTryCatch(function (Response $response) use ($lead) {
+            $data = $this->model::select('clients.*')
+            ->withCount(['notes', 'tasks', 'pendingTasks'])
+            ->with(['status', 'assigned', 'manageStatus', 'creator'])
+            ->join('statuses AS status', 'status.id', 'status_id')
+            ->leftJoin('statuses AS manage_status', 'manage_status.id', 'manage_status_id')
+            ->where('status.table_id', 'a8367789-666e-4929-aacb-7cbc2fbf74de')
+            ->where('clients.business_id', Auth::user()->business_id)
+                ->where('clients.id', $lead)
+                ->first();
+            $response->data = $data;
+        });
+        return response($response->toArray(), $response->status);
     }
 
     public function setPaginationInstance(string $model)
