@@ -79,9 +79,9 @@ const KPILeads = ({ grouped = [], currentMonth, currentYear, totalCount, clients
                 }}>
                   <div className="card-header">
                     <div className="float-end">
-                      {kpi.quantity}
+                      <b>{kpi.quantity}</b>
                     </div>
-                    <h4 className="header-title my-0 truncate" style={{ color: kpi.color }}>{kpi.name}</h4>
+                    <h4 className="header-title my-0 text-truncate" style={{ color: kpi.color }}>{kpi.name}</h4>
                   </div>
                   <div className="card-body">
                     <div className='d-flex gap-3 flex-column'>
