@@ -81,7 +81,7 @@ const KPILeads = ({ grouped = [], currentMonth, currentYear, totalCount, clients
                     <div className="float-end">
                       {kpi.quantity}
                     </div>
-                    <h4 className="header-title my-0" style={{ color: kpi.color }}>{kpi.name}</h4>
+                    <h4 className="header-title my-0 truncate" style={{ color: kpi.color }}>{kpi.name}</h4>
                   </div>
                   <div className="card-body">
                     <div className='d-flex gap-3 flex-column'>
@@ -89,7 +89,7 @@ const KPILeads = ({ grouped = [], currentMonth, currentYear, totalCount, clients
                         groupedByManageStatus.filter(({ status_id }) => status_id == kpi.id).map((row, index) => {
                           const percent = ((row.quantity / kpi.quantity) * 100).toFixed(2);
                           return <div key={index}>
-                            <h5 className="mt-0">{row.manage_status_name} <span className="float-end" style={{color: row.manage_status_color}}>{row.quantity}</span></h5>
+                            <h5 className="my-0">{row.manage_status_name} <span className="float-end" style={{color: row.manage_status_color}}>{row.quantity}</span></h5>
                             <div className="progress progress-bar-alt-primary progress-sm mt-0" style={{
                               backgroundColor: `${row.manage_status_color}44`
                             }}>
