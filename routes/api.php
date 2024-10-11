@@ -6,6 +6,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\ClientNoteController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\KPILeadsController;
 use App\Http\Controllers\LandingFormController;
 use App\Http\Controllers\LeadController;
 use App\Http\Controllers\NotificationController;
@@ -46,6 +47,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/authorize/{business}', [AuthController::class, 'activeService']);
 
     Route::get('/dashboard/{range}', [DashboardController::class, 'revenue']);
+    Route::get('/dashboard/leads/kpi/{month}', [KPILeadsController::class, 'kpi']);
 
     // Users routes
     Route::post('/users', [UserController::class, 'save']);

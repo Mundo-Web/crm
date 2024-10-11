@@ -107,17 +107,20 @@ class Client extends Model
     {
         $previousMonth = Carbon::now()->subMonth()->format('m');
         $previousYear = Carbon::now()->subMonth()->format('Y');
-        return Client::where('clients.business_id', Auth::user()->business_id)
-            ->whereMonth('clients.created_at', $previousMonth)
-            ->whereYear('clients.created_at', $previousYear);
+        return Client::byMonth($previousYear, $previousMonth);
     }
 
     static function thisMonth()
     {
         $currentMonth = date('m');
         $currentYear = date('Y');
+        return Client::byMonth($currentYear, $currentMonth);
+    }
+
+    static function byMonth($year, $month)
+    {
         return Client::where('clients.business_id', Auth::user()->business_id)
-            ->whereMonth('clients.created_at', $currentMonth)
-            ->whereYear('clients.created_at', $currentYear);
+            ->whereMonth('clients.created_at', $month)
+            ->whereYear('clients.created_at', $year);
     }
 }
