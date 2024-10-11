@@ -418,7 +418,7 @@ const Clients = ({ projectStatuses, clientStatuses, manageStatuses, session, can
       }}
     />
 
-    <Modal modalRef={detailModalRef} title='Detalles del lead' btnSubmitText='Guardar' size='full-width' bodyClass='p-3 bg-light' isStatic onSubmit={(e) => e.preventDefault()} hideFooter>
+    <Modal modalRef={detailModalRef} title='Detalles del cliente' btnSubmitText='Guardar' size='full-width' bodyClass='p-3 bg-light' isStatic onSubmit={(e) => e.preventDefault()} hideFooter>
       <div className="row">
         <div className="col-lg-3 col-md-4 col-sm-6 col-xs-12">
           <div className="d-flex mb-3">
