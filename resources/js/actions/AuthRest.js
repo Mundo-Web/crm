@@ -4,7 +4,7 @@ class AuthRest {
   static login = async (request) => {
     try {
 
-      const { status, result } = await Fetch('./api/login', {
+      const { status, result } = await Fetch('/api/login', {
         method: 'POST',
         body: JSON.stringify(request)
       })
@@ -30,7 +30,7 @@ class AuthRest {
 
   static activeService = async (business) => {
     try {
-      const { status, result } = await Fetch(`./api/authorize/${business}`)
+      const { status, result } = await Fetch(`/api/authorize/${business}`)
       if (!status) throw new Error(result?.message || 'Error al cambiar de empresa')
 
       Notify.add({
