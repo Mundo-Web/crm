@@ -21,7 +21,8 @@ class TaskController extends BasicController
             ->join('client_notes AS client_note', 'client_note.id', 'tasks.note_id')
             ->join('clients AS client', 'client.id', 'client_note.client_id')
             ->where('tasks.assigned_to', Auth::user()->service_user->id)
-            ->where('client.business_id', Auth::user()->business_id);
+            ->where('client.business_id', Auth::user()->business_id)
+            ->whereNotNull('client.status');
     }
 
     public function status(Request $request)
