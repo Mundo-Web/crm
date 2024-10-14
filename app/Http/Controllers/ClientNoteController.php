@@ -6,6 +6,7 @@ use App\Http\Classes\dxResponse;
 use App\Jobs\SaveNotification;
 use App\Models\ClientNote;
 use App\Models\Task;
+use App\Models\User;
 use Illuminate\Contracts\Routing\ResponseFactory;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response as HttpResponse;
@@ -88,16 +89,19 @@ class ClientNoteController extends BasicController
                 ];
                 if (Auth::check()) {
                     if ($object['assigned_to']) {
-                        SaveNotification::dispatchAfterResponse([
-                            'icon' => 'fas fa-tag',
-                            'name' => Auth::user()->service_user->fullname . ' te ha asignado una tarea',
-                            'message' =>  Auth::user()->service_user->fullname . ' te ha asignado una tarea de ' . $jpa->client->contact_name,
-                            'module' => 'Anotaciones del cliente',
-                            'description' => $object['description'] ?? $object['name'],
-                            'link_to' => '/leads/' . $jpa->client->id . '?annotation=' . rawurlencode($jpa->type->name),
-                            'created_by' => Auth::user()->service_user->id,
-                            'business_id' => Auth::user()->business_id
-                        ], $object['assigned_to']);
+                        $userJpa = User::find($object['assigned_to']);
+                        if ($userJpa) {
+                            SaveNotification::dispatchAfterResponse([
+                                'icon' => 'fas fa-tag',
+                                'name' => Auth::user()->service_user->fullname . ' te ha asignado una tarea',
+                                'message' =>  Auth::user()->service_user->fullname . ' te ha asignado una tarea de ' . $jpa->client->contact_name,
+                                'module' => 'Anotaciones del cliente',
+                                'description' => $object['description'] ?? $object['name'],
+                                'link_to' => '/leads/' . $jpa->client->id . '?annotation=' . rawurlencode($jpa->type->name),
+                                'created_by' => Auth::user()->service_user->id,
+                                'business_id' => Auth::user()->business_id
+                            ], $userJpa->relative_id);
+                        }
                     } else {
                         $object['assigned_to'] = Auth::user()->service_user->id;
                     }
