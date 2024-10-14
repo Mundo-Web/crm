@@ -70,8 +70,8 @@ const TaskCard = ({ id, status, name, description, assigned, priority, type, onC
           <small className="text-muted ms-1">vence {moment(ends_at).fromNow()}</small>
         </div>
         <div className="mb-1">
-          <span class="badge bg-light text-dark me-1"><i className={types[type].icon}></i> {type}</span>
-          <span class={`badge ${priorities[priority].color}`}>{priority}</span>
+          <span className="badge bg-light text-dark me-1"><i className={types[type].icon}></i> {type}</span>
+          <span className={`badge ${priorities[priority].color}`}>{priority}</span>
         </div>
         <h5 className="mt-0">{name}</h5>
         {
@@ -84,7 +84,7 @@ const TaskCard = ({ id, status, name, description, assigned, priority, type, onC
       {
         assigned &&
         <small>
-          <img src={`//${Global.APP_DOMAIN}/api/profile/thumbnail/${assigned.relative_id}`} alt={assigned.fullname} class="img-fluid avatar-xs rounded-circle me-1"></img>
+          <img src={`//${Global.APP_DOMAIN}/api/profile/thumbnail/${assigned.relative_id}`} alt={assigned.fullname} className="img-fluid avatar-xs rounded-circle me-1"></img>
           Asignado a <b>{assigned.fullname}</b>
         </small>
       }

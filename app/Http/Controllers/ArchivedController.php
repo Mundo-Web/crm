@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Client;
 use App\Models\NoteType;
+use App\Models\Setting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use SoDe\Extend\Response;
@@ -17,8 +18,11 @@ class ArchivedController extends BasicController
 
     public function setReactViewProperties(Request $request)
     {
+        $defaultLeadStatus = Setting::get('default-lead-status');
         $noteTypes = NoteType::all();
         return [
+            'archived' => $request->archived,
+            'defaultLeadStatus' => $defaultLeadStatus,
             'noteTypes' => $noteTypes
         ];
     }

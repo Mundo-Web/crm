@@ -1,6 +1,6 @@
 
 import Tippy from '@tippyjs/react'
-import React, { useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import ClientNotesModal from './Reutilizables/ClientNotes/ClientNotesModal.jsx'
 import PaymentModal from './Reutilizables/Payments/PaymentModal.jsx'
@@ -29,11 +29,18 @@ import Global from './Utils/Global.js'
 import DxPanelButton from './components/dx/DxPanelButton.jsx'
 import TaskCard from './Reutilizables/Tasks/TaskCard.jsx'
 import ClientNotesCard from './Reutilizables/ClientNotes/ClientNotesCard.jsx'
+import ClientNotesRest from './actions/ClientNotesRest.js'
 
 const archivedRest = new ArchivedRest()
+const clientsRest = new ClientsRest()
+const clientNotesRest = new ClientNotesRest();
 
-const Archived = ({ projectStatuses, can, noteTypes }) => {
+const Archived = ({ projectStatuses, archived, can, session, defaultLeadStatus, noteTypes }) => {
   const gridRef = useRef()
+  const detailModalRef = useRef()
+
+  const [detailLoaded, setDetailLoaded] = useState(null)
+  const [notes, setNotes] = useState([]);
 
   const onStatusChange = async ({ id, status }) => {
     const result = await archivedRest.status({ id, status })
@@ -56,6 +63,46 @@ const Archived = ({ projectStatuses, can, noteTypes }) => {
     $(gridRef.current).dxDataGrid('instance').refresh()
   }
 
+  const onDetailLoaded = async (lead) => {
+    setDetailLoaded(lead)
+    history.pushState(null, null, `/archived/${lead.id}`)
+    setNotes([])
+    $(detailModalRef.current).modal('show')
+  }
+
+  useEffect(() => {
+    getNotes()
+  }, [detailLoaded]);
+
+  const getNotes = async () => {
+    const newNotes = await clientNotesRest.byClient(detailLoaded?.id);
+    setNotes(newNotes ?? [])
+  }
+
+  useEffect(() => {
+    $(detailModalRef.current).on('hidden.bs.modal', () => {
+      setDetailLoaded(null)
+      history.pushState(null, null, '/archived')
+    });
+    if (!archived) return
+
+    clientsRest.get(archived).then(data => {
+      if (!data) return
+      setDetailLoaded(data)
+      setNotes([])
+      $(detailModalRef.current).modal('show')
+      if (GET.annotation) {
+        $(`[data-name="${GET.annotation}"]`).click()
+      }
+    })
+  }, [null])
+
+  const tasks = []
+  notes?.forEach(note => tasks.push(...note.tasks))
+
+  const pendingTasks = []
+  notes?.forEach(note => pendingTasks.push(...note.tasks.filter(x => x.status != 'Realizado')))
+
   return (<>
     <Table gridRef={gridRef} title='Archivados' rest={archivedRest}
       toolBar={(container) => {
@@ -73,13 +120,12 @@ const Archived = ({ projectStatuses, can, noteTypes }) => {
           caption: 'Lead',
           width: 250,
           cellTemplate: (container, { data }) => {
-            ReactAppend(container, <div className='d-flex align-items-center' >
-              <b>{data.contact_name}</b>
-              {data.assigned_to && <Tippy content={`Atendido por ${data.assigned.name} ${data.assigned.lastname}`}>
-                <img className='avatar-xs rounded-circle ms-1' src={`//${Global.APP_DOMAIN}/api/profile/thumbnail/${data.assigned.relative_id}`} alt={data.assigned.name} />
-              </Tippy>}
-            </div>)
-          }
+            container.attr('style', 'height: 48px; cursor: pointer')
+            container.on('click', () => onDetailLoaded(data))
+            container.html(data.status_id == defaultLeadStatus ? `<b>${data.contact_name}</b>` : data.contact_name)
+          },
+          fixed: true,
+          fixedPosition: 'left'
         },
         {
           dataField: 'contact_email',
@@ -197,7 +243,7 @@ const Archived = ({ projectStatuses, can, noteTypes }) => {
       }}
     />
 
-    <Modal modalRef={detailModalRef} title='Detalles del cliente' btnSubmitText='Guardar' size='full-width' bodyClass='p-3 bg-light' isStatic onSubmit={(e) => e.preventDefault()} hideFooter>
+    <Modal modalRef={detailModalRef} title='Detalles del archivado' btnSubmitText='Guardar' size='full-width' bodyClass='p-3 bg-light' isStatic onSubmit={(e) => e.preventDefault()} hideFooter>
       <div className="row">
         <div className="col-lg-3 col-md-4 col-sm-6 col-xs-12">
           <div className="d-flex mb-3">
