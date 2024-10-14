@@ -76,6 +76,7 @@ class BasicController extends Controller
       ->where('tasks.assigned_to', Auth::user()->service_user->id)
       ->where('client.business_id', Auth::user()->business_id)
       ->whereNotNull('client.status')
+      ->where('tasks.status', 'Pendiente')
       ->count();
 
     $defaultStatus = Setting::get('default-lead-status');
