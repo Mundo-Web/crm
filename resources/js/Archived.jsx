@@ -27,10 +27,12 @@ import LeadsRest from './actions/LeadsRest.js'
 import ArchivedRest from './actions/ArchivedRest.js'
 import Global from './Utils/Global.js'
 import DxPanelButton from './components/dx/DxPanelButton.jsx'
+import TaskCard from './Reutilizables/Tasks/TaskCard.jsx'
+import ClientNotesCard from './Reutilizables/ClientNotes/ClientNotesCard.jsx'
 
 const archivedRest = new ArchivedRest()
 
-const Archived = ({ projectStatuses, can }) => {
+const Archived = ({ projectStatuses, can, noteTypes }) => {
   const gridRef = useRef()
 
   const onStatusChange = async ({ id, status }) => {
@@ -194,6 +196,113 @@ const Archived = ({ projectStatuses, can }) => {
         }
       }}
     />
+
+    <Modal modalRef={detailModalRef} title='Detalles del cliente' btnSubmitText='Guardar' size='full-width' bodyClass='p-3 bg-light' isStatic onSubmit={(e) => e.preventDefault()} hideFooter>
+      <div className="row">
+        <div className="col-lg-3 col-md-4 col-sm-6 col-xs-12">
+          <div className="d-flex mb-3">
+            <img className="flex-shrink-0 me-3 rounded-circle avatar-md" alt={detailLoaded?.contact_name}
+              src={`//${Global.APP_DOMAIN}/api/profile/null`} />
+            <div className="flex-grow-1">
+              <h4 className="media-heading mt-0">
+                {detailLoaded?.contact_name}
+              </h4>
+              <span className="badge bg-primary me-1">{detailLoaded?.contact_position || 'Trabajador'}</span> <small className='text-muted'>desde <b>{detailLoaded?.origin}</b></small>
+            </div>
+          </div>
+          <div className="btn-group mb-0">
+            <span className="btn btn-light btn-sm" style={{ cursor: 'default', color: '#ffffff', backgroundColor: detailLoaded?.manage_status?.color || '#6c757d' }}>
+              {detailLoaded?.manage_status?.name || 'Sin estado'}
+            </span>
+          </div>
+          <hr />
+          <h4>Datos del contacto</h4>
+          <h5 className="font-600 mb-0">Correo electronico</h5>
+          <p className='mb-2 text-truncate'> {detailLoaded?.contact_email} </p>
+          <h5 className="font-600 mb-0">Tefono / Celular</h5>
+          <p className='mb-2'> {detailLoaded?.contact_phone} </p>
+          <h5 className="font-600 mb-0">Mensaje</h5>
+          <p className='mb-2'> {detailLoaded?.message} </p>
+          <h5 className="font-600 mb-0">Fecha de registro</h5>
+          <p className='mb-2'>
+            {moment(detailLoaded?.created_at).format('LL')}<br />
+            <small className="text-muted">{moment(detailLoaded?.created_at).format('LTS')}</small>
+          </p>
+          <hr />
+          <h4>Datos de la empresa</h4>
+
+          <h5 className="font-600 mb-0">Nombre comercial</h5>
+          <p className='mb-2'> {detailLoaded?.tradename ?? <i className='text-muted'>No especifica</i>} </p>
+
+          <h5 className="font-600 mb-0">RUC</h5>
+          <p className='mb-2'> {detailLoaded?.ruc ?? <i className='text-muted'>No especifica</i>} </p>
+
+          <h5 className="font-600 mb-0">N° trabajadores</h5>
+          <p className='mb-2'> {detailLoaded?.workers ?? <i className='text-muted'>No especifica</i>} </p>
+
+        </div>
+
+        <div className="col-lg-6 col-md-4 col-sm-6 col-xs-12">
+          <div className="card card-body">
+            <ul className="nav nav-tabs" style={{ flexWrap: 'nowrap', overflowX: 'auto' }}>
+              <li key={`note-type-activity`} className="nav-item">
+                <a href="#note-type-activity" data-bs-toggle="tab" aria-expanded="false" className="nav-link active">
+                  <i className="mdi mdi-clock"></i> Actividad
+                </a>
+              </li>
+              {
+                noteTypes.sort((a, b) => a.order - b.order).map((type, i) => {
+                  if (type.name == 'Correos') return
+                  return <li key={`note-type-${i}`} className="nav-item">
+                    <a href={`#note-type-${type.id}`} data-name={type.name} data-bs-toggle="tab" aria-expanded="false" className="nav-link">
+                      <i className={type.icon}></i> {type.name}
+                    </a>
+                  </li>
+                })
+              }
+            </ul>
+            <div className="tab-content">
+              <div key={`tab-note-type-activity`} className='tab-pane active' id={`note-type-activity`}>
+                {
+                  notes.sort((a, b) => b.created_at > a.created_at ? 1 : -1).map((note, i) => {
+                    return <ClientNotesCard key={`note-${i}`} {...note} showOptions={false} session={session} />
+                  })
+                }
+
+              </div>
+              {
+                noteTypes.sort((a, b) => a.order - b.order).map((type, i) => {
+                  return <div key={`tab-note-type-${i}`} className='tab-pane' id={`note-type-${type.id}`}>
+                    <h4 className='header-title mb-2'>Lista de {type.name}</h4>
+                    {
+                      notes.filter(x => x.note_type_id == type.id).sort((a, b) => b.created_at > a.created_at ? 1 : -1).map((note, i) => {
+                        return <ClientNotesCard key={`note-${i}`} {...note} session={session} />
+                      })
+                    }
+                  </div>
+                })
+              }
+            </div>
+          </div>
+        </div>
+
+        <div className="col-lg-3 col-md-4 col-sm-6 col-xs-12">
+          <div className="card">
+            <div className="card-body">
+              <h5 className="header-title">Lista de tareas</h5>
+              <hr />
+              {
+                pendingTasks.length > 0
+                  ? pendingTasks.sort((a, b) => a.ends_at > b.ends_at ? 1 : -1).map((task, i) => {
+                    return <TaskCard key={`task-${i}`} {...task} />
+                  })
+                  : <i className='text-muted'>- No hay tareas pendientes -</i>
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+    </Modal>
   </>
   )
 };

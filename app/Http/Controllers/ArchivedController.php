@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Client;
+use App\Models\NoteType;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use SoDe\Extend\Response;
@@ -13,6 +14,14 @@ class ArchivedController extends BasicController
     public $softDeletion = false;
     public $reactView = 'Archived';
     public $prefix4filter = 'clients';
+
+    public function setReactViewProperties(Request $request)
+    {
+        $noteTypes = NoteType::all();
+        return [
+            'noteTypes' => $noteTypes
+        ];
+    }
 
     public function setPaginationInstance(string $model)
     {

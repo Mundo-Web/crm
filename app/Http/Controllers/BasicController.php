@@ -8,6 +8,7 @@ use App\Models\Client;
 use App\Models\dxDataGrid;
 use App\Models\Notification;
 use App\Models\Setting;
+use App\Models\Task;
 use App\Models\View;
 use Exception;
 use Illuminate\Database\Eloquent\Builder;
@@ -69,6 +70,13 @@ class BasicController extends Controller
       ->where('status', true)
       ->count();
 
+    $tasksCount = Task::with(['clientNote', 'assigned', 'clientNote', 'clientNote.client'])
+      ->join('client_notes AS client_note', 'client_note.id', 'tasks.note_id')
+      ->join('clients AS client', 'client.id', 'client_note.client_id')
+      ->where('tasks.assigned_to', Auth::user()->service_user->id)
+      ->where('client.business_id', Auth::user()->business_id)
+      ->count();
+
     $defaultStatus = Setting::get('default-lead-status');
 
     $leadsCount = Client::where('business_id', Auth::user()->business_id)
@@ -81,6 +89,7 @@ class BasicController extends Controller
       // 'presets' => $views,
       'session' => Auth::user(),
       'notificationsCount' => $notificationsCount,
+      'tasksCount' => $tasksCount,
       'leadsCount' => $leadsCount,
       'global' => [
         'WA_URL' => env('WA_URL'),

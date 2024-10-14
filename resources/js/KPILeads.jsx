@@ -75,7 +75,7 @@ const KPILeads = ({ months = [], currentMonth, currentYear,
             <div className="card-body widget-user">
               <div className="text-center">
                 <h2 className="fw-normal text-info" data-plugin="counterup">{totalCount}</h2>
-                <h5>Leads - {prettyMonth}</h5>
+                <h5>Leads</h5>
               </div>
             </div>
           </div>
