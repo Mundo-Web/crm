@@ -20,6 +20,8 @@ const Menu = ({ session, can, presets, APP_PROTOCOL, APP_DOMAIN, leadsCount, tas
     }
   }
 
+  console.log(tasksCount)
+
   const currentBusiness = businesses.find(({ id }) => session.business_id == id)
   const otherBusinesses = businesses.filter(({ id }) => session.business_id != id)
 
