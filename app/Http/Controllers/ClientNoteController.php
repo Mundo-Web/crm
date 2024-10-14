@@ -4,17 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Http\Classes\dxResponse;
 use App\Jobs\SaveNotification;
-use App\Models\dxDataGrid;
 use App\Models\ClientNote;
-use App\Models\ClientNoteView;
 use App\Models\Task;
-use Exception;
 use Illuminate\Contracts\Routing\ResponseFactory;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response as HttpResponse;
 use Illuminate\Support\Facades\Auth;
 use SoDe\Extend\JSON;
-use SoDe\Extend\Response;
 
 class ClientNoteController extends BasicController
 {
@@ -65,7 +61,7 @@ class ClientNoteController extends BasicController
         if (\count($mentions ?? []) > 0) {
             foreach ($mentions as $mention) {
                 SaveNotification::dispatchAfterResponse([
-                    'icon' => 'fas fa-tag',
+                    'icon' => 'fas fa-at',
                     'name' => Auth::user()->service_user->fullname . ' te ha etiquetado',
                     'message' =>  Auth::user()->service_user->fullname . ' te ha etiquetado en ' . $jpa->type->name . ' de ' . $jpa->client->contact_name,
                     'module' => 'Anotaciones del cliente',
@@ -90,8 +86,21 @@ class ClientNoteController extends BasicController
                     'ends_at' => $task['ends_at'],
                     'assigned_to' => $task['assigned_to']
                 ];
-                if (!$object['assigned_to'] && Auth::check()) {
-                    $object['assigned_to'] = Auth::user()->service_user->id;
+                if (Auth::check()) {
+                    if ($object['assigned_to']) {
+                        SaveNotification::dispatchAfterResponse([
+                            'icon' => 'fas fa-tag',
+                            'name' => Auth::user()->service_user->fullname . ' te ha asignado una tarea',
+                            'message' =>  Auth::user()->service_user->fullname . ' te ha asignado una tarea de ' . $jpa->client->contact_name,
+                            'module' => 'Anotaciones del cliente',
+                            'description' => $object['description'] ?? $object['name'],
+                            'link_to' => '/leads/' . $jpa->client->id . '?annotation=' . rawurlencode($jpa->type->name),
+                            'created_by' => Auth::user()->service_user->id,
+                            'business_id' => Auth::user()->business_id
+                        ], $object['assigned_to']);
+                    } else {
+                        $object['assigned_to'] = Auth::user()->service_user->id;
+                    }
                 }
                 Task::create($object);
             }
