@@ -8,6 +8,7 @@ use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Ramsey\Uuid\Uuid;
+use SoDe\Extend\Text;
 
 class ProductController extends BasicController
 {
@@ -29,18 +30,20 @@ class ProductController extends BasicController
     public function beforeSave(Request $request)
     {
         $type_id = null;
-        if (Uuid::isValid($request->type_id)) {
-            $type = Type::where('id', $request->type_id)
-                ->where('business_id', Auth::user()->business_id)
-                ->exists();
-            if (!$type) throw new Exception('Este tipo no está configurado.');
-            $type_id = $request->type_id;
-        } else {
-            $type = Type::create4products([
-                'name' => $request->type_id,
-                'business_id' => Auth::user()->business_id
-            ]);
-            $type_id = $type->id;
+        if (!Text::nullOrEmpty($request->type_id)) {
+            if (Uuid::isValid($request->type_id)) {
+                $type = Type::where('id', $request->type_id)
+                    ->where('business_id', Auth::user()->business_id)
+                    ->exists();
+                if (!$type) throw new Exception('Este tipo no está configurado.');
+                $type_id = $request->type_id;
+            } else {
+                $type = Type::create4products([
+                    'name' => $request->type_id,
+                    'business_id' => Auth::user()->business_id
+                ]);
+                $type_id = $type->id;
+            }
         }
 
         return [

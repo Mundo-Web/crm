@@ -6,22 +6,24 @@ import { Math, String } from 'sode-extend-react';
 import SelectFormGroup from './components/form/SelectFormGroup';
 import { renderToString } from 'react-dom/server';
 import KPILeadsRest from './actions/KPILeadsRest';
+import Number2Currency from './Utils/Number2Currency';
 
 const KPILeads = ({ months = [], currentMonth, currentYear,
   // grouped = [], totalCount, clientsCount, archivedCount, managingCount, groupedByManageStatus
 }) => {
-  const prettyMonth = moment({
-    month: currentMonth - 1,
-    year: currentYear
-  }).format('MMMM YYYY');
-
   const [selectedMonth, setSelectedMonth] = useState(`${currentYear}-${currentMonth}`)
   const [grouped, setGrouped] = useState([])
   const [groupedByManageStatus, setGroupedByManageStatus] = useState([])
+
   const [totalCount, setTotalCount] = useState(0)
   const [clientsCount, setClientsCount] = useState(0)
   const [archivedCount, setArchivedCount] = useState(0)
   const [managingCount, setManagingCount] = useState(0)
+
+  const [totalSum, setTotalSum] = useState(0)
+  const [clientsSum, setClientsSum] = useState(0)
+  const [archivedSum, setArchivedSum] = useState(0)
+  const [managingSum, setManagingSum] = useState(0)
 
   const monthTemplate = ({
     id,
@@ -45,10 +47,16 @@ const KPILeads = ({ months = [], currentMonth, currentYear,
       .then(({ data, summary }) => {
         setGroupedByManageStatus(data)
         setGrouped(summary.grouped ?? [])
+
         setTotalCount(summary.totalCount ?? 0)
         setClientsCount(summary.clientsCount ?? 0)
         setArchivedCount(summary.archivedCount ?? 0)
         setManagingCount(summary.managingCount ?? 0)
+
+        setTotalSum(summary.totalSum ?? 0)
+        setClientsSum(summary.clientsSum ?? 0)
+        setArchivedSum(summary.archivedSum ?? 0)
+        setManagingSum(summary.managingSum ?? 0)
       });
   }, [selectedMonth])
 
@@ -76,6 +84,7 @@ const KPILeads = ({ months = [], currentMonth, currentYear,
               <div className="text-center">
                 <h2 className="fw-normal text-info" data-plugin="counterup">{totalCount}</h2>
                 <h5>Leads</h5>
+                <small>S/. {Number2Currency(totalSum)}</small>
               </div>
             </div>
           </div>
@@ -88,6 +97,7 @@ const KPILeads = ({ months = [], currentMonth, currentYear,
               <div className="text-center">
                 <h2 className="fw-normal text-success" data-plugin="counterup">{clientsCount}</h2>
                 <h5>Convertidos</h5>
+                <small>S/. {Number2Currency(clientsSum)}</small>
               </div>
             </div>
           </div>
@@ -100,6 +110,7 @@ const KPILeads = ({ months = [], currentMonth, currentYear,
               <div className="text-center">
                 <h2 className="fw-normal text-danger" data-plugin="counterup">{archivedCount}</h2>
                 <h5>No convertidos</h5>
+                <small>S/. {Number2Currency(archivedSum)}</small>
               </div>
             </div>
           </div>
@@ -112,6 +123,7 @@ const KPILeads = ({ months = [], currentMonth, currentYear,
               <div className="text-center">
                 <h2 className="fw-normal text-primary" data-plugin="counterup">{managingCount}</h2>
                 <h5>En gestion</h5>
+                <small>S/. {Number2Currency(managingSum)}</small>
               </div>
             </div>
           </div>

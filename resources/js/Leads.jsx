@@ -989,7 +989,7 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
                         </div>
 
                         <h5 class="header-title mt-0 mb-1" style={{ fontSize: '14.4px' }}>{product.name}</h5>
-                        <p className='text-sm mb-0'>S/. {Number2Currency(product.price)}</p>
+                        <small>S/. {Number2Currency(product.price)}</small>
                       </div>
                     </div>
                   })

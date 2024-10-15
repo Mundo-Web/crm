@@ -17,59 +17,8 @@ class KPILeadsController extends BasicController
 
     public function setReactViewProperties(Request $request)
     {
-        $leadStatuses = Status::forLeads()->get();
-        $clientStatuses = Status::forClients()->get();
-
-        $leadStatusesIds = array_map(fn($status) => $status['id'], $leadStatuses->toArray());
-        $clientStatusesIds = array_map(fn($status) => $status['id'], $clientStatuses->toArray());
-
         $currentMonth = date('m');
         $currentYear = date('Y');
-
-        $grouped = Client::thisMonth()
-            ->select([
-                'status.id',
-                'status.name',
-                'status.color',
-                'status.order',
-                DB::raw('count(clients.id) AS quantity')
-            ])
-            ->leftJoin('statuses AS status', 'status.id', 'clients.status_id')
-            ->whereIn('clients.status_id', $leadStatusesIds)
-            ->groupBy('status_id')
-            ->orderBy('status.order', 'asc')
-            ->get();
-
-        // Conteo
-        $defaultLeadStatus = Setting::get('default-lead-status');
-        $totalCount = Client::thisMonth()->count();
-        $clientsCount = Client::thisMonth()
-            ->whereIn('status_id', $clientStatusesIds)
-            ->count();
-        $archivedCount = Client::thisMonth()
-            ->whereNull('status')
-            ->count();
-        $managingCount = Client::thisMonth()
-            ->whereIn('status_id', $leadStatusesIds)
-            ->where('status_id', '<>', $defaultLeadStatus)
-            ->count();
-
-        $groupedByManageStatus = Client::thisMonth()
-            ->select([
-                'status.id AS status_id',
-                'status.name AS status_name',
-                'status.color AS status_color',
-                'manage_status.name AS manage_status_name',
-                'manage_status.color AS manage_status_color',
-                DB::raw('count(clients.id) AS quantity')
-            ])
-            ->leftJoin('statuses AS manage_status', 'manage_status.id', 'clients.manage_status_id')
-            ->leftJoin('statuses AS status', 'status.id', 'clients.status_id')
-            ->whereIn('clients.status_id', $leadStatusesIds)
-            ->groupBy('manage_status_id', 'status_id')
-            ->orderBy('status.order', 'asc')
-            ->orderBy('manage_status.order', 'asc')
-            ->get();
 
         $months = Client::select([
             DB::raw("DATE_FORMAT(clients.created_at, '%Y-%m') as id"),
@@ -89,14 +38,8 @@ class KPILeadsController extends BasicController
 
         return [
             'months' => $months,
-            'grouped' => $grouped,
-            'totalCount' => $totalCount,
-            'clientsCount' => $clientsCount,
-            'archivedCount' => $archivedCount,
-            'managingCount' => $managingCount,
             'currentMonth' => $currentMonth,
             'currentYear' => $currentYear,
-            'groupedByManageStatus' => $groupedByManageStatus
         ];
     }
 
@@ -128,16 +71,36 @@ class KPILeadsController extends BasicController
                 ->get();
 
             $totalCount = Client::byMonth($year, $month)->count();
+            $totalSum = Client::byMonth($year, $month)
+                ->join('client_has_products AS chp', 'chp.client_id', 'clients.id')
+                ->join('products AS p', 'p.id', 'chp.product_id')
+                ->sum('p.price');
             $clientsCount = Client::byMonth($year, $month)
                 ->whereIn('status_id', $clientStatusesIds)
                 ->count();
+            $clientsSum = Client::byMonth($year, $month)
+                ->whereIn('status_id', $clientStatusesIds)
+                ->join('client_has_products AS chp', 'chp.client_id', 'clients.id')
+                ->join('products AS p', 'p.id', 'chp.product_id')
+                ->sum('p.price');
             $archivedCount = Client::byMonth($year, $month)
                 ->whereNull('status')
                 ->count();
+            $archivedSum = Client::byMonth($year, $month)
+                ->whereNull('clients.status')
+                ->join('client_has_products AS chp', 'chp.client_id', 'clients.id')
+                ->join('products AS p', 'p.id', 'chp.product_id')
+                ->sum('p.price');
             $managingCount = Client::byMonth($year, $month)
                 ->whereIn('status_id', $leadStatusesIds)
                 ->where('status_id', '<>', $defaultLeadStatus)
                 ->count();
+            $managingSum = Client::byMonth($year, $month)
+                ->whereIn('status_id', $leadStatusesIds)
+                ->where('status_id', '<>', $defaultLeadStatus)
+                ->join('client_has_products AS chp', 'chp.client_id', 'clients.id')
+                ->join('products AS p', 'p.id', 'chp.product_id')
+                ->sum('p.price');
 
             $groupedByManageStatus = Client::byMonth($year, $month)
                 ->select([
@@ -159,9 +122,13 @@ class KPILeadsController extends BasicController
             $response->summary = [
                 'grouped' => $grouped,
                 'totalCount' => $totalCount,
+                'totalSum' => $totalSum,
                 'clientsCount' => $clientsCount,
+                'clientsSum' => $clientsSum,
                 'archivedCount' => $archivedCount,
+                'archivedSum' => $archivedSum,
                 'managingCount' => $managingCount,
+                'managingSum' => $managingSum,
             ];
             $response->data = $groupedByManageStatus;
         });

@@ -292,7 +292,7 @@
     ]
   },
   "resources/js/KPILeads.jsx": {
-    "file": "assets/KPILeads-5LKCBAUL.js",
+    "file": "assets/KPILeads-Jw9JXTYs.js",
     "name": "KPILeads",
     "src": "resources/js/KPILeads.jsx",
     "isEntry": true,
@@ -300,7 +300,8 @@
       "_CreateReactScript-DiMSE74L.js",
       "_Adminto-DDJrXyEx.js",
       "_SelectFormGroup-Lynb75r5.js",
-      "_server.browser-BzA2yPSr.js"
+      "_server.browser-BzA2yPSr.js",
+      "_Number2Currency-e57Tgsuk.js"
     ]
   },
   "resources/js/KPIProjects.jsx": {
@@ -319,7 +320,7 @@
     ]
   },
   "resources/js/Leads.jsx": {
-    "file": "assets/Leads-Cno6iIHa.js",
+    "file": "assets/Leads-CRIkMLux.js",
     "name": "Leads",
     "src": "resources/js/Leads.jsx",
     "isEntry": true,
@@ -381,7 +382,7 @@
     ]
   },
   "resources/js/Products.jsx": {
-    "file": "assets/Products-BY5UlIhH.js",
+    "file": "assets/Products-Dmdwm0_-.js",
     "name": "Products",
     "src": "resources/js/Products.jsx",
     "isEntry": true,
@@ -392,7 +393,7 @@
       "_InputFormGroup-TM-cwmw7.js",
       "_TextareaFormGroup-DptRN7bF.js",
       "_server.browser-BzA2yPSr.js",
-      "_SelectFormGroup-Lynb75r5.js"
+      "_Number2Currency-e57Tgsuk.js"
     ]
   },
   "resources/js/Profile.jsx": {

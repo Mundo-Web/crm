@@ -1,13 +1,13 @@
 import React from "react"
 
-const ProductCard = ({ className, ribbon, children, ...props }) => {
+const ProductCard = ({ className, ribbon, children, cardStyle, ...props }) => {
   return <article className={`pricing-column ${className} mb-0`} {...props}>
     {
       ribbon
         ? <div className="ribbon" style={{ left: -5 }}><span>{ribbon}</span></div>
         : ''
     }
-    <div className="card mb-0">
+    <div className="card mb-0" style={cardStyle}>
       <div className="inner-box card-body p-2">
         {children}
       </div>
