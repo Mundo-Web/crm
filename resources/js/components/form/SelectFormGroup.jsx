@@ -3,7 +3,8 @@ import React, { useEffect, useRef } from "react"
 const SelectFormGroup = ({ id, col, className, label, eRef, required = false, children, dropdownParent, noMargin = false, multiple = false, disabled = false, onChange = () => { },
   templateResult,
   templateSelection,
-  minimumResultsForSearch
+  minimumResultsForSearch,
+  tags
 }) => {
 
   if (!eRef) eRef = useRef()
@@ -14,7 +15,8 @@ const SelectFormGroup = ({ id, col, className, label, eRef, required = false, ch
       dropdownParent,
       templateResult,
       templateSelection,
-      minimumResultsForSearch
+      minimumResultsForSearch,
+      tags
     })
     $(eRef.current).on('change', onChange)
   }, [dropdownParent])

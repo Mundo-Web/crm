@@ -23,9 +23,10 @@ class TableSeeder extends Seeder
             {
                 if (!is_numeric($row[0])) return null;
 
-                Table::updateOrCreate([
-                    'id' => $row[1]
-                ], [
+                if (Table::where('id', $row[1])->exists()) return null;
+
+                Table::create([
+                    'id' => $row[1],
                     'name' => $row[2],
                     'description' => $row[3],
                     'configurable' => $row[4]

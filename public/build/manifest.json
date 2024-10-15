@@ -1,10 +1,10 @@
 {
-  "_Adminto-!~{00m}~.js": {
+  "_Adminto-!~{00n}~.js": {
     "file": "assets/Adminto-BfiZgK1t.css",
-    "src": "_Adminto-!~{00m}~.js"
+    "src": "_Adminto-!~{00n}~.js"
   },
-  "_Adminto-4qMMdGZY.js": {
-    "file": "assets/Adminto-4qMMdGZY.js",
+  "_Adminto-DDJrXyEx.js": {
+    "file": "assets/Adminto-DDJrXyEx.js",
     "name": "Adminto",
     "imports": [
       "_CreateReactScript-DiMSE74L.js"
@@ -13,45 +13,45 @@
       "assets/Adminto-BfiZgK1t.css"
     ]
   },
-  "_AssignUsersModal-Bmx5YgMp.js": {
-    "file": "assets/AssignUsersModal-Bmx5YgMp.js",
+  "_AssignUsersModal-DLxLoPl5.js": {
+    "file": "assets/AssignUsersModal-DLxLoPl5.js",
     "name": "AssignUsersModal",
     "imports": [
       "_CreateReactScript-DiMSE74L.js",
       "_Modal-DIHwUr7I.js",
       "_InputFormGroup-TM-cwmw7.js",
-      "_Adminto-4qMMdGZY.js",
-      "_TippyButton-BhHNRTfI.js",
+      "_Adminto-DDJrXyEx.js",
+      "_TippyButton-BVoSO3IC.js",
       "_SetSelectValue-CewST6hL.js",
-      "_Assigneds-ClBXRo9J.js"
+      "_Assigneds-DXJzLiBf.js"
     ]
   },
-  "_Assigneds-ClBXRo9J.js": {
-    "file": "assets/Assigneds-ClBXRo9J.js",
+  "_Assigneds-DXJzLiBf.js": {
+    "file": "assets/Assigneds-DXJzLiBf.js",
     "name": "Assigneds",
     "imports": [
       "_CreateReactScript-DiMSE74L.js",
-      "_Adminto-4qMMdGZY.js",
+      "_Adminto-DDJrXyEx.js",
       "_server.browser-BzA2yPSr.js"
     ]
   },
-  "_ClientNotesCard-DGxrDrA2.js": {
-    "file": "assets/ClientNotesCard-DGxrDrA2.js",
+  "_ClientNotesCard-egRi8tAY.js": {
+    "file": "assets/ClientNotesCard-egRi8tAY.js",
     "name": "ClientNotesCard",
     "imports": [
       "_CreateReactScript-DiMSE74L.js",
-      "_Adminto-4qMMdGZY.js"
+      "_Adminto-DDJrXyEx.js"
     ]
   },
   "_CreateReactScript-DiMSE74L.js": {
     "file": "assets/CreateReactScript-DiMSE74L.js",
     "name": "CreateReactScript"
   },
-  "_Dropdown-BTxxvraQ.js": {
-    "file": "assets/Dropdown-BTxxvraQ.js",
+  "_Dropdown-BnWkcEvN.js": {
+    "file": "assets/Dropdown-BnWkcEvN.js",
     "name": "Dropdown",
     "imports": [
-      "_Adminto-4qMMdGZY.js",
+      "_Adminto-DDJrXyEx.js",
       "_CreateReactScript-DiMSE74L.js"
     ]
   },
@@ -96,12 +96,12 @@
     "file": "assets/JSEncrypt-D3I3x59l.js",
     "name": "JSEncrypt"
   },
-  "_LeadsRest-C_gdCMiV.js": {
-    "file": "assets/LeadsRest-C_gdCMiV.js",
+  "_LeadsRest-DrB9SXGG.js": {
+    "file": "assets/LeadsRest-DrB9SXGG.js",
     "name": "LeadsRest",
     "imports": [
       "_CreateReactScript-DiMSE74L.js",
-      "_Adminto-4qMMdGZY.js"
+      "_Adminto-DDJrXyEx.js"
     ]
   },
   "_Modal-DIHwUr7I.js": {
@@ -118,14 +118,14 @@
       "_CreateReactScript-DiMSE74L.js"
     ]
   },
-  "_ProjectStatusDropdown-D9JQLQV5.js": {
-    "file": "assets/ProjectStatusDropdown-D9JQLQV5.js",
+  "_ProjectStatusDropdown-kJg2V0hx.js": {
+    "file": "assets/ProjectStatusDropdown-kJg2V0hx.js",
     "name": "ProjectStatusDropdown",
     "imports": [
       "_CreateReactScript-DiMSE74L.js",
-      "_Dropdown-BTxxvraQ.js",
+      "_Dropdown-BnWkcEvN.js",
       "_DropdownItem-DL6JiDl9.js",
-      "_Assigneds-ClBXRo9J.js"
+      "_Assigneds-DXJzLiBf.js"
     ]
   },
   "_ReactAppend-BsJVsMpn.js": {
@@ -135,8 +135,8 @@
       "_CreateReactScript-DiMSE74L.js"
     ]
   },
-  "_SelectFormGroup-1DdRYKS8.js": {
-    "file": "assets/SelectFormGroup-1DdRYKS8.js",
+  "_SelectFormGroup-Lynb75r5.js": {
+    "file": "assets/SelectFormGroup-Lynb75r5.js",
     "name": "SelectFormGroup",
     "imports": [
       "_CreateReactScript-DiMSE74L.js"
@@ -149,18 +149,18 @@
       "_CreateReactScript-DiMSE74L.js"
     ]
   },
-  "_StatusesRest-DVm_sycZ.js": {
-    "file": "assets/StatusesRest-DVm_sycZ.js",
+  "_StatusesRest-DOvQgO5D.js": {
+    "file": "assets/StatusesRest-DOvQgO5D.js",
     "name": "StatusesRest",
     "imports": [
-      "_Adminto-4qMMdGZY.js"
+      "_Adminto-DDJrXyEx.js"
     ]
   },
-  "_TasksRest-Bs8nzAZi.js": {
-    "file": "assets/TasksRest-Bs8nzAZi.js",
+  "_TasksRest-oKAaGPNS.js": {
+    "file": "assets/TasksRest-oKAaGPNS.js",
     "name": "TasksRest",
     "imports": [
-      "_Adminto-4qMMdGZY.js"
+      "_Adminto-DDJrXyEx.js"
     ]
   },
   "_TextareaFormGroup-DptRN7bF.js": {
@@ -170,25 +170,25 @@
       "_CreateReactScript-DiMSE74L.js"
     ]
   },
-  "_TippyButton-BhHNRTfI.js": {
-    "file": "assets/TippyButton-BhHNRTfI.js",
+  "_TippyButton-BVoSO3IC.js": {
+    "file": "assets/TippyButton-BVoSO3IC.js",
     "name": "TippyButton",
     "imports": [
       "_CreateReactScript-DiMSE74L.js",
-      "_Adminto-4qMMdGZY.js"
+      "_Adminto-DDJrXyEx.js"
     ]
   },
-  "_UsersRest-8IO4P8xJ.js": {
-    "file": "assets/UsersRest-8IO4P8xJ.js",
+  "_UsersRest-DBY3ShLg.js": {
+    "file": "assets/UsersRest-DBY3ShLg.js",
     "name": "UsersRest",
     "imports": [
       "_CreateReactScript-DiMSE74L.js",
-      "_Adminto-4qMMdGZY.js"
+      "_Adminto-DDJrXyEx.js"
     ]
   },
-  "_coming-soon-!~{00L}~.js": {
+  "_coming-soon-!~{00M}~.js": {
     "file": "assets/coming-soon-DjdwHcvt.css",
-    "src": "_coming-soon-!~{00L}~.js"
+    "src": "_coming-soon-!~{00M}~.js"
   },
   "_index-B8SohSAL.js": {
     "file": "assets/index-B8SohSAL.js",
@@ -205,134 +205,134 @@
     ]
   },
   "resources/js/Account.jsx": {
-    "file": "assets/Account-2QdMwar2.js",
+    "file": "assets/Account-C3bMN1qs.js",
     "name": "Account",
     "src": "resources/js/Account.jsx",
     "isEntry": true,
     "imports": [
       "_CreateReactScript-DiMSE74L.js",
-      "_Adminto-4qMMdGZY.js",
+      "_Adminto-DDJrXyEx.js",
       "_InputFormGroup-TM-cwmw7.js",
       "_JSEncrypt-D3I3x59l.js"
     ]
   },
   "resources/js/Apikeys.jsx": {
-    "file": "assets/Apikeys-DpfrfF1t.js",
+    "file": "assets/Apikeys--TsSS5wE.js",
     "name": "Apikeys",
     "src": "resources/js/Apikeys.jsx",
     "isEntry": true,
     "imports": [
       "_CreateReactScript-DiMSE74L.js",
-      "_Adminto-4qMMdGZY.js"
+      "_Adminto-DDJrXyEx.js"
     ]
   },
   "resources/js/Archived.jsx": {
-    "file": "assets/Archived-R4JGKD1L.js",
+    "file": "assets/Archived-BdZZkLa_.js",
     "name": "Archived",
     "src": "resources/js/Archived.jsx",
     "isEntry": true,
     "imports": [
       "_CreateReactScript-DiMSE74L.js",
       "_Modal-DIHwUr7I.js",
-      "_Adminto-4qMMdGZY.js",
-      "_ClientNotesCard-DGxrDrA2.js",
-      "_TippyButton-BhHNRTfI.js",
-      "_ProjectStatusDropdown-D9JQLQV5.js",
+      "_Adminto-DDJrXyEx.js",
+      "_ClientNotesCard-egRi8tAY.js",
+      "_TippyButton-BVoSO3IC.js",
+      "_ProjectStatusDropdown-kJg2V0hx.js",
       "_ReactAppend-BsJVsMpn.js",
-      "_Assigneds-ClBXRo9J.js",
+      "_Assigneds-DXJzLiBf.js",
       "_DxPanelButton-6w4Akznr.js",
       "_DxBox-DTge2tdv.js",
-      "_Dropdown-BTxxvraQ.js",
+      "_Dropdown-BnWkcEvN.js",
       "_DropdownItem-DL6JiDl9.js",
       "_server.browser-BzA2yPSr.js"
     ]
   },
   "resources/js/Calendar.jsx": {
-    "file": "assets/Calendar-BEC6pmvB.js",
+    "file": "assets/Calendar-amAfHPaa.js",
     "name": "Calendar",
     "src": "resources/js/Calendar.jsx",
     "isEntry": true,
     "imports": [
       "_CreateReactScript-DiMSE74L.js",
-      "_Adminto-4qMMdGZY.js"
+      "_Adminto-DDJrXyEx.js"
     ]
   },
   "resources/js/Clients.jsx": {
-    "file": "assets/Clients-CZefLxpb.js",
+    "file": "assets/Clients-CWRy_0rR.js",
     "name": "Clients",
     "src": "resources/js/Clients.jsx",
     "isEntry": true,
     "imports": [
-      "_Adminto-4qMMdGZY.js",
+      "_Adminto-DDJrXyEx.js",
       "_CreateReactScript-DiMSE74L.js",
       "_Modal-DIHwUr7I.js",
-      "_ClientNotesCard-DGxrDrA2.js",
+      "_ClientNotesCard-egRi8tAY.js",
       "_InputFormGroup-TM-cwmw7.js",
       "_TextareaFormGroup-DptRN7bF.js",
       "_SetSelectValue-CewST6hL.js",
       "_DropdownItem-DL6JiDl9.js",
       "_DropdownEnd-Bc0ixvdH.js",
-      "_AssignUsersModal-Bmx5YgMp.js",
-      "_ProjectStatusDropdown-D9JQLQV5.js",
+      "_AssignUsersModal-DLxLoPl5.js",
+      "_ProjectStatusDropdown-kJg2V0hx.js",
       "_ReactAppend-BsJVsMpn.js",
-      "_Assigneds-ClBXRo9J.js",
+      "_Assigneds-DXJzLiBf.js",
       "_DxPanelButton-6w4Akznr.js",
-      "_TippyButton-BhHNRTfI.js",
+      "_TippyButton-BVoSO3IC.js",
       "_DxBox-DTge2tdv.js",
-      "_Dropdown-BTxxvraQ.js",
-      "_LeadsRest-C_gdCMiV.js",
+      "_Dropdown-BnWkcEvN.js",
+      "_LeadsRest-DrB9SXGG.js",
       "_server.browser-BzA2yPSr.js"
     ]
   },
   "resources/js/KPILeads.jsx": {
-    "file": "assets/KPILeads-Bo-9EQ7X.js",
+    "file": "assets/KPILeads-5LKCBAUL.js",
     "name": "KPILeads",
     "src": "resources/js/KPILeads.jsx",
     "isEntry": true,
     "imports": [
       "_CreateReactScript-DiMSE74L.js",
-      "_Adminto-4qMMdGZY.js",
-      "_SelectFormGroup-1DdRYKS8.js",
+      "_Adminto-DDJrXyEx.js",
+      "_SelectFormGroup-Lynb75r5.js",
       "_server.browser-BzA2yPSr.js"
     ]
   },
   "resources/js/KPIProjects.jsx": {
-    "file": "assets/KPIProjects-BFT8RupZ.js",
+    "file": "assets/KPIProjects-DimQYDdo.js",
     "name": "KPIProjects",
     "src": "resources/js/KPIProjects.jsx",
     "isEntry": true,
     "imports": [
       "_CreateReactScript-DiMSE74L.js",
-      "_Adminto-4qMMdGZY.js",
+      "_Adminto-DDJrXyEx.js",
       "_DropdownEnd-Bc0ixvdH.js",
       "_DropdownItem-DL6JiDl9.js",
-      "_Assigneds-ClBXRo9J.js",
+      "_Assigneds-DXJzLiBf.js",
       "_server.browser-BzA2yPSr.js"
     ]
   },
   "resources/js/Leads.jsx": {
-    "file": "assets/Leads-fw5l37w-.js",
+    "file": "assets/Leads-B_x5sYUS.js",
     "name": "Leads",
     "src": "resources/js/Leads.jsx",
     "isEntry": true,
     "imports": [
-      "_Adminto-4qMMdGZY.js",
+      "_Adminto-DDJrXyEx.js",
       "_CreateReactScript-DiMSE74L.js",
-      "_ClientNotesCard-DGxrDrA2.js",
+      "_ClientNotesCard-egRi8tAY.js",
       "_ReactAppend-BsJVsMpn.js",
-      "_LeadsRest-C_gdCMiV.js",
-      "_TasksRest-Bs8nzAZi.js",
-      "_UsersRest-8IO4P8xJ.js",
+      "_LeadsRest-DrB9SXGG.js",
+      "_TasksRest-oKAaGPNS.js",
+      "_UsersRest-DBY3ShLg.js",
       "_Modal-DIHwUr7I.js",
       "_DxPanelButton-6w4Akznr.js",
       "_InputFormGroup-TM-cwmw7.js",
       "_TextareaFormGroup-DptRN7bF.js",
-      "_SelectFormGroup-1DdRYKS8.js",
-      "_TippyButton-BhHNRTfI.js",
+      "_SelectFormGroup-Lynb75r5.js",
+      "_TippyButton-BVoSO3IC.js",
       "_SetSelectValue-CewST6hL.js",
-      "_Dropdown-BTxxvraQ.js",
+      "_Dropdown-BnWkcEvN.js",
       "_DropdownItem-DL6JiDl9.js",
-      "_StatusesRest-DVm_sycZ.js",
+      "_StatusesRest-DOvQgO5D.js",
       "_server.browser-BzA2yPSr.js"
     ],
     "css": [
@@ -354,7 +354,7 @@
     ]
   },
   "resources/js/Permissions.jsx": {
-    "file": "assets/Permissions-COzuZTZZ.js",
+    "file": "assets/Permissions-CwYP50VA.js",
     "name": "Permissions",
     "src": "resources/js/Permissions.jsx",
     "isEntry": true,
@@ -362,52 +362,67 @@
       "_CreateReactScript-DiMSE74L.js",
       "_ReactAppend-BsJVsMpn.js",
       "_PermissionsRest-DgI3IJWq.js",
-      "_Adminto-4qMMdGZY.js",
+      "_Adminto-DDJrXyEx.js",
       "_Modal-DIHwUr7I.js",
       "_DxPanelButton-6w4Akznr.js",
       "_InputFormGroup-TM-cwmw7.js",
       "_TextareaFormGroup-DptRN7bF.js",
-      "_TippyButton-BhHNRTfI.js",
+      "_TippyButton-BVoSO3IC.js",
       "_server.browser-BzA2yPSr.js"
     ]
   },
+  "resources/js/Products.jsx": {
+    "file": "assets/Products-BdbY2WlF.js",
+    "name": "Products",
+    "src": "resources/js/Products.jsx",
+    "isEntry": true,
+    "imports": [
+      "_CreateReactScript-DiMSE74L.js",
+      "_Adminto-DDJrXyEx.js",
+      "_Modal-DIHwUr7I.js",
+      "_InputFormGroup-TM-cwmw7.js",
+      "_TextareaFormGroup-DptRN7bF.js",
+      "_server.browser-BzA2yPSr.js",
+      "_SelectFormGroup-Lynb75r5.js"
+    ]
+  },
   "resources/js/Profile.jsx": {
-    "file": "assets/Profile-CYwr-1qe.js",
+    "file": "assets/Profile-hP3sucYT.js",
     "name": "Profile",
     "src": "resources/js/Profile.jsx",
     "isEntry": true,
     "imports": [
       "_CreateReactScript-DiMSE74L.js",
-      "_Adminto-4qMMdGZY.js",
+      "_Adminto-DDJrXyEx.js",
       "_InputFormGroup-TM-cwmw7.js"
     ]
   },
   "resources/js/Projects.jsx": {
-    "file": "assets/Projects-x7keOKWF.js",
+    "file": "assets/Projects-Bgt-i_Z5.js",
     "name": "Projects",
     "src": "resources/js/Projects.jsx",
     "isEntry": true,
     "imports": [
       "_CreateReactScript-DiMSE74L.js",
-      "_Adminto-4qMMdGZY.js",
-      "_AssignUsersModal-Bmx5YgMp.js",
-      "_ProjectStatusDropdown-D9JQLQV5.js",
-      "_Assigneds-ClBXRo9J.js",
+      "_Adminto-DDJrXyEx.js",
+      "_AssignUsersModal-DLxLoPl5.js",
+      "_ProjectStatusDropdown-kJg2V0hx.js",
+      "_Assigneds-DXJzLiBf.js",
       "_SetSelectValue-CewST6hL.js",
       "_Modal-DIHwUr7I.js",
       "_DxPanelButton-6w4Akznr.js",
       "_InputFormGroup-TM-cwmw7.js",
       "_TextareaFormGroup-DptRN7bF.js",
       "_DxBox-DTge2tdv.js",
-      "_SelectFormGroup-1DdRYKS8.js",
-      "_TippyButton-BhHNRTfI.js",
-      "_Dropdown-BTxxvraQ.js",
+      "_SelectFormGroup-Lynb75r5.js",
+      "_TippyButton-BVoSO3IC.js",
+      "_Dropdown-BnWkcEvN.js",
       "_DropdownItem-DL6JiDl9.js",
       "_server.browser-BzA2yPSr.js"
     ]
   },
   "resources/js/Roles.jsx": {
-    "file": "assets/Roles-DHofvgPR.js",
+    "file": "assets/Roles-BSGCPXDG.js",
     "name": "Roles",
     "src": "resources/js/Roles.jsx",
     "isEntry": true,
@@ -415,25 +430,25 @@
       "_CreateReactScript-DiMSE74L.js",
       "_ReactAppend-BsJVsMpn.js",
       "_PermissionsRest-DgI3IJWq.js",
-      "_Adminto-4qMMdGZY.js",
+      "_Adminto-DDJrXyEx.js",
       "_Modal-DIHwUr7I.js",
       "_DxPanelButton-6w4Akznr.js",
       "_InputFormGroup-TM-cwmw7.js",
       "_TextareaFormGroup-DptRN7bF.js",
-      "_TippyButton-BhHNRTfI.js",
+      "_TippyButton-BVoSO3IC.js",
       "_server.browser-BzA2yPSr.js"
     ]
   },
   "resources/js/Settings.jsx": {
-    "file": "assets/Settings-ClTBk2os.js",
+    "file": "assets/Settings-c0_cUW0Z.js",
     "name": "Settings",
     "src": "resources/js/Settings.jsx",
     "isEntry": true,
     "imports": [
       "_CreateReactScript-DiMSE74L.js",
-      "_Adminto-4qMMdGZY.js",
+      "_Adminto-DDJrXyEx.js",
       "_Modal-DIHwUr7I.js",
-      "_SelectFormGroup-1DdRYKS8.js",
+      "_SelectFormGroup-Lynb75r5.js",
       "_index-B8SohSAL.js",
       "_TextareaFormGroup-DptRN7bF.js"
     ],
@@ -443,50 +458,50 @@
     ]
   },
   "resources/js/Statuses.jsx": {
-    "file": "assets/Statuses-s-GqJYIh.js",
+    "file": "assets/Statuses-CzMjP-Sb.js",
     "name": "Statuses",
     "src": "resources/js/Statuses.jsx",
     "isEntry": true,
     "imports": [
       "_CreateReactScript-DiMSE74L.js",
       "_SetSelectValue-CewST6hL.js",
-      "_StatusesRest-DVm_sycZ.js",
-      "_Adminto-4qMMdGZY.js",
+      "_StatusesRest-DOvQgO5D.js",
+      "_Adminto-DDJrXyEx.js",
       "_Modal-DIHwUr7I.js",
       "_InputFormGroup-TM-cwmw7.js",
       "_TextareaFormGroup-DptRN7bF.js"
     ]
   },
   "resources/js/Tables.jsx": {
-    "file": "assets/Tables-wrcb4WYd.js",
+    "file": "assets/Tables-BwyhCxfc.js",
     "name": "Tables",
     "src": "resources/js/Tables.jsx",
     "isEntry": true,
     "imports": [
       "_CreateReactScript-DiMSE74L.js",
       "_ReactAppend-BsJVsMpn.js",
-      "_Adminto-4qMMdGZY.js",
+      "_Adminto-DDJrXyEx.js",
       "_Modal-DIHwUr7I.js",
       "_DxPanelButton-6w4Akznr.js",
       "_InputFormGroup-TM-cwmw7.js",
       "_TextareaFormGroup-DptRN7bF.js",
-      "_TippyButton-BhHNRTfI.js",
+      "_TippyButton-BVoSO3IC.js",
       "_server.browser-BzA2yPSr.js"
     ]
   },
   "resources/js/Tasks.jsx": {
-    "file": "assets/Tasks-DAzHzycw.js",
+    "file": "assets/Tasks-DHtIv6oL.js",
     "name": "Tasks",
     "src": "resources/js/Tasks.jsx",
     "isEntry": true,
     "imports": [
       "_CreateReactScript-DiMSE74L.js",
-      "_TasksRest-Bs8nzAZi.js",
-      "_Adminto-4qMMdGZY.js",
+      "_TasksRest-oKAaGPNS.js",
+      "_Adminto-DDJrXyEx.js",
       "_DxPanelButton-6w4Akznr.js",
       "_ReactAppend-BsJVsMpn.js",
       "_DxBox-DTge2tdv.js",
-      "_Dropdown-BTxxvraQ.js",
+      "_Dropdown-BnWkcEvN.js",
       "_DropdownItem-DL6JiDl9.js",
       "_server.browser-BzA2yPSr.js"
     ],
@@ -495,7 +510,7 @@
     ]
   },
   "resources/js/Types.jsx": {
-    "file": "assets/Types--wv_Hs7I.js",
+    "file": "assets/Types-DgQsvXDs.js",
     "name": "Types",
     "src": "resources/js/Types.jsx",
     "isEntry": true,
@@ -503,34 +518,34 @@
       "_CreateReactScript-DiMSE74L.js",
       "_ReactAppend-BsJVsMpn.js",
       "_SetSelectValue-CewST6hL.js",
-      "_Adminto-4qMMdGZY.js",
+      "_Adminto-DDJrXyEx.js",
       "_Modal-DIHwUr7I.js",
       "_DxPanelButton-6w4Akznr.js",
       "_InputFormGroup-TM-cwmw7.js",
       "_TextareaFormGroup-DptRN7bF.js",
-      "_TippyButton-BhHNRTfI.js",
+      "_TippyButton-BVoSO3IC.js",
       "_server.browser-BzA2yPSr.js"
     ]
   },
   "resources/js/Users.jsx": {
-    "file": "assets/Users-CdET79Xq.js",
+    "file": "assets/Users-2qNhx5eX.js",
     "name": "Users",
     "src": "resources/js/Users.jsx",
     "isEntry": true,
     "imports": [
       "_CreateReactScript-DiMSE74L.js",
-      "_UsersRest-8IO4P8xJ.js",
-      "_Adminto-4qMMdGZY.js"
+      "_UsersRest-DBY3ShLg.js",
+      "_Adminto-DDJrXyEx.js"
     ]
   },
   "resources/js/Views.jsx": {
-    "file": "assets/Views-DvpuzVCK.js",
+    "file": "assets/Views-CJ5pi8Wd.js",
     "name": "Views",
     "src": "resources/js/Views.jsx",
     "isEntry": true,
     "imports": [
       "_CreateReactScript-DiMSE74L.js",
-      "_Adminto-4qMMdGZY.js",
+      "_Adminto-DDJrXyEx.js",
       "_Modal-DIHwUr7I.js",
       "_InputFormGroup-TM-cwmw7.js",
       "_TextareaFormGroup-DptRN7bF.js"

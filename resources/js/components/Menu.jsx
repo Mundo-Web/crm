@@ -142,6 +142,8 @@ const Menu = ({ session, can, presets, APP_PROTOCOL, APP_DOMAIN, leadsCount, tas
             <MenuItem id='archived-item' href="/archived" icon='mdi mdi-archive'>Archivados</MenuItem>
           </MenuItemContainer>
 
+          <MenuItem href="/products" icon='mdi mdi-layers'>Productos</MenuItem>
+
           {can('projects', 'root', 'all', 'list') && <MenuItem href="/projects" icon='mdi mdi-page-next'>Proyectos</MenuItem>}
           {
             (can('users', 'root', 'all', 'list') || can('roles', 'root', 'all', 'list') || can('permissions', 'root', 'all', 'list')) &&

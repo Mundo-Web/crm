@@ -14,6 +14,7 @@ use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\PermissionController;
+use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RemainingHistoryController;
 use App\Http\Controllers\SettingController;
@@ -103,6 +104,12 @@ Route::middleware('auth')->group(function () {
     Route::post('/statuses/paginate', [StatusController::class, 'paginate']);
     Route::patch('/statuses/status', [StatusController::class, 'status']);
     Route::delete('/statuses/{id}', [StatusController::class, 'delete']);
+
+    // Types routes
+    Route::post('/products', [ProductController::class, 'save']);
+    Route::post('/products/paginate', [ProductController::class, 'paginate']);
+    Route::patch('/products/status', [ProductController::class, 'status']);
+    Route::delete('/products/{id}', [ProductController::class, 'delete']);
 
     // Projects routes
     Route::post('/projects', [ProjectController::class, 'save']);
