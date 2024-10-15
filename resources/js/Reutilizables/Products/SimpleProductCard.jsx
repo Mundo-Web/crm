@@ -28,6 +28,17 @@ const SimpleProductCard = ({ onChange = () => { }, onDelete = () => { }, ...prod
     }
   }, [isEditing, price, product, onChange])
 
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      setIsEditing(false)
+      if (price !== product.price) {
+        console.log('cambio a:', price)
+        onChange({ ...product, price })
+      }
+    }
+  }
+
   return (
     <>
       <div
@@ -56,11 +67,12 @@ const SimpleProductCard = ({ onChange = () => { }, onDelete = () => { }, ...prod
           </h5>
           {isEditing ? (
             <input
-              ref={inputRef} // Referencia al input
+              ref={inputRef}
               className="form-control form-control-sm"
               type="number"
               value={price}
-              onChange={(e) => setPrice(parseFloat(e.target.value) || 0)} // Actualizar el estado del precio
+              onChange={(e) => setPrice(parseFloat(e.target.value) || 0)}
+              onKeyDown={handleKeyDown}
             />
           ) : (
             <small
