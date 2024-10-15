@@ -19,7 +19,8 @@ class ClientHasProductsController extends BasicController
         $response = Response::simpleTryCatch(function () use ($client) {
             $products = Product::select([
                 'products.*',
-                'chp.id as pivot_id'
+                'chp.id AS pivot_id',
+                'chp.price AS pivot_price'
             ])
                 ->join('client_has_products AS chp', 'chp.product_id', 'products.id')
                 ->where('chp.client_id', $client)
@@ -32,6 +33,14 @@ class ClientHasProductsController extends BasicController
 
     public function afterSave(Request $request, object $jpa, ?bool $isNew)
     {
-        return $jpa;
+        $productJpa = Product::select([
+            'products.*',
+            'chp.id AS pivot_id',
+            'chp.price AS pivot_price'
+        ])
+            ->join('client_has_products AS chp', 'chp.product_id', 'products.id')
+            ->where('chp.id', $jpa->id)
+            ->first();
+        return $productJpa;
     }
 }

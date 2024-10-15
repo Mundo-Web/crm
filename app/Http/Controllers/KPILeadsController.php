@@ -73,24 +73,21 @@ class KPILeadsController extends BasicController
             $totalCount = Client::byMonth($year, $month)->count();
             $totalSum = Client::byMonth($year, $month)
                 ->join('client_has_products AS chp', 'chp.client_id', 'clients.id')
-                ->join('products AS p', 'p.id', 'chp.product_id')
-                ->sum('p.price');
+                ->sum('chp.price');
             $clientsCount = Client::byMonth($year, $month)
                 ->whereIn('status_id', $clientStatusesIds)
                 ->count();
             $clientsSum = Client::byMonth($year, $month)
                 ->whereIn('status_id', $clientStatusesIds)
                 ->join('client_has_products AS chp', 'chp.client_id', 'clients.id')
-                ->join('products AS p', 'p.id', 'chp.product_id')
-                ->sum('p.price');
+                ->sum('chp.price');
             $archivedCount = Client::byMonth($year, $month)
                 ->whereNull('status')
                 ->count();
             $archivedSum = Client::byMonth($year, $month)
                 ->whereNull('clients.status')
                 ->join('client_has_products AS chp', 'chp.client_id', 'clients.id')
-                ->join('products AS p', 'p.id', 'chp.product_id')
-                ->sum('p.price');
+                ->sum('chp.price');
             $managingCount = Client::byMonth($year, $month)
                 ->whereIn('status_id', $leadStatusesIds)
                 ->where('status_id', '<>', $defaultLeadStatus)
@@ -99,8 +96,7 @@ class KPILeadsController extends BasicController
                 ->whereIn('status_id', $leadStatusesIds)
                 ->where('status_id', '<>', $defaultLeadStatus)
                 ->join('client_has_products AS chp', 'chp.client_id', 'clients.id')
-                ->join('products AS p', 'p.id', 'chp.product_id')
-                ->sum('p.price');
+                ->sum('chp.price');
 
             $groupedByManageStatus = Client::byMonth($year, $month)
                 ->select([

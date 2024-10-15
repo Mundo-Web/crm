@@ -16,6 +16,7 @@ class ClientHasProducts extends Model
     protected $fillable = [
         'client_id',
         'product_id',
-        'business_id'
+        'business_id',
+        'price',
     ];
 }

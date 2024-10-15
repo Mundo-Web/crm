@@ -36,6 +36,7 @@ import Dropdown from './components/dropdown/DropDown.jsx'
 import DropdownItem from './components/dropdown/DropdownItem.jsx'
 import Number2Currency from './Utils/Number2Currency.jsx'
 import ProductsByClients from './actions/ProductsByClientsRest.js'
+import SimpleProductCard from './Reutilizables/Products/SimpleProductCard.jsx'
 
 const leadsRest = new LeadsRest()
 const clientsRest = new ClientsRest()
@@ -457,7 +458,8 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
   const addProduct2Client = async (product) => {
     const result = await productsByClients.save({
       client_id: leadLoaded.id,
-      product_id: product.id
+      product_id: product.id,
+      price: product.price
     })
     if (!result) return
     setClientProducts(old => ([...old, { ...product, pivot_id: result.id }]))
@@ -467,6 +469,14 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
     const result = await productsByClients.delete(product.pivot_id)
     if (!result) return
     setClientProducts(old => (old.filter(x => x.id != product.id)))
+  }
+
+  const onPriceChange = async (product) => {
+    const result = await productsByClients.save({
+      id: product.pivot_id,
+      price: product.price
+    })
+    if (!result) return
   }
 
   const tasks = []
@@ -1023,21 +1033,7 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
               <div className='mt-2 d-flex flex-column gap-2'>
                 {
                   clientProducts.map((product, index) => {
-                    return <div className='card mb-0' key={index} style={{
-                      border: `1px solid ${product.color}44`,
-                      backgroundColor: `${product.color}11`
-                    }}>
-                      <div className="card-body p-2">
-                        <div className="float-end">
-                          <Tippy content='Quitar producto'>
-                            <i className='fa fa-times' onClick={() => deleteClientProduct(product)} style={{ cursor: 'pointer' }}></i>
-                          </Tippy>
-                        </div>
-
-                        <h5 className="header-title mt-0 mb-1" style={{ fontSize: '14.4px', color: product.color }}>{product.name}</h5>
-                        <small>S/. {Number2Currency(product.price)}</small>
-                      </div>
-                    </div>
+                    return <SimpleProductCard key={index} {...product} onDelete={deleteClientProduct} onChange={onPriceChange} />
                   })
                 }
               </div>
