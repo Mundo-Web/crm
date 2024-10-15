@@ -819,7 +819,7 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
           <h4>Estados</h4>
           <div className='d-flex flex-wrap gap-2 justify-content-between mb-2'>
             <div>
-              <label htmlFor="" className='d-block'>Estado de gestión</label>
+              <b className='d-block'>Estado de gestión</b>
               <div className='btn-group mb-0' style={{ width: '100%' }}>
                 <button className="btn btn-light btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style={{ color: '#ffffff', backgroundColor: leadLoaded?.status?.color || '#6c757d' }}>
                   {leadLoaded?.status?.name || 'Sin estado'} <i className="mdi mdi-chevron-down"></i>
@@ -832,7 +832,7 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
               </div>
             </div>
             <div>
-              <label htmlFor="" className='d-block'>Estado del lead</label>
+              <b className='d-block'>Estado del lead</b>
               <div className="btn-group mb-0" style={{ width: '100%' }}>
                 <button className="btn btn-light btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style={{ color: '#ffffff', backgroundColor: leadLoaded?.manage_status?.color || '#6c757d' }}>
                   {leadLoaded?.manage_status?.name || 'Sin estado'} <i className="mdi mdi-chevron-down"></i>
@@ -847,7 +847,7 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
           </div>
           {
             leadLoaded?.assigned_to && <>
-              <label htmlFor="" className='d-block mb-1'>Atendido por:</label>
+              <b className='d-block mb-1'>Atendido por:</b>
               <div className="d-flex align-items-start">
                 <img className="d-flex me-2 rounded-circle" src={`//${Global.APP_DOMAIN}/api/profile/thumbnail/${leadLoaded?.assigned?.relative_id}`}
                   alt={leadLoaded?.assigned?.name} height="32" />
