@@ -462,7 +462,7 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
       price: product.price
     })
     if (!result) return
-    setClientProducts(old => ([...old, { ...product, pivot_id: result.id }]))
+    setClientProducts(old => ([...old, { ...product, pivot_id: result.pivot_id, pivot_price: result.price }]))
   }
 
   const deleteClientProduct = async (product) => {
