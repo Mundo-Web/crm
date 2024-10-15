@@ -118,10 +118,10 @@ const Products = ({ products: productsFromDB = [], types: typesFromDB = [], can 
         <div className="card" >
           <div className="card-header">
             <div className="float-end">
-                <button className='btn btn-success btn-sm' onClick={onModalOpen}>
-                  <i className='fa fa-plus me-1'></i>
-                  Agregar producto
-                </button>
+              <button className='btn btn-success btn-sm' onClick={onModalOpen}>
+                <i className='fa fa-plus me-1'></i>
+                Agregar producto
+              </button>
             </div>
             <h4 className="header-title my-0">Lista de productos</h4>
           </div>
@@ -143,7 +143,7 @@ const Products = ({ products: productsFromDB = [], types: typesFromDB = [], can 
                     border: `1px solid ${product.color}44`,
                     backgroundColor: `${product.color}11`
                   }}>
-                    <h4 className={`${product.ribbon ? 'ms-4' : ''} text-center text-truncate line-clamp-2`}>{product.name}</h4>
+                    <h4 className={`${product.ribbon ? 'ms-4' : ''} text-center text-truncate line-clamp-2`} style={{ cursor: product.color }}>{product.name}</h4>
                     <table>
                       <tbody>
                         <tr>

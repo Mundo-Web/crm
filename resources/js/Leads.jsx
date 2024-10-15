@@ -980,7 +980,10 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
               <div className='mt-2 d-flex flex-column gap-2'>
                 {
                   clientProducts.map((product, index) => {
-                    return <div className='card mb-0 border' key={index}>
+                    return <div className='card mb-0' key={index} style={{
+                      border: `1px solid ${product.color}44`,
+                      backgroundColor: `${product.color}11`
+                    }}>
                       <div class="card-body p-2">
                         <div class="float-end">
                           <Tippy content='Quitar producto'>
@@ -988,7 +991,7 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
                           </Tippy>
                         </div>
 
-                        <h5 class="header-title mt-0 mb-1" style={{ fontSize: '14.4px' }}>{product.name}</h5>
+                        <h5 class="header-title mt-0 mb-1" style={{ fontSize: '14.4px', color: product.color }}>{product.name}</h5>
                         <small>S/. {Number2Currency(product.price)}</small>
                       </div>
                     </div>
