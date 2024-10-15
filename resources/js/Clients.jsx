@@ -444,20 +444,50 @@ const Clients = ({ projectStatuses, clientStatuses, products = [], manageStatuse
       <div className="row">
         <div className="col-lg-3 col-md-4 col-sm-6 col-xs-12">
           <div className="d-flex mb-3">
-            <img className="flex-shrink-0 me-3 rounded-circle avatar-md" alt={detailLoaded?.contact_name}
-              src={`//${Global.APP_DOMAIN}/api/profile/null`} />
             <div className="flex-grow-1">
               <h4 className="media-heading mt-0">
                 {detailLoaded?.contact_name}
               </h4>
-              <span className="badge bg-primary me-1">{detailLoaded?.contact_position || 'Trabajador'}</span> <small className='text-muted'>desde <b>{detailLoaded?.origin}</b></small>
+              <span className="badge bg-primary me-1">{detailLoaded?.contact_position || 'Trabajador'}</span>
+              <small className='text-muted'>desde <b>{detailLoaded?.origin}</b></small>
             </div>
           </div>
-          <div className="btn-group mb-0">
-            <span className="btn btn-light btn-sm" style={{ cursor: 'default', color: '#ffffff', backgroundColor: detailLoaded?.manage_status?.color || '#6c757d' }}>
-              {detailLoaded?.manage_status?.name || 'Sin estado'}
-            </span>
+
+          <hr />
+
+          <h4>Estados</h4>
+
+          <div className='d-flex flex-wrap gap-2 justify-content-between mb-2'>
+            <div>
+              <b className='d-block'>Estado de gestión</b>
+              <span className="btn btn-light btn-sm" style={{ cursor: 'default', color: '#ffffff', backgroundColor: detailLoaded?.status?.color || '#6c757d' }}>
+                {detailLoaded?.status?.name || 'Sin estado'}
+              </span>
+            </div>
+
+            <div>
+              <b className='d-block'>Estado del lead</b>
+              <span className="btn btn-light btn-sm" style={{ cursor: 'default', color: '#ffffff', backgroundColor: detailLoaded?.manage_status?.color || '#6c757d' }}>
+                {detailLoaded?.manage_status?.name || 'Sin estado'}
+              </span>
+            </div>
           </div>
+          {
+            detailLoaded?.assigned_to && (
+              <>
+                <b className='d-block mb-1'>Atendido por:</b>
+                <div className="d-flex align-items-start">
+                  <img className="d-flex me-2 rounded-circle"
+                    src={`//${Global.APP_DOMAIN}/api/profile/thumbnail/${detailLoaded?.assigned?.relative_id}`}
+                    alt={detailLoaded?.assigned?.name} height="32" />
+                  <div className="w-100">
+                    <h5 className='m-0 font-14'>{detailLoaded?.assigned?.name}</h5>
+                    <span className="font-12 mb-0">{detailLoaded?.assigned?.email}</span>
+                  </div>
+                </div>
+              </>
+            )
+          }
           <hr />
           <h4>Datos del contacto</h4>
           <h5 className="font-600 mb-0">Correo electronico</h5>
