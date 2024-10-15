@@ -123,4 +123,10 @@ class Client extends Model
             ->whereMonth('clients.created_at', $month)
             ->whereYear('clients.created_at', $year);
     }
+
+    public function products()
+    {
+        return $this->belongsToMany(Product::class, 'client_has_products', 'client_id', 'product_id')
+            ->withPivot('id');
+    }
 }

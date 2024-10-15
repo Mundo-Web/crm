@@ -35,7 +35,7 @@ const clientsRest = new ClientsRest()
 const leadsRest = new LeadsRest()
 const clientNotesRest = new ClientNotesRest();
 
-const Clients = ({ projectStatuses, clientStatuses, manageStatuses, session, can, noteTypes, defaultClientStatus, client }) => {
+const Clients = ({ projectStatuses, clientStatuses, products = [], manageStatuses, session, can, noteTypes, defaultClientStatus, client }) => {
   const gridRef = useRef()
   const modalRef = useRef()
   const detailModalRef = useRef()

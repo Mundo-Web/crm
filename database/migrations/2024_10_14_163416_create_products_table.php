@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -12,7 +13,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('products', function (Blueprint $table) {
-            $table->uuid('id');
+            $table->uuid('id')->default(DB::raw('(UUID())'))->primary();
+            $table->char('type_id', 36)->index();
             $table->string('name');
             $table->decimal('price')->nullable();
             $table->string('color')->nullable();
@@ -21,6 +23,8 @@ return new class extends Migration
             $table->boolean('status')->default(true)->nullable();
             $table->bigInteger('business_id');
             $table->timestamps();
+
+            $table->foreign('type_id')->references('id')->on('types')->cascadeOnDelete();
         });
     }
 

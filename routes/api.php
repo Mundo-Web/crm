@@ -4,10 +4,10 @@ use App\Http\Controllers\AccountController;
 use App\Http\Controllers\ArchivedController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ClientController;
+use App\Http\Controllers\ClientHasProductsController;
 use App\Http\Controllers\ClientNoteController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\KPILeadsController;
-use App\Http\Controllers\LandingFormController;
 use App\Http\Controllers\LeadController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PaymentController;
@@ -15,7 +15,6 @@ use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\ProductController;
-use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RemainingHistoryController;
 use App\Http\Controllers\SettingController;
 use App\Http\Controllers\StatusController;
@@ -110,6 +109,10 @@ Route::middleware('auth')->group(function () {
     Route::post('/products/paginate', [ProductController::class, 'paginate']);
     Route::patch('/products/status', [ProductController::class, 'status']);
     Route::delete('/products/{id}', [ProductController::class, 'delete']);
+
+    Route::post('/products-by-client', [ClientHasProductsController::class, 'save']);
+    Route::delete('/products-by-client/{id}', [ClientHasProductsController::class, 'delete']);
+    Route::get('/products-by-client/client/{id}', [ClientHasProductsController::class, 'byClient']);
 
     // Projects routes
     Route::post('/projects', [ProjectController::class, 'save']);

@@ -8,6 +8,7 @@ use App\Models\Atalaya\Business;
 use App\Models\Client;
 use App\Models\ClientNote;
 use App\Models\NoteType;
+use App\Models\Product;
 use App\Models\Setting;
 use App\Models\Status;
 use App\Models\Task;
@@ -44,13 +45,19 @@ class LeadController extends BasicController
             ->where('status', true)
             ->get();
 
+        $products = Product::with('type')
+            ->where('business_id', Auth::user()->business_id)
+            ->where('status', true)
+            ->get();
+
         return [
             'lead' => $request->lead,
             'manageStatuses' => $manageStatuses,
             'defaultClientStatus' => $defaultClientStatus,
             'defaultLeadStatus' => $defaultLeadStatus,
             'statuses' => $statuses,
-            'noteTypes' => $noteTypes
+            'noteTypes' => $noteTypes,
+            'products' => $products
         ];
     }
 
@@ -59,7 +66,7 @@ class LeadController extends BasicController
         $response = Response::simpleTryCatch(function (Response $response) use ($lead) {
             $data = $this->model::select('clients.*')
                 ->withCount(['notes', 'tasks', 'pendingTasks'])
-                ->with(['status', 'assigned', 'manageStatus', 'creator'])
+                ->with(['status', 'assigned', 'manageStatus', 'creator', 'products'])
                 ->join('statuses AS status', 'status.id', 'status_id')
                 ->leftJoin('statuses AS manage_status', 'manage_status.id', 'manage_status_id')
                 ->where('status.table_id', 'e05a43e5-b3a6-46ce-8d1f-381a73498f33')
@@ -75,7 +82,7 @@ class LeadController extends BasicController
     {
         return $model::select('clients.*')
             ->withCount(['notes', 'tasks', 'pendingTasks'])
-            ->with(['status', 'assigned', 'manageStatus', 'creator'])
+            ->with(['status', 'assigned', 'manageStatus', 'creator', 'products'])
             ->join('statuses AS status', 'status.id', 'status_id')
             ->leftJoin('statuses AS manage_status', 'manage_status.id', 'manage_status_id')
             ->leftJoin('users AS assigned', 'assigned.id', 'clients.assigned_to')
@@ -112,8 +119,8 @@ class LeadController extends BasicController
                 'name' => Auth::user()->name . ' actualizo datos del lead',
             ]);
             $newJpa = Client::with(['status', 'assigned', 'manageStatus', 'creator'])
-            ->where('id', $jpa->id)
-            ->first();
+                ->where('id', $jpa->id)
+                ->first();
             return $newJpa;
         }
         $noteJpa = ClientNote::create([

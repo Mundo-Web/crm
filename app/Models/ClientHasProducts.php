@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Product extends Model
+class ClientHasProducts extends Model
 {
     use HasFactory, HasUuids;
 
@@ -14,17 +14,8 @@ class Product extends Model
     protected $keyType = 'string';
 
     protected $fillable = [
-        'type_id',
-        'name',
-        'price',
-        'color',
-        'description',
-        'visible',
-        'status',
-        'business_id',
+        'client_id',
+        'product_id',
+        'business_id'
     ];
-
-    public function type() {
-        return $this->hasOne(Type::class, 'id', 'type_id');
-    }
 }

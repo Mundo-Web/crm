@@ -32,14 +32,19 @@ import Global from './Utils/Global.js'
 import DxPanelButton from './components/dx/DxPanelButton.jsx'
 import StatusModal from './Reutilizables/Statuses/StatusModal.jsx'
 import StatusDropdown from './Reutilizables/Statuses/StatusDropdown.jsx'
+import Dropdown from './components/dropdown/DropDown.jsx'
+import DropdownItem from './components/dropdown/DropdownItem.jsx'
+import Number2Currency from './Utils/Number2Currency.jsx'
+import ProductsByClients from './actions/ProductsByClientsRest.js'
 
 const leadsRest = new LeadsRest()
 const clientsRest = new ClientsRest()
 const clientNotesRest = new ClientNotesRest()
 const taskRest = new TasksRest()
 const usetsRest = new UsersRest()
+const productsByClients = new ProductsByClients()
 
-const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatus, manageStatuses: manageStatusesFromDB, noteTypes, session, can, lead }) => {
+const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatus, manageStatuses: manageStatusesFromDB, noteTypes, products = [], session, can, lead }) => {
 
   const modalRef = useRef()
   const newLeadModalRef = useRef()
@@ -69,6 +74,7 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
   const [leadLoaded, setLeadLoaded] = useState(null)
   const [notes, setNotes] = useState([]);
   const [defaultView, setDefaultView] = useState(Local.get('default-view') ?? 'kanban')
+  const [clientProducts, setClientProducts] = useState([])
 
   const typeRefs = {};
   const idRefs = {}
@@ -146,6 +152,7 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
 
   useEffect(() => {
     getNotes()
+    getClientProducts()
   }, [leadLoaded]);
 
   const getLeads = async () => {
@@ -156,6 +163,11 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
   const getNotes = async () => {
     const newNotes = await clientNotesRest.byClient(leadLoaded?.id);
     setNotes(newNotes ?? [])
+  }
+
+  const getClientProducts = async () => {
+    const newClientProducts = await productsByClients.byClient(leadLoaded?.id)
+    setClientProducts(newClientProducts)
   }
 
   const onLeadClicked = async (lead) => {
@@ -430,6 +442,21 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
       cancelButtonText: `Cancelar`
     })
     if (isConfirmed) onClientStatusClicked(data.id, defaultClientStatus)
+  }
+
+  const addProduct2Client = async (product) => {
+    const result = await productsByClients.save({
+      client_id: leadLoaded.id,
+      product_id: product.id
+    })
+    if (!result) return
+    setClientProducts(old => ([...old, { ...product, pivot_id: result.id }]))
+  }
+
+  const deleteClientProduct = async (product) => {
+    const result = await productsByClients.delete(product.pivot_id)
+    if (!result) return
+    setClientProducts(old => (old.filter(x => x.id != product.id)))
   }
 
   const tasks = []
@@ -912,9 +939,10 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
 
         <div className="col-lg-3 col-md-4 col-sm-6 col-xs-12">
           <div className="card">
+            <div className="card-header bg-danger">
+              <h5 className="header-title my-0 text-white">Tareas</h5>
+            </div>
             <div className="card-body">
-              <h5 className="header-title">Lista de tareas</h5>
-              <hr />
               {
                 pendingTasks.length > 0
                   ? pendingTasks.sort((a, b) => a.ends_at > b.ends_at ? 1 : -1).map((task, i) => {
@@ -922,6 +950,51 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
                   })
                   : <i className='text-muted'>- No hay tareas pendientes -</i>
               }
+            </div>
+          </div>
+          <div className="card">
+            <div className="card-header bg-primary">
+              <div class="float-end text-white">
+                S/. {Number2Currency(clientProducts.reduce((total, product) => total + Number(product.price), 0))}
+              </div>
+              <h5 className="header-title my-0 text-white">Productos</h5>
+            </div>
+            <div className="card-body">
+              <Dropdown className='d-block mx-auto btn btn-sm btn-white rounded-pill' title='Agregar' icon={{ icon: 'fa fa-plus' }} tippy='Agregar producto al cliente'>
+                {
+                  products.map((product, index) => {
+                    if (clientProducts.find(x => x.id == product.id)) {
+                      return <DropdownItem key={index} className='py-1' style={{ cursor: 'not-allowed', opacity: 0.5 }} tippy='Ya ha sido agregado'>
+                        <b className='d-block text-truncate'>{product.name}</b>
+                        <small>S/. {Number2Currency(product.price)}</small>
+                      </DropdownItem>
+                    } else {
+                      return <DropdownItem key={index} className='py-1' onClick={() => addProduct2Client(product)}>
+                        <b className='d-block text-truncate'>{product.name}</b>
+                        <small>S/. {Number2Currency(product.price)}</small>
+                      </DropdownItem>
+                    }
+                  })
+                }
+              </Dropdown>
+              <div className='mt-2 d-flex flex-column gap-2'>
+                {
+                  clientProducts.map((product, index) => {
+                    return <div className='card mb-0 border' key={index}>
+                      <div class="card-body p-2">
+                        <div class="float-end">
+                          <Tippy content='Quitar producto'>
+                            <i className='fa fa-times' onClick={() => deleteClientProduct(product)} style={{ cursor: 'pointer' }}></i>
+                          </Tippy>
+                        </div>
+
+                        <h5 class="header-title mt-0 mb-1" style={{ fontSize: '14.4px' }}>{product.name}</h5>
+                        <p className='text-sm mb-0'>S/. {Number2Currency(product.price)}</p>
+                      </div>
+                    </div>
+                  })
+                }
+              </div>
             </div>
           </div>
         </div>

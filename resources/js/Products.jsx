@@ -22,8 +22,7 @@ import Swal from 'sweetalert2'
 
 const productsRest = new ProductsRest()
 
-const Products = ({ products = [], types = [], can }) => {
-  const gridRef = useRef()
+const Products = ({ products: productsFromDB = [], types: typesFromDB = [], can }) => {
   const modalRef = useRef()
 
   // Form elements ref
@@ -35,13 +34,15 @@ const Products = ({ products = [], types = [], can }) => {
   const descriptionRef = useRef()
 
   const [isEditing, setIsEditing] = useState(false)
+  const [products, setProducts] = useState(productsFromDB)
+  const [types, setTypes] = useState(typesFromDB)
 
   const onModalOpen = (data) => {
     if (data?.id) setIsEditing(true)
     else setIsEditing(false)
 
     idRef.current.value = data?.id || null
-    $(typeRef.current).val(data?.type || null)
+    $(typeRef.current).val(data?.type_id || null).trigger('change')
     nameRef.current.value = data?.name || null
     priceRef.current.value = data?.price || null
     colorRef.current.value = data?.color || null
@@ -55,7 +56,7 @@ const Products = ({ products = [], types = [], can }) => {
 
     const request = {
       id: idRef.current.value || undefined,
-      type: typeRef.current.value,
+      type_id: typeRef.current.value,
       name: nameRef.current.value,
       price: priceRef.current.value,
       color: colorRef.current.value,
@@ -66,6 +67,26 @@ const Products = ({ products = [], types = [], can }) => {
     if (!result) return
 
     $(modalRef.current).modal('hide')
+
+    const newProducts = structuredClone(products).map(x => {
+      if (x.id == result.id) return result;
+      return x
+    })
+
+    if (!newProducts.find(x => x.id == result.id)) newProducts.push(result);
+
+    setProducts(newProducts)
+  }
+
+  const onStatusChange = async ({ id, status }) => {
+    const result = await productsRest.status({ id, status })
+    if (!result) return
+    setProducts(old => {
+      return old.map(x => {
+        if (x.id == id) x.status = 1
+        return x
+      })
+    })
   }
 
   const onDeleteClicked = async (id) => {
@@ -81,8 +102,16 @@ const Products = ({ products = [], types = [], can }) => {
 
     const result = await productsRest.delete(id)
     if (!result) return
-    $(gridRef.current).dxDataGrid('instance').refresh()
+
+    setProducts(old => {
+      return old.map(x => {
+        if (x.id == id) x.status = null
+        return x
+      })
+    })
   }
+
+  console.log(products)
 
   return (<>
     <div className="row mb-4">
@@ -98,7 +127,11 @@ const Products = ({ products = [], types = [], can }) => {
     }}>
       {
         products.map((product, index) => {
-          return <ProductCard key={index} style={{ width: '300px' }}>
+          return <ProductCard key={index} style={{
+            width: '300px',
+            textDecorationLine: product.status == null && 'line-through',
+            opacity: product.status == null && 0.5
+          }}>
             <h4 className={`${product.ribbon ? 'ms-4' : ''} text-center text-truncate line-clamp-2`}>{product.name}</h4>
             <table>
               <tbody>
@@ -114,12 +147,20 @@ const Products = ({ products = [], types = [], can }) => {
                     <b>S/.{Number(product.price).toFixed(2)}</b>
                   </td>
                   <td className='text-end'>
-                    <Tippy content='Editar'>
-                      <button className="btn btn-xs btn-soft-primary fa fa-pen mb-1" onClick={() => onModalOpen(product)}></button>
-                    </Tippy>
-                    <Tippy content='Eliminar'>
-                      <button className="btn btn-xs btn-soft-danger fa fa-times" onClick={() => onDeleteClicked(product.id)}></button>
-                    </Tippy>
+                    {
+                      product.status == null
+                        ? <Tippy content='Restaurar'>
+                          <button className="btn btn-xs btn-soft-dark fas fa-trash-restore" onClick={() => onStatusChange({ id: product.id, status: false })}></button>
+                        </Tippy>
+                        : <>
+                          <Tippy content='Editar'>
+                            <button className="btn btn-xs btn-soft-primary fa fa-pen mb-1" onClick={() => onModalOpen(product)}></button>
+                          </Tippy>
+                          <Tippy content='Eliminar'>
+                            <button className="btn btn-xs btn-soft-danger fa fa-times" onClick={() => onDeleteClicked(product.id)}></button>
+                          </Tippy>
+                        </>
+                    }
                   </td>
                 </tr>
               </tbody>

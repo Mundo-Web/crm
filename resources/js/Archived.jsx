@@ -35,7 +35,7 @@ const archivedRest = new ArchivedRest()
 const clientsRest = new ClientsRest()
 const clientNotesRest = new ClientNotesRest();
 
-const Archived = ({ projectStatuses, archived, can, session, defaultLeadStatus, noteTypes }) => {
+const Archived = ({ projectStatuses, archived, products = [], can, session, defaultLeadStatus, noteTypes }) => {
   const gridRef = useRef()
   const detailModalRef = useRef()
 
