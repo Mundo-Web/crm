@@ -849,7 +849,7 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
             leadLoaded?.assigned_to && <>
               <label htmlFor="" className='d-block mb-1'>Atendido por:</label>
               <div className="d-flex align-items-start">
-                <img className="d-flex me-2 rounded-circle" src={`//${Global.APP_DOMAIN}/api/profile/thumbnail/${leadLoaded?.assigned?.uuid}`}
+                <img className="d-flex me-2 rounded-circle" src={`//${Global.APP_DOMAIN}/api/profile/thumbnail/${leadLoaded?.assigned?.relative_id}`}
                   alt={leadLoaded?.assigned?.name} height="32" />
                 <div className="w-100">
                   <h5 className='m-0 font-14'>{leadLoaded?.assigned?.name}</h5>
