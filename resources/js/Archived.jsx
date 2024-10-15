@@ -31,6 +31,7 @@ import TaskCard from './Reutilizables/Tasks/TaskCard.jsx'
 import ClientNotesCard from './Reutilizables/ClientNotes/ClientNotesCard.jsx'
 import ClientNotesRest from './actions/ClientNotesRest.js'
 import ProductsByClients from './actions/ProductsByClientsRest.js'
+import { renderToString } from 'react-dom/server'
 
 const archivedRest = new ArchivedRest()
 const clientsRest = new ClientsRest()

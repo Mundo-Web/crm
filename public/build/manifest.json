@@ -232,7 +232,7 @@
     ]
   },
   "resources/js/Archived.jsx": {
-    "file": "assets/Archived-DmtnxY1f.js",
+    "file": "assets/Archived-B6JSELNi.js",
     "name": "Archived",
     "src": "resources/js/Archived.jsx",
     "isEntry": true,
@@ -248,9 +248,9 @@
       "_DxPanelButton-6w4Akznr.js",
       "_Number2Currency-e57Tgsuk.js",
       "_DxBox-DTge2tdv.js",
+      "_server.browser-BzA2yPSr.js",
       "_Dropdown-BnWkcEvN.js",
-      "_DropdownItem-E29r08GI.js",
-      "_server.browser-BzA2yPSr.js"
+      "_DropdownItem-E29r08GI.js"
     ]
   },
   "resources/js/Calendar.jsx": {
