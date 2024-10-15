@@ -30,10 +30,13 @@ import { GET } from 'sode-extend-react'
 import ClientNotesRest from './actions/ClientNotesRest.js'
 import ClientNotesCard from './Reutilizables/ClientNotes/ClientNotesCard.jsx'
 import TaskCard from './Reutilizables/Tasks/TaskCard.jsx'
+import ProductsByClients from './actions/ProductsByClientsRest.js'
+import { renderToString } from 'react-dom/server'
 
 const clientsRest = new ClientsRest()
 const leadsRest = new LeadsRest()
 const clientNotesRest = new ClientNotesRest();
+const productsByClients = new ProductsByClients()
 
 const Clients = ({ projectStatuses, clientStatuses, products = [], manageStatuses, session, can, noteTypes, defaultClientStatus, client }) => {
   const gridRef = useRef()
@@ -59,9 +62,10 @@ const Clients = ({ projectStatuses, clientStatuses, products = [], manageStatuse
   const [projectsGrid, setProjectsGrid] = useState({})
   const [clientLoaded, setClientLoaded] = useState({})
   const [projects, setProjects] = useState([])
-  
+
   const [detailLoaded, setDetailLoaded] = useState({})
   const [notes, setNotes] = useState([]);
+  const [clientProducts, setClientProducts] = useState([])
 
   const onModalOpen = (data) => {
     if (data?.id) setIsEditing(true)
@@ -153,16 +157,23 @@ const Clients = ({ projectStatuses, clientStatuses, products = [], manageStatuse
     setDetailLoaded(lead)
     history.pushState(null, null, `/clients/${lead.id}`)
     setNotes([])
+    setClientProducts([])
     $(detailModalRef.current).modal('show')
   }
 
   useEffect(() => {
     getNotes()
+    getClientProducts()
   }, [detailLoaded]);
 
   const getNotes = async () => {
     const newNotes = await clientNotesRest.byClient(detailLoaded?.id);
     setNotes(newNotes ?? [])
+  }
+
+  const getClientProducts = async () => {
+    const newClientProducts = await productsByClients.byClient(detailLoaded?.id)
+    setClientProducts(newClientProducts)
   }
 
   useEffect(() => {
@@ -176,6 +187,7 @@ const Clients = ({ projectStatuses, clientStatuses, products = [], manageStatuse
       if (!data) return
       setDetailLoaded(data)
       setNotes([])
+      setClientProducts([])
       $(detailModalRef.current).modal('show')
       if (GET.annotation) {
         $(`[data-name="${GET.annotation}"]`).click()
@@ -225,7 +237,9 @@ const Clients = ({ projectStatuses, clientStatuses, products = [], manageStatuse
         {
           dataField: 'ruc',
           caption: 'RUC',
-          cellTemplate: (container, {data}) => {
+          cellTemplate: (container, { data }) => {
+            container.attr('style', 'height: 48px; cursor: pointer')
+            container.on('click', () => onDetailLoaded(data))
             container.html(data.ruc || `<i class="text-muted">- Sin RUC -</i>`)
           }
         },
@@ -234,6 +248,8 @@ const Clients = ({ projectStatuses, clientStatuses, products = [], manageStatuse
           caption: 'Nombre comercial',
           width: 250,
           cellTemplate: (container, { data }) => {
+            container.attr('style', 'height: 48px; cursor: pointer')
+            container.on('click', () => onDetailLoaded(data))
             ReactAppend(container, <div className='d-flex align-items-center'>
               {data.assigned_to && <Tippy content={`Atendido por ${data.assigned.name} ${data.assigned.lastname}`}>
                 <img className='avatar-xs rounded-circle me-1' src={`//${Global.APP_DOMAIN}/api/profile/thumbnail/${data.assigned.relative_id}`} alt={data.assigned.name} />
@@ -249,7 +265,13 @@ const Clients = ({ projectStatuses, clientStatuses, products = [], manageStatuse
         },
         {
           dataField: 'contact_name',
-          caption: 'Nombre de contacto'
+          caption: 'Nombre de contacto',
+          width: 250,
+          cellTemplate: (container, { data }) => {
+            container.attr('style', 'height: 48px; cursor: pointer')
+            container.on('click', () => onDetailLoaded(data))
+            container.html(renderToString(<b>{data.contact_name}</b>))
+          },
         },
         {
           dataField: 'contact_phone',
@@ -432,7 +454,7 @@ const Clients = ({ projectStatuses, clientStatuses, products = [], manageStatuse
             </div>
           </div>
           <div className="btn-group mb-0">
-            <span className="btn btn-light btn-sm"  style={{ cursor: 'default', color: '#ffffff', backgroundColor: detailLoaded?.manage_status?.color || '#6c757d' }}>
+            <span className="btn btn-light btn-sm" style={{ cursor: 'default', color: '#ffffff', backgroundColor: detailLoaded?.manage_status?.color || '#6c757d' }}>
               {detailLoaded?.manage_status?.name || 'Sin estado'}
             </span>
           </div>
@@ -509,15 +531,53 @@ const Clients = ({ projectStatuses, clientStatuses, products = [], manageStatuse
 
         <div className="col-lg-3 col-md-4 col-sm-6 col-xs-12">
           <div className="card">
+            <div className="card-header bg-danger">
+              <h5 className="header-title my-0 text-white">Tareas</h5>
+            </div>
             <div className="card-body">
-              <h5 className="header-title">Lista de tareas</h5>
-              <hr />
               {
                 pendingTasks.length > 0
                   ? pendingTasks.sort((a, b) => a.ends_at > b.ends_at ? 1 : -1).map((task, i) => {
                     return <TaskCard key={`task-${i}`} {...task} />
                   })
                   : <i className='text-muted'>- No hay tareas pendientes -</i>
+              }
+            </div>
+          </div>
+          <div className="card">
+            <div className="card-header bg-primary">
+              <div className="float-end text-white">
+                S/. {Number2Currency(clientProducts.reduce((total, product) => total + Number(product.price), 0))}
+              </div>
+              <h5 className="header-title my-0 text-white">Productos</h5>
+            </div>
+            <div className="card-body">
+
+              {
+                clientProducts.length > 0
+                  ?
+                  <div className='mt-2 d-flex flex-column gap-2'>
+                    {
+                      clientProducts.map((product, index) => {
+                        return <div className='card mb-0' key={index} style={{
+                          border: `1px solid ${product.color}44`,
+                          backgroundColor: `${product.color}11`
+                        }}>
+                          <div className="card-body p-2">
+                            <div className="float-end">
+                              <Tippy content='Quitar producto'>
+                                <i className='fa fa-times' onClick={() => deleteClientProduct(product)} style={{ cursor: 'pointer' }}></i>
+                              </Tippy>
+                            </div>
+
+                            <h5 className="header-title mt-0 mb-1" style={{ fontSize: '14.4px', color: product.color }}>{product.name}</h5>
+                            <small>S/. {Number2Currency(product.price)}</small>
+                          </div>
+                        </div>
+                      })
+                    }
+                  </div>
+                  : <i className='text-muted'>- Sin productos -</i>
               }
             </div>
           </div>

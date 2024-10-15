@@ -35,14 +35,6 @@
       "_server.browser-BzA2yPSr.js"
     ]
   },
-  "_ClientNotesCard-egRi8tAY.js": {
-    "file": "assets/ClientNotesCard-egRi8tAY.js",
-    "name": "ClientNotesCard",
-    "imports": [
-      "_CreateReactScript-DiMSE74L.js",
-      "_Adminto-DDJrXyEx.js"
-    ]
-  },
   "_CreateReactScript-DiMSE74L.js": {
     "file": "assets/CreateReactScript-DiMSE74L.js",
     "name": "CreateReactScript"
@@ -121,6 +113,14 @@
     "name": "PermissionsRest",
     "imports": [
       "_CreateReactScript-DiMSE74L.js"
+    ]
+  },
+  "_ProductsByClientsRest-CbtLpExX.js": {
+    "file": "assets/ProductsByClientsRest-CbtLpExX.js",
+    "name": "ProductsByClientsRest",
+    "imports": [
+      "_CreateReactScript-DiMSE74L.js",
+      "_Adminto-DDJrXyEx.js"
     ]
   },
   "_ProjectStatusDropdown-CTiWr1xu.js": {
@@ -232,15 +232,15 @@
     ]
   },
   "resources/js/Archived.jsx": {
-    "file": "assets/Archived-4v0P2i6r.js",
+    "file": "assets/Archived-DmtnxY1f.js",
     "name": "Archived",
     "src": "resources/js/Archived.jsx",
     "isEntry": true,
     "imports": [
+      "_Adminto-DDJrXyEx.js",
       "_CreateReactScript-DiMSE74L.js",
       "_Modal-DIHwUr7I.js",
-      "_Adminto-DDJrXyEx.js",
-      "_ClientNotesCard-egRi8tAY.js",
+      "_ProductsByClientsRest-CbtLpExX.js",
       "_TippyButton-BVoSO3IC.js",
       "_ProjectStatusDropdown-CTiWr1xu.js",
       "_ReactAppend-BsJVsMpn.js",
@@ -264,7 +264,7 @@
     ]
   },
   "resources/js/Clients.jsx": {
-    "file": "assets/Clients-Ca321Vxq.js",
+    "file": "assets/Clients-C0oqqRLu.js",
     "name": "Clients",
     "src": "resources/js/Clients.jsx",
     "isEntry": true,
@@ -272,7 +272,7 @@
       "_Adminto-DDJrXyEx.js",
       "_CreateReactScript-DiMSE74L.js",
       "_Modal-DIHwUr7I.js",
-      "_ClientNotesCard-egRi8tAY.js",
+      "_ProductsByClientsRest-CbtLpExX.js",
       "_InputFormGroup-TM-cwmw7.js",
       "_TextareaFormGroup-DptRN7bF.js",
       "_SetSelectValue-CewST6hL.js",
@@ -320,14 +320,14 @@
     ]
   },
   "resources/js/Leads.jsx": {
-    "file": "assets/Leads-UnCXWg_V.js",
+    "file": "assets/Leads-Y0Tqnae-.js",
     "name": "Leads",
     "src": "resources/js/Leads.jsx",
     "isEntry": true,
     "imports": [
       "_Adminto-DDJrXyEx.js",
       "_CreateReactScript-DiMSE74L.js",
-      "_ClientNotesCard-egRi8tAY.js",
+      "_ProductsByClientsRest-CbtLpExX.js",
       "_ReactAppend-BsJVsMpn.js",
       "_LeadsRest-DrB9SXGG.js",
       "_TasksRest-oKAaGPNS.js",

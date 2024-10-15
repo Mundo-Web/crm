@@ -94,6 +94,7 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
       if (!data) return
       setLeadLoaded(data)
       setNotes([])
+      setClientProducts([])
       $(modalRef.current).modal('show')
       if (GET.annotation) {
         $(`[data-name="${GET.annotation}"]`).click()
@@ -292,7 +293,16 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
 
   const onClientStatusClicked = async (lead, status) => {
     await leadsRest.leadStatus({ lead, status })
-    $(gridRef.current).dxDataGrid('instance').refresh()
+
+    if (leadLoaded) {
+      const newLeadLoaded = structuredClone(leadLoaded)
+      newLeadLoaded.status = statuses.find(x => x.id == status);
+      setLeadLoaded(newLeadLoaded)
+      history.pushState(null, null, `/leads/${newLeadLoaded.id}`)
+    }
+
+    if (defaultView == 'kanban') getLeads()
+    else $(gridRef.current).dxDataGrid('instance').refresh()
   }
 
   const onAttendClient = async (lead, attend) => {
@@ -666,28 +676,28 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
                           return <li id={`${lead.id}`} key={`lead-${i}`} style={{ cursor: 'move' }} className={`p-2 ${lead.assigned_to == session.service_user.id ? 'border border-primary' : ''}`}>
                             <div className="kanban-box" >
                               <div className="kanban-detail ms-0">
-                                <div class="dropdown float-end">
-                                  <a href="#" class="dropdown-toggle arrow-none card-drop" data-bs-toggle="dropdown" aria-expanded="false">
-                                    <i class="mdi mdi-dots-vertical"></i>
+                                <div className="dropdown float-end">
+                                  <a href="#" className="dropdown-toggle arrow-none card-drop" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i className="mdi mdi-dots-vertical"></i>
                                   </a>
-                                  <div class="dropdown-menu dropdown-menu-end">
-                                    <a class="dropdown-item" style={{ cursor: 'pointer' }} onClick={() => onLeadClicked(lead)}>
+                                  <div className="dropdown-menu dropdown-menu-end">
+                                    <a className="dropdown-item" style={{ cursor: 'pointer' }} onClick={() => onLeadClicked(lead)}>
                                       <i className='fa fa-eye me-1'></i>
                                       Ver detalles
                                     </a>
-                                    <a class="dropdown-item" style={{ cursor: 'pointer' }} onClick={() => onOpenModal(lead)}>
+                                    <a className="dropdown-item" style={{ cursor: 'pointer' }} onClick={() => onOpenModal(lead)}>
                                       <i className='fa fa-pen me-1'></i>
                                       Editar lead
                                     </a>
-                                    <a class="dropdown-item" style={{ cursor: 'pointer' }} onClick={() => onMakeLeadClient(lead)}>
+                                    <a className="dropdown-item" style={{ cursor: 'pointer' }} onClick={() => onMakeLeadClient(lead)}>
                                       <i className='fa fa-user-plus me-1'></i>
                                       Convertir en cliente
                                     </a>
-                                    <a class="dropdown-item" style={{ cursor: 'pointer' }} onClick={() => onArchiveClicked(lead)}>
+                                    <a className="dropdown-item" style={{ cursor: 'pointer' }} onClick={() => onArchiveClicked(lead)}>
                                       <i className='mdi mdi-archive me-1'></i>
                                       Archivar lead
                                     </a>
-                                    <a class="dropdown-item" style={{ cursor: 'pointer' }} onClick={() => onDeleteClicked(lead)}>
+                                    <a className="dropdown-item" style={{ cursor: 'pointer' }} onClick={() => onDeleteClicked(lead)}>
                                       <i className='fa fa-trash me-1'></i>
                                       Eliminar lead
                                     </a>
@@ -795,8 +805,8 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
       <div className="row">
         <div className="col-lg-3 col-md-4 col-sm-6 col-xs-12">
           <div className="d-flex mb-3">
-            <img className="flex-shrink-0 me-3 rounded-circle avatar-md" alt={leadLoaded?.contact_name}
-              src={`//${Global.APP_DOMAIN}/api/profile/null`} />
+            {/* <img className="flex-shrink-0 me-3 rounded-circle avatar-md" alt={leadLoaded?.contact_name}
+              src={`//${Global.APP_DOMAIN}/api/profile/null`} /> */}
             <div className="flex-grow-1">
               <h4 className="media-heading mt-0">
                 <i className='mdi mdi-lead-pencil me-1' style={{ cursor: 'pointer' }} onClick={() => onOpenModal(leadLoaded)}></i>
@@ -805,16 +815,49 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
               <span className="badge bg-primary me-1">{leadLoaded?.contact_position || 'Trabajador'}</span> <small className='text-muted'>desde <b>{leadLoaded?.origin}</b></small>
             </div>
           </div>
-          <div className="btn-group mb-0">
-            <button className="btn btn-light btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style={{ color: '#ffffff', backgroundColor: leadLoaded?.manage_status?.color || '#6c757d' }}>
-              {leadLoaded?.manage_status?.name || 'Sin estado'} <i className="mdi mdi-chevron-down"></i>
-            </button>
-            <div className="dropdown-menu">
-              {manageStatuses.map((status, i) => {
-                return <span key={`status-${i}`} className="dropdown-item" style={{ cursor: 'pointer' }} onClick={() => onManageStatusChange(leadLoaded, status)}>{status.name}</span>
-              })}
+          <hr />
+          <h4>Estados</h4>
+          <div className='d-flex flex-wrap gap-2 justify-content-between mb-2'>
+            <div>
+              <label htmlFor="" className='d-block'>Estado de gestión</label>
+              <div className='btn-group mb-0' style={{ width: '100%' }}>
+                <button className="btn btn-light btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style={{ color: '#ffffff', backgroundColor: leadLoaded?.status?.color || '#6c757d' }}>
+                  {leadLoaded?.status?.name || 'Sin estado'} <i className="mdi mdi-chevron-down"></i>
+                </button>
+                <div className="dropdown-menu">
+                  {statuses.map((status, i) => {
+                    return <span key={`status-${i}`} className="dropdown-item" style={{ cursor: 'pointer' }} onClick={() => onClientStatusClicked(leadLoaded.id, status.id)}>{status.name}</span>
+                  })}
+                </div>
+              </div>
+            </div>
+            <div>
+              <label htmlFor="" className='d-block'>Estado del lead</label>
+              <div className="btn-group mb-0" style={{ width: '100%' }}>
+                <button className="btn btn-light btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style={{ color: '#ffffff', backgroundColor: leadLoaded?.manage_status?.color || '#6c757d' }}>
+                  {leadLoaded?.manage_status?.name || 'Sin estado'} <i className="mdi mdi-chevron-down"></i>
+                </button>
+                <div className="dropdown-menu">
+                  {manageStatuses.map((status, i) => {
+                    return <span key={`status-${i}`} className="dropdown-item" style={{ cursor: 'pointer' }} onClick={() => onManageStatusChange(leadLoaded, status)}>{status.name}</span>
+                  })}
+                </div>
+              </div>
             </div>
           </div>
+          {
+            leadLoaded?.assigned_to && <>
+              <label htmlFor="" className='d-block mb-1'>Atendido por:</label>
+              <div className="d-flex align-items-start">
+                <img className="d-flex me-2 rounded-circle" src={`//${Global.APP_DOMAIN}/api/profile/thumbnail/${leadLoaded?.assigned?.uuid}`}
+                  alt={leadLoaded?.assigned?.name} height="32" />
+                <div className="w-100">
+                  <h5 className='m-0 font-14'>{leadLoaded?.assigned?.name}</h5>
+                  <span className="font-12 mb-0">{leadLoaded?.assigned?.email}</span>
+                </div>
+              </div>
+            </>
+          }
           <hr />
           <h4>Datos del contacto</h4>
           <h5 className="font-600 mb-0">Correo electronico</h5>
@@ -954,7 +997,7 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
           </div>
           <div className="card">
             <div className="card-header bg-primary">
-              <div class="float-end text-white">
+              <div className="float-end text-white">
                 S/. {Number2Currency(clientProducts.reduce((total, product) => total + Number(product.price), 0))}
               </div>
               <h5 className="header-title my-0 text-white">Productos</h5>
@@ -984,14 +1027,14 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
                       border: `1px solid ${product.color}44`,
                       backgroundColor: `${product.color}11`
                     }}>
-                      <div class="card-body p-2">
-                        <div class="float-end">
+                      <div className="card-body p-2">
+                        <div className="float-end">
                           <Tippy content='Quitar producto'>
                             <i className='fa fa-times' onClick={() => deleteClientProduct(product)} style={{ cursor: 'pointer' }}></i>
                           </Tippy>
                         </div>
 
-                        <h5 class="header-title mt-0 mb-1" style={{ fontSize: '14.4px', color: product.color }}>{product.name}</h5>
+                        <h5 className="header-title mt-0 mb-1" style={{ fontSize: '14.4px', color: product.color }}>{product.name}</h5>
                         <small>S/. {Number2Currency(product.price)}</small>
                       </div>
                     </div>
