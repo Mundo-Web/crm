@@ -620,7 +620,7 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
             {
               dataField: 'created_at',
               caption: 'Fecha creacion',
-              dataType: 'datetime',
+              dataType: 'date',
               cellTemplate: (container, { data }) => {
                 container.text(moment(data.created_at).format('lll'))
               },
