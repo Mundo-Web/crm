@@ -15,6 +15,7 @@ import InputFormGroup from './components/form/InputFormGroup.jsx'
 import TextareaFormGroup from './components/form/TextareaFormGroup.jsx'
 import TippyButton from './components/form/TippyButton.jsx'
 import DxPanelButton from './components/dx/DxPanelButton.jsx'
+import Swal from 'sweetalert2'
 
 const Roles = ({ permissions, can }) => {
   permissions = Object.values(permissions.map((x) => {
@@ -100,6 +101,17 @@ const Roles = ({ permissions, can }) => {
   }
 
   const onDeleteClicked = async (id) => {
+    const { isConfirmed } = await Swal.fire({
+      title: 'Eliminar rol',
+      text: '¿Está seguro de eliminar este rol?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Si, eliminar!',
+      cancelButtonText: 'Cancelar'
+    })
+    if (!isConfirmed) return
     const result = await RolesRest.delete(id)
     if (!result) return
     $(gridRef.current).dxDataGrid('instance').refresh()
