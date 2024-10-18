@@ -232,6 +232,9 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
     const result = await clientNotesRest.save({
       id: idRefs[type].current.value || undefined,
       note_type_id: type,
+      process: processRef.current.value,
+      status_id: statusRef.current.value,
+      manage_status_id: manageStatusRef.current.value,
       name: title,
       description: !isTask ? content : undefined,
       raw: !isTask ? text : undefined,
@@ -252,6 +255,7 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
     editor.empty()
     idRefs[type].current.value = null
     taskTitleRef.current.value = ''
+    processRef.current.value = ''
     $(taskTypeRef.current).val('Por hacer').trigger('change')
     $(taskPriorityRef.current).val('Media').trigger('change')
     $(taskAssignedToRef.current).val('').trigger('change')
@@ -263,6 +267,14 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
     if (index == -1) newNotes.push(result)
     else newNotes[index] = result
     setNotes(newNotes)
+
+    leadsRest.get(lead).then(data => {
+      if (!data) return
+      setLeadLoaded(data)
+    })
+
+    if (defaultView == 'kanban') getLeads()
+    else $(gridRef.current).dxDataGrid('instance').refresh()
   }
 
   const onDeleteNote = async (noteId) => {

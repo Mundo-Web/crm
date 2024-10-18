@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Classes\dxResponse;
 use App\Jobs\SaveNotification;
+use App\Models\Client;
 use App\Models\ClientNote;
 use App\Models\Task;
 use App\Models\User;
@@ -22,7 +23,7 @@ class ClientNoteController extends BasicController
     {
         $response =  new dxResponse();
         try {
-            $notes = $this->model::with(['type', 'user', 'tasks', 'tasks.assigned'])
+            $notes = $this->model::with(['type', 'user', 'tasks', 'tasks.assigned', 'status', 'manageStatus'])
                 ->where('client_id', $client)
                 ->get();
 
@@ -56,6 +57,14 @@ class ClientNoteController extends BasicController
 
     public function afterSave(Request $request, object $jpa, ?bool $isNew)
     {
+
+        if ($jpa->status_id || $jpa->manage_status_id) {
+            $clientJpa = Client::find($jpa->client_id);
+            if ($jpa->status_id) $clientJpa->status_id = $jpa->status_id;
+            if ($jpa->manage_status_id) $clientJpa->manage_status_id = $jpa->manage_status_id;
+            $clientJpa->save();
+        }
+
         $mentions = $request->mentions;
         $tasks = $request->tasks;
 
@@ -110,12 +119,10 @@ class ClientNoteController extends BasicController
             }
         }
 
-        $newJpa = ClientNote::where('id', $jpa->id)->with(['type', 'user', 'tasks', 'tasks.assigned'])->first();
-
-        // $jpa->type = $jpa->type()->first();
-        // $jpa->user = $jpa->user()->first();
-        // $jpa->tasks = $jpa->tasks()->get();
-        // $jpa->tasks->assigned = $jpa->tasks()->assigned()->first();
+        $newJpa = ClientNote::where('id', $jpa->id)
+            ->with(['type', 'user', 'tasks', 'tasks.assigned', 'status', 'manageStatus'])
+            ->first();
+            
         return $newJpa;
     }
 }

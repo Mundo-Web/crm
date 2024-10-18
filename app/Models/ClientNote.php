@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+use function PHPSTORM_META\map;
+
 class ClientNote extends Model
 {
     use HasFactory, HasUuids;
@@ -19,7 +21,9 @@ class ClientNote extends Model
         'user_id',
         'name',
         'description',
-        'process'
+        'process',
+        'status_id',
+        'manage_status_id'
     ];
 
     public function client()
@@ -40,5 +44,15 @@ class ClientNote extends Model
     public function tasks()
     {
         return $this->hasMany(Task::class, 'note_id', 'id');
+    }
+
+    public function status()
+    {
+        return $this->hasOne(Status::class, 'id', 'status_id');
+    }
+
+    public function manageStatus()
+    {
+        return $this->hasOne(Status::class, 'id', 'manage_status_id');
     }
 }
