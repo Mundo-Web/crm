@@ -94,11 +94,13 @@ const Processes = ({ can }) => {
       columns={[
         {
           dataField: 'name',
-          caption: 'Proceso'
+          caption: 'Proceso',
+          dataType: 'string'
         },
         {
           dataField: 'description',
-          caption: 'Descripcion'
+          caption: 'Descripcion',
+          dataType: 'string'
         },
         {
           caption: 'Acciones',
