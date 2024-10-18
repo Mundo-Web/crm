@@ -268,7 +268,7 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
     else newNotes[index] = result
     setNotes(newNotes)
 
-    leadsRest.get(lead).then(data => {
+    leadsRest.get(leadLoaded.id).then(data => {
       if (!data) return
       setLeadLoaded(data)
     })
