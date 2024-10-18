@@ -18,7 +18,8 @@ class ClientNote extends Model
         'note_type_id',
         'user_id',
         'name',
-        'description'
+        'description',
+        'process'
     ];
 
     public function client()

@@ -55,7 +55,7 @@ const SelectAPIFormGroup = ({ col, label, eRef, required = false, dropdownParent
   }, [dropdownParent])
 
   return <div className={`form-group ${col} mb-2`}>
-    <label htmlFor=''>
+    <label htmlFor='' className="mb-1">
       {label} {required && <b className="text-danger">*</b>}
     </label>
     <select ref={eRef} required={required} className='form-control' style={{ width: '100%' }} multiple={multiple}></select>

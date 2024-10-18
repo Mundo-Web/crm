@@ -9,6 +9,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Controllers\KPILeadsController;
 use App\Http\Controllers\KPIProjectsController;
 use App\Http\Controllers\LeadController;
+use App\Http\Controllers\ProcessController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\RoleController;
@@ -61,6 +62,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/archived', [ArchivedController::class, 'reactView'])->name('Archived.jsx');
     Route::get('/archived/{archived}', [ClientController::class, 'reactView'])->name('Archived.jsx');
     Route::get('/products', [ProductController::class, 'reactView'])->name('Products.jsx');
+    Route::get('/processes', [ProcessController::class, 'reactView'])->name('Processes.jsx');
     Route::get('/views', [ViewController::class, 'reactView'])->name('Views.jsx');
     Route::get('/projects', [ProjectController::class, 'reactView'])->name('Projects.jsx');
     Route::get('/users', [UserController::class, 'reactView'])->name('Users.jsx');

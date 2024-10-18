@@ -30,7 +30,6 @@ import Prepare2Send from './Utils/Prepare2Send.js'
 import Send2Div from './Utils/Send2Div.js'
 import Global from './Utils/Global.js'
 import DxPanelButton from './components/dx/DxPanelButton.jsx'
-import StatusModal from './Reutilizables/Statuses/StatusModal.jsx'
 import StatusDropdown from './Reutilizables/Statuses/StatusDropdown.jsx'
 import Dropdown from './components/dropdown/DropDown.jsx'
 import DropdownItem from './components/dropdown/DropdownItem.jsx'
@@ -45,7 +44,7 @@ const taskRest = new TasksRest()
 const usetsRest = new UsersRest()
 const productsByClients = new ProductsByClients()
 
-const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatus, manageStatuses: manageStatusesFromDB, noteTypes, products = [], session, can, lead }) => {
+const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatus, manageStatuses: manageStatusesFromDB, noteTypes, products = [], processes = [], session, can, lead }) => {
 
   const modalRef = useRef()
   const newLeadModalRef = useRef()
@@ -58,6 +57,9 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
   const taskAssignedToRef = useRef()
   const taskEndsAtDateRef = useRef()
   const taskEndsAtTimeRef = useRef()
+  const processRef = useRef()
+  const statusRef = useRef()
+  const manageStatusRef = useRef()
 
   // Form Ref
   const idRef = useRef()
@@ -101,6 +103,19 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
         $(`[data-name="${GET.annotation}"]`).click()
       }
     })
+
+    const input = processRef.current
+    const dropdownMenu = new bootstrap.Dropdown(input);
+
+    input.addEventListener('focus', function () {
+      dropdownMenu.show();
+    });
+    input.addEventListener('blur', function () {
+      setTimeout(() => {
+        dropdownMenu.hide();
+      }, 200);
+    });
+
   }, [null])
 
   useEffect(() => {
@@ -155,6 +170,8 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
   useEffect(() => {
     getNotes()
     getClientProducts()
+    $(statusRef.current).val(leadLoaded?.status?.id).trigger('change')
+    $(manageStatusRef.current).val(leadLoaded?.manage_status?.id).trigger('change')
   }, [leadLoaded]);
 
   const getLeads = async () => {
@@ -819,7 +836,9 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
               src={`//${Global.APP_DOMAIN}/api/profile/null`} /> */}
             <div className="flex-grow-1">
               <h4 className="media-heading mt-0">
-                <i className='mdi mdi-lead-pencil me-1' style={{ cursor: 'pointer' }} onClick={() => onOpenModal(leadLoaded)}></i>
+                <Tippy content="Modificar datos">
+                  <i className='mdi mdi-lead-pencil me-1' style={{ cursor: 'pointer' }} onClick={() => onOpenModal(leadLoaded)}></i>
+                </Tippy>
                 {leadLoaded?.contact_name}
               </h4>
               <span className="badge bg-primary me-1">{leadLoaded?.contact_position || 'Trabajador'}</span> <small className='text-muted'>desde <b>{leadLoaded?.origin}</b></small>
@@ -899,7 +918,7 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
           <div className="card card-body">
             <ul className="nav nav-tabs" style={{ flexWrap: 'nowrap', overflowX: 'auto' }}>
               <li key={`note-type-activity`} className="nav-item">
-                <a href="#note-type-activity" data-bs-toggle="tab" aria-expanded="false" className="nav-link active">
+                <a href="#note-type-activity" data-bs-toggle="tab" aria-expanded="false" className="nav-link active text-center">
                   <i className="mdi mdi-clock"></i> Actividad
                 </a>
               </li>
@@ -907,7 +926,7 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
                 noteTypes.sort((a, b) => a.order - b.order).map((type, i) => {
                   if (type.name == 'Correos') return
                   return <li key={`note-type-${i}`} className="nav-item">
-                    <a href={`#note-type-${type.id}`} data-name={type.name} data-bs-toggle="tab" aria-expanded="false" className="nav-link">
+                    <a href={`#note-type-${type.id}`} data-name={type.name} data-bs-toggle="tab" aria-expanded="false" className="nav-link text-center">
                       <i className={type.icon}></i> {type.name}
                     </a>
                   </li>
@@ -969,10 +988,43 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
                           <InputFormGroup eRef={taskEndsAtTimeRef} label='Hora finalización' type='time' col='col-lg-6 col-md-12' required />
                         </>
                       }
+                      {
+                        (type.id == '8e895346-3d87-4a87-897a-4192b917c211') && <>
+                          <InputFormGroup eRef={processRef} label='Proceso' col='col-12' parentClassName='dropdown' className='dropdown-toggle' data-bs-toggle='dropdown' >
+                            <ul className="dropdown-menu" style={{ width: '100%' }}>
+                              {
+                                processes.map((process, index) => {
+                                  return <li key={index} className='dropdown-item' onClick={() => processRef.current.value = process.name} style={{ cursor: 'pointer' }}>
+                                    <b className='d-block'>{process.name}</b>
+                                    {
+                                      process.description &&
+                                      <small className='d-block text-truncate'>{process.description}</small>
+                                    }
+                                  </li>
+                                })
+                              }
+                            </ul>
+                          </InputFormGroup>
+                        </>
+                      }
                       <div className="col-12 mb-2">
                         <label className='mb-1' htmlFor="">Contenido</label>
-                        <div ref={typeRefs[type.id]} id={`editor-${type.id}`} style={{ height: '120px', transition: 'transform 0.3s ease, box-shadow 0.3s ease' }}></div>
+                        <div ref={typeRefs[type.id]} id={`editor-${type.id}`} style={{ height: '162px', transition: 'transform 0.3s ease, box-shadow 0.3s ease' }}></div>
                       </div>
+                      {
+                        (type.id == '8e895346-3d87-4a87-897a-4192b917c211') && <>
+                          <SelectFormGroup eRef={statusRef} label='Estado de gestión' col='col-sm-12 col-md-12 col-lg-6' dropdownParent={`#note-type-${type.id}`} minimumResultsForSearch={-1}>
+                            {statuses.map((status, index) => {
+                              return <option key={index} value={status.id}>{status.name}</option>
+                            })}
+                          </SelectFormGroup>
+                          <SelectFormGroup eRef={manageStatusRef} label='Estado del lead' col='col-lg-6 col-md-12' dropdownParent={`#note-type-${type.id}`} minimumResultsForSearch={-1}>
+                            {manageStatuses.map((status, index) => {
+                              return <option key={index} value={status.id}>{status.name}</option>
+                            })}
+                          </SelectFormGroup>
+                        </>
+                      }
                       <div className="col-12">
                         <button className='btn btn-sm btn-success' type='button' value={type.id} onClick={onSaveNote}>{type.id == '37b1e8e2-04c4-4246-a8c9-838baa7f8187' ? 'Guardar y enviar' : 'Guardar'}</button>
                       </div>

@@ -8,6 +8,7 @@ use App\Models\Atalaya\Business;
 use App\Models\Client;
 use App\Models\ClientNote;
 use App\Models\NoteType;
+use App\Models\Process;
 use App\Models\Product;
 use App\Models\Setting;
 use App\Models\Status;
@@ -50,6 +51,8 @@ class LeadController extends BasicController
             ->where('status', true)
             ->get();
 
+        $processes = Process::where('business_id', Auth::user()->business_id)->get();
+
         return [
             'lead' => $request->lead,
             'manageStatuses' => $manageStatuses,
@@ -57,7 +60,8 @@ class LeadController extends BasicController
             'defaultLeadStatus' => $defaultLeadStatus,
             'statuses' => $statuses,
             'noteTypes' => $noteTypes,
-            'products' => $products
+            'products' => $products,
+            'processes' => $processes,
         ];
     }
 

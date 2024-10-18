@@ -143,6 +143,7 @@ const Menu = ({ session, can, presets, APP_PROTOCOL, APP_DOMAIN, leadsCount, tas
           </MenuItemContainer>
 
           <MenuItem href="/products" icon='mdi mdi-layers'>Productos</MenuItem>
+          {can('processes', 'root', 'all', 'list') && <MenuItem href="/processes" icon='mdi mdi-timeline-text'>Procesos</MenuItem>}
 
           {can('projects', 'root', 'all', 'list') && <MenuItem href="/projects" icon='mdi mdi-page-next'>Proyectos</MenuItem>}
           {
