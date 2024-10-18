@@ -17,7 +17,11 @@ class ProductController extends BasicController
 
     public function setReactViewProperties(Request $request)
     {
-        $products = Product::where('business_id', Auth::user()->business_id)->get();
+        $instance = Product::where('business_id', Auth::user()->business_id);
+        if (!Auth::user()->is_owner) {
+            $instance->where('status', true);
+        }
+        $products = $instance->get();
         $types = Type::ofProducts()
             ->where('status', true)
             ->get();

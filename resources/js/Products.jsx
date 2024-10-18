@@ -105,10 +105,11 @@ const Products = ({ products: productsFromDB = [], types: typesFromDB = [], can 
     if (!result) return
 
     setProducts(old => {
-      return old.map(x => {
-        if (x.id == id) x.status = null
-        return x
-      })
+      return old.filter(x => x.id != id)
+      // return old.map(x => {
+      //   if (x.id == id) x.status = null
+      //   return x
+      // })
     })
   }
 
