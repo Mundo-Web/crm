@@ -36,6 +36,7 @@ import DropdownItem from './components/dropdown/DropdownItem.jsx'
 import Number2Currency from './Utils/Number2Currency.jsx'
 import ProductsByClients from './actions/ProductsByClientsRest.js'
 import SimpleProductCard from './Reutilizables/Products/SimpleProductCard.jsx'
+import { renderToString } from 'react-dom/server'
 
 const leadsRest = new LeadsRest()
 const clientsRest = new ClientsRest()
@@ -554,7 +555,17 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
               cellTemplate: (container, { data }) => {
                 container.attr('style', 'height: 48px; cursor: pointer')
                 container.on('click', () => onLeadClicked(data))
-                container.html(data.status_id == defaultLeadStatus ? `<b>${data.contact_name}</b>` : data.contact_name)
+                container.html(renderToString(<>
+                  {
+                    data.status_id == defaultLeadStatus
+                      ? <b className='d-block'>{data.contact_name}</b>
+                      : <span className='d-block'>{data.contact_name}</span>
+                  }
+                  {
+                    data.products_count > 0 &&
+                    <small className='text-muted'>{data.products_count} {data.products_count > 1 ? 'productos' : 'producto'}</small>
+                  }
+                </>))
               },
               fixed: true,
               fixedPosition: 'left'

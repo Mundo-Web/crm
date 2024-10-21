@@ -69,8 +69,8 @@ class LeadController extends BasicController
     {
         $response = Response::simpleTryCatch(function (Response $response) use ($lead) {
             $data = $this->model::select('clients.*')
-                ->withCount(['notes', 'tasks', 'pendingTasks'])
-                ->with(['status', 'assigned', 'manageStatus', 'creator', 'products'])
+                ->withCount(['notes', 'tasks', 'pendingTasks', 'products'])
+                ->with(['status', 'assigned', 'manageStatus', 'creator'])
                 ->join('statuses AS status', 'status.id', 'status_id')
                 ->leftJoin('statuses AS manage_status', 'manage_status.id', 'manage_status_id')
                 ->where('status.table_id', 'e05a43e5-b3a6-46ce-8d1f-381a73498f33')
@@ -85,7 +85,7 @@ class LeadController extends BasicController
     public function setPaginationInstance(string $model)
     {
         return $model::select('clients.*')
-            ->withCount(['notes', 'tasks', 'pendingTasks'])
+            ->withCount(['notes', 'tasks', 'pendingTasks', 'products'])
             ->with(['status', 'assigned', 'manageStatus', 'creator'])
             ->join('statuses AS status', 'status.id', 'status_id')
             ->leftJoin('statuses AS manage_status', 'manage_status.id', 'manage_status_id')
