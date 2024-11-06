@@ -947,7 +947,7 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
               </li>
               {
                 noteTypes.sort((a, b) => a.order - b.order).map((type, i) => {
-                  if (!leadLoaded?.contact_email && type.name == 'Correos') return
+                  if (type.name == 'Correos') return
                   return <li key={`note-type-${i}`} className="nav-item">
                     <a href={`#note-type-${type.id}`} data-name={type.name} data-bs-toggle="tab" aria-expanded="false" className="nav-link text-center">
                       <i className={type.icon}></i> {type.name}
@@ -993,7 +993,6 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
                           <p>Parece que debes generar una contraseña de aplicación antes</p>
                         </>
                       }
-                      {console.log(session)}
                       {
                         type.id == 'e20c7891-1ef8-4388-8150-4c1028cc4525' &&
                         <>
