@@ -74,8 +74,8 @@
     "file": "assets/DxButton-CsjWvhyj.js",
     "name": "DxButton"
   },
-  "_DxPanelButton-CDZA-D-t.js": {
-    "file": "assets/DxPanelButton-CDZA-D-t.js",
+  "_DxPanelButton-DtCMmdCO.js": {
+    "file": "assets/DxPanelButton-DtCMmdCO.js",
     "name": "DxPanelButton",
     "imports": [
       "_CreateReactScript-DiMSE74L.js",
@@ -236,7 +236,7 @@
     ]
   },
   "resources/js/Archived.jsx": {
-    "file": "assets/Archived-DWfSBovv.js",
+    "file": "assets/Archived-CKAOpxns.js",
     "name": "Archived",
     "src": "resources/js/Archived.jsx",
     "isEntry": true,
@@ -249,7 +249,7 @@
       "_ProjectStatusDropdown-DzH2j87Q.js",
       "_ReactAppend-BsJVsMpn.js",
       "_Assigneds-jYvCKKiT.js",
-      "_DxPanelButton-CDZA-D-t.js",
+      "_DxPanelButton-DtCMmdCO.js",
       "_Number2Currency-e57Tgsuk.js",
       "_DxBox-DTge2tdv.js",
       "_server.browser-BzA2yPSr.js",
@@ -268,7 +268,7 @@
     ]
   },
   "resources/js/Clients.jsx": {
-    "file": "assets/Clients-BK121bFr.js",
+    "file": "assets/Clients-kabI2LHE.js",
     "name": "Clients",
     "src": "resources/js/Clients.jsx",
     "isEntry": true,
@@ -286,7 +286,7 @@
       "_ProjectStatusDropdown-DzH2j87Q.js",
       "_ReactAppend-BsJVsMpn.js",
       "_Assigneds-jYvCKKiT.js",
-      "_DxPanelButton-CDZA-D-t.js",
+      "_DxPanelButton-DtCMmdCO.js",
       "_TippyButton-CxZ2QuCv.js",
       "_Number2Currency-e57Tgsuk.js",
       "_DxBox-DTge2tdv.js",
@@ -324,7 +324,7 @@
     ]
   },
   "resources/js/Leads.jsx": {
-    "file": "assets/Leads-DpFq3Ub9.js",
+    "file": "assets/Leads-P1AofY4F.js",
     "name": "Leads",
     "src": "resources/js/Leads.jsx",
     "isEntry": true,
@@ -337,7 +337,7 @@
       "_TasksRest-C0dD4NbE.js",
       "_UsersRest-7ZSKn6Qr.js",
       "_Modal-DIHwUr7I.js",
-      "_DxPanelButton-CDZA-D-t.js",
+      "_DxPanelButton-DtCMmdCO.js",
       "_InputFormGroup-Bhb7n767.js",
       "_TextareaFormGroup-DPWu9-xC.js",
       "_SelectFormGroup-Lynb75r5.js",
@@ -368,7 +368,7 @@
     ]
   },
   "resources/js/Permissions.jsx": {
-    "file": "assets/Permissions-yGBc_Ina.js",
+    "file": "assets/Permissions-CgpshM1n.js",
     "name": "Permissions",
     "src": "resources/js/Permissions.jsx",
     "isEntry": true,
@@ -378,7 +378,7 @@
       "_PermissionsRest-DgI3IJWq.js",
       "_Adminto-DHVjzXyO.js",
       "_Modal-DIHwUr7I.js",
-      "_DxPanelButton-CDZA-D-t.js",
+      "_DxPanelButton-DtCMmdCO.js",
       "_InputFormGroup-Bhb7n767.js",
       "_TextareaFormGroup-DPWu9-xC.js",
       "_TippyButton-CxZ2QuCv.js",
@@ -386,7 +386,7 @@
     ]
   },
   "resources/js/Processes.jsx": {
-    "file": "assets/Processes-ewln3lgv.js",
+    "file": "assets/Processes-_XG4EHLt.js",
     "name": "Processes",
     "src": "resources/js/Processes.jsx",
     "isEntry": true,
@@ -394,7 +394,7 @@
       "_CreateReactScript-DiMSE74L.js",
       "_Adminto-DHVjzXyO.js",
       "_Modal-DIHwUr7I.js",
-      "_DxPanelButton-CDZA-D-t.js",
+      "_DxPanelButton-DtCMmdCO.js",
       "_InputFormGroup-Bhb7n767.js",
       "_TextareaFormGroup-DPWu9-xC.js",
       "_DxButton-CsjWvhyj.js",
@@ -428,7 +428,7 @@
     ]
   },
   "resources/js/Projects.jsx": {
-    "file": "assets/Projects-fdd6wmmi.js",
+    "file": "assets/Projects-CMgTXWmc.js",
     "name": "Projects",
     "src": "resources/js/Projects.jsx",
     "isEntry": true,
@@ -441,7 +441,7 @@
       "_SetSelectValue-DmwLsvHx.js",
       "_Assigneds-jYvCKKiT.js",
       "_Modal-DIHwUr7I.js",
-      "_DxPanelButton-CDZA-D-t.js",
+      "_DxPanelButton-DtCMmdCO.js",
       "_DxButton-CsjWvhyj.js",
       "_InputFormGroup-Bhb7n767.js",
       "_TextareaFormGroup-DPWu9-xC.js",
@@ -454,7 +454,7 @@
     ]
   },
   "resources/js/Roles.jsx": {
-    "file": "assets/Roles-DHfkh-C-.js",
+    "file": "assets/Roles-iFTCwCce.js",
     "name": "Roles",
     "src": "resources/js/Roles.jsx",
     "isEntry": true,
@@ -464,7 +464,7 @@
       "_PermissionsRest-DgI3IJWq.js",
       "_Adminto-DHVjzXyO.js",
       "_Modal-DIHwUr7I.js",
-      "_DxPanelButton-CDZA-D-t.js",
+      "_DxPanelButton-DtCMmdCO.js",
       "_InputFormGroup-Bhb7n767.js",
       "_TextareaFormGroup-DPWu9-xC.js",
       "_TippyButton-CxZ2QuCv.js",
@@ -505,7 +505,7 @@
     ]
   },
   "resources/js/Tables.jsx": {
-    "file": "assets/Tables-DsnRocjQ.js",
+    "file": "assets/Tables-DDa_yOie.js",
     "name": "Tables",
     "src": "resources/js/Tables.jsx",
     "isEntry": true,
@@ -514,7 +514,7 @@
       "_ReactAppend-BsJVsMpn.js",
       "_Adminto-DHVjzXyO.js",
       "_Modal-DIHwUr7I.js",
-      "_DxPanelButton-CDZA-D-t.js",
+      "_DxPanelButton-DtCMmdCO.js",
       "_InputFormGroup-Bhb7n767.js",
       "_TextareaFormGroup-DPWu9-xC.js",
       "_TippyButton-CxZ2QuCv.js",
@@ -522,7 +522,7 @@
     ]
   },
   "resources/js/Tasks.jsx": {
-    "file": "assets/Tasks-CZdNfBmi.js",
+    "file": "assets/Tasks-BFTN6Ry1.js",
     "name": "Tasks",
     "src": "resources/js/Tasks.jsx",
     "isEntry": true,
@@ -530,7 +530,7 @@
       "_CreateReactScript-DiMSE74L.js",
       "_TasksRest-C0dD4NbE.js",
       "_Adminto-DHVjzXyO.js",
-      "_DxPanelButton-CDZA-D-t.js",
+      "_DxPanelButton-DtCMmdCO.js",
       "_ReactAppend-BsJVsMpn.js",
       "_DxBox-DTge2tdv.js",
       "_Dropdown-BI3lZupb.js",
@@ -542,7 +542,7 @@
     ]
   },
   "resources/js/Types.jsx": {
-    "file": "assets/Types-CcRD4V6c.js",
+    "file": "assets/Types-BYyN1uKq.js",
     "name": "Types",
     "src": "resources/js/Types.jsx",
     "isEntry": true,
@@ -552,7 +552,7 @@
       "_SetSelectValue-DmwLsvHx.js",
       "_Adminto-DHVjzXyO.js",
       "_Modal-DIHwUr7I.js",
-      "_DxPanelButton-CDZA-D-t.js",
+      "_DxPanelButton-DtCMmdCO.js",
       "_InputFormGroup-Bhb7n767.js",
       "_TextareaFormGroup-DPWu9-xC.js",
       "_TippyButton-CxZ2QuCv.js",

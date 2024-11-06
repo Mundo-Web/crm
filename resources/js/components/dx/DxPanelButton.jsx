@@ -14,7 +14,7 @@ const DxPanelButton = ({ className = 'btn btn-xs btn-default rounded-pill', loca
         container.attr('class', className)
         container.html(renderToString(<>
           {data.icon && <i className={`${data.icon}`}></i>}
-          <span className="d-none d-md-block ms-1">{data.text}</span>
+          <span className="d-none d-md-inline-block ms-1">{data.text}</span>
         </>))
       }
     }
