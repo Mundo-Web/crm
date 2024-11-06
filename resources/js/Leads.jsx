@@ -527,14 +527,14 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
         <Table gridRef={gridRef} title='Leads' rest={leadsRest} reloadWith={[statuses, manageStatuses]}
           toolBar={(container) => {
             container.unshift(DxPanelButton({
-              className: 'btn btn-xs btn-soft-dark',
+              className: 'btn btn-xs btn-soft-dark text-nowrap',
               text: 'Actualizar',
               title: 'Refrescar tabla',
               icon: 'fas fa-undo-alt',
               onClick: () => $(gridRef.current).dxDataGrid('instance').refresh()
             }))
             can('leads', 'all', 'create') && container.unshift(DxPanelButton({
-              className: 'btn btn-xs btn-soft-primary',
+              className: 'btn btn-xs btn-soft-primary text-nowrap',
               text: 'Nuevo',
               title: 'Agregar registro',
               icon: 'fa fa-plus',
@@ -947,7 +947,7 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
               </li>
               {
                 noteTypes.sort((a, b) => a.order - b.order).map((type, i) => {
-                  if (type.name == 'Correos') return
+                  if (!leadLoaded?.contact_email && type.name == 'Correos') return
                   return <li key={`note-type-${i}`} className="nav-item">
                     <a href={`#note-type-${type.id}`} data-name={type.name} data-bs-toggle="tab" aria-expanded="false" className="nav-link text-center">
                       <i className={type.icon}></i> {type.name}
@@ -973,7 +973,7 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
                     <div className="row">
                       {
                         type.id == '37b1e8e2-04c4-4246-a8c9-838baa7f8187' && <>
-                          <div className="col-md-6 col-sm-12 form-group mb-2">
+                          {/* <div className="col-md-6 col-sm-12 form-group mb-2">
                             <label className='mb-1' htmlFor="">Asunto</label>
                             <input type="text" className='form-control' />
                           </div>
@@ -988,9 +988,12 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
                           <div className="col-md-6 col-sm-12 form-group mb-2">
                             <label className='mb-1' htmlFor="">CCO</label>
                             <input type="text" className='form-control' />
-                          </div>
+                          </div> */}
+                          <h1>Ooops!</h1>
+                          <p>Parece que debes generar una contraseña de aplicación antes</p>
                         </>
                       }
+                      {console.log(session)}
                       {
                         type.id == 'e20c7891-1ef8-4388-8150-4c1028cc4525' &&
                         <>
@@ -1030,7 +1033,7 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
                           </InputFormGroup>
                         </>
                       }
-                      <div className="col-12 mb-2">
+                      <div className="col-12 mb-2" hidden={type.id == '37b1e8e2-04c4-4246-a8c9-838baa7f8187'}>
                         <label className='mb-1' htmlFor="">Contenido</label>
                         <div ref={typeRefs[type.id]} id={`editor-${type.id}`} style={{ height: '162px', transition: 'transform 0.3s ease, box-shadow 0.3s ease' }}></div>
                       </div>
