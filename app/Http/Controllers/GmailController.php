@@ -25,9 +25,6 @@ class GmailController extends Controller
         $this->client->setPrompt('select_account consent');
     }
 
-    /**
-     * Verificar si hay autorización o devolver URL de autenticación.
-     */
     public function check()
     {
         $response = Response::simpleTryCatch(function () {
@@ -43,9 +40,6 @@ class GmailController extends Controller
         return response($response->toArray(), $response->status);
     }
 
-    /**
-     * Callback para procesar el token de Google después de la autenticación.
-     */
     public function callback(Request $request)
     {
         if ($request->has('code')) {
