@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Middleware\Authenticate;
+use App\Models\Atalaya\User;
 use Exception;
 use Google\Client;
 use Google\Service\Gmail;
@@ -44,9 +45,10 @@ class GmailController extends Controller
     {
         if ($request->has('code')) {
             $gs_token = $this->client->fetchAccessTokenWithAuthCode($request->code);
-            $userJpa = Auth::user();
+            $userJpa = User::find(Auth::user()->id);
             $userJpa->gs_token = $gs_token;
-            return redirect()->route('home')->with('message', 'Autorización exitosa');
+            $userJpa->save();
+            return redirect()->route('KPILeads.jsx')->with('message', 'Autorización exitosa');
         }
         return redirect()->route('home')->with('error', 'Error en la autorización');
     }
