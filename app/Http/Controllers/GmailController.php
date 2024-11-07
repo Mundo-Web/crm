@@ -43,8 +43,9 @@ class GmailController extends Controller
     public function callback(Request $request)
     {
         if ($request->has('code')) {
-            $token = $this->client->fetchAccessTokenWithAuthCode($request->code);
-            session(['google_access_token' => $token]);
+            $gs_token = $this->client->fetchAccessTokenWithAuthCode($request->code);
+            $userJpa = Auth::user();
+            $userJpa->gs_token = $gs_token;
             return redirect()->route('home')->with('message', 'Autorización exitosa');
         }
         return redirect()->route('home')->with('error', 'Error en la autorización');
