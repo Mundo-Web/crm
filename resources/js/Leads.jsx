@@ -130,8 +130,8 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
   }, [null])
 
   useEffect(() => {
-    if (!(hasGSToken && leadLoaded?.email)) return
-    gmailRest.list(leadLoaded.email).then(data => {
+    if (!(hasGSToken && leadLoaded?.contact_email)) return
+    gmailRest.list(leadLoaded.contact_email).then(data => {
       console.log(data)
     })
   }, [hasGSToken, leadLoaded])
