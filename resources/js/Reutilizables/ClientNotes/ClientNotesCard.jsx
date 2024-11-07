@@ -63,11 +63,11 @@ const ClientNotesCard = ({ id, type, name, process, description, created_at, upd
         <div className="d-flex mb-1 gap-1">
           {
             status &&
-            <span class="badge rounded-pill px-1" style={{ paddingTop: '4px', backgroundColor: status.color }}>{status.name}</span>
+            <span className="badge rounded-pill px-1" style={{ paddingTop: '4px', backgroundColor: status.color }}>{status.name}</span>
           }
           {
             manage_status &&
-            <span class="badge rounded-pill px-1" style={{ paddingTop: '4px', backgroundColor: manage_status.color }}>{manage_status.name}</span>
+            <span className="badge rounded-pill px-1" style={{ paddingTop: '4px', backgroundColor: manage_status.color }}>{manage_status.name}</span>
           }
         </div>
       }

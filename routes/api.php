@@ -7,6 +7,7 @@ use App\Http\Controllers\ClientController;
 use App\Http\Controllers\ClientHasProductsController;
 use App\Http\Controllers\ClientNoteController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\GmailController;
 use App\Http\Controllers\KPILeadsController;
 use App\Http\Controllers\LeadController;
 use App\Http\Controllers\NotificationController;
@@ -183,4 +184,7 @@ Route::middleware('auth')->group(function () {
     Route::delete('/leads/{id}', [LeadController::class, 'delete']);
 
     Route::patch('/tasks/status', [TaskController::class, 'status']);
+
+    Route::get('/gmail/check', [GmailController::class, 'check']);
+    Route::get('/gmail/callback', [GmailController::class, 'callback'])->name('gmail.callback');
 });

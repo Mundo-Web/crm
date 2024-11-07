@@ -27,7 +27,8 @@ class User extends Authenticatable
         'relative_id',
         'person_id',
         'email_verified_at',
-        'birthdate'
+        'birthdate',
+        'gs_token'
     ];
 
     /**

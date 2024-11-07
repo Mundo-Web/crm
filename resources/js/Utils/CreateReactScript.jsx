@@ -33,4 +33,16 @@ const CreateReactScript = (render) => {
   });
 }
 
+// INICIO: Pintando datos en consola y evitando futuros logs
+console.log(
+  "%c¡Hola messie!",
+  "font-size: 24px; color: red; font-weight: bold;"
+);
+console.log(
+  "%cEsta es una característica avanzada para desarrolladores. Usar esta consola puede dar acceso a información privada o a tu cuenta. No copies ni pegues ningún código aquí si no sabes exactamente lo que hace.",
+  "font-size: 16px; color: grey;"
+);
+// console.log = console.warn = console.error = console.info = function () { };
+// FIN
+
 export default CreateReactScript

@@ -37,6 +37,8 @@ import Number2Currency from './Utils/Number2Currency.jsx'
 import ProductsByClients from './actions/ProductsByClientsRest.js'
 import SimpleProductCard from './Reutilizables/Products/SimpleProductCard.jsx'
 import { renderToString } from 'react-dom/server'
+import googleSVG from './components/svg/google.svg'
+import GmailRest from './actions/GmailRest.js'
 
 const leadsRest = new LeadsRest()
 const clientsRest = new ClientsRest()
@@ -44,6 +46,7 @@ const clientNotesRest = new ClientNotesRest()
 const taskRest = new TasksRest()
 const usetsRest = new UsersRest()
 const productsByClients = new ProductsByClients()
+const gmailRest = new GmailRest()
 
 const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatus, manageStatuses: manageStatusesFromDB, noteTypes, products = [], processes = [], session, can, lead }) => {
 
@@ -79,6 +82,8 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
   const [notes, setNotes] = useState([]);
   const [defaultView, setDefaultView] = useState(Local.get('default-view') ?? 'kanban')
   const [clientProducts, setClientProducts] = useState([])
+  const [hasGSToken, setHasGSToken] = useState(false)
+  const [googleAuthURI, setGoogleAuthURI] = useState(null)
 
   const typeRefs = {};
   const idRefs = {}
@@ -116,6 +121,11 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
         dropdownMenu.hide();
       }, 200);
     });
+
+    gmailRest.check().then(data => {
+      if (data.authorized) return setHasGSToken(true)
+      setGoogleAuthURI(data.auth_url)
+    })
 
   }, [null])
 
@@ -947,7 +957,7 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
               </li>
               {
                 noteTypes.sort((a, b) => a.order - b.order).map((type, i) => {
-                  if (type.name == 'Correos') return
+                  if (!leadLoaded?.contact_email && type.name == 'Correos') return
                   return <li key={`note-type-${i}`} className="nav-item">
                     <a href={`#note-type-${type.id}`} data-name={type.name} data-bs-toggle="tab" aria-expanded="false" className="nav-link text-center">
                       <i className={type.icon}></i> {type.name}
@@ -967,12 +977,16 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
               </div>
               {
                 noteTypes.sort((a, b) => a.order - b.order).map((type, i) => {
+                  const drawGoogleAuth = type.id == '37b1e8e2-04c4-4246-a8c9-838baa7f8187' && !session.gs_token
                   return <div key={`tab-note-type-${i}`} className='tab-pane' id={`note-type-${type.id}`}>
-                    <h4 className='header-title mb-2'>Lista de {type.name}</h4>
+                    {
+                      !drawGoogleAuth &&
+                      <h4 className='header-title mb-2'>Lista de {type.name}</h4>
+                    }
                     <input ref={idRefs[type.id]} type="hidden" />
                     <div className="row">
                       {
-                        type.id == '37b1e8e2-04c4-4246-a8c9-838baa7f8187' && <>
+                        drawGoogleAuth && <div className='col-12 text-center'>
                           {/* <div className="col-md-6 col-sm-12 form-group mb-2">
                             <label className='mb-1' htmlFor="">Asunto</label>
                             <input type="text" className='form-control' />
@@ -989,9 +1003,18 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
                             <label className='mb-1' htmlFor="">CCO</label>
                             <input type="text" className='form-control' />
                           </div> */}
-                          <h1>Ooops!</h1>
-                          <p>Parece que debes generar una contraseña de aplicación antes</p>
-                        </>
+                          <h1>¡Ups!</h1>
+                          <p>
+                            Necesitamos tu permiso para acceder a tu correo electrónico. <br />
+                            <small className='text-muted'>No te preocupes, tus datos están seguros con nosotros.</small>
+                          </p>
+                          <button className="btn btn-sm btn-white d-inline-flex align-items-center gap-1" type='button' onClick={e => {
+                            window.open(googleAuthURI, '_blank')
+                          }}>
+                            <img src={googleSVG} alt="" style={{ width: '14px', height: '14px', objectFit: 'contain', objectPosition: 'center' }} />
+                            <span>Permitir acceso</span>
+                          </button>
+                        </div>
                       }
                       {
                         type.id == 'e20c7891-1ef8-4388-8150-4c1028cc4525' &&
@@ -1050,9 +1073,12 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
                           </SelectFormGroup>
                         </>
                       }
-                      <div className="col-12">
-                        <button className='btn btn-sm btn-success' type='button' value={type.id} onClick={onSaveNote}>{type.id == '37b1e8e2-04c4-4246-a8c9-838baa7f8187' ? 'Guardar y enviar' : 'Guardar'}</button>
-                      </div>
+                      {
+                        type.id != '37b1e8e2-04c4-4246-a8c9-838baa7f8187' &&
+                        <div className="col-12">
+                          <button className='btn btn-sm btn-success' type='button' value={type.id} onClick={onSaveNote}>Guardar</button>
+                        </div>
+                      }
                     </div>
                     <hr />
                     {
