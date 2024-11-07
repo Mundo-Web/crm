@@ -58,7 +58,8 @@ class GmailController extends Controller
      */
     public function send(Request $request)
     {
-        $this->client->setAccessToken(session('google_access_token'));
+        $gs_token = Auth::user()->gs_token;
+        $this->client->setAccessToken($gs_token);
 
         if ($this->client->isAccessTokenExpired()) {
             return redirect()->route('gmail.check');
@@ -88,7 +89,8 @@ class GmailController extends Controller
      */
     public function list(Request $request)
     {
-        $this->client->setAccessToken(session('google_access_token'));
+        $gs_token = Auth::user()->gs_token;
+        $this->client->setAccessToken($gs_token);
 
         if ($this->client->isAccessTokenExpired()) {
             return redirect()->route('gmail.check');

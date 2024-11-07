@@ -130,6 +130,13 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
   }, [null])
 
   useEffect(() => {
+    if (!hasGSToken || !leadLoaded) return
+    gmailRest.list(leadLoaded.email).then(data => {
+      console.log(data)
+    })
+  }, [hasGSToken, leadLoaded])
+
+  useEffect(() => {
     const ids = statuses.map(x => `#status-${Correlative(x.name)}`).join(', ');
     $(ids).sortable({
       connectWith: '.taskList',

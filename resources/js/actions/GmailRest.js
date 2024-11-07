@@ -11,6 +11,20 @@ class GmailRest {
     })
     return result?.data
   }
+
+  list = async (email) => {
+    const { status, result } = await Fetch(`/api/gmail`, {
+      method: 'POST',
+      body: JSON.stringify({ email })
+    })
+    if (!status) return Notify.add({
+      icon: '/assets/img/logo-login.svg',
+      title: 'Error',
+      body: result?.message || 'Ocurrió un error inesperado',
+      type: 'danger'
+    })
+    return result?.data
+  }
 }
 
 export default GmailRest

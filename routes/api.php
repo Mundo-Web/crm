@@ -185,6 +185,7 @@ Route::middleware('auth')->group(function () {
 
     Route::patch('/tasks/status', [TaskController::class, 'status']);
 
+    Route::post('/gmail', [GmailController::class, 'list']);
     Route::get('/gmail/check', [GmailController::class, 'check']);
     Route::get('/gmail/callback', [GmailController::class, 'callback'])->name('gmail.callback');
 });
