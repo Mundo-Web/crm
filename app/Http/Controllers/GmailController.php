@@ -30,7 +30,7 @@ class GmailController extends Controller
     {
         $response = Response::simpleTryCatch(function () {
             if (!Auth::check()) throw new Exception('Inicie sesión para continuar');
-            $userJpa = Auth::user();
+            $userJpa = User::find(Auth::user()->id);
             $gs_token = $userJpa->gs_token;
 
             $this->client->setAccessToken($gs_token);
@@ -78,7 +78,7 @@ class GmailController extends Controller
      */
     public function send(Request $request)
     {
-        $userJpa = Auth::user();
+        $userJpa = User::find(Auth::user()->id);
         $this->client->setAccessToken($userJpa->gs_token);
 
         if ($this->client->isAccessTokenExpired()) {
@@ -110,7 +110,7 @@ class GmailController extends Controller
     public function list(Request $request)
     {
         $response = Response::simpleTryCatch(function () use ($request) {
-            $userJpa = Auth::user();
+            $userJpa = User::find(Auth::user()->id);
             $gs_token = $userJpa->gs_token;
             $this->client->setAccessToken($gs_token);
 
@@ -199,7 +199,7 @@ class GmailController extends Controller
     public function getDetails(Request $request)
     {
         $response = Response::simpleTryCatch(function () use ($request) {
-            $userJpa = Auth::user();
+            $userJpa = User::find(Auth::user()->id);
             $gs_token = $userJpa->gs_token;
             $this->client->setAccessToken($gs_token);
 
@@ -290,7 +290,7 @@ class GmailController extends Controller
     public function getAttachment(Request $request)
     {
         $response = Response::simpleTryCatch(function () use ($request) {
-            $userJpa = Auth::user();
+            $userJpa = User::find(Auth::user()->id);
             $gs_token = $userJpa->gs_token;
             $this->client->setAccessToken($gs_token);
 
