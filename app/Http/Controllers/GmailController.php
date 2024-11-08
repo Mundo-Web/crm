@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Middleware\Authenticate;
 use App\Models\Atalaya\User;
 use Exception;
 use Google\Client;
 use Google\Service\Gmail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Maatwebsite\Excel\Facades\Excel;
 use SoDe\Extend\Response;
 
 class GmailController extends Controller
@@ -23,7 +23,7 @@ class GmailController extends Controller
         $this->client->addScope(Gmail::GMAIL_SEND);
         $this->client->addScope(Gmail::GMAIL_READONLY);
         $this->client->setAccessType('offline');
-        $this->client->setPrompt('select_account consent');
+        $this->client->setPrompt('consent');
     }
 
     public function check()
@@ -31,19 +31,25 @@ class GmailController extends Controller
         $response = Response::simpleTryCatch(function () {
             if (!Auth::check()) throw new Exception('Inicie sesión para continuar');
             $userJpa = Auth::user();
-            $this->client->setAccessToken($userJpa->gs_token);
+            $gs_token = $userJpa->gs_token;
+
+            $this->client->setAccessToken($gs_token);
 
             if ($this->client->isAccessTokenExpired()) {
-                $authUrl = $this->client->createAuthUrl();
-                return [
-                    'authorized' => false,
-                    'auth_url' => $authUrl
-                ];
+                if (isset($gs_token['refresh_token'])) {
+                    $newToken = $this->client->fetchAccessTokenWithRefreshToken($gs_token['refresh_token']);
+                    $userJpa->gs_token = array_merge($gs_token, $newToken);
+                    $userJpa->save();
+                } else {
+                    return [
+                        'authorized' => false,
+                        'auth_url' => $this->client->createAuthUrl()
+                    ];
+                }
             }
-            return [
-                'authorized' => true
-            ];
+            return ['authorized' => true];
         });
+
         return response($response->toArray(), $response->status);
     }
 
@@ -51,13 +57,21 @@ class GmailController extends Controller
     {
         if ($request->has('code')) {
             $gs_token = $this->client->fetchAccessTokenWithAuthCode($request->code);
+
+            if (isset($gs_token['error'])) {
+                return redirect()->route('home')->with('error', 'Error en la autorización');
+            }
+
+            // Guardamos el access token y refresh token
             $userJpa = User::find(Auth::user()->id);
-            $userJpa->gs_token = $gs_token;
+            $userJpa->gs_token = $gs_token; // Guardar como JSON para incluir el refresh_token
             $userJpa->save();
+
             return redirect()->route('KPILeads.jsx')->with('message', 'Autorización exitosa');
         }
-        return redirect()->route('home')->with('error', 'Error en la autorización');
+        return redirect()->route('home')->with('error', 'Código no recibido');
     }
+
 
     /**
      * Enviar correo.
@@ -95,75 +109,73 @@ class GmailController extends Controller
      */
     public function list(Request $request)
     {
-        $gs_token = Auth::user()->gs_token;
-        $this->client->setAccessToken($gs_token);
+        $response = Response::simpleTryCatch(function () use ($request) {
+            $userJpa = Auth::user();
+            $gs_token = $userJpa->gs_token;
+            $this->client->setAccessToken($gs_token);
 
-        // Verificamos si el token ha expirado
-        if ($this->client->isAccessTokenExpired()) {
-            return redirect()->route('gmail.check');
-        }
-
-        $gmail = new Gmail($this->client);
-
-        // Obtenemos el correo ingresado como parámetro de búsqueda
-        $query = $request->input('email');
-        $optParams = [
-            'q' => "from:$query OR to:$query"
-        ];
-
-        try {
-            // Obtenemos la lista de mensajes
-            $messages = $gmail->users_messages->listUsersMessages('me', $optParams);
-            $emails = [];
-
-            if ($messages->getMessages()) {
-                foreach ($messages->getMessages() as $message) {
-                    // Obtenemos los detalles de cada mensaje
-                    $messageData = $gmail->users_messages->get('me', $message->getId(), ['format' => 'full']);
-
-                    // Extraemos los encabezados
-                    $headers = $messageData->getPayload()->getHeaders();
-
-                    // Inicializamos las variables
-                    $sender = '';
-                    $to = '';
-                    $subject = '';
-                    $date = '';
-
-                    // Extraemos la información de los encabezados
-                    foreach ($headers as $header) {
-                        switch (strtolower($header->getName())) {
-                            case 'from':
-                                $sender = $header->getValue();
-                                break;
-                            case 'to':
-                                $to = $header->getValue();
-                                break;
-                            case 'subject':
-                                $subject = $header->getValue();
-                                break;
-                            case 'date':
-                                $date = $header->getValue();
-                                break;
-                        }
-                    }
-
-                    // Almacenamos la información en el array de emails
-                    $emails[] = [
-                        'id' => $message->getId(),
-                        'sender' => $sender,
-                        'to' => $to,
-                        'subject' => $subject,
-                        'date' => $date,
-                        'snippet' => $messageData->getSnippet()
-                    ];
-                }
+            if ($this->client->isAccessTokenExpired()) {
+                if (isset($gs_token['refresh_token'])) {
+                    $newToken = $this->client->fetchAccessTokenWithRefreshToken($gs_token['refresh_token']);
+                    $userJpa->gs_token = array_merge($gs_token, $newToken);
+                    $userJpa->save();
+                } else throw new Exception('Inicie sesión para continuar');
             }
 
-            return response()->json(['status' => 'success', 'emails' => $emails]);
-        } catch (\Exception $e) {
-            return response()->json(['status' => 'error', 'message' => $e->getMessage()]);
-        }
-    }
+            $gmail = new Gmail($this->client);
+            $query = $request->input('email');
+            $optParams = [
+                'q' => "from:$query OR to:$query"
+            ];
 
+            try {
+                $messages = $gmail->users_messages->listUsersMessages('me', $optParams);
+                $emails = [];
+
+                if ($messages->getMessages()) {
+                    foreach ($messages->getMessages() as $message) {
+                        $messageData = $gmail->users_messages->get('me', $message->getId(), ['format' => 'full']);
+                        $headers = $messageData->getPayload()->getHeaders();
+
+                        $sender = '';
+                        $to = '';
+                        $subject = '';
+                        $date = '';
+
+                        foreach ($headers as $header) {
+                            switch (strtolower($header->getName())) {
+                                case 'from':
+                                    $sender = $header->getValue();
+                                    break;
+                                case 'to':
+                                    $to = $header->getValue();
+                                    break;
+                                case 'subject':
+                                    $subject = $header->getValue();
+                                    break;
+                                case 'date':
+                                    $date = $header->getValue();
+                                    break;
+                            }
+                        }
+
+                        $emails[] = [
+                            'id' => $message->getId(),
+                            'sender' => $sender,
+                            'to' => $to,
+                            'subject' => $subject,
+                            'date' => $date,
+                            'snippet' => $messageData->getSnippet()
+                        ];
+                    }
+                }
+
+                return $emails;
+            } catch (\Exception $e) {
+                throw new Exception($e->getMessage());
+            }
+        });
+
+        return response($response->toArray(), $response->status);
+    }
 }
