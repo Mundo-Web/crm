@@ -1100,7 +1100,7 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
                         const date = new Date(mail.date)
                         return <div key={index} className="card mb-2" style={{ border: '1px solid rgb(222, 226, 230)' }}>
                           <div class="card-header p-2">
-                            <b>
+                            <b className='d-block'>
                               <i class="mdi mdi-email me-1"></i>
                               {mail.sender}
                             </b>
