@@ -1107,7 +1107,7 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
                           <div class="card-header p-2">
                             <b className='d-block'>
                               <i class="mdi mdi-email me-1"></i>
-                              <HtmlContent className={'d-inline-block'} html={sender}/>
+                              <HtmlContent className={'d-inline'} html={sender}/>
                             </b>
                             <small className='text-muted'>{moment(date).format('LLL')}</small>
                           </div>
