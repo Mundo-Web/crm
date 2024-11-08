@@ -171,9 +171,9 @@ class GmailController extends Controller
 
                         // Determinar si el correo es de entrada o salida
                         if (Text::has(strtolower($sender), strtolower($email))) {
-                            $type = 'sent';
-                        } else {
                             $type = 'inbox';
+                        } else {
+                            $type = 'sent';
                         }
 
                         $emails[] = [
