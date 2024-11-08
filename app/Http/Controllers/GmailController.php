@@ -64,8 +64,8 @@ class GmailController extends Controller
      */
     public function send(Request $request)
     {
-        $gs_token = Auth::user()->gs_token;
-        $this->client->setAccessToken($gs_token);
+        $userJpa = Auth::user();
+        $this->client->setAccessToken($userJpa->gs_token);
 
         if ($this->client->isAccessTokenExpired()) {
             return redirect()->route('gmail.check');
