@@ -114,19 +114,31 @@ class GmailController extends Controller
             $gs_token = $userJpa->gs_token;
             $this->client->setAccessToken($gs_token);
 
+            // Refrescar el token si ha expirado
             if ($this->client->isAccessTokenExpired()) {
                 if (isset($gs_token['refresh_token'])) {
                     $newToken = $this->client->fetchAccessTokenWithRefreshToken($gs_token['refresh_token']);
                     $userJpa->gs_token = array_merge($gs_token, $newToken);
                     $userJpa->save();
-                } else throw new Exception('Inicie sesión para continuar');
+                } else {
+                    throw new Exception('Inicie sesión para continuar');
+                }
             }
 
             $gmail = new Gmail($this->client);
-            $query = $request->input('email');
-            $optParams = [
-                'q' => "from:$query OR to:$query"
-            ];
+
+            // Obtener los parámetros de búsqueda del request
+            $fromArray = $request->input('from', []);
+            $toEmail = $request->input('to');
+
+            // Construir la query dinámica
+            $fromQuery = '';
+            if (is_array($fromArray) && !empty($fromArray)) {
+                $fromQuery = implode(' OR ', array_map(fn($email) => "from:$email", $fromArray));
+            }
+            $query = trim("$fromQuery to:$toEmail");
+
+            $optParams = ['q' => $query];
 
             try {
                 $messages = $gmail->users_messages->listUsersMessages('me', $optParams);
@@ -141,7 +153,9 @@ class GmailController extends Controller
                         $to = '';
                         $subject = '';
                         $date = '';
+                        $type = 'inbox'; // Por defecto, asumimos que es de entrada
 
+                        // Extraer los encabezados relevantes
                         foreach ($headers as $header) {
                             switch (strtolower($header->getName())) {
                                 case 'from':
@@ -159,13 +173,19 @@ class GmailController extends Controller
                             }
                         }
 
+                        // Determinar si el correo es de entrada o salida basado en los parámetros
+                        if (in_array($sender, $fromArray)) {
+                            $type = 'sent';
+                        }
+
                         $emails[] = [
                             'id' => $message->getId(),
                             'sender' => $sender,
                             'to' => $to,
                             'subject' => $subject,
                             'date' => $date,
-                            'snippet' => $messageData->getSnippet()
+                            'snippet' => $messageData->getSnippet(),
+                            'type' => $type // 'inbox' o 'sent'
                         ];
                     }
                 }
