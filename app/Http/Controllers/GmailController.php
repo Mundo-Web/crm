@@ -36,7 +36,7 @@ class GmailController extends Controller
             if ($this->client->isAccessTokenExpired()) {
                 $authUrl = $this->client->createAuthUrl();
                 return [
-                    'authorized' => true,
+                    'authorized' => false,
                     'auth_url' => $authUrl
                 ];
             }
