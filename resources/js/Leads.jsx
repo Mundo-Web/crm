@@ -1101,11 +1101,11 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
                         const sender = String(mail.sender).replace(/\<(.*?)\>/g, '<span class="me-1">·</span><small style="font-weight: lighter">&lt;$1&gt;</small>')
                         const date = new Date(mail.date)
                         return <div key={index} className="card mb-2" style={{ border: '1px solid rgb(222, 226, 230)' }}>
-                          <div class="card-header p-2">
+                          <div className="card-header p-2">
                             <b className='d-block'>
                               {
                                 mail.type == 'sent'
-                                  ? <i class="mdi mdi-inbox me-1"></i>
+                                  ? <i className="mdi mdi-inbox me-1"></i>
                                   : <i className='mdi mdi-send me-1'></i>
                               }
                               <HtmlContent className={'d-inline'} html={sender} />
