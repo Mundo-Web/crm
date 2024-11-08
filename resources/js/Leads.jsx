@@ -1098,13 +1098,16 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
                       type.id == '37b1e8e2-04c4-4246-a8c9-838baa7f8187' &&
                       mails?.map((mail, index) => {
                         const date = new Date(mail.date)
-                        return <div key={index} class="card card-body p-2 mb-2" style={{border: '1px solid rgb(222, 226, 230)'}}>
-                          <p class="card-text mb-0">
-                            <i class="mdi mdi-email me-1"></i>
+                        return <div key={index} className="card card-body p-2 mb-2" style={{ border: '1px solid rgb(222, 226, 230)' }}>
+                          <p className="card-text mb-0">
+                            <i className="mdi mdi-email me-1"></i>
                             {mail.sender}
                           </p>
-                          <p class="card-text">
-                            <small class="text-muted">{moment(date).format('LLL')}</small>
+                          <p className="card-text">
+                            <small className="text-muted">{moment(date).format('LLL')}</small>
+                          </p>
+                          <p className='card-text'>
+                            <b>{mail.subject}</b> - {mail.snippet || '.'}
                           </p>
                         </div>
                       })
