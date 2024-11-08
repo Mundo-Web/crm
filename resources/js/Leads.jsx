@@ -1098,16 +1098,13 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
                     {
                       type.id == '37b1e8e2-04c4-4246-a8c9-838baa7f8187' &&
                       mails?.map((mail, index) => {
-                        const sender = String(mail.sender).replace(
-                          /\<(.*?)\>/g,
-                          '<span class="me-1">·</span><small style="font-weight: lighter">&lt;$1&gt;</small>'
-                        )
+                        const sender = String(mail.sender).replace(/\<(.*?)\>/g, '<span class="me-1">·</span><small style="font-weight: lighter">&lt;$1&gt;</small>')
                         const date = new Date(mail.date)
                         return <div key={index} className="card mb-2" style={{ border: '1px solid rgb(222, 226, 230)' }}>
-                          <div class="card-header p-2">
+                          <div class="card-header p-2" style={{ backgroundColor: mail.type == 'sent' ? '#f2f6fc': '#ffffff'}}>
                             <b className='d-block'>
                               <i class="mdi mdi-email me-1"></i>
-                              <HtmlContent className={'d-inline'} html={sender}/>
+                              <HtmlContent className={'d-inline'} html={sender} />
                             </b>
                             <small className='text-muted'>{moment(date).format('LLL')}</small>
                           </div>
