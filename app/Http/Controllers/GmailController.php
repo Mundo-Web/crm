@@ -98,27 +98,66 @@ class GmailController extends Controller
         $gs_token = Auth::user()->gs_token;
         $this->client->setAccessToken($gs_token);
 
+        // Verificamos si el token ha expirado
         if ($this->client->isAccessTokenExpired()) {
             return redirect()->route('gmail.check');
         }
 
         $gmail = new Gmail($this->client);
 
+        // Obtenemos el correo ingresado como parámetro de búsqueda
         $query = $request->input('email');
         $optParams = [
             'q' => "from:$query OR to:$query"
         ];
 
         try {
+            // Obtenemos la lista de mensajes
             $messages = $gmail->users_messages->listUsersMessages('me', $optParams);
             $emails = [];
 
-            foreach ($messages->getMessages() as $message) {
-                $messageData = $gmail->users_messages->get('me', $message->getId());
-                $emails[] = [
-                    'id' => $message->getId(),
-                    'snippet' => $messageData->getSnippet()
-                ];
+            if ($messages->getMessages()) {
+                foreach ($messages->getMessages() as $message) {
+                    // Obtenemos los detalles de cada mensaje
+                    $messageData = $gmail->users_messages->get('me', $message->getId(), ['format' => 'full']);
+
+                    // Extraemos los encabezados
+                    $headers = $messageData->getPayload()->getHeaders();
+
+                    // Inicializamos las variables
+                    $sender = '';
+                    $to = '';
+                    $subject = '';
+                    $date = '';
+
+                    // Extraemos la información de los encabezados
+                    foreach ($headers as $header) {
+                        switch (strtolower($header->getName())) {
+                            case 'from':
+                                $sender = $header->getValue();
+                                break;
+                            case 'to':
+                                $to = $header->getValue();
+                                break;
+                            case 'subject':
+                                $subject = $header->getValue();
+                                break;
+                            case 'date':
+                                $date = $header->getValue();
+                                break;
+                        }
+                    }
+
+                    // Almacenamos la información en el array de emails
+                    $emails[] = [
+                        'id' => $message->getId(),
+                        'sender' => $sender,
+                        'to' => $to,
+                        'subject' => $subject,
+                        'date' => $date,
+                        'snippet' => $messageData->getSnippet()
+                    ];
+                }
             }
 
             return response()->json(['status' => 'success', 'emails' => $emails]);
@@ -126,4 +165,5 @@ class GmailController extends Controller
             return response()->json(['status' => 'error', 'message' => $e->getMessage()]);
         }
     }
+
 }
