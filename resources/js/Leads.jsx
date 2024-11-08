@@ -133,7 +133,7 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
   useEffect(() => {
     if (!(hasGSToken && leadLoaded?.contact_email)) return
     gmailRest.list(leadLoaded.contact_email).then(data => {
-      console.log(data)
+      setMails(data ?? [])
     })
   }, [hasGSToken, leadLoaded])
 
@@ -1092,6 +1092,15 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
                     {
                       notes.filter(x => x.note_type_id == type.id).sort((a, b) => b.created_at > a.created_at ? 1 : -1).map((note, i) => {
                         return <ClientNotesCard key={`note-${i}`} {...note} session={session} onDeleteNote={onDeleteNote} onUpdateNote={onUpdateNoteClicked} />
+                      })
+                    }
+                    {
+                      type.id == '37b1e8e2-04c4-4246-a8c9-838baa7f8187' &&
+                      mails?.map((mail, index) => {
+                        console.log(mail)
+                        return <div key={index} className='card card-body p-2'>
+                          {mail.subject}
+                        </div>
                       })
                     }
                   </div>
