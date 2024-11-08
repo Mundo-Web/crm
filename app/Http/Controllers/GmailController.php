@@ -31,11 +31,17 @@ class GmailController extends Controller
         $response = Response::simpleTryCatch(function () {
             if (!Auth::check()) throw new Exception('Inicie sesión para continuar');
             $userJpa = Auth::user();
-            if ($userJpa->gs_token) return ['authorized' => true];
-            $authUrl = $this->client->createAuthUrl();
+            $this->client->setAccessToken($userJpa->gs_token);
+
+            if ($this->client->isAccessTokenExpired()) {
+                $authUrl = $this->client->createAuthUrl();
+                return [
+                    'authorized' => true,
+                    'auth_url' => $authUrl
+                ];
+            }
             return [
-                'authorized' => false,
-                'auth_url' => $authUrl
+                'authorized' => true
             ];
         });
         return response($response->toArray(), $response->status);
