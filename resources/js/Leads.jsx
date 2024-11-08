@@ -84,6 +84,7 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
   const [clientProducts, setClientProducts] = useState([])
   const [hasGSToken, setHasGSToken] = useState(false)
   const [googleAuthURI, setGoogleAuthURI] = useState(null)
+  const [mails, setMails] = useState([]);
 
   const typeRefs = {};
   const idRefs = {}
@@ -984,7 +985,7 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
               </div>
               {
                 noteTypes.sort((a, b) => a.order - b.order).map((type, i) => {
-                  const drawGoogleAuth = type.id == '37b1e8e2-04c4-4246-a8c9-838baa7f8187' && !session.gs_token
+                  const drawGoogleAuth = type.id == '37b1e8e2-04c4-4246-a8c9-838baa7f8187' && !hasGSToken
                   return <div key={`tab-note-type-${i}`} className='tab-pane' id={`note-type-${type.id}`}>
                     {
                       !drawGoogleAuth &&
