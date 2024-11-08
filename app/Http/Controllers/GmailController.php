@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Maatwebsite\Excel\Facades\Excel;
 use SoDe\Extend\Response;
+use SoDe\Extend\Text;
 
 class GmailController extends Controller
 {
@@ -169,7 +170,7 @@ class GmailController extends Controller
                         }
 
                         // Determinar si el correo es de entrada o salida
-                        if (strtolower($sender) === strtolower($email)) {
+                        if (Text::has(strtolower($sender), strtolower($email))) {
                             $type = 'sent';
                         } else {
                             $type = 'inbox';
