@@ -1100,14 +1100,14 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
                       mails?.map((mail, index) => {
                         const sender = String(mail.sender).replace(
                           /\<(.*?)\>/g,
-                          '<span>·</span><small style="font-weight: lighter">&lt;$1&gt;</small>'
+                          '<span class="me-1">·</span><small style="font-weight: lighter">&lt;$1&gt;</small>'
                         )
                         const date = new Date(mail.date)
                         return <div key={index} className="card mb-2" style={{ border: '1px solid rgb(222, 226, 230)' }}>
                           <div class="card-header p-2">
                             <b className='d-block'>
                               <i class="mdi mdi-email me-1"></i>
-                              <HtmlContent className={'d-inline-flex flex-wrap align-items-center gap-1'} html={sender}/>
+                              <HtmlContent className={'d-inline'} html={sender}/>
                             </b>
                             <small className='text-muted'>{moment(date).format('LLL')}</small>
                           </div>
