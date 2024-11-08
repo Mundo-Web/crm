@@ -119,8 +119,8 @@
       "_CreateReactScript-CWilN3F0.js"
     ]
   },
-  "_ProductsByClientsRest-DCEhKawj.js": {
-    "file": "assets/ProductsByClientsRest-DCEhKawj.js",
+  "_ProductsByClientsRest-CHpXtgPg.js": {
+    "file": "assets/ProductsByClientsRest-CHpXtgPg.js",
     "name": "ProductsByClientsRest",
     "imports": [
       "_CreateReactScript-CWilN3F0.js",
@@ -236,7 +236,7 @@
     ]
   },
   "resources/js/Archived.jsx": {
-    "file": "assets/Archived-DhhoHYP2.js",
+    "file": "assets/Archived-DFymgVMk.js",
     "name": "Archived",
     "src": "resources/js/Archived.jsx",
     "isEntry": true,
@@ -244,7 +244,7 @@
       "_Adminto-BCOK67Bo.js",
       "_CreateReactScript-CWilN3F0.js",
       "_Modal-NWoleUCW.js",
-      "_ProductsByClientsRest-DCEhKawj.js",
+      "_ProductsByClientsRest-CHpXtgPg.js",
       "_TippyButton-dZwMJNBS.js",
       "_ProjectStatusDropdown-DxZlCEB7.js",
       "_ReactAppend-BcOMMNJr.js",
@@ -268,7 +268,7 @@
     ]
   },
   "resources/js/Clients.jsx": {
-    "file": "assets/Clients-CBRb2vAf.js",
+    "file": "assets/Clients-DjbBOFJe.js",
     "name": "Clients",
     "src": "resources/js/Clients.jsx",
     "isEntry": true,
@@ -276,7 +276,7 @@
       "_Adminto-BCOK67Bo.js",
       "_CreateReactScript-CWilN3F0.js",
       "_Modal-NWoleUCW.js",
-      "_ProductsByClientsRest-DCEhKawj.js",
+      "_ProductsByClientsRest-CHpXtgPg.js",
       "_InputFormGroup-CU2p82su.js",
       "_TextareaFormGroup-Cyo7PuQM.js",
       "_SetSelectValue-Wr3bfIRR.js",
@@ -324,14 +324,14 @@
     ]
   },
   "resources/js/Leads.jsx": {
-    "file": "assets/Leads-CVkBHbh-.js",
+    "file": "assets/Leads-uPE1MgBA.js",
     "name": "Leads",
     "src": "resources/js/Leads.jsx",
     "isEntry": true,
     "imports": [
       "_Adminto-BCOK67Bo.js",
       "_CreateReactScript-CWilN3F0.js",
-      "_ProductsByClientsRest-DCEhKawj.js",
+      "_ProductsByClientsRest-CHpXtgPg.js",
       "_ReactAppend-BcOMMNJr.js",
       "_LeadsRest-BS-ay9T3.js",
       "_TasksRest-DofCFEGp.js",
