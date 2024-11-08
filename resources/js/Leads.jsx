@@ -1105,8 +1105,8 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
                             <b className='d-block'>
                               {
                                 mail.type == 'sent'
-                                  ? <i className="mdi mdi-inbox me-1"></i>
-                                  : <i className='mdi mdi-send me-1'></i>
+                                  ? <i className='mdi mdi-send me-1'></i>
+                                  : <i className="mdi mdi-inbox me-1"></i>
                               }
                               <HtmlContent className={'d-inline'} html={sender} />
                             </b>
