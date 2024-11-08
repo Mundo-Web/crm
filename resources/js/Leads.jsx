@@ -1099,16 +1099,18 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
                       mails?.map((mail, index) => {
                         const date = new Date(mail.date)
                         return <div key={index} className="card card-body p-2 mb-2" style={{ border: '1px solid rgb(222, 226, 230)' }}>
-                          <p className="card-text mb-0">
-                            <i className="mdi mdi-email me-1"></i>
-                            {mail.sender}
-                          </p>
-                          <p className="card-text">
-                            <small className="text-muted">{moment(date).format('LLL')}</small>
-                          </p>
-                          <p className='card-text'>
-                            <b>{mail.subject}</b> - {mail.snippet || '.'}
-                          </p>
+                          <div class="card-header p-2 d-flex justify-content-between align-items-center">
+                            <h5 className="header-title">
+                              <i class="mdi mdi-email me-1"></i>
+                              {mail.sender}
+                            </h5>
+                            <small className='text-muted'>{moment(date).format('LLL')}</small>
+                          </div>
+                          <div className="card-body p-2">
+                            <small>
+                              <b>{mail.subject}</b> - {mail.snippet || '.'}
+                            </small>
+                          </div>
                         </div>
                       })
                     }
