@@ -1100,7 +1100,7 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
                       mails?.map((mail, index) => {
                         const sender = String(mail.sender).replace(
                           /\<(.*?)\>/g,
-                          '<span style="font-weight: lighter">&lt;$1&gt;</span>'
+                          '<br><small style="font-weight: lighter">&lt;$1&gt;</small>'
                         )
                         const date = new Date(mail.date)
                         return <div key={index} className="card mb-2" style={{ border: '1px solid rgb(222, 226, 230)' }}>
