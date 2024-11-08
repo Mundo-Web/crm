@@ -195,4 +195,132 @@ class GmailController extends Controller
 
         return response($response->toArray(), $response->status);
     }
+
+    public function getDetails(Request $request)
+    {
+        $response = Response::simpleTryCatch(function () use ($request) {
+            $userJpa = Auth::user();
+            $gs_token = $userJpa->gs_token;
+            $this->client->setAccessToken($gs_token);
+
+            if ($this->client->isAccessTokenExpired()) {
+                if (isset($gs_token['refresh_token'])) {
+                    $newToken = $this->client->fetchAccessTokenWithRefreshToken($gs_token['refresh_token']);
+                    $userJpa->gs_token = array_merge($gs_token, $newToken);
+                    $userJpa->save();
+                } else {
+                    throw new Exception('Inicie sesión para continuar');
+                }
+            }
+
+            $gmail = new Gmail($this->client);
+            $messageId = $request->input('id');
+
+            try {
+                $messageData = $gmail->users_messages->get('me', $messageId, ['format' => 'full']);
+                $headers = $messageData->getPayload()->getHeaders();
+                $parts = $messageData->getPayload()->getParts();
+
+                // Inicializar variables
+                $sender = '';
+                $to = '';
+                $cc = '';
+                $bcc = '';
+                $subject = '';
+                $date = '';
+                $bodyText = '';
+                $bodyHtml = '';
+                $attachments = [];
+
+                // Extraer encabezados
+                foreach ($headers as $header) {
+                    switch (strtolower($header->getName())) {
+                        case 'from':
+                            $sender = $header->getValue();
+                            break;
+                        case 'to':
+                            $to = $header->getValue();
+                            break;
+                        case 'cc':
+                            $cc = $header->getValue();
+                            break;
+                        case 'bcc':
+                            $bcc = $header->getValue();
+                            break;
+                        case 'subject':
+                            $subject = $header->getValue();
+                            break;
+                        case 'date':
+                            $date = $header->getValue();
+                            break;
+                    }
+                }
+
+                // Obtener detalles de los adjuntos (solo nombre y tamaño)
+                foreach ($parts as $part) {
+                    if (isset($part['filename']) && $part['filename'] !== '') {
+                        $attachments[] = [
+                            'filename' => $part['filename'],
+                            'size' => $part['body']['size'],
+                            'attachmentId' => $part['body']['attachmentId']
+                        ];
+                    }
+                }
+
+                return [
+                    'id' => $messageId,
+                    'sender' => $sender,
+                    'to' => $to,
+                    'cc' => $cc,
+                    'bcc' => $bcc,
+                    'subject' => $subject,
+                    'date' => $date,
+                    'bodyText' => $bodyText,
+                    'bodyHtml' => $bodyHtml,
+                    'attachments' => $attachments
+                ];
+            } catch (\Exception $e) {
+                throw new Exception($e->getMessage());
+            }
+        });
+
+        return response($response->toArray(), $response->status);
+    }
+
+    public function getAttachment(Request $request)
+    {
+        $response = Response::simpleTryCatch(function () use ($request) {
+            $userJpa = Auth::user();
+            $gs_token = $userJpa->gs_token;
+            $this->client->setAccessToken($gs_token);
+
+            if ($this->client->isAccessTokenExpired()) {
+                if (isset($gs_token['refresh_token'])) {
+                    $newToken = $this->client->fetchAccessTokenWithRefreshToken($gs_token['refresh_token']);
+                    $userJpa->gs_token = array_merge($gs_token, $newToken);
+                    $userJpa->save();
+                } else {
+                    throw new Exception('Inicie sesión para continuar');
+                }
+            }
+
+            $gmail = new Gmail($this->client);
+            $messageId = $request->input('messageId');
+            $attachmentId = $request->input('attachmentId');
+
+            try {
+                // Obtener el adjunto usando el ID del mensaje y el ID del adjunto
+                $attachment = $gmail->users_messages_attachments->get('me', $messageId, $attachmentId);
+
+                return [
+                    'attachmentId' => $attachmentId,
+                    'data' => $attachment->getData(), // Contenido del adjunto en base64
+                ];
+            } catch (\Exception $e) {
+                throw new Exception($e->getMessage());
+            }
+        });
+
+        return response($response->toArray(), $response->status);
+    }
 }
