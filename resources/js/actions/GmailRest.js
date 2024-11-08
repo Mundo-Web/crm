@@ -12,10 +12,10 @@ class GmailRest {
     return result?.data
   }
 
-  list = async (from, to) => {
+  list = async (email) => {
     const { status, result } = await Fetch(`/api/gmail`, {
       method: 'POST',
-      body: JSON.stringify({ from, to })
+      body: JSON.stringify({ email })
     })
     if (!status) return Notify.add({
       icon: '/assets/img/logo-login.svg',

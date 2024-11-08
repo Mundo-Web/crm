@@ -127,18 +127,13 @@ class GmailController extends Controller
 
             $gmail = new Gmail($this->client);
 
-            // Obtener los parámetros de búsqueda del request
-            $fromArray = $request->input('from', []);
-            $toEmail = $request->input('to');
+            // Obtener el parámetro de email desde el request
+            $email = $request->input('email');
 
-            // Construir la query dinámica
-            $fromQuery = '';
-            if (is_array($fromArray) && !empty($fromArray)) {
-                $fromQuery = implode(' OR ', array_map(fn($email) => "from:$email", $fromArray));
-            }
-            $query = trim("$fromQuery to:$toEmail");
-
-            $optParams = ['q' => $query];
+            // Construir la query para obtener correos tanto enviados como recibidos por ese email
+            $optParams = [
+                'q' => "from:$email OR to:$email"
+            ];
 
             try {
                 $messages = $gmail->users_messages->listUsersMessages('me', $optParams);
@@ -153,7 +148,7 @@ class GmailController extends Controller
                         $to = '';
                         $subject = '';
                         $date = '';
-                        $type = 'inbox'; // Por defecto, asumimos que es de entrada
+                        $type = 'inbox'; // Por defecto, asumimos que es un correo entrante
 
                         // Extraer los encabezados relevantes
                         foreach ($headers as $header) {
@@ -173,9 +168,11 @@ class GmailController extends Controller
                             }
                         }
 
-                        // Determinar si el correo es de entrada o salida basado en los parámetros
-                        if (in_array($sender, $fromArray)) {
+                        // Determinar si el correo es de entrada o salida
+                        if (strtolower($sender) === strtolower($email)) {
                             $type = 'sent';
+                        } else {
+                            $type = 'inbox';
                         }
 
                         $emails[] = [
