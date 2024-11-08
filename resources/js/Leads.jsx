@@ -132,7 +132,7 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
 
   useEffect(() => {
     if (!(hasGSToken && leadLoaded?.contact_email)) return
-    const senders = [session.email, leadLoaded?.assigned?.email].filter(Boolean)
+    const senders = [...new Set([session.email, leadLoaded?.assigned?.email].filter(Boolean))]
     const receptor = leadLoaded.contact_email
     gmailRest.list(senders, receptor).then(data => {
       setMails(data ?? [])
