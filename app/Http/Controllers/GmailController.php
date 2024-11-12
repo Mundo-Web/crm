@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Atalaya\User;
+use App\Models\Client as ModelsClient;
+use App\Models\ClientNote;
 use Exception;
 use Google\Client;
 use Google\Service\Gmail;
@@ -15,376 +17,393 @@ use SoDe\Extend\Text;
 
 class GmailController extends Controller
 {
-    private $client;
+  private $client;
 
-    public function __construct()
-    {
-        $this->client = new Client();
-        $this->client->setAuthConfig(storage_path('app/google/credentials.json'));
-        $this->client->setRedirectUri(route('gmail.callback'));
-        $this->client->addScope(Gmail::GMAIL_SEND);
-        $this->client->addScope(Gmail::GMAIL_READONLY);
-        $this->client->setAccessType('offline');
-        $this->client->setPrompt('consent');
-    }
+  public function __construct()
+  {
+    $this->client = new Client();
+    $this->client->setAuthConfig(storage_path('app/google/credentials.json'));
+    $this->client->setRedirectUri(route('gmail.callback'));
+    $this->client->addScope(Gmail::GMAIL_SEND);
+    $this->client->addScope(Gmail::GMAIL_READONLY);
+    $this->client->setAccessType('offline');
+    $this->client->setPrompt('consent');
+  }
 
-    public function check()
-    {
-        $response = Response::simpleTryCatch(function () {
-            // Verificar si el usuario está autenticado
-            if (!Auth::check()) {
-                throw new Exception('Inicie sesión para continuar');
-            }
+  public function check()
+  {
+    $response = Response::simpleTryCatch(function () {
+      // Verificar si el usuario está autenticado
+      if (!Auth::check()) {
+        throw new Exception('Inicie sesión para continuar');
+      }
 
-            // Buscar al usuario autenticado en la base de datos
-            $userJpa = User::find(Auth::id());
-            if (!$userJpa) {
-                throw new Exception('Usuario no encontrado');
-            }
+      // Buscar al usuario autenticado en la base de datos
+      $userJpa = User::find(Auth::id());
+      if (!$userJpa) {
+        throw new Exception('Usuario no encontrado');
+      }
 
-            $gs_token = $userJpa->gs_token;
+      $gs_token = $userJpa->gs_token;
 
-            // Si no se encuentra el token de Google, devolver la URL de autenticación
-            if (!$gs_token) {
-                return [
-                    'authorized' => false,
-                    'auth_url' => $this->client->createAuthUrl()
-                ];
-            }
+      // Si no se encuentra el token de Google, devolver la URL de autenticación
+      if (!$gs_token) {
+        return [
+          'authorized' => false,
+          'auth_url' => $this->client->createAuthUrl()
+        ];
+      }
 
-            // Establecer el token de acceso en el cliente
-            $this->client->setAccessToken($gs_token);
+      // Establecer el token de acceso en el cliente
+      $this->client->setAccessToken($gs_token);
 
-            // Verificar si el token ha expirado
-            if ($this->client->isAccessTokenExpired()) {
-                // Si no hay refresh token, devolver la URL de autenticación
-                if (empty($gs_token['refresh_token'])) {
-                    return [
-                        'authorized' => false,
-                        'auth_url' => $this->client->createAuthUrl()
-                    ];
-                }
-
-                // Intentar refrescar el token con el refresh token
-                $newToken = $this->client->fetchAccessTokenWithRefreshToken($gs_token['refresh_token']);
-
-                // Si falla al obtener un nuevo token, devolver la URL de autenticación
-                if (empty($newToken['access_token'])) {
-                    return [
-                        'authorized' => false,
-                        'auth_url' => $this->client->createAuthUrl()
-                    ];
-                }
-
-                // Actualizar el token en la base de datos
-                $userJpa->gs_token = array_merge($gs_token, $newToken);
-                $userJpa->save();
-                $this->client->setAccessToken($newToken);
-            }
-
-            // Validar si el token actual es válido
-            if (!$this->client->getAccessToken()) {
-                return [
-                    'authorized' => false,
-                    'auth_url' => $this->client->createAuthUrl()
-                ];
-            }
-
-            // Si todo está bien, el usuario está autorizado
-            return ['authorized' => true];
-        });
-
-        return response($response->toArray(), $response->status);
-    }
-
-    public function callback(Request $request)
-    {
-        if ($request->has('code')) {
-            $gs_token = $this->client->fetchAccessTokenWithAuthCode($request->code);
-
-            if (isset($gs_token['error'])) {
-                return redirect()->route('home')->with('error', 'Error en la autorización');
-            }
-
-            // Guardamos el access token y refresh token
-            $userJpa = User::find(Auth::user()->id);
-            $userJpa->gs_token = $gs_token; // Guardar como JSON para incluir el refresh_token
-            $userJpa->save();
-
-            return view('utils.refreshstorage')
-                ->with('title', 'Espere un momento por favor')
-                ->with('key', 'tokenUUID')
-                ->with('value', Crypto::randomUUID());
+      // Verificar si el token ha expirado
+      if ($this->client->isAccessTokenExpired()) {
+        // Si no hay refresh token, devolver la URL de autenticación
+        if (empty($gs_token['refresh_token'])) {
+          return [
+            'authorized' => false,
+            'auth_url' => $this->client->createAuthUrl()
+          ];
         }
-        return redirect()->route('home')->with('error', 'Código no recibido');
+
+        // Intentar refrescar el token con el refresh token
+        $newToken = $this->client->fetchAccessTokenWithRefreshToken($gs_token['refresh_token']);
+
+        // Si falla al obtener un nuevo token, devolver la URL de autenticación
+        if (empty($newToken['access_token'])) {
+          return [
+            'authorized' => false,
+            'auth_url' => $this->client->createAuthUrl()
+          ];
+        }
+
+        // Actualizar el token en la base de datos
+        $userJpa->gs_token = array_merge($gs_token, $newToken);
+        $userJpa->save();
+        $this->client->setAccessToken($newToken);
+      }
+
+      // Validar si el token actual es válido
+      if (!$this->client->getAccessToken()) {
+        return [
+          'authorized' => false,
+          'auth_url' => $this->client->createAuthUrl()
+        ];
+      }
+
+      // Si todo está bien, el usuario está autorizado
+      return ['authorized' => true];
+    });
+
+    return response($response->toArray(), $response->status);
+  }
+
+  public function callback(Request $request)
+  {
+    if ($request->has('code')) {
+      $gs_token = $this->client->fetchAccessTokenWithAuthCode($request->code);
+
+      if (isset($gs_token['error'])) {
+        return redirect()->route('home')->with('error', 'Error en la autorización');
+      }
+
+      // Guardamos el access token y refresh token
+      $userJpa = User::find(Auth::user()->id);
+      $userJpa->gs_token = $gs_token; // Guardar como JSON para incluir el refresh_token
+      $userJpa->save();
+
+      return view('utils.refreshstorage')
+        ->with('title', 'Espere un momento por favor')
+        ->with('key', 'tokenUUID')
+        ->with('value', Crypto::randomUUID());
     }
+    return redirect()->route('home')->with('error', 'Código no recibido');
+  }
 
 
-    /**
-     * Enviar correo.
-     */
-    public function send(Request $request)
-    {
-        $response = Response::simpleTryCatch(function ($response) use ($request) {
-            // Verificar si el usuario está autenticado
-            $userJpa = User::find(Auth::user()->id);
-            if (!$userJpa || !$userJpa->gs_token) {
-                throw new Exception('Inicie sesión para continuar');
+  /**
+   * Enviar correo.
+   */
+  public function send(Request $request)
+  {
+    $response = Response::simpleTryCatch(function ($response) use ($request) {
+      // Verificar si el usuario está autenticado
+      $userJpa = User::find(Auth::user()->id);
+      if (!$userJpa || !$userJpa->gs_token) {
+        throw new Exception('Inicie sesión para continuar');
+      }
+
+      $this->client->setAccessToken($userJpa->gs_token);
+
+      // Refrescar el token si ha expirado
+      if ($this->client->isAccessTokenExpired()) {
+        $gs_token = $userJpa->gs_token;
+        if (isset($gs_token['refresh_token'])) {
+          $newToken = $this->client->fetchAccessTokenWithRefreshToken($gs_token['refresh_token']);
+          $userJpa->gs_token = array_merge($gs_token, $newToken);
+          $userJpa->save();
+        } else {
+          throw new Exception('El token ha expirado y no se pudo refrescar. Inicie sesión nuevamente.');
+        }
+      }
+
+      $clientJpa = ModelsClient::find($request->input('to'));
+
+      // Crear una instancia del servicio Gmail
+      $gmail = new \Google\Service\Gmail($this->client);
+      $message = new \Google\Service\Gmail\Message();
+
+      // Construir el mensaje MIME para enviar un correo HTML
+      $rawMessage = "From: \"{$userJpa->name} {$userJpa->lastname}\" <{$userJpa->email}>\r\n";
+      $rawMessage .= "To: {$clientJpa->contact_email}\r\n";
+      $rawMessage .= "Subject: {$request->input('subject')}\r\n";
+      $rawMessage .= "MIME-Version: 1.0\r\n";
+      $rawMessage .= "Content-Type: text/html; charset=UTF-8\r\n\r\n";
+      $rawMessage .= $request->input('body');
+
+      // Codificar el mensaje en base64 para la API de Gmail
+      $encodedMessage = rtrim(strtr(base64_encode($rawMessage), '+/', '-_'), '=');
+      $message->setRaw($encodedMessage);
+      $gmail->users_messages->send('me', $message);
+
+      $noteJpa = ClientNote::create([
+        'note_type_id' => '37b1e8e2-04c4-4246-a8c9-838baa7f8187',
+        'client_id' => $clientJpa->id,
+        'user_id' => $userJpa->id,
+        'name' => $request->input('subject'),
+        'description' => $request->input('body'),
+        'status_id' => $clientJpa->status_id,
+        'manage_status_id' => $clientJpa->manage_status_id,
+      ]);
+
+      $response->message = 'Correo enviado';
+
+      return ClientNote::where('id', $noteJpa->id)
+        ->with(['type', 'user', 'tasks', 'tasks.assigned', 'status', 'manageStatus'])
+        ->first();
+    });
+
+    return response($response->toArray(), $response->status);
+  }
+
+  /**
+   * Listar correos con un determinado correo electrónico.
+   */
+  public function list(Request $request)
+  {
+    $response = Response::simpleTryCatch(function () use ($request) {
+      $userJpa = User::find(Auth::user()->id);
+      $gs_token = $userJpa->gs_token;
+      $this->client->setAccessToken($gs_token);
+
+      // Refrescar el token si ha expirado
+      if ($this->client->isAccessTokenExpired()) {
+        if (isset($gs_token['refresh_token'])) {
+          $newToken = $this->client->fetchAccessTokenWithRefreshToken($gs_token['refresh_token']);
+          $userJpa->gs_token = array_merge($gs_token, $newToken);
+          $userJpa->save();
+        } else {
+          throw new Exception('Inicie sesión para continuar');
+        }
+      }
+
+      $gmail = new Gmail($this->client);
+
+      // Obtener el parámetro de email desde el request
+      $email = $request->input('email');
+
+      // Construir la query para obtener correos tanto enviados como recibidos por ese email
+      $optParams = [
+        'q' => "from:$email OR to:$email"
+      ];
+
+      try {
+        $messages = $gmail->users_messages->listUsersMessages('me', $optParams);
+        $emails = [];
+
+        if ($messages->getMessages()) {
+          foreach ($messages->getMessages() as $message) {
+            $messageData = $gmail->users_messages->get('me', $message->getId(), ['format' => 'full']);
+            $headers = $messageData->getPayload()->getHeaders();
+
+            $sender = '';
+            $to = '';
+            $subject = '';
+            $date = '';
+            $type = 'inbox'; // Por defecto, asumimos que es un correo entrante
+
+            // Extraer los encabezados relevantes
+            foreach ($headers as $header) {
+              switch (strtolower($header->getName())) {
+                case 'from':
+                  $sender = $header->getValue();
+                  break;
+                case 'to':
+                  $to = $header->getValue();
+                  break;
+                case 'subject':
+                  $subject = $header->getValue();
+                  break;
+                case 'date':
+                  $date = $header->getValue();
+                  break;
+              }
             }
 
-            $this->client->setAccessToken($userJpa->gs_token);
-
-            // Refrescar el token si ha expirado
-            if ($this->client->isAccessTokenExpired()) {
-                $gs_token = $userJpa->gs_token;
-                if (isset($gs_token['refresh_token'])) {
-                    $newToken = $this->client->fetchAccessTokenWithRefreshToken($gs_token['refresh_token']);
-                    $userJpa->gs_token = array_merge($gs_token, $newToken);
-                    $userJpa->save();
-                } else {
-                    throw new Exception('El token ha expirado y no se pudo refrescar. Inicie sesión nuevamente.');
-                }
+            // Determinar si el correo es de entrada o salida
+            if (Text::has(strtolower($sender), strtolower($email))) {
+              $type = 'inbox';
+            } else {
+              $type = 'sent';
             }
 
-            // Crear una instancia del servicio Gmail
-            $gmail = new \Google\Service\Gmail($this->client);
-            $message = new \Google\Service\Gmail\Message();
-
-            // Construir el mensaje MIME para enviar un correo HTML
-            $rawMessage = "From: \"{$userJpa->name}\" <{$userJpa->email}>\r\n";
-            $rawMessage .= "To: {$request->input('to')}\r\n";
-            $rawMessage .= "Subject: {$request->input('subject')}\r\n";
-            $rawMessage .= "MIME-Version: 1.0\r\n";
-            $rawMessage .= "Content-Type: text/html; charset=UTF-8\r\n\r\n";
-            $rawMessage .= $request->input('body');
-
-            // Codificar el mensaje en base64 para la API de Gmail
-            $encodedMessage = rtrim(strtr(base64_encode($rawMessage), '+/', '-_'), '=');
-            $message->setRaw($encodedMessage);
-            $gmail->users_messages->send('me', $message);
-            $response->message = 'Correo enviado';
-        });
-
-        return response($response->toArray(), $response->status);
-    }
-
-    /**
-     * Listar correos con un determinado correo electrónico.
-     */
-    public function list(Request $request)
-    {
-        $response = Response::simpleTryCatch(function () use ($request) {
-            $userJpa = User::find(Auth::user()->id);
-            $gs_token = $userJpa->gs_token;
-            $this->client->setAccessToken($gs_token);
-
-            // Refrescar el token si ha expirado
-            if ($this->client->isAccessTokenExpired()) {
-                if (isset($gs_token['refresh_token'])) {
-                    $newToken = $this->client->fetchAccessTokenWithRefreshToken($gs_token['refresh_token']);
-                    $userJpa->gs_token = array_merge($gs_token, $newToken);
-                    $userJpa->save();
-                } else {
-                    throw new Exception('Inicie sesión para continuar');
-                }
-            }
-
-            $gmail = new Gmail($this->client);
-
-            // Obtener el parámetro de email desde el request
-            $email = $request->input('email');
-
-            // Construir la query para obtener correos tanto enviados como recibidos por ese email
-            $optParams = [
-                'q' => "from:$email OR to:$email"
+            $emails[] = [
+              'id' => $message->getId(),
+              'sender' => $sender,
+              'to' => $to,
+              'subject' => $subject,
+              'date' => $date,
+              'snippet' => $messageData->getSnippet(),
+              'type' => $type // 'inbox' o 'sent'
             ];
+          }
+        }
 
-            try {
-                $messages = $gmail->users_messages->listUsersMessages('me', $optParams);
-                $emails = [];
+        return $emails;
+      } catch (\Exception $e) {
+        throw new Exception($e->getMessage());
+      }
+    });
 
-                if ($messages->getMessages()) {
-                    foreach ($messages->getMessages() as $message) {
-                        $messageData = $gmail->users_messages->get('me', $message->getId(), ['format' => 'full']);
-                        $headers = $messageData->getPayload()->getHeaders();
+    return response($response->toArray(), $response->status);
+  }
 
-                        $sender = '';
-                        $to = '';
-                        $subject = '';
-                        $date = '';
-                        $type = 'inbox'; // Por defecto, asumimos que es un correo entrante
+  public function getDetails(Request $request)
+  {
+    $response = Response::simpleTryCatch(function () use ($request) {
+      $userJpa = User::find(Auth::user()->id);
+      $gs_token = $userJpa->gs_token;
+      $this->client->setAccessToken($gs_token);
 
-                        // Extraer los encabezados relevantes
-                        foreach ($headers as $header) {
-                            switch (strtolower($header->getName())) {
-                                case 'from':
-                                    $sender = $header->getValue();
-                                    break;
-                                case 'to':
-                                    $to = $header->getValue();
-                                    break;
-                                case 'subject':
-                                    $subject = $header->getValue();
-                                    break;
-                                case 'date':
-                                    $date = $header->getValue();
-                                    break;
-                            }
-                        }
+      if ($this->client->isAccessTokenExpired()) {
+        if (isset($gs_token['refresh_token'])) {
+          $newToken = $this->client->fetchAccessTokenWithRefreshToken($gs_token['refresh_token']);
+          $userJpa->gs_token = array_merge($gs_token, $newToken);
+          $userJpa->save();
+        } else {
+          throw new Exception('Inicie sesión para continuar');
+        }
+      }
 
-                        // Determinar si el correo es de entrada o salida
-                        if (Text::has(strtolower($sender), strtolower($email))) {
-                            $type = 'inbox';
-                        } else {
-                            $type = 'sent';
-                        }
+      $gmail = new Gmail($this->client);
+      $messageId = $request->input('id');
 
-                        $emails[] = [
-                            'id' => $message->getId(),
-                            'sender' => $sender,
-                            'to' => $to,
-                            'subject' => $subject,
-                            'date' => $date,
-                            'snippet' => $messageData->getSnippet(),
-                            'type' => $type // 'inbox' o 'sent'
-                        ];
-                    }
-                }
+      try {
+        $messageData = $gmail->users_messages->get('me', $messageId, ['format' => 'full']);
+        $headers = $messageData->getPayload()->getHeaders();
+        $parts = $messageData->getPayload()->getParts();
 
-                return $emails;
-            } catch (\Exception $e) {
-                throw new Exception($e->getMessage());
-            }
-        });
+        // Inicializar variables
+        $sender = '';
+        $to = '';
+        $cc = '';
+        $bcc = '';
+        $subject = '';
+        $date = '';
+        $bodyText = '';
+        $bodyHtml = '';
+        $attachments = [];
 
-        return response($response->toArray(), $response->status);
-    }
+        // Extraer encabezados
+        foreach ($headers as $header) {
+          switch (strtolower($header->getName())) {
+            case 'from':
+              $sender = $header->getValue();
+              break;
+            case 'to':
+              $to = $header->getValue();
+              break;
+            case 'cc':
+              $cc = $header->getValue();
+              break;
+            case 'bcc':
+              $bcc = $header->getValue();
+              break;
+            case 'subject':
+              $subject = $header->getValue();
+              break;
+            case 'date':
+              $date = $header->getValue();
+              break;
+          }
+        }
 
-    public function getDetails(Request $request)
-    {
-        $response = Response::simpleTryCatch(function () use ($request) {
-            $userJpa = User::find(Auth::user()->id);
-            $gs_token = $userJpa->gs_token;
-            $this->client->setAccessToken($gs_token);
+        // Obtener detalles de los adjuntos (solo nombre y tamaño)
+        foreach ($parts as $part) {
+          if (isset($part['filename']) && $part['filename'] !== '') {
+            $attachments[] = [
+              'filename' => $part['filename'],
+              'size' => $part['body']['size'],
+              'attachmentId' => $part['body']['attachmentId']
+            ];
+          }
+        }
 
-            if ($this->client->isAccessTokenExpired()) {
-                if (isset($gs_token['refresh_token'])) {
-                    $newToken = $this->client->fetchAccessTokenWithRefreshToken($gs_token['refresh_token']);
-                    $userJpa->gs_token = array_merge($gs_token, $newToken);
-                    $userJpa->save();
-                } else {
-                    throw new Exception('Inicie sesión para continuar');
-                }
-            }
+        return [
+          'id' => $messageId,
+          'sender' => $sender,
+          'to' => $to,
+          'cc' => $cc,
+          'bcc' => $bcc,
+          'subject' => $subject,
+          'date' => $date,
+          'bodyText' => $bodyText,
+          'bodyHtml' => $bodyHtml,
+          'attachments' => $attachments
+        ];
+      } catch (\Exception $e) {
+        throw new Exception($e->getMessage());
+      }
+    });
 
-            $gmail = new Gmail($this->client);
-            $messageId = $request->input('id');
+    return response($response->toArray(), $response->status);
+  }
 
-            try {
-                $messageData = $gmail->users_messages->get('me', $messageId, ['format' => 'full']);
-                $headers = $messageData->getPayload()->getHeaders();
-                $parts = $messageData->getPayload()->getParts();
+  public function getAttachment(Request $request)
+  {
+    $response = Response::simpleTryCatch(function () use ($request) {
+      $userJpa = User::find(Auth::user()->id);
+      $gs_token = $userJpa->gs_token;
+      $this->client->setAccessToken($gs_token);
 
-                // Inicializar variables
-                $sender = '';
-                $to = '';
-                $cc = '';
-                $bcc = '';
-                $subject = '';
-                $date = '';
-                $bodyText = '';
-                $bodyHtml = '';
-                $attachments = [];
+      if ($this->client->isAccessTokenExpired()) {
+        if (isset($gs_token['refresh_token'])) {
+          $newToken = $this->client->fetchAccessTokenWithRefreshToken($gs_token['refresh_token']);
+          $userJpa->gs_token = array_merge($gs_token, $newToken);
+          $userJpa->save();
+        } else {
+          throw new Exception('Inicie sesión para continuar');
+        }
+      }
 
-                // Extraer encabezados
-                foreach ($headers as $header) {
-                    switch (strtolower($header->getName())) {
-                        case 'from':
-                            $sender = $header->getValue();
-                            break;
-                        case 'to':
-                            $to = $header->getValue();
-                            break;
-                        case 'cc':
-                            $cc = $header->getValue();
-                            break;
-                        case 'bcc':
-                            $bcc = $header->getValue();
-                            break;
-                        case 'subject':
-                            $subject = $header->getValue();
-                            break;
-                        case 'date':
-                            $date = $header->getValue();
-                            break;
-                    }
-                }
+      $gmail = new Gmail($this->client);
+      $messageId = $request->input('messageId');
+      $attachmentId = $request->input('attachmentId');
 
-                // Obtener detalles de los adjuntos (solo nombre y tamaño)
-                foreach ($parts as $part) {
-                    if (isset($part['filename']) && $part['filename'] !== '') {
-                        $attachments[] = [
-                            'filename' => $part['filename'],
-                            'size' => $part['body']['size'],
-                            'attachmentId' => $part['body']['attachmentId']
-                        ];
-                    }
-                }
+      try {
+        // Obtener el adjunto usando el ID del mensaje y el ID del adjunto
+        $attachment = $gmail->users_messages_attachments->get('me', $messageId, $attachmentId);
 
-                return [
-                    'id' => $messageId,
-                    'sender' => $sender,
-                    'to' => $to,
-                    'cc' => $cc,
-                    'bcc' => $bcc,
-                    'subject' => $subject,
-                    'date' => $date,
-                    'bodyText' => $bodyText,
-                    'bodyHtml' => $bodyHtml,
-                    'attachments' => $attachments
-                ];
-            } catch (\Exception $e) {
-                throw new Exception($e->getMessage());
-            }
-        });
+        return [
+          'attachmentId' => $attachmentId,
+          'data' => $attachment->getData(), // Contenido del adjunto en base64
+        ];
+      } catch (\Exception $e) {
+        throw new Exception($e->getMessage());
+      }
+    });
 
-        return response($response->toArray(), $response->status);
-    }
-
-    public function getAttachment(Request $request)
-    {
-        $response = Response::simpleTryCatch(function () use ($request) {
-            $userJpa = User::find(Auth::user()->id);
-            $gs_token = $userJpa->gs_token;
-            $this->client->setAccessToken($gs_token);
-
-            if ($this->client->isAccessTokenExpired()) {
-                if (isset($gs_token['refresh_token'])) {
-                    $newToken = $this->client->fetchAccessTokenWithRefreshToken($gs_token['refresh_token']);
-                    $userJpa->gs_token = array_merge($gs_token, $newToken);
-                    $userJpa->save();
-                } else {
-                    throw new Exception('Inicie sesión para continuar');
-                }
-            }
-
-            $gmail = new Gmail($this->client);
-            $messageId = $request->input('messageId');
-            $attachmentId = $request->input('attachmentId');
-
-            try {
-                // Obtener el adjunto usando el ID del mensaje y el ID del adjunto
-                $attachment = $gmail->users_messages_attachments->get('me', $messageId, $attachmentId);
-
-                return [
-                    'attachmentId' => $attachmentId,
-                    'data' => $attachment->getData(), // Contenido del adjunto en base64
-                ];
-            } catch (\Exception $e) {
-                throw new Exception($e->getMessage());
-            }
-        });
-
-        return response($response->toArray(), $response->status);
-    }
+    return response($response->toArray(), $response->status);
+  }
 }

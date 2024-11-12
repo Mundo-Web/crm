@@ -90,6 +90,7 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
   const [tokenUUID, setTokenUUID] = useState(crypto.randomUUID())
   const [googleAuthURI, setGoogleAuthURI] = useState(null)
   const [mails, setMails] = useState([]);
+  const [loadingMails, setLoadingMails] = useState(false);
 
   const typeRefs = {};
   const idRefs = {}
@@ -139,8 +140,10 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
 
   useEffect(() => {
     if (!(hasGSToken && leadLoaded?.contact_email)) return
+    setLoadingMails(true);
     gmailRest.list(leadLoaded.contact_email).then(data => {
       setMails(data ?? [])
+      setLoadingMails(false);
     })
   }, [hasGSToken, leadLoaded])
 
@@ -1000,12 +1003,23 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
                         <span>Lista de {type.name}</span>
                         {
                           type.id == '37b1e8e2-04c4-4246-a8c9-838baa7f8187' &&
-                          <button className='btn btn-xs btn-success' onClick={() => {
-                            $(composeModal.current).modal('show');
-                          }}>
-                            <i className='mdi mdi-pen me-1'></i>
-                            Redactar
-                          </button>
+                          <div className='d-flex gap-1'>
+                            <Tippy content='Refrescar correos'>
+                              <button className='btn btn-xs btn-white' type='button' disabled={loadingMails} onClick={() => setLeadLoaded(old => ({ ...old, refresh: crypto.randomUUID() }))}>
+                                {
+                                  loadingMails
+                                    ? <i className='fa fa-spinner fa-spin'></i>
+                                    : <i className='fas fa-redo'></i>
+                                }
+                              </button>
+                            </Tippy>
+                            <button className='btn btn-xs btn-success' onClick={() => {
+                              $(composeModal.current).modal('show');
+                            }}>
+                              <i className='mdi mdi-pen me-1'></i>
+                              Redactar
+                            </button>
+                          </div>
                         }
                       </h4>
                     }
@@ -1119,34 +1133,32 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
                       type.id != '37b1e8e2-04c4-4246-a8c9-838baa7f8187' && <hr />
                     }
                     {
-                      notes.filter(x => x.note_type_id == type.id).sort((a, b) => b.created_at > a.created_at ? 1 : -1).map((note, i) => {
-                        return <ClientNotesCard key={`note-${i}`} {...note} session={session} onDeleteNote={onDeleteNote} onUpdateNote={onUpdateNoteClicked} />
-                      })
-                    }
-                    {
-                      type.id == '37b1e8e2-04c4-4246-a8c9-838baa7f8187' &&
-                      mails?.map((mail, index) => {
-                        const sender = String(mail.sender).replace(/\<(.*?)\>/g, '<span class="me-1">·</span><small style="font-weight: lighter">&lt;$1&gt;</small>')
-                        const date = new Date(mail.date)
-                        return <div key={index} className="card mb-2" style={{ border: '1px solid rgb(222, 226, 230)' }}>
-                          <div className="card-header p-2" style={{ cursor: 'pointer' }}>
-                            <b className='d-block'>
-                              {
-                                mail.type == 'sent'
-                                  ? <i className='mdi mdi-send me-1'></i>
-                                  : <i className="mdi mdi-inbox me-1"></i>
-                              }
-                              <HtmlContent className={'d-inline'} html={sender} />
-                            </b>
-                            <small className='text-muted'>{moment(date).format('LLL')}</small>
+                      type.id == '37b1e8e2-04c4-4246-a8c9-838baa7f8187'
+                        ? mails?.map((mail, index) => {
+                          const sender = String(mail.sender).replace(/\<(.*?)\>/g, '<span class="me-1">·</span><small style="font-weight: lighter">&lt;$1&gt;</small>')
+                          const date = new Date(mail.date)
+                          return <div key={index} className="card mb-2" style={{ border: '1px solid rgb(222, 226, 230)' }}>
+                            <div className="card-header p-2" style={{ cursor: 'pointer' }}>
+                              <b className='d-block'>
+                                {
+                                  mail.type == 'sent'
+                                    ? <i className='mdi mdi-send me-1'></i>
+                                    : <i className="mdi mdi-inbox me-1"></i>
+                                }
+                                <HtmlContent className={'d-inline'} html={sender} />
+                              </b>
+                              <small className='text-muted'>{moment(date).format('LLL')}</small>
+                            </div>
+                            <div className="card-body p-2">
+                              <small>
+                                <b>{mail.subject}</b> - {mail.snippet || '.'}
+                              </small>
+                            </div>
                           </div>
-                          <div className="card-body p-2">
-                            <small>
-                              <b>{mail.subject}</b> - {mail.snippet || '.'}
-                            </small>
-                          </div>
-                        </div>
-                      })
+                        })
+                        : notes.filter(x => x.note_type_id == type.id).sort((a, b) => b.created_at > a.created_at ? 1 : -1).map((note, i) => {
+                          return <ClientNotesCard key={`note-${i}`} {...note} session={session} onDeleteNote={onDeleteNote} onUpdateNote={onUpdateNoteClicked} />
+                        })
                     }
                   </div>
                 })
@@ -1220,7 +1232,10 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
       </div>
     </Modal>
 
-    <MailingModal modalRef={composeModal} data={leadLoaded} onSend={() => setLeadLoaded(old => ({ ...old, refresh: crypto.randomUUID() }))} />
+    <MailingModal modalRef={composeModal} data={leadLoaded} onSend={(newNote) => {
+      setLeadLoaded(old => ({ ...old, refresh: crypto.randomUUID() }))
+      setNotes(old => ([...old, newNote]))
+    }} />
   </>
   )
 };

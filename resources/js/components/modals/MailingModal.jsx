@@ -4,6 +4,7 @@ import QuillFormGroup from "../form/QuillFormGroup"
 import TextareaFormGroup from "../form/TextareaFormGroup"
 import Modal from "../Modal"
 import GmailRest from "../../actions/GmailRest"
+import { Notify } from "sode-extend-react"
 
 const gmailRest = new GmailRest()
 
@@ -18,19 +19,25 @@ const MailingModal = ({ data, modalRef, onSend = () => { } }) => {
   const onSubmit = async (e) => {
     e.preventDefault()
     setSending(true)
-    const result = gmailRest.send({
-      to: toRef.current.value,
+    const result = await gmailRest.send({
+      to: data?.id,
       subject: subjectRef.current.value,
       body: bodyRef.current.value
     })
-    if (!result) return
     setSending(false)
+    if (!result) return
+
+    Notify.add({
+      icon: '/assets/img/logo-login.svg',
+      title: 'Correcto',
+      body: 'El correo ha sido enviado correctamente',
+    })
 
     subjectRef.current.value = ''
     bodyRef.current.value = ''
     bodyRef.editor.root.innerHTML = ''
     $(modalRef.current).modal('hide')
-    onSend()
+    onSend(result)
   }
 
   return <Modal modalRef={modalRef} position='right' zIndex={1060} onSubmit={onSubmit} hideHeader hideFooter>
