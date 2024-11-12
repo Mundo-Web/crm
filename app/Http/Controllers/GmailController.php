@@ -9,6 +9,7 @@ use Google\Service\Gmail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Maatwebsite\Excel\Facades\Excel;
+use SoDe\Extend\Crypto;
 use SoDe\Extend\Response;
 use SoDe\Extend\Text;
 
@@ -30,24 +31,66 @@ class GmailController extends Controller
     public function check()
     {
         $response = Response::simpleTryCatch(function () {
-            if (!Auth::check()) throw new Exception('Inicie sesión para continuar');
-            $userJpa = User::find(Auth::user()->id);
+            // Verificar si el usuario está autenticado
+            if (!Auth::check()) {
+                throw new Exception('Inicie sesión para continuar');
+            }
+
+            // Buscar al usuario autenticado en la base de datos
+            $userJpa = User::find(Auth::id());
+            if (!$userJpa) {
+                throw new Exception('Usuario no encontrado');
+            }
+
             $gs_token = $userJpa->gs_token;
 
+            // Si no se encuentra el token de Google, devolver la URL de autenticación
+            if (!$gs_token) {
+                return [
+                    'authorized' => false,
+                    'auth_url' => $this->client->createAuthUrl()
+                ];
+            }
+
+            // Establecer el token de acceso en el cliente
             $this->client->setAccessToken($gs_token);
 
+            // Verificar si el token ha expirado
             if ($this->client->isAccessTokenExpired()) {
-                if (isset($gs_token['refresh_token'])) {
-                    $newToken = $this->client->fetchAccessTokenWithRefreshToken($gs_token['refresh_token']);
-                    $userJpa->gs_token = array_merge($gs_token, $newToken);
-                    $userJpa->save();
-                } else {
+                // Si no hay refresh token, devolver la URL de autenticación
+                if (empty($gs_token['refresh_token'])) {
                     return [
                         'authorized' => false,
                         'auth_url' => $this->client->createAuthUrl()
                     ];
                 }
+
+                // Intentar refrescar el token con el refresh token
+                $newToken = $this->client->fetchAccessTokenWithRefreshToken($gs_token['refresh_token']);
+
+                // Si falla al obtener un nuevo token, devolver la URL de autenticación
+                if (empty($newToken['access_token'])) {
+                    return [
+                        'authorized' => false,
+                        'auth_url' => $this->client->createAuthUrl()
+                    ];
+                }
+
+                // Actualizar el token en la base de datos
+                $userJpa->gs_token = array_merge($gs_token, $newToken);
+                $userJpa->save();
+                $this->client->setAccessToken($newToken);
             }
+
+            // Validar si el token actual es válido
+            if (!$this->client->getAccessToken()) {
+                return [
+                    'authorized' => false,
+                    'auth_url' => $this->client->createAuthUrl()
+                ];
+            }
+
+            // Si todo está bien, el usuario está autorizado
             return ['authorized' => true];
         });
 
@@ -68,7 +111,10 @@ class GmailController extends Controller
             $userJpa->gs_token = $gs_token; // Guardar como JSON para incluir el refresh_token
             $userJpa->save();
 
-            return redirect()->route('KPILeads.jsx')->with('message', 'Autorización exitosa');
+            return redirect('utils.refreshstorage')
+            ->with('title', 'Espere un momento por favor')
+            ->with('key', 'tokenUUID')
+            ->with('value', Crypto::randomUUID());
         }
         return redirect()->route('home')->with('error', 'Código no recibido');
     }

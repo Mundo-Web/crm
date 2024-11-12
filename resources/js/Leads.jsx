@@ -85,6 +85,7 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
   const [defaultView, setDefaultView] = useState(Local.get('default-view') ?? 'kanban')
   const [clientProducts, setClientProducts] = useState([])
   const [hasGSToken, setHasGSToken] = useState(false)
+  const [tokenUUID, setTokenUUID] = useState(crypto.randomUUID())
   const [googleAuthURI, setGoogleAuthURI] = useState(null)
   const [mails, setMails] = useState([]);
 
@@ -96,12 +97,6 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
   })
 
   useEffect(() => {
-
-    gmailRest.check().then(data => {
-      if (data.authorized) return setHasGSToken(true)
-      setGoogleAuthURI(data.auth_url)
-    })
-
     $(modalRef.current).on('hidden.bs.modal', () => {
       setLeadLoaded(null)
       history.pushState(null, null, '/leads')
@@ -132,6 +127,13 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
     });
 
   }, [null])
+
+  useEffect(() => {
+    gmailRest.check().then(data => {
+      if (data.authorized) return setHasGSToken(true)
+      setGoogleAuthURI(data.auth_url)
+    })
+  }, [tokenUUID])
 
   useEffect(() => {
     if (!(hasGSToken && leadLoaded?.contact_email)) return
@@ -1020,7 +1022,16 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
                             <small className='text-muted'>No te preocupes, tus datos están seguros con nosotros.</small>
                           </p>
                           <button className="btn btn-sm btn-white d-inline-flex align-items-center gap-1" type='button' onClick={e => {
-                            window.open(googleAuthURI, '_blank')
+                            const authWindow = window.open(googleAuthURI, '_blank')
+                            const lastTokenUUID = Local.get('tokenUUID')
+                            const interval = setInterval(() => {
+                              const newTokenUUID = Local.get('tokenUUID')
+                              if (lastTokenUUID != newTokenUUID) {
+                                clearInterval(interval)
+                                authWindow.close();
+                                setTokenUUID()
+                              }
+                            }, [500]);
                           }}>
                             <img src={googleSVG} alt="" style={{ width: '14px', height: '14px', objectFit: 'contain', objectPosition: 'center' }} />
                             <span>Permitir acceso</span>
@@ -1103,7 +1114,7 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
                         const sender = String(mail.sender).replace(/\<(.*?)\>/g, '<span class="me-1">·</span><small style="font-weight: lighter">&lt;$1&gt;</small>')
                         const date = new Date(mail.date)
                         return <div key={index} className="card mb-2" style={{ border: '1px solid rgb(222, 226, 230)' }}>
-                          <div className="card-header p-2" style={{cursor: 'pointer'}}>
+                          <div className="card-header p-2" style={{ cursor: 'pointer' }}>
                             <b className='d-block'>
                               {
                                 mail.type == 'sent'
