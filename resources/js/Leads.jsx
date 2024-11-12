@@ -1218,7 +1218,7 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
       </div>
     </Modal>
 
-    <Modal modalRef={composeModal} title='Redactar correo'>
+    <Modal modalRef={composeModal} title='Redactar correo' position='right'>
 
     </Modal>
   </>
