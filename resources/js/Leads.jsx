@@ -994,7 +994,18 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
                   return <div key={`tab-note-type-${i}`} className='tab-pane' id={`note-type-${type.id}`}>
                     {
                       !drawGoogleAuth &&
-                      <h4 className='header-title mb-2'>Lista de {type.name}</h4>
+                      <h4 className='header-title mb-2 d-flex justify-content-between'>
+                        <span>Lista de {type.name}</span>
+                        {
+                          type.id == '37b1e8e2-04c4-4246-a8c9-838baa7f8187' &&
+                          <button className='btn btn-xs btn-success' onClick={() => {
+                            $(composeModal.current).modal('show');
+                          }}>
+                            <i className='mdi mdi-pen me-1'></i>
+                            Redactar
+                          </button>
+                        }
+                      </h4>
                     }
                     <input ref={idRefs[type.id]} type="hidden" />
                     <div className="row">
