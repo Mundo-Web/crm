@@ -35,7 +35,7 @@ const CreateReactScript = (render) => {
 
 // INICIO: Pintando datos en consola y evitando futuros logs
 console.log(
-  "%c¡Hola messie!",
+  "%c¡Detente!",
   "font-size: 24px; color: red; font-weight: bold;"
 );
 console.log(

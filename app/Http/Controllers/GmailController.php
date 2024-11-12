@@ -112,9 +112,9 @@ class GmailController extends Controller
             $userJpa->save();
 
             return view('utils.refreshstorage')
-            ->with('title', 'Espere un momento por favor')
-            ->with('key', 'tokenUUID')
-            ->with('value', Crypto::randomUUID());
+                ->with('title', 'Espere un momento por favor')
+                ->with('key', 'tokenUUID')
+                ->with('value', Crypto::randomUUID());
         }
         return redirect()->route('home')->with('error', 'Código no recibido');
     }
@@ -125,30 +125,47 @@ class GmailController extends Controller
      */
     public function send(Request $request)
     {
-        $userJpa = User::find(Auth::user()->id);
-        $this->client->setAccessToken($userJpa->gs_token);
+        $response = Response::simpleTryCatch(function ($response) use ($request) {
+            // Verificar si el usuario está autenticado
+            $userJpa = User::find(Auth::user()->id);
+            if (!$userJpa || !$userJpa->gs_token) {
+                throw new Exception('Inicie sesión para continuar');
+            }
 
-        if ($this->client->isAccessTokenExpired()) {
-            return redirect()->route('gmail.check');
-        }
+            $this->client->setAccessToken($userJpa->gs_token);
 
-        $gmail = new Gmail($this->client);
+            // Refrescar el token si ha expirado
+            if ($this->client->isAccessTokenExpired()) {
+                $gs_token = $userJpa->gs_token;
+                if (isset($gs_token['refresh_token'])) {
+                    $newToken = $this->client->fetchAccessTokenWithRefreshToken($gs_token['refresh_token']);
+                    $userJpa->gs_token = array_merge($gs_token, $newToken);
+                    $userJpa->save();
+                } else {
+                    throw new Exception('El token ha expirado y no se pudo refrescar. Inicie sesión nuevamente.');
+                }
+            }
 
-        $message = new \Google\Service\Gmail\Message();
-        $rawMessage = "From: your-email@gmail.com\r\n";
-        $rawMessage .= "To: {$request->input('to')}\r\n";
-        $rawMessage .= "Subject: {$request->input('subject')}\r\n\r\n";
-        $rawMessage .= $request->input('body');
-        $encodedMessage = rtrim(strtr(base64_encode($rawMessage), '+/', '-_'), '=');
+            // Crear una instancia del servicio Gmail
+            $gmail = new \Google\Service\Gmail($this->client);
+            $message = new \Google\Service\Gmail\Message();
 
-        $message->setRaw($encodedMessage);
+            // Construir el mensaje MIME para enviar un correo HTML
+            $rawMessage = "From: \"{$userJpa->name}\" <{$userJpa->email}>\r\n";
+            $rawMessage .= "To: {$request->input('to')}\r\n";
+            $rawMessage .= "Subject: {$request->input('subject')}\r\n";
+            $rawMessage .= "MIME-Version: 1.0\r\n";
+            $rawMessage .= "Content-Type: text/html; charset=UTF-8\r\n\r\n";
+            $rawMessage .= $request->input('body');
 
-        try {
+            // Codificar el mensaje en base64 para la API de Gmail
+            $encodedMessage = rtrim(strtr(base64_encode($rawMessage), '+/', '-_'), '=');
+            $message->setRaw($encodedMessage);
             $gmail->users_messages->send('me', $message);
-            return response()->json(['status' => 'success', 'message' => 'Correo enviado']);
-        } catch (\Exception $e) {
-            return response()->json(['status' => 'error', 'message' => $e->getMessage()]);
-        }
+            $response->message = 'Correo enviado';
+        });
+
+        return response($response->toArray(), $response->status);
     }
 
     /**

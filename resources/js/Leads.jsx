@@ -40,6 +40,8 @@ import { renderToString } from 'react-dom/server'
 import googleSVG from './components/svg/google.svg'
 import GmailRest from './actions/GmailRest.js'
 import HtmlContent from './Utils/HtmlContent.jsx'
+import QuillFormGroup from './components/form/QuillFormGroup.jsx'
+import MailingModal from './components/modals/MailingModal.jsx'
 
 const leadsRest = new LeadsRest()
 const clientsRest = new ClientsRest()
@@ -1206,7 +1208,7 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
       </div>
     </Modal>
 
-    <Modal modalRef={newLeadModalRef} title='Nuevo lead' btnSubmitText='Guardar' onSubmit={onModalSubmit}>
+    <Modal modalRef={newLeadModalRef} title='Nuevo lead' btnSubmitText='Guardar' onSubmit={onModalSubmit} zIndex={1060}>
       <div className="row mb-0">
         <input ref={idRef} type="hidden" />
         <InputFormGroup eRef={contactNameRef} label='Nombre completo' />
@@ -1218,9 +1220,7 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
       </div>
     </Modal>
 
-    <Modal modalRef={composeModal} title='Redactar correo' position='right'>
-
-    </Modal>
+    <MailingModal modalRef={composeModal} data={leadLoaded} onSend={() => setLeadLoaded(old => ({ ...old, refresh: crypto.randomUUID() }))} />
   </>
   )
 };

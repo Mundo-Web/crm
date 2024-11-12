@@ -143,6 +143,16 @@
   <script src="/lte/assets/libs/moment/min/moment.min.js"></script>
   <script src="/lte/assets/libs/moment/moment-timezone.js"></script>
   <script src="/lte/assets/libs/moment/locale/es.js"></script>
+  <script>
+    document.addEventListener('shown.bs.modal', function(event) {
+      const modal = event.target;
+      const backdrop = document.querySelector('.modal-backdrop:not([data-modal-id])');
+      if (backdrop) {
+        backdrop.style.zIndex = window.getComputedStyle(modal).zIndex -1
+        backdrop.setAttribute('data-modal-id', modal.id);
+      }
+    });
+  </script>
 </body>
 
 </html>

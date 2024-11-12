@@ -25,6 +25,20 @@ class GmailRest {
     })
     return result?.data
   }
+
+  send = async (request) => {
+    const { status, result } = await Fetch(`/api/gmail/send`, {
+      method: 'POST',
+      body: JSON.stringify(request)
+    })
+    if (!status) return Notify.add({
+      icon: '/assets/img/logo-login.svg',
+      title: 'Error',
+      body: result?.message || 'Ocurrió un error inesperado',
+      type: 'danger'
+    })
+    return result?.data ?? true
+  }
 }
 
 export default GmailRest

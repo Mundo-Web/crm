@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from "react"
 
-const QuillFormGroup = ({ col, label, eRef, value, required = false, theme = 'snow' }) => {
+const QuillFormGroup = ({ col, label, eRef = useRef(), value, required = false, theme = 'snow' }) => {
   const quillRef = useRef()
 
   useEffect(() => {
@@ -17,7 +17,6 @@ const QuillFormGroup = ({ col, label, eRef, value, required = false, theme = 'sn
     quill.on('text-change', () => {
       eRef.current.value = quill.root.innerHTML
     });
-
     eRef.editor = quill
   }, [null])
 
