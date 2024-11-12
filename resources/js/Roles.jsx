@@ -132,7 +132,7 @@ const Roles = ({ permissions, can }) => {
           text: 'Nuevo',
           title: 'Agregar registro',
           icon: 'fa fa-plus',
-          onClick: () => onOpenModal()
+          onClick: () => onModalOpen()
         }))
       }}
       columns={[
