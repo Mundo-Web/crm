@@ -54,6 +54,7 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
   const modalRef = useRef()
   const newLeadModalRef = useRef()
   const gridRef = useRef()
+  const composeModal = useRef()
 
   const taskTitleRef = useRef()
   // const taskEndsAtRef = useRef()
@@ -95,7 +96,7 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
   })
 
   useEffect(() => {
-    
+
     gmailRest.check().then(data => {
       if (data.authorized) return setHasGSToken(true)
       setGoogleAuthURI(data.auth_url)
