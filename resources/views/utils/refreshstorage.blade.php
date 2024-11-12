@@ -79,9 +79,9 @@
 <body>
   <div class="container">
     <h1>{{ $title ?? 'Espere un momento por favor' }}</h1>
-    @if ($description)
+    @isset($description)
       <p>{{ $description }}</p>
-    @endif
+    @endisset
     <div class="loader"></div>
   </div>
   <script src="/assets/js/storage.extend.js"></script>
