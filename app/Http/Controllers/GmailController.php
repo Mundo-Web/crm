@@ -111,7 +111,7 @@ class GmailController extends Controller
             $userJpa->gs_token = $gs_token; // Guardar como JSON para incluir el refresh_token
             $userJpa->save();
 
-            return redirect('utils.refreshstorage')
+            return view('utils.refreshstorage')
             ->with('title', 'Espere un momento por favor')
             ->with('key', 'tokenUUID')
             ->with('value', Crypto::randomUUID());
