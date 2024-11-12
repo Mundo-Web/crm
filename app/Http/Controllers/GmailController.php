@@ -154,19 +154,67 @@ class GmailController extends Controller
       $gmail = new \Google\Service\Gmail($this->client);
       $message = new \Google\Service\Gmail\Message();
 
-      // Construir el mensaje MIME para enviar un correo HTML
+      // Crear un límite MIME único
+      $boundary = '----=_Part_' . uniqid();
+
+      // Construir el mensaje MIME para enviar un correo HTML con adjuntos
       $rawMessage = "From: \"{$userJpa->name} {$userJpa->lastname}\" <{$userJpa->email}>\r\n";
       $rawMessage .= "To: {$clientJpa->contact_email}\r\n";
+
+      $ccs = $request->input('cc');
+      if ($ccs && is_array($ccs) && count($ccs) > 0) {
+        $ccs = implode(',', $ccs);
+        $rawMessage .= "Cc: {$ccs}\r\n";
+      }
+      $bccs = $request->input('bcc');
+      if ($bccs && is_array($bccs) && count($bccs) > 0) {
+        $bccs = implode(',', $bccs);
+        $rawMessage .= "Bcc: {$bccs}\r\n";
+      }
+
       $rawMessage .= "Subject: {$request->input('subject')}\r\n";
       $rawMessage .= "MIME-Version: 1.0\r\n";
+      $rawMessage .= "Content-Type: multipart/mixed; boundary=\"$boundary\"\r\n";
+
+      // Agregar los encabezados para el hilo (In-Reply-To y References) si están presentes
+      if ($request->has('inReplyTo')) {
+        $inReplyTo = $request->input('inReplyTo');
+        $rawMessage .= "In-Reply-To: <{$inReplyTo}>\r\n";
+        $rawMessage .= "References: <{$inReplyTo}>\r\n";
+      }
+
+      $rawMessage .= "\r\n";
+
+      // Parte 1: El cuerpo del mensaje en HTML
+      $rawMessage .= "--$boundary\r\n";
       $rawMessage .= "Content-Type: text/html; charset=UTF-8\r\n\r\n";
-      $rawMessage .= $request->input('body');
+      $rawMessage .= $request->input('body') . "\r\n\r\n";
+
+      // Parte 2: Adjuntar archivos (si los hay)
+      if ($request->hasFile('attachments')) {
+        foreach ($request->file('attachments') as $file) {
+          $fileContent = file_get_contents($file->getRealPath());
+          $encodedFile = base64_encode($fileContent);
+
+          $rawMessage .= "--$boundary\r\n";
+          $rawMessage .= "Content-Type: " . $file->getMimeType() . "; name=\"" . $file->getClientOriginalName() . "\"\r\n";
+          $rawMessage .= "Content-Disposition: attachment; filename=\"" . $file->getClientOriginalName() . "\"\r\n";
+          $rawMessage .= "Content-Transfer-Encoding: base64\r\n\r\n";
+          $rawMessage .= chunk_split($encodedFile) . "\r\n\r\n";
+        }
+      }
+
+      // Finalizar el mensaje MIME
+      $rawMessage .= "--$boundary--";
 
       // Codificar el mensaje en base64 para la API de Gmail
       $encodedMessage = rtrim(strtr(base64_encode($rawMessage), '+/', '-_'), '=');
       $message->setRaw($encodedMessage);
+
+      // Enviar el mensaje
       $gmail->users_messages->send('me', $message);
 
+      // Crear una nota del cliente con los detalles del correo enviado
       $noteJpa = ClientNote::create([
         'note_type_id' => '37b1e8e2-04c4-4246-a8c9-838baa7f8187',
         'client_id' => $clientJpa->id,
@@ -177,7 +225,7 @@ class GmailController extends Controller
         'manage_status_id' => $clientJpa->manage_status_id,
       ]);
 
-      $response->message = 'Correo enviado';
+      $response->message = 'Correo enviado con éxito';
 
       return ClientNote::where('id', $noteJpa->id)
         ->with(['type', 'user', 'tasks', 'tasks.assigned', 'status', 'manageStatus'])
@@ -286,6 +334,7 @@ class GmailController extends Controller
       $gs_token = $userJpa->gs_token;
       $this->client->setAccessToken($gs_token);
 
+      // Refrescar el token si ha expirado
       if ($this->client->isAccessTokenExpired()) {
         if (isset($gs_token['refresh_token'])) {
           $newToken = $this->client->fetchAccessTokenWithRefreshToken($gs_token['refresh_token']);
@@ -297,7 +346,7 @@ class GmailController extends Controller
       }
 
       $gmail = new Gmail($this->client);
-      $messageId = $request->input('id');
+      $messageId = $request->id;
 
       try {
         $messageData = $gmail->users_messages->get('me', $messageId, ['format' => 'full']);
@@ -339,9 +388,13 @@ class GmailController extends Controller
           }
         }
 
+        // Obtener el cuerpo del mensaje
+        $bodyText = $this->getBodyFromParts($parts, 'text/plain');
+        $bodyHtml = $this->getBodyFromParts($parts, 'text/html');
+
         // Obtener detalles de los adjuntos (solo nombre y tamaño)
         foreach ($parts as $part) {
-          if (isset($part['filename']) && $part['filename'] !== '') {
+          if (isset($part['filename']) && $part['filename'] !== '' && isset($part['body']['attachmentId'])) {
             $attachments[] = [
               'filename' => $part['filename'],
               'size' => $part['body']['size'],
@@ -368,6 +421,30 @@ class GmailController extends Controller
     });
 
     return response($response->toArray(), $response->status);
+  }
+
+  /**
+   * Función para extraer el cuerpo del mensaje desde las partes del payload
+   */
+  private function getBodyFromParts($parts, $mimeType)
+  {
+    $bodyContent = '';
+
+    foreach ($parts as $part) {
+      // Si la parte tiene su propio conjunto de partes, buscar recursivamente
+      if (isset($part['parts']) && is_array($part['parts'])) {
+        $bodyContent .= $this->getBodyFromParts($part['parts'], $mimeType);
+      } else {
+        // Buscar el tipo MIME solicitado
+        if ($part['mimeType'] === $mimeType) {
+          $data = $part['body']['data'] ?? '';
+          $decodedData = base64_decode(str_replace(['-', '_'], ['+', '/'], $data));
+          $bodyContent .= $decodedData;
+        }
+      }
+    }
+
+    return $bodyContent;
   }
 
   public function getAttachment(Request $request)

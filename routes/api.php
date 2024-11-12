@@ -188,5 +188,6 @@ Route::middleware('auth')->group(function () {
     Route::post('/gmail', [GmailController::class, 'list']);
     Route::get('/gmail/check', [GmailController::class, 'check'])->name('gmail.check');
     Route::get('/gmail/callback', [GmailController::class, 'callback'])->name('gmail.callback');
+    Route::get('/gmail/details/{id}', [GmailController::class, 'getDetails']);
     Route::post('/gmail/send', [GmailController::class, 'send']);
 });

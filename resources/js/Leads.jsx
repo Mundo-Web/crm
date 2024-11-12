@@ -42,6 +42,7 @@ import GmailRest from './actions/GmailRest.js'
 import HtmlContent from './Utils/HtmlContent.jsx'
 import QuillFormGroup from './components/form/QuillFormGroup.jsx'
 import MailingModal from './components/modals/MailingModal.jsx'
+import FormatBytes from './Utils/FormatBytes.js'
 
 const leadsRest = new LeadsRest()
 const clientsRest = new ClientsRest()
@@ -57,6 +58,7 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
   const newLeadModalRef = useRef()
   const gridRef = useRef()
   const composeModal = useRef()
+  const mailModal = useRef()
 
   const taskTitleRef = useRef()
   // const taskEndsAtRef = useRef()
@@ -90,7 +92,9 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
   const [tokenUUID, setTokenUUID] = useState(crypto.randomUUID())
   const [googleAuthURI, setGoogleAuthURI] = useState(null)
   const [mails, setMails] = useState([]);
-  const [loadingMails, setLoadingMails] = useState(false);
+  const [loadingMails, setLoadingMails] = useState(false)
+  const [inReplyTo, setInReplyTo] = useState(null)
+  const [mailLoaded, setMailLoaded] = useState(null)
 
   const typeRefs = {};
   const idRefs = {}
@@ -141,6 +145,7 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
   useEffect(() => {
     if (!(hasGSToken && leadLoaded?.contact_email)) return
     setLoadingMails(true);
+    setMails([])
     gmailRest.list(leadLoaded.contact_email).then(data => {
       setMails(data ?? [])
       setLoadingMails(false);
@@ -1014,6 +1019,7 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
                               </button>
                             </Tippy>
                             <button className='btn btn-xs btn-success' onClick={() => {
+                              setInReplyTo(null)
                               $(composeModal.current).modal('show');
                             }}>
                               <i className='mdi mdi-pen me-1'></i>
@@ -1027,42 +1033,31 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
                     <div className="row">
                       {
                         drawGoogleAuth && <div className='col-12 text-center'>
-                          {/* <div className="col-md-6 col-sm-12 form-group mb-2">
-                            <label className='mb-1' htmlFor="">Asunto</label>
-                            <input type="text" className='form-control' />
-                          </div>
-                          <div className="col-md-6 col-sm-12 form-group mb-2">
-                            <label className='mb-1' htmlFor="">Para</label>
-                            <input type="text" className='form-control' />
-                          </div>
-                          <div className="col-md-6 col-sm-12 form-group mb-2">
-                            <label className='mb-1' htmlFor="">CC</label>
-                            <input type="text" className='form-control' />
-                          </div>
-                          <div className="col-md-6 col-sm-12 form-group mb-2">
-                            <label className='mb-1' htmlFor="">CCO</label>
-                            <input type="text" className='form-control' />
-                          </div> */}
                           <h1>¡Ups!</h1>
                           <p>
                             Necesitamos tu permiso para acceder a tu correo electrónico. <br />
                             <small className='text-muted'>No te preocupes, tus datos están seguros con nosotros.</small>
                           </p>
-                          <button className="btn btn-sm btn-white d-inline-flex align-items-center gap-1" type='button' onClick={e => {
-                            const authWindow = window.open(googleAuthURI, '_blank')
-                            const lastTokenUUID = Local.get('tokenUUID')
-                            const interval = setInterval(() => {
-                              const newTokenUUID = Local.get('tokenUUID')
-                              if (lastTokenUUID != newTokenUUID) {
-                                clearInterval(interval)
-                                authWindow.close();
-                                setTokenUUID()
-                              }
-                            }, [500]);
-                          }}>
-                            <img src={googleSVG} alt="" style={{ width: '14px', height: '14px', objectFit: 'contain', objectPosition: 'center' }} />
-                            <span>Permitir acceso</span>
-                          </button>
+                          <div className='d-flex flex-column justify-content-center align-items-center gap-1'>
+                            <button className='btn btn-sm btn-primary' type='button' onClick={() => setTokenUUID(crypto.randomUUID())}>
+                              Ya he iniciado sesión
+                            </button>
+                            <button className="btn btn-sm btn-white d-inline-flex align-items-center gap-1" type='button' onClick={e => {
+                              const authWindow = window.open(googleAuthURI, '_blank')
+                              const lastTokenUUID = Local.get('tokenUUID')
+                              const interval = setInterval(() => {
+                                const newTokenUUID = Local.get('tokenUUID')
+                                if (lastTokenUUID != newTokenUUID) {
+                                  clearInterval(interval)
+                                  authWindow.close();
+                                  setTokenUUID()
+                                }
+                              }, [500]);
+                            }}>
+                              <img src={googleSVG} alt="" style={{ width: '14px', height: '14px', objectFit: 'contain', objectPosition: 'center' }} />
+                              <span>Permitir acceso</span>
+                            </button>
+                          </div>
                         </div>
                       }
                       {
@@ -1138,7 +1133,13 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
                           const sender = String(mail.sender).replace(/\<(.*?)\>/g, '<span class="me-1">·</span><small style="font-weight: lighter">&lt;$1&gt;</small>')
                           const date = new Date(mail.date)
                           return <div key={index} className="card mb-2" style={{ border: '1px solid rgb(222, 226, 230)' }}>
-                            <div className="card-header p-2" style={{ cursor: 'pointer' }}>
+                            <div className="card-header p-2" style={{ cursor: 'pointer' }} onClick={async () => {
+                              const mailing = await gmailRest.getDetails(mail.id)
+                              if (!mailing) return
+                              setMailLoaded(mailing)
+                              console.log(mailing)
+                              $(mailModal.current).modal('show')
+                            }}>
                               <b className='d-block'>
                                 {
                                   mail.type == 'sent'
@@ -1232,7 +1233,77 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
       </div>
     </Modal>
 
-    <MailingModal modalRef={composeModal} data={leadLoaded} onSend={(newNote) => {
+    <Modal modalRef={mailModal} title={mailLoaded?.subject} size='lg' zIndex={1060} hideHeader hideFooter>
+      <table style={{
+        width: 'max-content',
+        maxWidth: '100%',
+      }}>
+        <tbody>
+          <tr>
+            <th className='py-0 px-1' style={{ textAlign: 'end' }}>De:</th>
+            <td className='py-0 px-1'>{mailLoaded?.sender}</td>
+          </tr>
+          <tr>
+            <th className='py-0 px-1' style={{ textAlign: 'end' }}>Para:</th>
+            <td className='py-0 px-1'>{mailLoaded?.to}</td>
+          </tr>
+          {
+            mailLoaded?.cc &&
+            <tr>
+              <th className='py-0 px-1' style={{ textAlign: 'end' }}>Cc:</th>
+              <td className='py-0 px-1'>{mailLoaded?.cc}</td>
+            </tr>
+          }
+          {
+            mailLoaded?.bcc &&
+            <tr>
+              <th className='py-0 px-1' style={{ textAlign: 'end' }}>Bcc:</th>
+              <td className='py-0 px-1'>{mailLoaded?.bcc}</td>
+            </tr>
+          }
+          <tr>
+            <th className='py-0 px-1' style={{ textAlign: 'end' }}>Fecha:</th>
+            <td className='py-0 px-1'>{moment(new Date(mailLoaded?.date)).format('LLL')}</td>
+          </tr>
+          <tr>
+            <th className='py-0 px-1' style={{ textAlign: 'end' }}>Asunto:</th>
+            <td className='py-0 px-1'>{mailLoaded?.subject}</td>
+          </tr>
+        </tbody>
+      </table>
+      <hr className="my-2" />
+      <HtmlContent html={mailLoaded?.bodyHtml} style={{
+        minHeight: '360px'
+      }} />
+      <hr className='mt-2' />
+      {
+        mailLoaded?.attachments?.length > 0 && <div className='mt-2'>
+          {mailLoaded?.attachments?.map((file) => {
+            return <div className='d-flex gap-1 border p-2'>
+              <i className='mdi mdi-file'></i>
+              <div>
+                <span>{file.filename}</span>
+                <small className='d-block'>{FormatBytes(file.size)}</small>
+              </div>
+            </div>
+          })}
+        </div>
+      }
+      {
+        mailLoaded?.sender?.includes(leadLoaded?.contact_email) &&
+        <div className='mt-2'>
+          <button className='btn btn-xs btn-white' type='button' onClick={() => {
+            setInReplyTo(mailLoaded)
+            $(composeModal.current).modal('show');
+          }}>
+            <i className='fas fa-reply me-1'></i>
+            Responder
+          </button>
+        </div>
+      }
+    </Modal>
+
+    <MailingModal modalRef={composeModal} data={leadLoaded} inReplyTo={inReplyTo} onSend={(newNote) => {
       setLeadLoaded(old => ({ ...old, refresh: crypto.randomUUID() }))
       setNotes(old => ([...old, newNote]))
     }} />
