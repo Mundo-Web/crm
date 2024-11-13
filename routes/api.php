@@ -189,5 +189,6 @@ Route::middleware('auth')->group(function () {
     Route::get('/gmail/check', [GmailController::class, 'check'])->name('gmail.check');
     Route::get('/gmail/callback', [GmailController::class, 'callback'])->name('gmail.callback');
     Route::get('/gmail/details/{id}', [GmailController::class, 'getDetails']);
+    Route::get('/gmail/attachment/{messageId}/{attachmentId}/{filename}', [GmailController::class, 'getAttachment']);
     Route::post('/gmail/send', [GmailController::class, 'send']);
 });

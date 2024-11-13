@@ -76,6 +76,11 @@ const MailingModal = ({ data, inReplyTo, modalRef, onSend = () => { } }) => {
       <div id="mailing-modal">
         <h4 className="header-title mb-0">Mensaje nuevo</h4>
         <hr className="my-2" />
+        {
+          inReplyTo && <div className="mb-2">
+            <i className='fas fa-reply me-1'></i> {inReplyTo?.sender}
+          </div>
+        }
         <div className="mb-2">
           <b>Para:</b> {data?.contact_name}
           <small className="text-muted d-block">&lt;{data?.contact_email}&gt;</small>

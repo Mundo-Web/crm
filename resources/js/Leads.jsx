@@ -1234,6 +1234,7 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
     </Modal>
 
     <Modal modalRef={mailModal} title={mailLoaded?.subject} size='lg' zIndex={1060} hideHeader hideFooter>
+      <button type="button" class="btn-close float-end" data-bs-dismiss="modal" aria-label="Close"></button>
       <table style={{
         width: 'max-content',
         maxWidth: '100%',
@@ -1275,15 +1276,31 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
       <HtmlContent html={mailLoaded?.bodyHtml} style={{
         minHeight: '360px'
       }} />
-      <hr className='mt-2' />
+      <hr className='mt-2 mb-0' />
       {
-        mailLoaded?.attachments?.length > 0 && <div className='mt-2'>
+        mailLoaded?.attachments?.length > 0 && <div className='mt-2 d-flex flex-wrap gap-2'>
           {mailLoaded?.attachments?.map((file) => {
-            return <div className='d-flex gap-1 border p-2'>
+            return <div className='d-flex gap-1 border p-1' style={{
+              width: '180px'
+            }}>
               <i className='mdi mdi-file'></i>
               <div>
-                <span>{file.filename}</span>
-                <small className='d-block'>{FormatBytes(file.size)}</small>
+                <span className='d-block text-truncate' style={{ width: '145px' }}>{file.filename}</span>
+                <div className='d-flex gap-1 align-items-center justify-content-between'>
+                  <small className='d-block'>{FormatBytes(file.size)}</small>
+                  <div className='d-flex gap-1'>
+                    <Tippy content='Abrir'>
+                      <a href={`/api/gmail/attachment/${mailLoaded?.id}/${file.attachmentId}/${file.filename}`} target='_blank' className="btn btn-xs btn-white" type='button'>
+                        <i className='fa fa-eye'></i>
+                      </a>
+                    </Tippy>
+                    <Tippy content='Descargar'>
+                      <a href={`/api/gmail/attachment/${mailLoaded?.id}/${file.attachmentId}/${file.filename}`} target='_blank' download className="btn btn-xs btn-white" type='button'>
+                        <i className='fa fa-download'></i>
+                      </a>
+                    </Tippy>
+                  </div>
+                </div>
               </div>
             </div>
           })}
@@ -1292,7 +1309,7 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
       {
         mailLoaded?.sender?.includes(leadLoaded?.contact_email) &&
         <div className='mt-2'>
-          <button className='btn btn-xs btn-white' type='button' onClick={() => {
+          <button className='btn btn-xs btn-white rounded-pill' type='button' onClick={() => {
             setInReplyTo(mailLoaded)
             $(composeModal.current).modal('show');
           }}>

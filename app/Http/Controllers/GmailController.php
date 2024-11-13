@@ -449,38 +449,64 @@ class GmailController extends Controller
 
   public function getAttachment(Request $request)
   {
-    $response = Response::simpleTryCatch(function () use ($request) {
-      $userJpa = User::find(Auth::user()->id);
-      $gs_token = $userJpa->gs_token;
-      $this->client->setAccessToken($gs_token);
+    $response = new Response();
 
-      if ($this->client->isAccessTokenExpired()) {
-        if (isset($gs_token['refresh_token'])) {
-          $newToken = $this->client->fetchAccessTokenWithRefreshToken($gs_token['refresh_token']);
-          $userJpa->gs_token = array_merge($gs_token, $newToken);
-          $userJpa->save();
-        } else {
-          throw new Exception('Inicie sesión para continuar');
+    // Obtener el usuario y el token de Google
+    $userJpa = User::find(Auth::user()->id);
+    $gs_token = $userJpa->gs_token;
+    $this->client->setAccessToken($gs_token);
+
+    // Refrescar el token si está expirado
+    if ($this->client->isAccessTokenExpired()) {
+      if (isset($gs_token['refresh_token'])) {
+        $newToken = $this->client->fetchAccessTokenWithRefreshToken($gs_token['refresh_token']);
+        $userJpa->gs_token = array_merge($gs_token, $newToken);
+        $userJpa->save();
+      } else {
+        throw new Exception('Inicie sesión para continuar');
+      }
+    }
+
+    $gmail = new Gmail($this->client);
+    $messageId = $request->messageId;
+    $filename = $request->filename;
+
+    try {
+      // Obtener el mensaje completo para acceder a los adjuntos
+      $message = $gmail->users_messages->get('me', $messageId, ['format' => 'full']);
+      $parts = $message->getPayload()->getParts();
+
+      $contentType = 'application/octet-stream';
+      $fileContent = null;
+
+      // Buscar el adjunto por nombre
+      foreach ($parts as $part) {
+        if (isset($part['filename']) && $part['filename'] === $filename) {
+          $contentType = $part['mimeType'] ?? 'application/octet-stream';
+
+          // Obtener el contenido del adjunto usando el attachmentId
+          $attachmentId = $part['body']['attachmentId'];
+          $attachment = $gmail->users_messages_attachments->get('me', $messageId, $attachmentId);
+          $fileContent = base64_decode(str_replace(['-', '_'], ['+', '/'], $attachment->getData()));
+          break;
         }
       }
 
-      $gmail = new Gmail($this->client);
-      $messageId = $request->input('messageId');
-      $attachmentId = $request->input('attachmentId');
-
-      try {
-        // Obtener el adjunto usando el ID del mensaje y el ID del adjunto
-        $attachment = $gmail->users_messages_attachments->get('me', $messageId, $attachmentId);
-
-        return [
-          'attachmentId' => $attachmentId,
-          'data' => $attachment->getData(), // Contenido del adjunto en base64
-        ];
-      } catch (\Exception $e) {
-        throw new Exception($e->getMessage());
+      // Si no se encontró el archivo o su contenido, lanzar una excepción
+      if (!$fileContent) {
+        throw new Exception('No se pudo encontrar el adjunto solicitado con el nombre: ' . $filename);
       }
-    });
 
-    return response($response->toArray(), $response->status);
+      // Forzar la descarga del archivo con su nombre y tipo de contenido original
+      return response($fileContent)
+        ->header('Content-Type', $contentType)
+        ->header('Content-Disposition', 'attachment; filename="' . $filename . '"')
+        ->header('Content-Length', strlen($fileContent));
+    } catch (\Exception $e) {
+      $response->status = 400;
+      $response->message = $e->getMessage();
+      return response($response->toArray(), $response->status);
+    }
   }
+
 }
