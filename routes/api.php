@@ -51,6 +51,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard/{range}', [DashboardController::class, 'revenue']);
     Route::get('/dashboard/leads/kpi/{month}', [KPILeadsController::class, 'kpi']);
 
+    // Users sign Routes
+    Route::post('/users/sign', [UserController::class, 'addSign']);
+    Route::delete('/users/sign', [UserController::class, 'deleteSign']);
+
     // Users routes
     Route::post('/users', [UserController::class, 'save']);
     Route::post('/users/paginate', [UserController::class, 'paginate']);

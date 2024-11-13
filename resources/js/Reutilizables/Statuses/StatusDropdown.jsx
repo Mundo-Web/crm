@@ -267,19 +267,19 @@ export default function StatusDropdown({
                     {
                       canUpdate &&
                       <Tippy content='Editar'>
-                        <a href="javascript:void(0)" className="btn btn-xs btn-soft-primary " onClick={e => onUpdateStatusClicked(e, item)} type='button'>
+                        <span style={{cursor: 'pointer'}} className="btn btn-xs btn-soft-primary " onClick={e => onUpdateStatusClicked(e, item)} type='button'>
                           <i className="fa fa-pen" aria-hidden="true"></i>
                           <span className="sr-only">Editar</span>
-                        </a>
+                        </span>
                       </Tippy>
                     }
                     {
                       canDelete &&
                       <Tippy content='Eliminar'>
-                        <a href="javascript:void(0)" className="btn btn-xs btn-soft-danger" onClick={e => onDeleteStatusClicked(e, item)} type='button'>
+                        <span style={{cursor: 'pointer'}} className="btn btn-xs btn-soft-danger" onClick={e => onDeleteStatusClicked(e, item)} type='button'>
                           <i className="fa fa-trash" aria-hidden="true"></i>
                           <span className="sr-only">Eliminar</span>
-                        </a>
+                        </span>
                       </Tippy>
                     }
                   </div>

@@ -249,7 +249,7 @@ const NavBar = ({ can, session = {}, title = '', whatsappStatus, businesses, APP
 
 
       <div className="logo-box">
-        <a href="index.html" className="logo logo-light text-center">
+        <a href="/" className="logo logo-light text-center">
           <span className="logo-sm">
             <img src="/assets/img/icon.svg?v=gracias-manuel-de-nada-manuel" alt="" height="22" />
           </span>
@@ -257,7 +257,7 @@ const NavBar = ({ can, session = {}, title = '', whatsappStatus, businesses, APP
             <img src="/assets/img/logo.svg?v=gracias-manuel-de-nada-manuel" alt="" height="16" />
           </span>
         </a>
-        <a href="index.html" className="logo logo-dark text-center">
+        <a href="/" className="logo logo-dark text-center">
           <span className="logo-sm">
             <img src="/assets/img/icon-dark.svg?v=gracias-manuel-de-nada-manuel" alt="" height="22" />
           </span>

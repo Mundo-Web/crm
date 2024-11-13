@@ -2,17 +2,16 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Classes\dxResponse;
-use App\Models\Atalaya\UsersByServicesByBusiness;
-use App\Models\dxDataGrid;
 use App\Models\ModelHasRoles;
 use App\Models\User;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use SoDe\Extend\Crypto;
 use SoDe\Extend\Response;
 use Spatie\Permission\Models\Role;
+use Illuminate\Support\Facades\File;
 
 class UserController extends BasicController
 {
@@ -69,6 +68,91 @@ class UserController extends BasicController
                 'business_id' => Auth::user()->business_id
             ]);
         });
+        return response($response->toArray(), $response->status);
+    }
+
+    public function addSign(Request $request)
+    {
+        $response = Response::simpleTryCatch(function () use ($request) {
+            // Validar si el archivo fue adjuntado
+            if (!$request->hasFile('sign')) {
+                throw new Exception('Debes adjuntar una firma.');
+            }
+
+            $sign = $request->file('sign');
+
+            // Validar que el archivo sea una imagen (sin usar Intervention Image)
+            if (!$sign->isValid() || !in_array($sign->getMimeType(), ['image/jpeg', 'image/png', 'image/gif'])) {
+                throw new Exception('El archivo adjuntado debe ser una imagen válida (jpeg, png, gif).');
+            }
+
+            $directory = public_path('storage/signs');
+
+            // Crear la carpeta si no existe
+            if (!File::exists($directory)) {
+                File::makeDirectory($directory, 0755, true);
+            }
+
+            // Generar UUID y nombre de archivo para la nueva firma
+            $uuid = Crypto::randomUUID();
+            $filename = $uuid . '.' . $sign->getClientOriginalExtension();
+
+            // Mover el archivo a la carpeta de destino
+            $sign->move($directory, $filename);
+
+            // Obtener el usuario autenticado
+            $userJpa = User::where('business_id', Auth::user()->business_id)
+            ->where('user_id', Auth::user()->id)
+                ->first();
+
+            if (!$userJpa) {
+                throw new Exception('Usuario no encontrado.');
+            }
+
+            // Guardar la nueva firma en la base de datos
+            $previousSign = $userJpa->mailing_sign; // Guardamos el nombre de la firma anterior
+            $userJpa->mailing_sign = $filename;
+            $userJpa->save();
+
+            // Eliminar la firma anterior si existe, solo después de haber guardado la nueva
+            if ($previousSign) {
+                $oldSignPath = $directory . '/' . $previousSign;
+                if (File::exists($oldSignPath)) {
+                    File::delete($oldSignPath);
+                }
+            }
+
+            return $filename;
+        });
+
+        return response($response->toArray(), $response->status);
+    }
+
+    public function deleteSign(Request $request)
+    {
+        $response = Response::simpleTryCatch(function () {
+            $userJpa = User::where('business_id', Auth::user()->business_id)
+                ->where('user_id', Auth::user()->id)
+                ->first();
+
+            if (!$userJpa) {
+                throw new Exception('Usuario no encontrado.');
+            }
+
+            // Eliminar la firma anterior si existe
+            $directory = public_path('storage/signs');
+
+            if ($userJpa->mailing_sign) {
+                $oldSignPath = $directory . '/' . $userJpa->mailing_sign;
+                if (File::exists($oldSignPath)) {
+                    File::delete($oldSignPath);
+                }
+            }
+
+            $userJpa->mailing_sign = null;
+            $userJpa->save();
+        });
+
         return response($response->toArray(), $response->status);
     }
 }

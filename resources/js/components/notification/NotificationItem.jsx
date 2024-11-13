@@ -17,7 +17,7 @@ const NotificationItem = ({ id, name, message, description, created_at, link_to,
   }
 
   return <>
-    <a href='javascript:void(0)' className="dropdown-item notify-item" onClick={onNotificationClicked}>
+    <div style={{cursor: 'pointer'}} className="dropdown-item notify-item" onClick={onNotificationClicked}>
       <div className={`notify-icon ${!creator ? 'bg-primary' : ''}`}>
         {
           creator
@@ -41,7 +41,7 @@ const NotificationItem = ({ id, name, message, description, created_at, link_to,
       <p className="text-muted mb-0 user-msg">
         <small>{moment(created_at).format('LLL')}</small>
       </p>
-    </a>
+    </div>
   </>
 }
 

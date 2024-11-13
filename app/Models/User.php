@@ -37,6 +37,7 @@ class User extends Model
         'email',
         'user_id',
         'business_id',
+        'has_mailing_sign',
         'relative_id'
     ];
 

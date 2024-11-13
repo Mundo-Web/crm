@@ -214,21 +214,19 @@ const Statuses = ({ statuses: statusesFromDB, tables }) => {
               </div>
               <div className="card-body d-flex align-items-start justify-content-center gap-2" style={{ flexWrap: 'wrap', minHeight: '200px' }}>
                 {statuses.filter(status => status.table_id === table.id).map((status, index) => (
-                  <>
-                    <div key={index} class="btn-group dropup col-auto">
-                      <span type="button" class="btn btn-sm btn-white" style={{ cursor: 'default' }}>
-                        <i className='mdi mdi-circle me-1' style={{ color: status.color }}></i>
-                        {status.name}
-                      </span>
-                      <button type="button" class="btn btn-sm btn-white dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                        <i class="mdi mdi-dots-vertical"></i>
-                      </button>
-                      <div class="dropdown-menu">
-                        <a class="dropdown-item" href="javascript:void(0)" onClick={() => onModalOpen(status)}>Editar</a>
-                        <a class="dropdown-item" href="javascript:void(0)" onClick={() => onDeleteClicked(status.id)}>Eliminar</a>
-                      </div>
+                  <div key={index} className="btn-group dropup col-auto">
+                    <span type="button" className="btn btn-sm btn-white" style={{ cursor: 'default' }}>
+                      <i className='mdi mdi-circle me-1' style={{ color: status.color }}></i>
+                      {status.name}
+                    </span>
+                    <button type="button" className="btn btn-sm btn-white dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                      <i className="mdi mdi-dots-vertical"></i>
+                    </button>
+                    <div className="dropdown-menu">
+                      <span className="dropdown-item" style={{ cursor: 'pointer' }} onClick={() => onModalOpen(status)}>Editar</span>
+                      <span className="dropdown-item" style={{ cursor: 'pointer' }} onClick={() => onDeleteClicked(status.id)}>Eliminar</span>
                     </div>
-                  </>
+                  </div>
                 ))}
               </div>
             </div>

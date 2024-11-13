@@ -40,7 +40,6 @@ import { renderToString } from 'react-dom/server'
 import googleSVG from './components/svg/google.svg'
 import GmailRest from './actions/GmailRest.js'
 import HtmlContent from './Utils/HtmlContent.jsx'
-import QuillFormGroup from './components/form/QuillFormGroup.jsx'
 import MailingModal from './components/modals/MailingModal.jsx'
 import FormatBytes from './Utils/FormatBytes.js'
 
@@ -52,7 +51,7 @@ const usetsRest = new UsersRest()
 const productsByClients = new ProductsByClients()
 const gmailRest = new GmailRest()
 
-const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatus, manageStatuses: manageStatusesFromDB, noteTypes, products = [], processes = [], session, can, lead }) => {
+const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatus, manageStatuses: manageStatusesFromDB, noteTypes, products = [], processes = [], session: sessionDB, can, lead }) => {
 
   const modalRef = useRef()
   const newLeadModalRef = useRef()
@@ -80,6 +79,7 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
   const webUrlRef = useRef()
   const messageRef = useRef()
 
+  const [session, setSession] = useState(sessionDB)
   const [statuses, setStatuses] = useState(statusesFromDB);
   const [manageStatuses, setManageStatuses] = useState(manageStatusesFromDB)
 
@@ -1018,7 +1018,7 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
                                 }
                               </button>
                             </Tippy>
-                            <button className='btn btn-xs btn-success' onClick={() => {
+                            <button className='btn btn-xs btn-success' type='button' onClick={() => {
                               setInReplyTo(null)
                               $(composeModal.current).modal('show');
                             }}>
@@ -1039,9 +1039,9 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
                             <small className='text-muted'>No te preocupes, tus datos están seguros con nosotros.</small>
                           </p>
                           <div className='d-flex flex-column justify-content-center align-items-center gap-1'>
-                            {/* <button className='btn btn-sm btn-primary' type='button' onClick={() => setTokenUUID(crypto.randomUUID())}>
+                            <button className='btn btn-sm btn-primary' type='button' onClick={() => setTokenUUID(crypto.randomUUID())}>
                               Ya he iniciado sesión
-                            </button> */}
+                            </button>
                             <button className="btn btn-sm btn-white d-inline-flex align-items-center gap-1" type='button' onClick={e => {
                               const authWindow = window.open(googleAuthURI, '_blank')
                               const lastTokenUUID = Local.get('tokenUUID')
@@ -1137,7 +1137,6 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
                               const mailing = await gmailRest.getDetails(mail.id)
                               if (!mailing) return
                               setMailLoaded(mailing)
-                              console.log(mailing)
                               $(mailModal.current).modal('show')
                             }}>
                               <b className='d-block'>
@@ -1234,7 +1233,7 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
     </Modal>
 
     <Modal modalRef={mailModal} title={mailLoaded?.subject} size='lg' zIndex={1060} hideHeader hideFooter>
-      <button type="button" class="btn-close float-end" data-bs-dismiss="modal" aria-label="Close"></button>
+      <button type="button" className="btn-close float-end" data-bs-dismiss="modal" aria-label="Close"></button>
       <table style={{
         width: 'max-content',
         maxWidth: '100%',
@@ -1322,7 +1321,7 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
       }
     </Modal>
 
-    <MailingModal modalRef={composeModal} data={leadLoaded} inReplyTo={inReplyTo} onSend={(newNote) => {
+    <MailingModal modalRef={composeModal} data={leadLoaded} session={session} setSession={setSession} inReplyTo={inReplyTo} onSend={(newNote) => {
       setLeadLoaded(old => ({ ...old, refresh: crypto.randomUUID() }))
       setNotes(old => ([...old, newNote]))
     }} />
