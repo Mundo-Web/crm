@@ -1039,9 +1039,9 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
                             <small className='text-muted'>No te preocupes, tus datos están seguros con nosotros.</small>
                           </p>
                           <div className='d-flex flex-column justify-content-center align-items-center gap-1'>
-                            <button className='btn btn-sm btn-primary' type='button' onClick={() => setTokenUUID(crypto.randomUUID())}>
+                            {/* <button className='btn btn-sm btn-primary' type='button' onClick={() => setTokenUUID(crypto.randomUUID())}>
                               Ya he iniciado sesión
-                            </button>
+                            </button> */}
                             <button className="btn btn-sm btn-white d-inline-flex align-items-center gap-1" type='button' onClick={e => {
                               const authWindow = window.open(googleAuthURI, '_blank')
                               const lastTokenUUID = Local.get('tokenUUID')
