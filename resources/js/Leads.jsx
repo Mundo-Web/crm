@@ -1285,7 +1285,9 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
             }}>
               <i className='mdi mdi-file'></i>
               <div>
-                <span className='d-block text-truncate' style={{ width: '145px' }}>{file.filename}</span>
+                <Tippy content={file.filename}>
+                  <span className='d-block text-truncate' style={{ width: '145px' }}>{file.filename}</span>
+                </Tippy>
                 <div className='d-flex gap-1 align-items-center justify-content-between'>
                   <small className='d-block'>{FormatBytes(file.size)}</small>
                   <div className='d-flex gap-1'>
