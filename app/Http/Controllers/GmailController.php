@@ -188,7 +188,15 @@ class GmailController extends Controller
       // Parte 1: El cuerpo del mensaje en HTML
       $rawMessage .= "--$boundary\r\n";
       $rawMessage .= "Content-Type: text/html; charset=UTF-8\r\n\r\n";
-      $rawMessage .= $request->input('body') . "\r\n\r\n";
+
+      $mailing_sign = Auth::user()->service_user->mailing_sign;
+
+      if ($mailing_sign) {
+        $app_url = \env('APP_URL');
+        $rawMessage .= $request->input('body') . "<div><img src=\"{$app_url}/storage/signs/{$mailing_sign}\" style=\"width: 100%; max-width: 520px;\"></div>\r\n\r\n";
+      } else {
+        $rawMessage .= $request->input('body') . "\r\n\r\n";
+      }
 
       // Parte 2: Adjuntar archivos (si los hay)
       if ($request->hasFile('attachments')) {
@@ -508,5 +516,4 @@ class GmailController extends Controller
       return response($response->toArray(), $response->status);
     }
   }
-
 }
