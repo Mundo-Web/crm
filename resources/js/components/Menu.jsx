@@ -91,7 +91,7 @@ const Menu = ({ session, can, presets, APP_PROTOCOL, APP_DOMAIN, leadsCount, tas
             <img className="d-flex me-2 rounded-circle" src={`//${APP_DOMAIN}/api/logo/thumbnail/null`}
               alt={currentBusiness.name} height="32" />
             <div className="w-100">
-              <h5 className={`m-0 font-14 text-primary`}>{currentBusiness.name}</h5>
+              <h5 className={`m-0 font-14 text-primary text-truncate`} style={{ width: '115px' }}>{currentBusiness.name}</h5>
               <span className="font-12 mb-0">RUC: {currentBusiness.person.document_number}</span>
             </div>
           </div>
