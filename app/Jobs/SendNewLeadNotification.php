@@ -116,7 +116,7 @@ class SendNewLeadNotification implements ShouldQueue
     }
 
     try {
-      new Fetch(env('WA_URL') . '/api/send', [
+      $resHTML = new Fetch(env('WA_URL') . '/api/send', [
         'method' => 'POST',
         'headers' => [
           'Accept' => 'application/json',
@@ -128,6 +128,8 @@ class SendNewLeadNotification implements ShouldQueue
           'html' => $html
         ]
       ]);
+
+      dump($resHTML->text());
 
       sleep(5);
 
