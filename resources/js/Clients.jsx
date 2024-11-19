@@ -216,7 +216,7 @@ const Clients = ({ projectStatuses, clientStatuses, products = [], manageStatuse
           text: 'Nuevo',
           title: 'Agregar registro',
           icon: 'fa fa-plus',
-          onClick: () => onOpenModal()
+          onClick: () => onModalOpen()
         }))
       }}
       columns={[
