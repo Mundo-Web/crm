@@ -118,7 +118,7 @@ const DataGrid = ({ gridRef: dataGridRef, rest, columns, toolBar, masterDetail, 
       masterDetail,
       onContentReady: (...props) => {
         tippy('.tippy-here', { arrow: true, animation: 'scale' })
-      }
+      },
       // onColumnsChanging: () => {
       //   const dataGrid = $(dataGridRef.current).dxDataGrid('instance')
       //   const state = dataGrid.state()
@@ -135,6 +135,16 @@ const DataGrid = ({ gridRef: dataGridRef, rest, columns, toolBar, masterDetail, 
 
       //   Local.set('dxSettings', dxSettings)
       // }
+      onOptionChanged: (e) => {
+        if (e.fullName === 'filterValue') {
+          const path = location.pathname;
+          const dxSettings = Local.get('dxSettings') || {};
+          dxSettings[path] = {
+            filterValue: e.value
+          };
+          Local.set('dxSettings', dxSettings);
+        }
+      },
     }).dxDataGrid('instance')
 
     tippy('.dx-button', { arrow: true })
@@ -143,6 +153,10 @@ const DataGrid = ({ gridRef: dataGridRef, rest, columns, toolBar, masterDetail, 
     // if (dxSettings[location.pathname]) {
     //   $(dataGridRef.current).dxDataGrid('instance').state(dxSettings[location.pathname])
     // }
+    const dxSettings = Local.get('dxSettings') || {};
+    if (dxSettings[location.pathname]?.filterValue) {
+      $(dataGridRef.current).dxDataGrid('instance').option('filterValue', dxSettings[location.pathname].filterValue);
+    }
   }, reloadWith)
 
   return (

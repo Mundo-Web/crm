@@ -17,6 +17,7 @@ class ProjectController extends BasicController
     public $reactView = 'Projects';
     public $prefix4filter = 'projects';
     public $ignorePrefix = ['remaining_amount', 'total_payments', 'last_payment_date'];
+    public $softDeletion = true;
 
     public function setReactViewProperties(Request $request)
     {
@@ -43,7 +44,9 @@ class ProjectController extends BasicController
             ->leftJoin('clients AS client', 'client.id', 'projects.id')
             ->leftJoin('payments', 'payments.project_id', 'projects.id')
             ->leftJoin('statuses AS status', 'status.id', 'projects.status_id')
-            ->groupBy('projects.id');
+            ->groupBy('projects.id')
+            ->where('projects.business_id', Auth::user()->business_id)
+            ->where('projects.deleted_at', null);
     }
 
     static function projectStatus(Request $request)

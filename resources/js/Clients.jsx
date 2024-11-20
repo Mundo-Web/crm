@@ -296,21 +296,21 @@ const Clients = ({ projectStatuses, clientStatuses, products = [], manageStatuse
             </Dropdown>)
           }
         } : null,
-        can('clients', 'root', 'all', 'changestatus') ? {
-          dataField: 'manage_status.name',
-          caption: 'Estado de gestion',
-          dataType: 'string',
-          cellTemplate: (container, { data }) => {
-            container.attr('style', 'overflow: visible')
-            ReactAppend(container, <Dropdown className='btn btn-xs btn-white rounded-pill' title={data?.manage_status?.name} icon={{ icon: 'fa fa-circle', color: data?.manage_status?.color }} tippy='Actualizar estado'>
-              {manageStatuses.map((status, i) => {
-                return <DropdownItem key={`status-${i}`} onClick={() => onManageStatusChange(data, status)}>
-                  <i className='fa fa-circle' style={{ color: status.color }}></i> {status.name}
-                </DropdownItem>
-              })}
-            </Dropdown>)
-          }
-        } : null,
+        // can('clients', 'root', 'all', 'changestatus') ? {
+        //   dataField: 'manage_status.name',
+        //   caption: 'Estado de gestion',
+        //   dataType: 'string',
+        //   cellTemplate: (container, { data }) => {
+        //     container.attr('style', 'overflow: visible')
+        //     ReactAppend(container, <Dropdown className='btn btn-xs btn-white rounded-pill' title={data?.manage_status?.name} icon={{ icon: 'fa fa-circle', color: data?.manage_status?.color }} tippy='Actualizar estado'>
+        //       {manageStatuses.map((status, i) => {
+        //         return <DropdownItem key={`status-${i}`} onClick={() => onManageStatusChange(data, status)}>
+        //           <i className='fa fa-circle' style={{ color: status.color }}></i> {status.name}
+        //         </DropdownItem>
+        //       })}
+        //     </Dropdown>)
+        //   }
+        // } : null,
         can('clients', 'root', 'all', 'list', 'update', 'changestatus', 'delete') ? {
           caption: 'Acciones',
           width: 235,
