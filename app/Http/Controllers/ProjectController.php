@@ -46,7 +46,7 @@ class ProjectController extends BasicController
             ->leftJoin('statuses AS status', 'status.id', 'projects.status_id')
             ->groupBy('projects.id')
             ->where('projects.business_id', Auth::user()->business_id)
-            ->where('projects.deleted_at', null);
+            ->whereNotNull('projects.status');
     }
 
     static function projectStatus(Request $request)
