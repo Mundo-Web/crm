@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Payment;
 use App\Models\Project;
 use App\Models\Status;
 use App\Models\User;
@@ -54,5 +55,12 @@ class ProjectController extends BasicController
                 ]);
         });
         return response($response->toArray(), $response->status);
+    }
+
+    public function afterSave(Request $request, object $projectJpa, ?bool $isNew)
+    {
+        $total_amount = Payment::where('project_id', $projectJpa->id)->sum('amount');
+        $projectJpa->remaining_amount = $projectJpa->cost - $total_amount;
+        $projectJpa->save();
     }
 }
