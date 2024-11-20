@@ -123,7 +123,7 @@ const Projects = ({ statuses, can }) => {
           text: 'Nuevo',
           title: 'Agregar registro',
           icon: 'fa fa-plus',
-          onClick: () => onOpenModal()
+          onClick: () => onModalOpen()
         }))
       }}
       filterValue={undefined}
