@@ -62,8 +62,12 @@ class ProjectController extends BasicController
 
     public function afterSave(Request $request, object $projectJpa, ?bool $isNew)
     {
-        $total_amount = Payment::where('project_id', $projectJpa->id)->sum('amount');
-        $projectJpa->remaining_amount = $projectJpa->cost - $total_amount;
+        if ($isNew) {
+            $projectJpa->remaining_amount = $projectJpa->cost;
+        } else {
+            $total_amount = Payment::where('project_id', $projectJpa->id)->sum('amount');
+            $projectJpa->remaining_amount = $projectJpa->cost - $total_amount;
+        }
         $projectJpa->save();
     }
 }
