@@ -333,7 +333,7 @@ const Projects = ({ statuses, can }) => {
           </div>
         </div>
         <input ref={idRef} type='hidden' />
-        <SelectAPIFormGroup eRef={clientRef} label='Cliente' col='col-12' dropdownParent='#project-crud-container' searchAPI='/api/clients/paginate' searchBy='name' required />
+        <SelectAPIFormGroup eRef={clientRef} label='Cliente' col='col-12' dropdownParent='#project-crud-container' searchAPI='/api/clients/paginate' searchBy='tradename' required />
         <SelectAPIFormGroup eRef={typeRef} label='Tipo del proyecto' col='col-md-4' dropdownParent='#project-crud-container' searchAPI='/api/types/paginate' searchBy='name' filter={['table_id', '=', 'cd8bd48f-c73c-4a62-9935-024139f3be5f']} required />
         <InputFormGroup eRef={nameRef} label='Nombre del proyecto' col='col-md-8' required />
         <TextareaFormGroup eRef={descriptionRef} label='Descripcion del proyecto' col='col-12' />
