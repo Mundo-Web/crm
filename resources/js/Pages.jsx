@@ -141,7 +141,7 @@ const Pages = ({ subdomains, subdomain, can }) => {
           icon: 'fas fa-undo-alt',
           onClick: () => $(gridRef.current).dxDataGrid('instance').refresh()
         }))
-        can('roles', 'all', 'create') && container.unshift(DxPanelButton({
+        can('pages', 'all', 'create') && container.unshift(DxPanelButton({
           className: 'btn btn-xs btn-soft-primary',
           text: 'Nuevo',
           title: 'Agregar registro',
