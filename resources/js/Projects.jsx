@@ -1,4 +1,3 @@
-
 import React, { useRef, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import { GET } from 'sode-extend-react'
@@ -23,6 +22,9 @@ import DateRange from './Reutilizables/Projects/DateRange.jsx'
 import Assigneds from './Reutilizables/Projects/Assigneds.jsx'
 import SelectFormGroup from './components/form/SelectFormGroup.jsx'
 import DxPanelButton from './components/dx/DxPanelButton.jsx'
+import SubdomainsRest from './actions/SubdomainsRest.js'
+
+const subdomainsRest = new SubdomainsRest()
 
 const Projects = ({ statuses, can }) => {
 
@@ -108,6 +110,33 @@ const Projects = ({ statuses, can }) => {
     $(gridRef.current).dxDataGrid('instance').refresh()
   }
 
+  const onAddSubdomainClicked = async (project) => {
+    const { isConfirmed } = await Swal.fire({
+      title: "¿Estás seguro de agregar páginas?",
+      text: "Esta acción creará un correlativo de páginas para el proyecto.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Sí, agregar",
+      cancelButtonText: "Cancelar"
+    });
+
+    if (!isConfirmed) return;
+
+    const result = await subdomainsRest.save({
+      project_id: project.id,
+      name: project.client.tradename
+    });
+    if (!result) {
+      Swal.fire("Error", "No se pudo crear la página.", "error");
+      return;
+    }
+
+    Swal.fire("Éxito", "Página creada exitosamente.", "success");
+    $(gridRef.current).dxDataGrid('instance').refresh();
+
+    location.href = `/pages/${result.correlative}`
+  }
+
   return (<>
     <Table gridRef={gridRef} title='Proyectos' rest={ProjectsRest} exportable
       toolBar={(container) => {
@@ -156,6 +185,7 @@ const Projects = ({ statuses, can }) => {
           visible: false,
           allowExporting: false,
         },
+        can('projects', 'root', 'all', 'addpayment') &&
         {
           dataField: 'cost',
           caption: 'Costo total',
@@ -164,6 +194,7 @@ const Projects = ({ statuses, can }) => {
             container.text(`S/. ${Number2Currency(data.cost)}`)
           }
         },
+        can('projects', 'root', 'all', 'addpayment') &&
         {
           dataField: 'remaining_amount',
           caption: 'Debe',
@@ -181,7 +212,7 @@ const Projects = ({ statuses, can }) => {
                 <div className='progress progress-bar-alt-primary progress-sm mt-0 mb-0' style={{
                   width: '200px'
                 }}>
-                  <div className='progress-bar bg-primary progress-animated wow animated animated' role='progressbar' aria-valuenow={data.total_payments} aria-valuemin='0' aria-valuemax={data.cost} style={{ width: `${percent}%`, visibility: 'visible', animationName: 'animationProgress' }}>
+                  <div className='progress-bar bg-primary progress-animated wow animated animated animated' role='progressbar' aria-valuenow={data.total_payments} aria-valuemin='0' aria-valuemax={data.cost} style={{ width: `${percent}%`, visibility: 'visible', animationName: 'animationProgress' }}>
                   </div>
                 </div>
               </>
@@ -218,6 +249,7 @@ const Projects = ({ statuses, can }) => {
           dataType: 'datetime',
           format: 'yyyy-MM-dd HH:mm:ss',
           cellTemplate: (container, { data }) => {
+            if (!data.last_payment_date) return container.html('<i class="text-muted">- No hay pagos -</i>')
             container.text(moment(data.last_payment_date).format('LLL'))
           }
         },
@@ -296,6 +328,24 @@ const Projects = ({ statuses, can }) => {
               icon: 'fas fa-money-check-alt',
               onClick: () => setDataLoaded(data)
             }))
+
+            if (can('pages', 'root', 'all', 'create')) {
+              if (data.subdomain) {
+                container.append(DxButton({
+                  className: 'btn btn-xs btn-dark-success',
+                  title: 'Ver páginas',
+                  icon: 'fas fa-window-restore',
+                  onClick: () => location.href = `/pages/${data.subdomain.correlative}`
+                }))
+              } else {
+                container.append(DxButton({
+                  className: 'btn btn-xs btn-dark-success',
+                  title: 'Agregar páginas',
+                  icon: 'fas fa-window-restore',
+                  onClick: () => onAddSubdomainClicked(data)
+                }))
+              }
+            }
 
             // can('projects', 'root', 'all', 'update') && ReactAppend(container, <TippyButton className='btn btn-xs btn-light' title={data.status === null ? 'Restaurar' : 'Cambiar estado'} onClick={() => onStatusChange(data)}>
             //   {

@@ -11,6 +11,7 @@ use App\Http\Controllers\GmailController;
 use App\Http\Controllers\KPILeadsController;
 use App\Http\Controllers\LeadController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\PageController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\RoleController;
@@ -20,6 +21,7 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\RemainingHistoryController;
 use App\Http\Controllers\SettingController;
 use App\Http\Controllers\StatusController;
+use App\Http\Controllers\SubdomainController;
 use App\Http\Controllers\TableController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\TypeController;
@@ -42,6 +44,8 @@ use Illuminate\Support\Facades\Route;
 
 Route::post('/login', [AuthController::class, 'login']);
 Route::get('/start/{uuid}', [UtilController::class, 'start']);
+
+Route::get('/pages/media/{uuid}', [PageController::class, 'media']);
 
 Route::middleware('auth')->group(function () {
     Route::delete('/logout', [AuthController::class, 'destroy'])
@@ -132,6 +136,16 @@ Route::middleware('auth')->group(function () {
     Route::patch('/projects/status', [ProjectController::class, 'status']);
     Route::patch('/projects/project-status', [ProjectController::class, 'projectStatus']);
     Route::delete('/projects/{id}', [ProjectController::class, 'delete']);
+
+    Route::post('/subdomains', [SubdomainController::class, 'save']);
+    Route::patch('/subdomains/status', [SubdomainController::class, 'status']);
+    Route::delete('/subdomains/{id}', [SubdomainController::class, 'delete']);
+
+    Route::post('/pages', [PageController::class, 'save']);
+    Route::post('/pages/paginate', [PageController::class, 'paginate']);
+    Route::patch('/pages/status', [PageController::class, 'status']);
+    Route::patch('/pages/project-status', [PageController::class, 'projectStatus']);
+    Route::delete('/pages/{id}', [PageController::class, 'delete']);
 
     // Payments routes
     Route::post('/payments', [PaymentController::class, 'save']);

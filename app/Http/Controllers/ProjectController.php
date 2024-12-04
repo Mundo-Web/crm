@@ -35,7 +35,7 @@ class ProjectController extends BasicController
 
     public function setPaginationInstance(string $model)
     {
-        return $model::with(['client', 'type', 'status'])->select([
+        return $model::with(['client', 'type', 'status', 'subdomain'])->select([
             'projects.*',
             // DB::raw('COALESCE(projects.cost - SUM(payments.amount), projects.cost) AS remaining_amount'),
             DB::raw('COALESCE(SUM(payments.amount), 0) AS total_payments'),
