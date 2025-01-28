@@ -13,6 +13,7 @@ class Project extends Model
     protected $keyType = 'string';
 
     protected $fillable = [
+        'id',
         'type_id',
         'client_id',
         'name',
@@ -26,18 +27,29 @@ class Project extends Model
         'remaining_amount'
     ];
 
-    public function client() {
+    public function client()
+    {
         return $this->belongsTo(Client::class);
     }
     public function status()
     {
         return $this->belongsTo(Status::class);
     }
-    public function type() {
+    public function type()
+    {
         return $this->belongsTo(Type::class);
     }
 
-    public function subdomain() {
+    public function subdomain()
+    {
         return $this->hasOne(Subdomain::class);
+    }
+
+    public static function regularizeRemaining(string $projectId)
+    {
+        $total_amount = Payment::where('project_id', $projectId)->sum('amount');
+        $projectJpa = Project::find($projectId);
+        $projectJpa->remaining_amount = $projectJpa->cost - $total_amount;
+        $projectJpa->save();
     }
 }
