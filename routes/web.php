@@ -39,14 +39,14 @@ use Inertia\Inertia;
 
 Route::get(
     'login',
-    fn () => Auth::check()
+    fn() => Auth::check()
         ? redirect('/home')
         // : Inertia::render('Login', [
         //     'PUBLIC_RSA_KEY' => Controller::$PUBLIC_RSA_KEY,
         //     'NOCAPTCHA_SITEKEY' => env('NOCAPTCHA_SITEKEY'),
         //     'token' => csrf_token()
         // ])
-        : redirect('//' . env('APP_DOMAIN'))
+        : redirect('//' . env('APP_DOMAIN') . '/login?service=' . env('APP_CORRELATIVE'))
 )->name('login');
 
 Route::get('/', function (Request $request) {
