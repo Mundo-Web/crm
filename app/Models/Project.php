@@ -22,7 +22,8 @@ class Project extends Model
         'starts_at',
         'ends_at',
         'business_id',
-        'status_id'
+        'status_id',
+        'remaining_amount'
     ];
 
     public function client() {
