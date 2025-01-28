@@ -41,11 +41,12 @@ Route::get(
     'login',
     fn () => Auth::check()
         ? redirect('/home')
-        : Inertia::render('Login', [
-            'PUBLIC_RSA_KEY' => Controller::$PUBLIC_RSA_KEY,
-            'NOCAPTCHA_SITEKEY' => env('NOCAPTCHA_SITEKEY'),
-            'token' => csrf_token()
-        ])
+        // : Inertia::render('Login', [
+        //     'PUBLIC_RSA_KEY' => Controller::$PUBLIC_RSA_KEY,
+        //     'NOCAPTCHA_SITEKEY' => env('NOCAPTCHA_SITEKEY'),
+        //     'token' => csrf_token()
+        // ])
+        : redirect('//' . env('APP_DOMAIN'))
 )->name('login');
 
 Route::get('/', function (Request $request) {
