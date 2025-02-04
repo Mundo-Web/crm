@@ -10,6 +10,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\GmailController;
 use App\Http\Controllers\KPILeadsController;
 use App\Http\Controllers\LeadController;
+use App\Http\Controllers\MetaController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\PaymentController;
@@ -46,6 +47,8 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::get('/start/{uuid}', [UtilController::class, 'start']);
 
 Route::get('/pages/media/{uuid}', [PageController::class, 'media']);
+
+Route::get('/meta/{business_id}', [MetaController::class, 'verify']);
 
 Route::middleware('auth')->group(function () {
     Route::delete('/logout', [AuthController::class, 'destroy'])
