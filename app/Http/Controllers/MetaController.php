@@ -12,8 +12,9 @@ class MetaController extends Controller
         return \response($challenge, 200);
     }
 
-    public function webhook(Request $request)
+    public function webhook(Request $request, string $business_id)
     {
+        dump($business_id);
         dump($request->all());
         return \response('OK', 200);
     }
