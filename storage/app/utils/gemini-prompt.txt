@@ -9,7 +9,7 @@ Instrucciones:
 6. Si detectas necesidad de asistencia humana, confirma con el cliente si desean hablar con un representante.
 
 Formato de respuesta:
-{{"nombreCliente": "[Nombre del cliente o '-' si no se proporciona]","correoCliente": "[Correo del cliente o 'unknown@atalaya.pe' si no se proporciona]","asistenciaHumana": "[SI/NO]"}}
+{{nombreCliente: "[Nombre del cliente o '-' si no se proporciona]",correoCliente: "[Correo del cliente o 'unknown@atalaya.pe' si no se proporciona]",asistenciaHumana: "[SI/NO]"}}
 
 Ejemplos de interacción:
 Cliente: "Hola, quiero información sobre sus servicios."
