@@ -6,7 +6,10 @@ use App\Http\Classes\dxResponse;
 use App\Models\Message;
 use App\Models\Atalaya\Business;
 use App\Models\Client;
+use App\Models\ClientNote;
 use App\Models\Setting;
+use App\Models\Task;
+use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\Request;
 use SoDe\Extend\Fetch;
@@ -38,14 +41,6 @@ class MessageController extends BasicController
             if ($clientExists) throw new Exception('El cliente ya ha sido registrado en Atalaya');
 
             if (!$request->from_me) {
-                // $leadJpa = Client::select()
-                //     ->where('business_id', $businessJpa->id)
-                //     ->where('contact_phone', $request->waId)
-                //     ->where('status_id', Setting::get('default-lead-status', $businessJpa->id))
-                //     ->where('manage_status_id', Setting::get('default-manage-lead-status', $businessJpa->id))
-                //     ->where('complete_registration', false)
-                //     ->first();
-                
                 $leadJpa = Client::updateOrCreate([
                     'business_id' => $businessJpa->id,
                     'contact_phone' => $request->waId,
@@ -63,7 +58,27 @@ class MessageController extends BasicController
                     'time' => Trace::getDate('time'),
                     'ip' => $request->ip()
                 ]);
-                dump($leadJpa->wasRecentlyCreated);
+                if ($leadJpa->wasRecentlyCreated) {
+                    $noteJpa = ClientNote::create([
+                        'note_type_id' => '8e895346-3d87-4a87-897a-4192b917c211',
+                        'client_id' => $leadJpa->id,
+                        'name' => 'Lead nuevo',
+                        'description' => UtilController::replaceData(
+                            Setting::get('whatsapp-new-lead-notification-message', $leadJpa->business_id),
+                            $leadJpa->toArray()
+                        )
+                    ]);
+
+                    Task::create([
+                        'model_id' => ClientNote::class,
+                        'note_id' => $noteJpa->id,
+                        'name' => 'Revisar lead',
+                        'description' => 'Debes revisar los requerimientos del lead',
+                        'ends_at' => Carbon::now()->addDay()->format('Y-m-d H:i:s'),
+                        'status' => 'Pendiente',
+                        'asignable' => true
+                    ]);
+                }
             }
 
             $needsExecutive = Message::where('business_id', $businessJpa->id)
