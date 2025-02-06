@@ -63,7 +63,7 @@ class MessageController extends BasicController
                     'time' => Trace::getDate('time'),
                     'ip' => $request->ip()
                 ]);
-                dump($leadJpa);
+                dump($leadJpa->wasRecentlyCreated);
             }
 
             $needsExecutive = Message::where('business_id', $businessJpa->id)
