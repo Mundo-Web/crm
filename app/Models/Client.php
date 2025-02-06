@@ -56,7 +56,8 @@ class Client extends Model
         'sector',
         'country_prefix',
         'workers',
-        'business_id'
+        'business_id',
+        'complete_registration'
     ];
 
     protected $hidden = [

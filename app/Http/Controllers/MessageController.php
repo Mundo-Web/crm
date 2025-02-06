@@ -13,10 +13,12 @@ use SoDe\Extend\Fetch;
 use SoDe\Extend\File;
 use SoDe\Extend\Response;
 use SoDe\Extend\Text;
+use SoDe\Extend\Trace;
 
 class MessageController extends BasicController
 {
     public $model = Message::class;
+    public $reactView = 'Messages';
 
     public function byPhone(Request $request, string $sessionId)
     {
@@ -29,8 +31,23 @@ class MessageController extends BasicController
             $businessApiKey = Setting::get('gemini-api-key', $businessJpa->id);
             if (!$businessApiKey) throw new Exception('Esta empresa no tiene integracion con AI');
 
-            $clientExists = Client::where('contact_phone', $request->waId)->where('business_id', $businessJpa->id)->exists();
+            $clientExists = Client::where('business_id', $businessJpa->id)
+                ->where('contact_phone', $request->waId)
+                ->where('complete_registration', true)
+                ->exists();
             if ($clientExists) throw new Exception('El cliente ya ha sido registrado en Atalaya');
+
+            Client::updateOrCreate([
+                'contact_phone' => $request->waId,
+                'complete_registration' => false
+            ], [
+                'contact_name' => $request->contact_name ?? 'Lead anonimo',
+                'source' => 'Gemini AI',
+                'origin' => 'WhatsApp',
+                'date' => Trace::getDate('date'),
+                'time' => Trace::getDate('time'),
+                'ip' => $request->ip()
+            ]);
 
             $needsExecutive = Message::where('business_id', $businessJpa->id)
                 ->where('wa_id', $request->waId)

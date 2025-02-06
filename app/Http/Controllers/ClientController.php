@@ -91,6 +91,7 @@ class ClientController extends BasicController
         $body['time'] = Trace::getDate('time');
         $body['ip'] = $request->ip();
         $body['updated_by'] = Auth::user()->service_user->id;
+        $body['complete_registration'] = true;
         return $body;
     }
 
