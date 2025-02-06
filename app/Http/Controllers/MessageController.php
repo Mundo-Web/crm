@@ -40,12 +40,15 @@ class MessageController extends BasicController
             Client::updateOrCreate([
                 'business_id' => $businessJpa->id,
                 'contact_phone' => $request->waId,
-                'complete_registration' => false
+                'status_id' => Setting::get('default-lead-status', $businessJpa->id),
+                'manage_status_id' => Setting::get('default-manage-lead-status', $businessJpa->id),
+                'complete_registration' => false,
             ], [
                 'name' => $request->contact_name ?? 'Lead anonimo',
                 'contact_name' => $request->contact_name ?? 'Lead anonimo',
                 'message' => $request->message,
-                'source' => 'Gemini AI',
+                'source' => 'Externo',
+                'triggered_by' => 'Gemini AI',
                 'origin' => 'WhatsApp',
                 'date' => Trace::getDate('date'),
                 'time' => Trace::getDate('time'),
