@@ -86,9 +86,9 @@ class SendNewLeadNotification implements ShouldQueue
           'content' => UtilController::html2wa($content)
         ]
       ]);
-      dump("WhatsApp API (Owner): Mensaje enviado correctamente a " . $client->country_prefix . $client->contact_phone);
+      // dump("WhatsApp API (Owner): Mensaje enviado correctamente a " . $client->country_prefix . $client->contact_phone);
     } catch (\Throwable $th) {
-      dump("WhatsApp Error (Owner): " . $th->getMessage());
+      // dump("WhatsApp Error (Owner): " . $th->getMessage());
     }
   }
 
@@ -112,7 +112,7 @@ class SendNewLeadNotification implements ShouldQueue
       $mail->isHTML(true);
       $mail->send();
     } catch (\Throwable $th) {
-      dump("Email Error: " . $th->getMessage());
+      // dump("Email Error: " . $th->getMessage());
     }
 
     try {
@@ -129,7 +129,7 @@ class SendNewLeadNotification implements ShouldQueue
         ]
       ]);
 
-      dump($resHTML->text());
+      // dump($resHTML->text());
 
       sleep(5);
 
@@ -149,9 +149,9 @@ class SendNewLeadNotification implements ShouldQueue
           'content' => UtilController::html2wa($message)
         ]
       ]);
-      dump("WhatsApp API: Mensaje enviado correctamente a " . $client->country_prefix . $client->contact_phone);
+      // dump("WhatsApp API: Mensaje enviado correctamente a " . $client->country_prefix . $client->contact_phone);
     } catch (\Throwable $th) {
-      dump("WhatsApp Error: " . $th->getMessage());
+      // dump("WhatsApp Error: " . $th->getMessage());
     }
   }
 }
