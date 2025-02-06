@@ -37,23 +37,25 @@ class MessageController extends BasicController
                 ->exists();
             if ($clientExists) throw new Exception('El cliente ya ha sido registrado en Atalaya');
 
-            Client::updateOrCreate([
-                'business_id' => $businessJpa->id,
-                'contact_phone' => $request->waId,
-                'status_id' => Setting::get('default-lead-status', $businessJpa->id),
-                'manage_status_id' => Setting::get('default-manage-lead-status', $businessJpa->id),
-                'complete_registration' => false,
-            ], [
-                'name' => $request->contact_name ?? 'Lead anonimo',
-                'contact_name' => $request->contact_name ?? 'Lead anonimo',
-                'message' => $request->message,
-                'source' => 'Externo',
-                'triggered_by' => 'Gemini AI',
-                'origin' => 'WhatsApp',
-                'date' => Trace::getDate('date'),
-                'time' => Trace::getDate('time'),
-                'ip' => $request->ip()
-            ]);
+            if (!$request->from_me) {
+                Client::updateOrCreate([
+                    'business_id' => $businessJpa->id,
+                    'contact_phone' => $request->waId,
+                    'status_id' => Setting::get('default-lead-status', $businessJpa->id),
+                    'manage_status_id' => Setting::get('default-manage-lead-status', $businessJpa->id),
+                    'complete_registration' => false,
+                ], [
+                    'name' => $request->contact_name ?? 'Lead anonimo',
+                    'contact_name' => $request->contact_name ?? 'Lead anonimo',
+                    'message' => $request->message,
+                    'source' => 'Externo',
+                    'triggered_by' => 'Gemini AI',
+                    'origin' => 'WhatsApp',
+                    'date' => Trace::getDate('date'),
+                    'time' => Trace::getDate('time'),
+                    'ip' => $request->ip()
+                ]);
+            }
 
             $needsExecutive = Message::where('business_id', $businessJpa->id)
                 ->where('wa_id', $request->waId)
