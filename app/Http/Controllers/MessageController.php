@@ -38,7 +38,15 @@ class MessageController extends BasicController
             if ($clientExists) throw new Exception('El cliente ya ha sido registrado en Atalaya');
 
             if (!$request->from_me) {
-                Client::updateOrCreate([
+                // $leadJpa = Client::select()
+                //     ->where('business_id', $businessJpa->id)
+                //     ->where('contact_phone', $request->waId)
+                //     ->where('status_id', Setting::get('default-lead-status', $businessJpa->id))
+                //     ->where('manage_status_id', Setting::get('default-manage-lead-status', $businessJpa->id))
+                //     ->where('complete_registration', false)
+                //     ->first();
+                
+                $leadJpa = Client::updateOrCreate([
                     'business_id' => $businessJpa->id,
                     'contact_phone' => $request->waId,
                     'status_id' => Setting::get('default-lead-status', $businessJpa->id),
@@ -55,6 +63,7 @@ class MessageController extends BasicController
                     'time' => Trace::getDate('time'),
                     'ip' => $request->ip()
                 ]);
+                dump($leadJpa);
             }
 
             $needsExecutive = Message::where('business_id', $businessJpa->id)
