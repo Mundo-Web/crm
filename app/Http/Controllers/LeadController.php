@@ -7,6 +7,7 @@ use App\Jobs\SendNewLeadNotification;
 use App\Models\Atalaya\Business;
 use App\Models\Client;
 use App\Models\ClientNote;
+use App\Models\Message;
 use App\Models\NoteType;
 use App\Models\Process;
 use App\Models\Product;
@@ -333,5 +334,36 @@ class LeadController extends BasicController
             $response->message = 'Se ha creado el lead correctamente';
         });
         return response($response->toArray(), $response->status);
+    }
+
+    public function delete(Request $request, string $id)
+    {
+        $response = new Response();
+        try {
+            $leadJpa = Client::find($id);
+            $deleted = $this->softDeletion
+                ? $this->model::where('id', $id)
+                ->update(['status' => null])
+                : $this->model::where('id', $id)
+                ->delete();
+
+            if (!$deleted) throw new Exception('No se ha eliminado ningun registro');
+
+            try {
+                Message::where('wa_id', $leadJpa->contact_phone)->delete();
+            } catch (\Throwable $th) {
+            }
+
+            $response->status = 200;
+            $response->message = 'Operacion correcta';
+        } catch (\Throwable $th) {
+            $response->status = 400;
+            $response->message = $th->getMessage();
+        } finally {
+            return response(
+                $response->toArray(),
+                $response->status
+            );
+        }
     }
 }
