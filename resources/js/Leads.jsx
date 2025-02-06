@@ -695,7 +695,7 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
               caption: 'Fecha creacion',
               dataType: 'date',
               cellTemplate: (container, { data }) => {
-                container.text(moment(data.created_at.replace('Z', '-05:00')).format('lll'))
+                container.text(moment(data.created_at.replace('Z', '+05:00')).format('lll'))
               },
               sortOrder: 'desc',
             },
