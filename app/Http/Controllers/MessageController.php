@@ -41,7 +41,9 @@ class MessageController extends BasicController
                 'contact_phone' => $request->waId,
                 'complete_registration' => false
             ], [
+                'name' => $request->contact_name ?? 'Lead anonimo',
                 'contact_name' => $request->contact_name ?? 'Lead anonimo',
+                'message' => $request->message,
                 'source' => 'Gemini AI',
                 'origin' => 'WhatsApp',
                 'date' => Trace::getDate('date'),
