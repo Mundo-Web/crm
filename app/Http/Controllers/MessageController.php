@@ -92,7 +92,7 @@ class MessageController extends BasicController
                 ->where('business_id', $businessJpa->id)
                 ->where('wa_id', $request->waId)
                 ->orderBy('created_at', 'DESC')
-                ->limit(20)
+                ->limit(40)
                 ->get();
             $prompt = File::get('../storage/app/utils/gemini-prompt.txt');
             $businessEmail = Setting::get('email-new-lead-notification-message-owneremail', $businessJpa->id);
