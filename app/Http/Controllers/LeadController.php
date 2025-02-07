@@ -318,6 +318,7 @@ class LeadController extends BasicController
             $validatedData['ip'] = $request->ip();
             $validatedData['status_id'] = Setting::get('default-lead-status', $businessJpa->id);
             $validatedData['manage_status_id'] = Setting::get('default-manage-lead-status', $businessJpa->id);
+            $validatedData['complete_registration'] = true;
 
             if ($validatedData['origin'] == 'WhatsApp') {
                 $leadJpa = Client::updateOrCreate([
