@@ -113,6 +113,7 @@ class LeadController extends BasicController
         $body['date'] = Trace::getDate('date');
         $body['time'] = Trace::getDate('time');
         $body['ip'] = $request->ip();
+        $body['complete_registration'] = true;
         return $body;
     }
 
