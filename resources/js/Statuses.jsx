@@ -2,17 +2,13 @@
 import React, { useRef, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import CreateReactScript from './Utils/CreateReactScript.jsx'
-import ReactAppend from './Utils/ReactAppend.jsx'
 import SetSelectValue from './Utils/SetSelectValue.jsx'
 import StatusesRest from './actions/StatusesRest.js'
 import Adminto from './components/Adminto.jsx'
 import Modal from './components/Modal.jsx'
-import Table from './components/Table.jsx'
 import InputFormGroup from './components/form/InputFormGroup.jsx'
 import SelectAPIFormGroup from './components/form/SelectAPIFormGroup.jsx'
 import TextareaFormGroup from './components/form/TextareaFormGroup.jsx'
-import TippyButton from './components/form/TippyButton.jsx'
-import Tippy from '@tippyjs/react'
 import Swal from 'sweetalert2'
 
 const statusesRest = new StatusesRest()
@@ -69,7 +65,6 @@ const Statuses = ({ statuses: statusesFromDB, tables }) => {
     if (statuses.find(x => x.id == result.id)) {
       setStatuses(old => {
         const index = old.findIndex(x => x.id == result.id)
-        console.log(index)
         old[index] = result
         return [...old]
       })

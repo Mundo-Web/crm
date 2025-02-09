@@ -2,15 +2,12 @@ import React, { useEffect, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import Adminto from './components/Adminto'
 import CreateReactScript from './Utils/CreateReactScript'
-import { Math, String } from 'sode-extend-react';
 import SelectFormGroup from './components/form/SelectFormGroup';
 import { renderToString } from 'react-dom/server';
 import KPILeadsRest from './actions/KPILeadsRest';
 import Number2Currency from './Utils/Number2Currency';
 
-const KPILeads = ({ months = [], currentMonth, currentYear,
-  // grouped = [], totalCount, clientsCount, archivedCount, managingCount, groupedByManageStatus
-}) => {
+const KPILeads = ({ months = [], currentMonth, currentYear }) => {
   const [selectedMonth, setSelectedMonth] = useState(`${currentYear}-${currentMonth}`)
   const [grouped, setGrouped] = useState([])
   const [groupedByManageStatus, setGroupedByManageStatus] = useState([])
@@ -42,7 +39,6 @@ const KPILeads = ({ months = [], currentMonth, currentYear,
   }
 
   useEffect(() => {
-    console.log(selectedMonth)
     KPILeadsRest.kpi(selectedMonth)
       .then(({ data, summary }) => {
         setGroupedByManageStatus(data)
@@ -71,7 +67,7 @@ const KPILeads = ({ months = [], currentMonth, currentYear,
                   month: row.month - 1,
                   year: row.year
                 })
-                return <option key={index} value={row.id} data-option={JSON.stringify(row)} selected={selectedMonth == row.id}>{month.format('MMMM YYYY').toTitleCase()}</option>
+                return <option key={index} value={row.id} data-option={JSON.stringify(row)}>{month.format('MMMM YYYY').toTitleCase()}</option>
               })
             }
           </SelectFormGroup>

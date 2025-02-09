@@ -40,8 +40,6 @@ const Pages = ({ subdomains, subdomain, can }) => {
     if (data?.id) setIsEditing(true)
     else setIsEditing(false)
 
-    console.log(data)
-
     idRef.current.value = data?.id || null
     pathRef.current.value = data?.path || ''
     nameRef.current.value = data?.name || ''

@@ -34,7 +34,25 @@ class KPILeadsController extends BasicController
             )
             ->orderBy(DB::raw('YEAR(clients.created_at)'), 'desc')
             ->orderBy(DB::raw('MONTH(clients.created_at)'), 'desc')
-            ->get();
+            ->get()->toArray();
+
+        $found = false;
+        foreach ($months as $month) {
+            if ($month['id'] == ("{$currentYear}-{$currentMonth}")) {
+                $found = true;
+                break;
+            }
+        }
+
+        // Si no se encontró, agregar un nuevo item
+        if (!$found) {
+            array_unshift($months, [
+                'id' => "{$currentYear}-{$currentMonth}",
+                'year' => $currentYear,
+                'month' => $currentMonth,
+                'quantity' => 0
+            ]);
+        }
 
         return [
             'months' => $months,

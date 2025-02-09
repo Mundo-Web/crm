@@ -1,7 +1,12 @@
 const WhatsAppStatuses = {
+  null: {
+    icon: 'mdi mdi-qrcode',
+    text: 'Inicia sesión en WhatsApp',
+    color: 'dark'
+  },
   verifying: {
     icon: 'fa fa-spinner fa-spin',
-    text: 'Verificando sesion...',
+    text: 'Verificando sesión...',
     color: 'secondary'
   },
   qr: {
@@ -16,17 +21,17 @@ const WhatsAppStatuses = {
   },
   authenticated: {
     icon: 'fa fa-check',
-    text: 'Sesion activa',
+    text: 'Sesión activa',
     color: 'primary'
   },
   ready: {
     icon: 'fa fa-check',
-    text: 'Sesion activa y lista',
+    text: 'Sesión activa y lista',
     color: 'success'
   },
   close: {
     icon: 'fa fa-warning',
-    text: 'Sesion cerrada',
+    text: 'Sesión cerrada',
     color: 'danger'
   }
 }

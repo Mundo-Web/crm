@@ -5,10 +5,15 @@ namespace App\Http\Middleware;
 use App\Models\User;
 use App\Models\Atalaya\User as AtalayaUser;
 use Closure;
+use Error;
+use Exception;
 use Illuminate\Auth\Middleware\Authenticate as Middleware;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use SoDe\Extend\JSON;
+use SoDe\Extend\Text;
+use Illuminate\Support\Facades\Schema;
 
 class Authenticate extends Middleware
 {
@@ -38,30 +43,46 @@ class Authenticate extends Middleware
             ->where('users_by_services_by_businesses.invitation_accepted', true)
             ->first();
 
-        if ($hasPermission) {
-            Auth::user()->is_owner = $hasPermission->is_owner;
-            Auth::user()->business_id = $hasPermission->business_id;
-            Auth::user()->business_uuid = $hasPermission->business_uuid;
-            $serviceUser = User::updateOrCreate([
-                'user_id' => Auth::user()->id,
-                'business_id' => $hasPermission->business_id
-            ], [
-                'user_id' => Auth::user()->id,
-                'business_id' => $hasPermission->business_id,
-                'name' => Auth::user()->name,
-                'lastname' => Auth::user()->lastname,
-                'email' => Auth::user()->email,
-                'fullname' => Auth::user()->name . ' ' . Auth::user()->lastname,
-                'relative_id' => Auth::user()->relative_id
-            ]);
+        if (!$hasPermission) return redirect("http://{$domain}/home?message=" . rawurldecode('No tienes permisos para utilizar el servicio de ' . env('APP_NAME')));
 
-            $serviceUser->getAllPermissions();
-            Auth::user()->service_user = $serviceUser;
+        Auth::user()->is_owner = $hasPermission->is_owner;
+        Auth::user()->business_id = $hasPermission->business_id;
+        Auth::user()->business_uuid = $hasPermission->business_uuid;
+        // $authUser = Auth::user();
 
-            return $next($request);
-        }
+        // dump("Auth::user() de [{$authUser->connection}]: " . JSON::stringify($authUser, true));
 
-        return  redirect("http://{$domain}/home?message=" . rawurldecode('No tienes permisos para utilizar el servicio de ' . env('APP_NAME')));
+        // \dump('Auth::user():' . Text::lineBreak() . JSON::stringify(Auth::user(), true));
+
+        // dump(\array_map(fn($item) => $item['name'], Schema::getColumns((new User())->getTable())));
+
+        // dump(env('WA_URL'));
+
+        $serviceUser = User::select()
+            ->where('user_id', $hasPermission->id)
+            ->where('business_id', $hasPermission->business_id)
+            ->first();
+
+        // \dump('ServiceUser:' . Text::lineBreak() . JSON::stringify($serviceUser));
+
+        $serviceUser = User::updateOrCreate([
+            'user_id' => $hasPermission->id,
+            'business_id' => $hasPermission->business_id
+        ], [
+            'user_id' => $hasPermission->id,
+            'business_id' => $hasPermission->business_id,
+            'name' => $hasPermission->name,
+            'lastname' => $hasPermission->lastname,
+            'email' => $hasPermission->email,
+            'fullname' => $hasPermission->name . ' ' . $hasPermission->lastname,
+            'relative_id' => $hasPermission->relative_id
+        ]);
+
+        // dump("Service user after update: " . JSON::stringify($serviceUser, true));
+        $serviceUser->getAllPermissions();
+        Auth::user()->service_user = $serviceUser;
+
+        return $next($request);
     }
     /**
      * Get the path the user should be redirected to when they are not authenticated.

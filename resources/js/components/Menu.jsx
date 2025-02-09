@@ -6,7 +6,7 @@ import Tippy from '@tippyjs/react'
 import 'tippy.js/dist/tippy.css';
 import BusinessCard from '../Reutilizables/Business/BusinessCard'
 
-const Menu = ({ session, can, presets, whatsappStatus, APP_PROTOCOL, APP_DOMAIN, leadsCount, tasksCount, businesses }) => {
+const Menu = ({ session, can, whatsAppStatus, APP_PROTOCOL, APP_DOMAIN, leadsCount, tasksCount, businesses }) => {
   let mainRole = {}
   if (session.is_owner) {
     mainRole = {
@@ -19,8 +19,6 @@ const Menu = ({ session, can, presets, whatsappStatus, APP_PROTOCOL, APP_DOMAIN,
       description: 'El usuario aún no tiene un rol asignado'
     }
   }
-
-  console.log(whatsappStatus)
 
   const currentBusiness = businesses.find(({ id }) => session.business_id == id)
   const otherBusinesses = businesses.filter(({ id }) => session.business_id != id)
@@ -144,7 +142,7 @@ const Menu = ({ session, can, presets, whatsappStatus, APP_PROTOCOL, APP_DOMAIN,
             <MenuItem id='archived-item' href="/archived" icon='mdi mdi-archive'>Archivados</MenuItem>
           </MenuItemContainer>
 
-          {whatsappStatus == 'ready' && <MenuItem href="/messages" icon='mdi mdi-forum'>Mensajes</MenuItem>}
+          {whatsAppStatus == 'ready' && <MenuItem href="/messages" icon='mdi mdi-forum'>Mensajes</MenuItem>}
           <MenuItem href="/products" icon='mdi mdi-layers'>Productos</MenuItem>
           {can('processes', 'root', 'all', 'list') && <MenuItem href="/processes" icon='mdi mdi-timeline-text'>Procesos</MenuItem>}
 

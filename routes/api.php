@@ -30,6 +30,8 @@ use App\Http\Controllers\UserByProjectController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\UtilController;
 use App\Http\Controllers\ViewController;
+use App\Http\Controllers\WhatsAppController;
+
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -55,6 +57,8 @@ Route::middleware('auth')->group(function () {
     Route::delete('/logout', [AuthController::class, 'destroy'])
         ->name('logout');
     Route::get('/authorize/{business}', [AuthController::class, 'activeService']);
+
+    Route::get('/whatsapp', [WhatsAppController::class, 'verify']);
 
     Route::get('/dashboard/{range}', [DashboardController::class, 'revenue']);
     Route::get('/dashboard/leads/kpi/{month}', [KPILeadsController::class, 'kpi']);
