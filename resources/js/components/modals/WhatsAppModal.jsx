@@ -170,9 +170,7 @@ const WhatsAppModal = ({ status: whatsAppStatus, setStatus: setWhatsAppStatus, W
     }
   }
 
-  return (<div ref={modalRef} id="whatsapp-modal" className="modal fade" aria-hidden="true" data-bs-backdrop='static' onLoadedData={(e) => e.target.addEventListener('show.bs.modal', () => {
-    console.log('Soy el evento directo y el estado de whastapp es:', whatsAppStatus)
-  })} >
+  return (<div ref={modalRef} id="whatsapp-modal" className="modal fade" aria-hidden="true" data-bs-backdrop='static'>
     <div className="modal-dialog modal-sm modal-dialog-centered">
       <div className="modal-content">
         <div className="modal-body">

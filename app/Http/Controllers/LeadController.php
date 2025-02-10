@@ -352,7 +352,8 @@ class LeadController extends BasicController
             if (!$deleted) throw new Exception('No se ha eliminado ningun registro');
 
             try {
-                Message::where('wa_id', $leadJpa->contact_phone)->delete();
+                Message::where('business_id', Auth::user()->business_id)
+                ->where('wa_id', $leadJpa->contact_phone)->delete();
             } catch (\Throwable $th) {
             }
 
