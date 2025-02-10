@@ -40,7 +40,10 @@ class MessageController extends BasicController
                         ->orWhere('contact_phone', $request->justPhone);
                 })
                 ->where('complete_registration', true)
+                ->whereNotNull('assigned_to')
+                ->where('status', true)
                 ->exists();
+
             if ($clientExists) throw new Exception('El cliente ya ha sido registrado en Atalaya');
 
             if (!$request->from_me) {
