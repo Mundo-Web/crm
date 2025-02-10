@@ -38,7 +38,7 @@ const WhatsAppModal = ({ status: whatsAppStatus, setStatus: setWhatsAppStatus, W
     setIsModalOpen(true);
   };
 
-  const handleHide = (whatsAppStatus) => {
+  const handleHide = () => {
     eventSource?.close?.()
     setIsModalOpen(false);
     if (whatsAppStatus == 'ready') return
