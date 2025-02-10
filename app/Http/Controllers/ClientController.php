@@ -131,9 +131,10 @@ class ClientController extends BasicController
         return \response($response->toArray(), $response->status);
     }
 
-    public function afterDelete(Model $data)
+    public function beforeDelete(Request $request)
     {
-        
-        dump($data);
+        return [
+            'complete_registration' => true
+        ];
     }
 }

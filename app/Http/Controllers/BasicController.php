@@ -360,11 +360,13 @@ class BasicController extends Controller
   {
     $response = new Response();
     try {
-      $this->beforeDelete($request);
+      $body = $this->beforeDelete($request);
+
       $dataBeforeDelete = $this->model::find($id);
+
       $deleted = $this->softDeletion
         ? $this->model::where('id', $id)
-        ->update(['status' => null])
+        ->update(\array_merge(['status' => null], $body))
         : $this->model::where('id', $id)
         ->delete();
 
