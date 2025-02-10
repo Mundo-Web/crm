@@ -48,22 +48,6 @@ class Authenticate extends Middleware
         Auth::user()->is_owner = $hasPermission->is_owner;
         Auth::user()->business_id = $hasPermission->business_id;
         Auth::user()->business_uuid = $hasPermission->business_uuid;
-        // $authUser = Auth::user();
-
-        // dump("Auth::user() de [{$authUser->connection}]: " . JSON::stringify($authUser, true));
-
-        // \dump('Auth::user():' . Text::lineBreak() . JSON::stringify(Auth::user(), true));
-
-        // dump(\array_map(fn($item) => $item['name'], Schema::getColumns((new User())->getTable())));
-
-        // dump(env('WA_URL'));
-
-        $serviceUser = User::select()
-            ->where('user_id', $hasPermission->id)
-            ->where('business_id', $hasPermission->business_id)
-            ->first();
-
-        // \dump('ServiceUser:' . Text::lineBreak() . JSON::stringify($serviceUser));
 
         $serviceUser = User::updateOrCreate([
             'user_id' => $hasPermission->id,
@@ -78,7 +62,6 @@ class Authenticate extends Middleware
             'relative_id' => $hasPermission->relative_id
         ]);
 
-        // dump("Service user after update: " . JSON::stringify($serviceUser, true));
         $serviceUser->getAllPermissions();
         Auth::user()->service_user = $serviceUser;
 
