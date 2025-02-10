@@ -17,7 +17,7 @@ class WhatsAppRest extends BasicRest {
         body: error.message,
         type: 'danger'
       })
-      return false
+      return { status: 400, data: null }
     }
   }
 }
