@@ -107,7 +107,7 @@ class MessageController extends BasicController
                     'correoEmpresa' => $businessEmail ?? 'hola@mundoweb.pe',
                     'servicios' => $businessServices ?? 'algunos servicios',
                 ]),
-                'alreadySent' => Message::where('wa_id', $request->waId)
+                'alreadySent' => Message::where('wa_id', 'like', "%{$request->waId}")
                     ->where('message', $request->message)
                     ->where('role', 'AI')
                     ->exists()
