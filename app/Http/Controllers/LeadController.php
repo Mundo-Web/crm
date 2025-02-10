@@ -251,7 +251,7 @@ class LeadController extends BasicController
         $response = Response::simpleTryCatch(function (Response $response) use ($request) {
             $leadJpa = Client::find($request->lead);
             if ($leadJpa->business_id != Auth::user()->business_id) throw new Exception('Este lead no pertenece a tu empresa');
-
+            $leadJpa->complete_registration = true;
             StatusController::updateStatus4Lead($leadJpa, $request->method() != 'DELETE');
 
             $leadJpa->save();
@@ -353,7 +353,7 @@ class LeadController extends BasicController
 
             try {
                 Message::where('business_id', Auth::user()->business_id)
-                ->where('wa_id', $leadJpa->contact_phone)->delete();
+                    ->where('wa_id', $leadJpa->contact_phone)->delete();
             } catch (\Throwable $th) {
             }
 

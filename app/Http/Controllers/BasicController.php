@@ -346,15 +346,29 @@ class BasicController extends Controller
     }
   }
 
+  public function beforeDelete(Request $request)
+  {
+    return [];
+  }
+
+  public function afterDelete(Model $data)
+  {
+    return [];
+  }
+
   public function delete(Request $request, string $id)
   {
     $response = new Response();
     try {
+      $this->beforeDelete($request);
+      $dataBeforeDelete = $this->model::find($id);
       $deleted = $this->softDeletion
         ? $this->model::where('id', $id)
         ->update(['status' => null])
         : $this->model::where('id', $id)
         ->delete();
+
+      $this->afterDelete($dataBeforeDelete);
 
       if (!$deleted) throw new Exception('No se ha eliminado ningun registro');
 
