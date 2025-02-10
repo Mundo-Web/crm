@@ -118,7 +118,7 @@ class MessageController extends BasicController
                     ->where('message', $request->message)
                     ->where('role', 'AI')
                     ->exists(),
-                'clientData' => $clientExists
+                'client' => $clientExists
             ];
             return $messages;
         });
