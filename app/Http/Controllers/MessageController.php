@@ -35,7 +35,10 @@ class MessageController extends BasicController
             if (!$businessApiKey) throw new Exception('Esta empresa no tiene integracion con AI');
 
             $clientExists = Client::where('business_id', $businessJpa->id)
-                ->where('contact_phone', $request->waId)
+                ->where(function ($query) use ($request) {
+                    return $query->where('contact_phone', $request->waId)
+                        ->orWhere('contact_phone', $request->justPhone);
+                })
                 ->where('complete_registration', true)
                 ->exists();
             if ($clientExists) throw new Exception('El cliente ya ha sido registrado en Atalaya');
