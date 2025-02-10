@@ -41,10 +41,14 @@ class MessageController extends BasicController
                 })
                 ->where('complete_registration', true)
                 ->whereNotNull('assigned_to')
-                ->where('status', true)
+                // ->where('status', true)
                 ->exists();
 
-            if ($clientExists) throw new Exception('El cliente ya ha sido registrado en Atalaya');
+
+
+            if ($clientExists && $clientExists->status == true) {
+                throw new Exception('El cliente ya ha sido registrado en Atalaya');
+            }
 
             if (!$request->from_me) {
                 $leadJpa = Client::updateOrCreate([
@@ -113,7 +117,8 @@ class MessageController extends BasicController
                 'alreadySent' => Message::where('wa_id', 'like', "%{$request->waId}")
                     ->where('message', $request->message)
                     ->where('role', 'AI')
-                    ->exists()
+                    ->exists(),
+                'clientData' => $clientExists
             ];
             return $messages;
         });
