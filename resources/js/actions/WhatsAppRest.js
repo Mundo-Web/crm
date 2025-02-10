@@ -7,8 +7,8 @@ class WhatsAppRest extends BasicRest {
   verify = async (showNotify = false) => {
     try {
       const { status, result } = await Fetch(`/api/${this.path}`)
-      if (!status) throw new Error(result?.message ?? 'Ocurrio un error al verificar la sesion')
-      return { status, data: result.data } ?? true
+      // if (!status) throw new Error(result?.message ?? 'Ocurrio un error al verificar la sesion')
+      return { status: data.status, data: result.data } ?? true
     } catch (error) {
       console.error(error.message)
       showNotify && Notify.add({
