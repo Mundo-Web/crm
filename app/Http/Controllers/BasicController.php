@@ -362,18 +362,11 @@ class BasicController extends Controller
     try {
       $body = $this->beforeDelete($request);
 
-      $dataBeforeDelete = $this->model::find($id);
-
-      $deleted = $this->softDeletion
-        ? $this->model::where('id', $id)
-        ->update(\array_merge(['status' => null], $body))
-        : $this->model::where('id', $id)
-        ->delete();
-
+      $dataBeforeDelete = new Model();
       if ($this->softDeletion) {
         $deleted = $this->model::where('id', $id)
           ->update(\array_merge(['status' => null], $body));
-        $dataBeforeDelete = $deleted;
+        $dataBeforeDelete = $this->model::find($id);
       } else {
         $deleted = $this->model::where('id', $id)
           ->delete();
