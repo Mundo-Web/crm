@@ -370,6 +370,15 @@ class BasicController extends Controller
         : $this->model::where('id', $id)
         ->delete();
 
+      if ($this->softDeletion) {
+        $deleted = $this->model::where('id', $id)
+          ->update(\array_merge(['status' => null], $body));
+        $dataBeforeDelete = $deleted;
+      } else {
+        $deleted = $this->model::where('id', $id)
+          ->delete();
+      }
+
       $this->afterDelete($dataBeforeDelete);
 
       if (!$deleted) throw new Exception('No se ha eliminado ningun registro');
