@@ -55,7 +55,7 @@ const WhatsAppModal = ({ status: whatsAppStatus, setStatus: setWhatsAppStatus, W
       modalElement.removeEventListener('show.bs.modal', handleShow);
       modalElement.removeEventListener('hide.bs.modal', handleHide);
     };
-  }, [null]);
+  }, [whatsAppStatus]);
 
   useEffect(() => {
     if (whatsAppStatus == 'verifying') {

@@ -10,8 +10,6 @@ moment.tz.setDefault('UTC');
 const Adminto = ({ session, children, notificationsCount, title, can, WA_URL, APP_URL, presets, businesses, APP_PROTOCOL, APP_DOMAIN, leadsCount, tasksCount }) => {
   const [whatsappStatus, setWhatsAppStatus] = useState(null)
 
-  console.log('El estado de WhatsApp en base es:', whatsappStatus)
-
   return (<>
     <div id="wrapper">
       <NavBar session={session} title={title} can={can} whatsappStatus={whatsappStatus} businesses={businesses} APP_DOMAIN={APP_DOMAIN} APP_PROTOCOL={APP_PROTOCOL} notificationsCount={notificationsCount} />
