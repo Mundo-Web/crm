@@ -168,7 +168,9 @@ const WhatsAppModal = ({ status: whatsAppStatus, setStatus: setWhatsAppStatus, W
     }
   }
 
-  return (<div ref={modalRef} id="whatsapp-modal" className="modal fade" aria-hidden="true" data-bs-backdrop='static' >
+  return (<div ref={modalRef} id="whatsapp-modal" className="modal fade" aria-hidden="true" data-bs-backdrop='static' onLoad={(e) => e.target.addEventListener('show.bs.modal', () => {
+    console.log('El esatdo de WhatsApp es:', whatsAppStatus)
+  })} >
     <div className="modal-dialog modal-sm modal-dialog-centered">
       <div className="modal-content">
         <div className="modal-body">
