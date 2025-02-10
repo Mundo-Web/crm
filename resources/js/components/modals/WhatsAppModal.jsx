@@ -10,7 +10,6 @@ const whatsAppRest = new WhatsAppRest()
 let eventSource = {}
 
 const WhatsAppModal = ({ status: whatsAppStatus, setStatus: setWhatsAppStatus, WA_URL, APP_URL, session }) => {
-  console.log('Hola mund');
 
   const modalRef = useRef()
   const qrRef = useRef()
@@ -24,11 +23,15 @@ const WhatsAppModal = ({ status: whatsAppStatus, setStatus: setWhatsAppStatus, W
   const businessSession = `atalaya-${session.business_uuid}`
 
   const verifyStatus = async () => {
-    console.log('Verificando sesion (el estado esta en):', whatsAppStatus)
-    const result = await whatsAppRest.verify()
-    if (!result) return
-    setWhatsAppStatus('ready')
-    setSessionInfo(result)
+    const { status, data } = await whatsAppRest.verify()
+    if (status == 200) {
+      setWhatsAppStatus('ready')
+      setSessionInfo(data)
+    } else if (status == 404) {
+      setWhatsAppStatus('close')
+    } else {
+      setWhatsAppStatus(null)
+    }
   }
 
   const handleShow = () => {
@@ -55,7 +58,6 @@ const WhatsAppModal = ({ status: whatsAppStatus, setStatus: setWhatsAppStatus, W
   }, [null]);
 
   useEffect(() => {
-    console.log({ whatsAppStatus, isModalOpen })
     if (whatsAppStatus == 'verifying') {
       const searchParams = new URLSearchParams({
         session: businessSession,
