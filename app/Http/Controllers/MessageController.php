@@ -42,7 +42,7 @@ class MessageController extends BasicController
                 ->where('complete_registration', true)
                 ->whereNotNull('assigned_to')
                 // ->where('status', true)
-                ->exists();
+                ->first();
 
 
 
