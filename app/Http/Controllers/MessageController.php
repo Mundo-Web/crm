@@ -34,7 +34,7 @@ class MessageController extends BasicController
             $businessApiKey = Setting::get('gemini-api-key', $businessJpa->id);
             if (!$businessApiKey) throw new Exception('Esta empresa no tiene integracion con AI');
 
-            $clientJpa = Client::where('business_id', $businessJpa->id)
+            $clientExists = Client::where('business_id', $businessJpa->id)
                 ->where(function ($query) use ($request) {
                     return $query->where('contact_phone', $request->waId)
                         ->orWhere('contact_phone', $request->justPhone);
@@ -44,9 +44,17 @@ class MessageController extends BasicController
                 ->where('status', true)
                 ->first();
 
-            if ($clientJpa) throw new Exception('El cliente ya ha sido registrado en Atalaya');
+            if ($clientExists) throw new Exception('El cliente ya ha sido registrado en Atalaya');
 
-            dump($clientJpa);
+            $clientJpa = Client::where('business_id', $businessJpa->id)
+                ->where(function ($query) use ($request) {
+                    return $query->where('contact_phone', $request->waId)
+                        ->orWhere('contact_phone', $request->justPhone);
+                })
+                // ->where('complete_registration', true)
+                // ->whereNotNull('assigned_to')
+                // ->where('status', true)
+                ->first();
 
             if (!$request->from_me) {
                 $leadJpa = Client::updateOrCreate([
