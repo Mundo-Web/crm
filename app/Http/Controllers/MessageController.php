@@ -57,7 +57,7 @@ class MessageController extends BasicController
                 // ->where('status', true)
                 ->first();
 
-            dump(JSON::stringify($clientJpa->toArray(), true));
+            dump(JSON::stringify($clientJpa, true));
 
             if (!$request->from_me) {
                 $leadJpa = Client::updateOrCreate([
