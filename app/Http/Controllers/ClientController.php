@@ -134,7 +134,7 @@ class ClientController extends BasicController
     public function beforeDelete(Request $request)
     {
         return [
-            // 'complete_registration' => false
+            'complete_registration' => false
         ];
     }
 }

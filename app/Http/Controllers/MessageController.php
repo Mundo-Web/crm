@@ -55,6 +55,7 @@ class MessageController extends BasicController
                 // ->where('complete_registration', true)
                 // ->whereNotNull('assigned_to')
                 // ->where('status', true)
+                ->orderBy('updated_at', 'DESC')
                 ->first();
 
             dump($request->all());
