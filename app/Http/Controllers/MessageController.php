@@ -58,9 +58,6 @@ class MessageController extends BasicController
                 ->orderBy('updated_at', 'DESC')
                 ->first();
 
-            dump($request->all());
-            dump(JSON::stringify($clientJpa, true));
-
             if (!$request->from_me) {
                 $leadJpa = Client::updateOrCreate([
                     'business_id' => $businessJpa->id,
