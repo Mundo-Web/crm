@@ -323,7 +323,8 @@ class LeadController extends BasicController
 
             if ($validatedData['origin'] == 'WhatsApp') {
                 $leadJpa = Client::updateOrCreate([
-                    'contact_phone' => $validatedData['contact_phone']
+                    'contact_phone' => $validatedData['contact_phone'],
+                    'complete_registration' => false
                 ], $validatedData);
             } else {
                 $leadJpa = Client::create($validatedData);
