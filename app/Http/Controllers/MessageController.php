@@ -69,8 +69,8 @@ class MessageController extends BasicController
                     'complete_registration' => false,
                     'status' => true
                 ], [
-                    'name' => $clientJpa->name == 'Lead anonimo' ? ($request->contact_name ?? 'Lead anonimo') : $clientJpa->name,
-                    'contact_name' => $clientJpa->name == 'Lead anonimo' ?  ($request->contact_name ?? 'Lead anonimo') : $clientJpa->contact_name,
+                    'name' => ($clientJpa->name == 'Lead anonimo' ? $request->contact_name : $clientJpa->name) ?? 'Lead anonimo',
+                    'contact_name' => ($clientJpa->contact_name == 'Lead anonimo' ? $request->contact_name : $clientJpa->contact_name) ?? 'Lead anonimo',
                     'message' => $request->message,
                     'source' => 'Externo',
                     'triggered_by' => 'Gemini AI',
