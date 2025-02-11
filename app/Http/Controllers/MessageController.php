@@ -57,6 +57,7 @@ class MessageController extends BasicController
                 // ->where('status', true)
                 ->first();
 
+            dump($request->all());
             dump(JSON::stringify($clientJpa, true));
 
             if (!$request->from_me) {
