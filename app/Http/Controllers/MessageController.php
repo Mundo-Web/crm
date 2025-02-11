@@ -74,7 +74,6 @@ class MessageController extends BasicController
                     'time' => Trace::getDate('time'),
                     'ip' => $request->ip()
                 ]);
-                dump($leadJpa);
                 if ($leadJpa->wasRecentlyCreated) {
                     $noteJpa = ClientNote::create([
                         'note_type_id' => '8e895346-3d87-4a87-897a-4192b917c211',
@@ -128,10 +127,13 @@ class MessageController extends BasicController
                     ->exists(),
                 'client' => $clientJpa?->toArray() ?? null
             ];
-            return $messages->map(function ($message) use ($clientJpa) {
+            $messages =
+            $messages->map(function ($message) use ($clientJpa) {
                 if ($clientJpa) $message->role = $clientJpa->contact_name;
                 return $message;
             });
+            dump($messages);
+            return $messages;
         });
         return response($response->toArray(), $response->status);
     }
