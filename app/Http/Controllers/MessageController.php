@@ -46,6 +46,8 @@ class MessageController extends BasicController
 
             if ($clientJpa) throw new Exception('El cliente ya ha sido registrado en Atalaya');
 
+            dump($clientJpa);
+
             if (!$request->from_me) {
                 $leadJpa = Client::updateOrCreate([
                     'business_id' => $businessJpa->id,
