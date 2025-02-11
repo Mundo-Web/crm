@@ -14,6 +14,7 @@ use Exception;
 use Illuminate\Http\Request;
 use SoDe\Extend\Fetch;
 use SoDe\Extend\File;
+use SoDe\Extend\JSON;
 use SoDe\Extend\Response;
 use SoDe\Extend\Text;
 use SoDe\Extend\Trace;
@@ -40,11 +41,11 @@ class MessageController extends BasicController
                         ->orWhere('contact_phone', $request->justPhone);
                 })
                 ->where('complete_registration', true)
-                // ->whereNotNull('assigned_to')
+                ->whereNotNull('assigned_to')
                 ->where('status', true)
                 ->first();
 
-            if ($clientExists && $clientExists->assigned_to) throw new Exception('El cliente ya ha sido registrado en Atalaya');
+            if ($clientExists) throw new Exception('El cliente ya ha sido registrado en Atalaya');
 
             $clientJpa = Client::where('business_id', $businessJpa->id)
                 ->where(function ($query) use ($request) {
@@ -55,6 +56,8 @@ class MessageController extends BasicController
                 // ->whereNotNull('assigned_to')
                 // ->where('status', true)
                 ->first();
+
+            dump(JSON::stringify($clientJpa->toArray(), true));
 
             if (!$request->from_me) {
                 $leadJpa = Client::updateOrCreate([
