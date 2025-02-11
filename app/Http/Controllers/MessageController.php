@@ -58,7 +58,7 @@ class MessageController extends BasicController
                 ->orderBy('updated_at', 'DESC')
                 ->first();
 
-            if ($clientJpa) $clientJpa = new Client();
+            if (!$clientJpa) $clientJpa = new Client();
 
             if (!$request->from_me) {
                 $leadJpa = Client::updateOrCreate([
