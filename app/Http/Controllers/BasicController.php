@@ -372,8 +372,6 @@ class BasicController extends Controller
           ->delete();
       }
 
-      dump($dataBeforeDelete);
-
       $this->afterDelete($dataBeforeDelete);
 
       if (!$deleted) throw new Exception('No se ha eliminado ningun registro');
