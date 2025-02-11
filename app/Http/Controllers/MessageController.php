@@ -128,10 +128,10 @@ class MessageController extends BasicController
                 'client' => $clientJpa?->toArray() ?? null
             ];
             $messages =
-            $messages->map(function ($message) use ($clientJpa) {
-                if ($clientJpa) $message->role = $clientJpa->contact_name;
-                return $message;
-            });
+                $messages->map(function ($message) use ($clientJpa) {
+                    if ($clientJpa) $message->role = $clientJpa->contact_name;
+                    return $message;
+                });
             dump($messages);
             return $messages;
         });
