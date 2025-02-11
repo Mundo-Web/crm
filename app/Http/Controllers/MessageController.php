@@ -39,14 +39,12 @@ class MessageController extends BasicController
                     return $query->where('contact_phone', $request->waId)
                         ->orWhere('contact_phone', $request->justPhone);
                 })
-                // ->where('complete_registration', true)
-                // ->whereNotNull('assigned_to')
-                // ->where('status', true)
+                ->where('complete_registration', true)
+                ->whereNotNull('assigned_to')
+                ->where('status', true)
                 ->first();
 
-            if ($clientJpa && $clientJpa->status && $clientJpa->complete_registration && !$clientJpa->assigned_to) {
-                throw new Exception('El cliente ya ha sido registrado en Atalaya');
-            }
+            if ($clientJpa) throw new Exception('El cliente ya ha sido registrado en Atalaya');
 
             if (!$request->from_me) {
                 $leadJpa = Client::updateOrCreate([
