@@ -118,7 +118,10 @@ class MessageController extends BasicController
                     ->exists(),
                 'client' => $clientJpa?->toArray() ?? null
             ];
-            return $messages;
+            return $messages->map(function ($message) use ($clientJpa) {
+                if ($clientJpa) $message->role = $clientJpa->contact_name;
+                return $message;
+            });
         });
         return response($response->toArray(), $response->status);
     }
