@@ -68,6 +68,7 @@ class MessageController extends BasicController
                     'status_id' => Setting::get('default-lead-status', $businessJpa->id),
                     'manage_status_id' => Setting::get('default-manage-lead-status', $businessJpa->id),
                     'complete_registration' => false,
+                    'status' => true
                 ], [
                     'name' => $clientJpa->name == 'Lead anonimo' ? ($request->contact_name ?? 'Lead anonimo') : $clientJpa->name,
                     'contact_name' => $clientJpa->name == 'Lead anonimo' ?  ($request->contact_name ?? 'Lead anonimo') : $clientJpa->contact_name,
