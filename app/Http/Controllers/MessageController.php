@@ -134,7 +134,6 @@ class MessageController extends BasicController
                     if ($clientJpa) $message->role = $clientJpa->contact_name;
                     return $message;
                 });
-            dump($messages);
             return $messages;
         });
         return response($response->toArray(), $response->status);
