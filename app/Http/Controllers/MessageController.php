@@ -40,7 +40,7 @@ class MessageController extends BasicController
                         ->orWhere('contact_phone', $request->justPhone);
                 })
                 ->where('complete_registration', true)
-                ->whereNotNull('assigned_to')
+                // ->whereNotNull('assigned_to')
                 ->where('status', true)
                 ->first();
 
