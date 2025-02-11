@@ -44,7 +44,7 @@ class MessageController extends BasicController
                 // ->where('status', true)
                 ->first();
 
-            if ($clientJpa && $clientJpa->status == true && $clientJpa->complete_registration == true && !$clientJpa->assigned_to) {
+            if ($clientJpa && $clientJpa->status && $clientJpa->complete_registration && !$clientJpa->assigned_to) {
                 throw new Exception('El cliente ya ha sido registrado en Atalaya');
             }
 
@@ -56,8 +56,8 @@ class MessageController extends BasicController
                     'manage_status_id' => Setting::get('default-manage-lead-status', $businessJpa->id),
                     'complete_registration' => false,
                 ], [
-                    'name' => $request->contact_name ?? 'Lead anonimo',
-                    'contact_name' => $request->contact_name ?? 'Lead anonimo',
+                    'name' => $clientJpa->name == 'Lead anonimo' ? ($request->contact_name ?? 'Lead anonimo') : $clientJpa->name,
+                    'contact_name' => $clientJpa->name == 'Lead anonimo' ?  ($request->contact_name ?? 'Lead anonimo') : $clientJpa->contact_name,
                     'message' => $request->message,
                     'source' => 'Externo',
                     'triggered_by' => 'Gemini AI',
@@ -70,7 +70,7 @@ class MessageController extends BasicController
                     $noteJpa = ClientNote::create([
                         'note_type_id' => '8e895346-3d87-4a87-897a-4192b917c211',
                         'client_id' => $leadJpa->id,
-                        'name' => 'Lead nuevo',
+                        'name' => 'Lead anonimo',
                         'description' => UtilController::replaceData(
                             Setting::get('whatsapp-new-lead-notification-message', $leadJpa->business_id),
                             $leadJpa->toArray()
@@ -87,6 +87,7 @@ class MessageController extends BasicController
                         'asignable' => true
                     ]);
                 }
+                // $clientJpa = $leadJpa;
             }
 
             $needsExecutive = Message::where('business_id', $businessJpa->id)
