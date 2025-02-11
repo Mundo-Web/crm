@@ -66,6 +66,7 @@ class MessageController extends BasicController
                     'time' => Trace::getDate('time'),
                     'ip' => $request->ip()
                 ]);
+                dump($leadJpa);
                 if ($leadJpa->wasRecentlyCreated) {
                     $noteJpa = ClientNote::create([
                         'note_type_id' => '8e895346-3d87-4a87-897a-4192b917c211',
