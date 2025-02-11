@@ -44,9 +44,7 @@ class MessageController extends BasicController
                 ->where('status', true)
                 ->first();
 
-            dump($clientExists);
-
-            if ($clientExists) throw new Exception('El cliente ya ha sido registrado en Atalaya');
+            if ($clientExists && $clientExists->assigned_to) throw new Exception('El cliente ya ha sido registrado en Atalaya');
 
             $clientJpa = Client::where('business_id', $businessJpa->id)
                 ->where(function ($query) use ($request) {
