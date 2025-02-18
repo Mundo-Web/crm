@@ -152,6 +152,7 @@ Route::middleware('auth')->group(function () {
 
     // Projects Archived routes
     Route::post('/projects/archived/paginate', [ProjectArchivedController::class, 'paginate']);
+    Route::delete('/projects/archived/{id}', [ProjectArchivedController::class, 'delete']);
 
     Route::post('/subdomains', [SubdomainController::class, 'save']);
     Route::patch('/subdomains/status', [SubdomainController::class, 'status']);

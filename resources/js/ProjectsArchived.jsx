@@ -27,6 +27,22 @@ const ProjectsArchived = ({ can }) => {
     $(gridRef.current).dxDataGrid('instance').refresh()
   }
 
+  const onDeleteClicked = async (id) => {
+    const { isConfirmed } = await Swal.fire({
+      title: "¿Estás seguro de eliminar este proyecto?",
+      text: "Esta accion es irreversible, se eliminara el proyecto por completo",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Continuar",
+      cancelButtonText: "Cancelar"
+    })
+    if (!isConfirmed) return
+
+    const result = await projectsArchivedRest.delete(id)
+    if (!result) return
+    $(gridRef.current).dxDataGrid('instance').refresh()
+  }
+
   return (<>
     <Table gridRef={gridRef} title='Proyectos Archivados' rest={projectsArchivedRest} exportable
       toolBar={(container) => {
@@ -150,11 +166,17 @@ const ProjectsArchived = ({ can }) => {
         {
           caption: 'Acciones',
           cellTemplate: (container, { data }) => {
-            can('projects', 'root', 'all', 'delete') && container.append(DxButton({
+            can('projects', 'root', 'all', 'changestatus') && container.append(DxButton({
               className: 'btn btn-xs btn-soft-dark',
               title: 'Restaurar',
               icon: 'fas fa-trash-restore',
               onClick: () => onStatusChange(data)
+            }))
+            can('projects', 'root', 'all', 'delete') && container.append(DxButton({
+              className: 'btn btn-xs btn-soft-danger',
+              title: 'Eliminar definitivamente',
+              icon: 'fas fa-trash',
+              onClick: () => onDeleteClicked(data)
             }))
           },
           allowFiltering: false,
