@@ -19,6 +19,7 @@ use App\Http\Controllers\RoleController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\ProcessController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\ProjectArchivedController;
 use App\Http\Controllers\RemainingHistoryController;
 use App\Http\Controllers\SettingController;
 use App\Http\Controllers\StatusController;
@@ -144,6 +145,9 @@ Route::middleware('auth')->group(function () {
     Route::patch('/projects/status', [ProjectController::class, 'status']);
     Route::patch('/projects/project-status', [ProjectController::class, 'projectStatus']);
     Route::delete('/projects/{id}', [ProjectController::class, 'delete']);
+
+    // Projects Archived routes
+    Route::post('/projects/archived/paginate', [ProjectArchivedController::class, 'paginate']);
 
     Route::post('/subdomains', [SubdomainController::class, 'save']);
     Route::patch('/subdomains/status', [SubdomainController::class, 'status']);

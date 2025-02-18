@@ -146,7 +146,12 @@ const Menu = ({ session, can, whatsAppStatus, APP_PROTOCOL, APP_DOMAIN, leadsCou
           <MenuItem href="/products" icon='mdi mdi-layers'>Productos</MenuItem>
           {can('processes', 'root', 'all', 'list') && <MenuItem href="/processes" icon='mdi mdi-timeline-text'>Procesos</MenuItem>}
 
-          {can('projects', 'root', 'all', 'list') && <MenuItem href="/projects" icon='mdi mdi-page-next'>Proyectos</MenuItem>}
+          {can('projects', 'root', 'all', 'list') && <MenuItemContainer title='Proyectos' icon='mdi mdi-page-next'>
+            <MenuItem href="/projects" icon='mdi mdi-lan-pending'>En curso</MenuItem>
+            {/* <MenuItem href="/projects/done" icon='mdi mdi-check'>Terminados</MenuItem> */}
+            <MenuItem href="/projects/archived" icon='mdi mdi-archive'>Archivados</MenuItem>
+          </MenuItemContainer>
+          }
           {
             (can('users', 'root', 'all', 'list') || can('roles', 'root', 'all', 'list') || can('permissions', 'root', 'all', 'list')) &&
             <MenuItemContainer title='Usuarios y roles' icon='mdi mdi-account-lock'>

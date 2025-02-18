@@ -96,12 +96,12 @@ const Projects = ({ statuses, can }) => {
 
   const onDeleteClicked = async (id) => {
     const { isConfirmed } = await Swal.fire({
-      title: "Estas seguro?",
-      text: `Esta acción no se puede deshacer`,
+      title: "¿Estás seguro de archivar este proyecto?",
+      text: "Aún podrás verlo en la ventana de archivados",
       icon: "warning",
       showCancelButton: true,
       confirmButtonText: "Continuar",
-      cancelButtonText: `Cancelar`
+      cancelButtonText: "Cancelar"
     })
     if (!isConfirmed) return
 
@@ -138,7 +138,7 @@ const Projects = ({ statuses, can }) => {
   }
 
   return (<>
-    <Table gridRef={gridRef} title='Proyectos' rest={ProjectsRest} exportable
+    <Table gridRef={gridRef} title='Proyectos En Curso' rest={ProjectsRest} exportable
       toolBar={(container) => {
         container.unshift(DxPanelButton({
           className: 'btn btn-xs btn-soft-dark',
@@ -172,7 +172,6 @@ const Projects = ({ statuses, can }) => {
         {
           dataField: 'name',
           caption: 'Proyecto',
-          visible: false
         },
         {
           dataField: 'users',
@@ -184,6 +183,7 @@ const Projects = ({ statuses, can }) => {
           },
           visible: false,
           allowExporting: false,
+          // allowFiltering: false,
         },
         can('projects', 'root', 'all', 'addpayment') &&
         {
@@ -361,9 +361,9 @@ const Projects = ({ statuses, can }) => {
             //   <i className='fa fa-trash-alt'></i>
             // </TippyButton>)
             can('projects', 'root', 'all', 'delete') && container.append(DxButton({
-              className: 'btn btn-xs btn-soft-danger',
-              title: 'Eliminar',
-              icon: 'fa fa-trash-alt',
+              className: 'btn btn-xs btn-soft-dark',
+              title: 'Archivar',
+              icon: 'mdi mdi-archive',
               onClick: () => onDeleteClicked(data.id)
             }))
           },
@@ -404,7 +404,7 @@ const Projects = ({ statuses, can }) => {
 CreateReactScript((el, properties) => {
   if (!properties.can('projects', 'root', 'all', 'list')) return location.href = '/';
   createRoot(el).render(
-    <Adminto {...properties} title='Proyectos'>
+    <Adminto {...properties} title='Proyectos en curso'>
       <Projects {...properties} />
     </Adminto>
   );

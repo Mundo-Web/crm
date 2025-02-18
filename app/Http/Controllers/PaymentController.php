@@ -3,16 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Http\Classes\dxResponse;
-use App\Models\dxDataGrid;
 use App\Models\Payment;
 use App\Models\Project;
-use Exception;
 use Illuminate\Contracts\Routing\ResponseFactory;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response as HttpResponse;
 use Illuminate\Support\Facades\Auth;
-use SoDe\Extend\JSON;
-use SoDe\Extend\Response;
 
 class PaymentController extends BasicController
 {
