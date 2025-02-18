@@ -34,20 +34,4 @@ class ProjectArchivedController extends BasicController
             ->whereNull('projects.status')
             ->distinct();
     }
-
-    static function projectStatus(Request $request)
-    {
-        $response = Response::simpleTryCatch(function (Response $response) use ($request) {
-            Project::where('id', $request->project)
-                ->update([
-                    'status_id' => $request->status
-                ]);
-        });
-        return response($response->toArray(), $response->status);
-    }
-
-    public function afterSave(Request $request, object $projectJpa, ?bool $isNew)
-    {
-        Project::regularizeRemaining($projectJpa->id);
-    }
 }

@@ -1,61 +1,33 @@
 import React, { useRef, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import { GET } from 'sode-extend-react'
-import Swal from 'sweetalert2'
 import 'tippy.js/dist/tippy.css'
-import PaymentModal from './Reutilizables/Payments/PaymentModal.jsx'
-import ProjectStatusDropdown from './Reutilizables/Projects/ProjectStatusDropdown.jsx'
 import CreateReactScript from './Utils/CreateReactScript.jsx'
 import Number2Currency from './Utils/Number2Currency.jsx'
-import SetSelectValue from './Utils/SetSelectValue.jsx'
 import ProjectsArchivedRest from './actions/ProjectsArchivedRest.js'
 import Adminto from './components/Adminto.jsx'
-import Modal from './components/Modal.jsx'
 import Table from './components/Table.jsx'
 import DxButton from './components/dx/DxButton.jsx'
-import InputFormGroup from './components/form/InputFormGroup.jsx'
-import SelectAPIFormGroup from './components/form/SelectAPIFormGroup.jsx'
-import TextareaFormGroup from './components/form/TextareaFormGroup.jsx'
 import DxBox from './components/dx/DxBox.jsx'
-import AssignUsersModal from './Reutilizables/Projects/AssignUsersModal.jsx'
 import DateRange from './Reutilizables/Projects/DateRange.jsx'
 import Assigneds from './Reutilizables/Projects/Assigneds.jsx'
-import SelectFormGroup from './components/form/SelectFormGroup.jsx'
 import DxPanelButton from './components/dx/DxPanelButton.jsx'
-import SubdomainsRest from './actions/SubdomainsRest.js'
 import ReactAppend from './Utils/ReactAppend.jsx'
 
-const subdomainsRest = new SubdomainsRest()
+const projectsArchivedRest = new ProjectsArchivedRest()
 
 const ProjectsArchived = ({ can }) => {
 
   const gridRef = useRef()
-  const modalRef = useRef()
-
-  // Form elements ref
-  const statusRef = useRef()
-  const idRef = useRef()
-  const clientRef = useRef()
-  const typeRef = useRef()
-  const nameRef = useRef()
-  const descriptionRef = useRef()
-  const costRef = useRef()
-  const signAtRef = useRef()
-  const startsAtRef = useRef()
-  const endsAtRef = useRef()
-
-  const [isEditing, setIsEditing] = useState(false)
-  const [dataLoaded, setDataLoaded] = useState({})
-  const [project2Assign, setProject2Assign] = useState({})
 
   const onStatusChange = async ({ id, status }) => {
-    const result = await ProjectsArchivedRest.status({ id, status })
+    const result = await projectsArchivedRest.status({ id, status })
     if (!result) return
     $(gridRef.current).dxDataGrid('instance').refresh()
   }
 
   return (<>
-    <Table gridRef={gridRef} title='Proyectos Archivados' rest={ProjectsArchivedRest} exportable
+    <Table gridRef={gridRef} title='Proyectos Archivados' rest={projectsArchivedRest} exportable
       toolBar={(container) => {
         container.unshift(DxPanelButton({
           className: 'btn btn-xs btn-soft-dark',
