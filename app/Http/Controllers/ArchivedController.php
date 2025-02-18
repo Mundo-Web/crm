@@ -29,7 +29,7 @@ class ArchivedController extends BasicController
         ];
     }
 
-    public function setPaginationInstance(string $model)
+    public function setPaginationInstance(Request $request, string $model)
     {
         return $model::select('clients.*')
             ->withCount(['notes', 'tasks', 'pendingTasks', 'projects'])

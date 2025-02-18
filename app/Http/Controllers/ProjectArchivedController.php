@@ -18,7 +18,7 @@ class ProjectArchivedController extends BasicController
     public $ignorePrefix = ['remaining_amount', 'total_payments', 'last_payment_date'];
     public $softDeletion = false;
 
-    public function setPaginationInstance(string $model)
+    public function setPaginationInstance(Request $request, string $model)
     {
         return $model::with(['client', 'type', 'status', 'subdomain'])->select([
             'projects.*',

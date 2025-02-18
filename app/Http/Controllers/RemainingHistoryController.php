@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
-use App\Models\ProjectView;
+use App\Models\Project;
 use App\Models\RemainingHistory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -13,7 +13,7 @@ class RemainingHistoryController extends Controller
     public function set()
     {
         try {
-            $amount = ProjectView::select([
+            $amount = Project::select([
                 DB::raw('SUM(remaining_amount) as remaining_amount'),
                 DB::raw('SUM(cost) as total_amount')
             ])

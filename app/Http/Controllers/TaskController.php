@@ -14,7 +14,7 @@ class TaskController extends BasicController
     public $filterBusiness = false;
     public $prefix4filter = 'tasks';
 
-    public function setPaginationInstance(string $model)
+    public function setPaginationInstance(Request $request, string $model)
     {
         return $model::select('tasks.*')
             ->with(['clientNote', 'assigned', 'clientNote', 'clientNote.client'])

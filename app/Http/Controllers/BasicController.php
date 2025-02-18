@@ -61,7 +61,7 @@ class BasicController extends Controller
     }
   }
 
-  public function setPaginationInstance(string $model)
+  public function setPaginationInstance(Request $request, string $model)
   {
     return $model::select();
   }
@@ -147,7 +147,7 @@ class BasicController extends Controller
   {
     $response =  new dxResponse();
     try {
-      $instance = $this->setPaginationInstance($this->model);
+      $instance = $this->setPaginationInstance($request, $this->model);
 
       if ($request->group != null) {
         [$grouping] = $request->group;

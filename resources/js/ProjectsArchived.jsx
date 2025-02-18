@@ -13,6 +13,7 @@ import DateRange from './Reutilizables/Projects/DateRange.jsx'
 import Assigneds from './Reutilizables/Projects/Assigneds.jsx'
 import DxPanelButton from './components/dx/DxPanelButton.jsx'
 import ReactAppend from './Utils/ReactAppend.jsx'
+import ProjectsRest from './actions/ProjectsRest.js'
 
 const projectsArchivedRest = new ProjectsArchivedRest()
 
@@ -21,7 +22,7 @@ const ProjectsArchived = ({ can }) => {
   const gridRef = useRef()
 
   const onStatusChange = async ({ id, status }) => {
-    const result = await projectsArchivedRest.status({ id, status })
+    const result = await ProjectsRest.status({ id, status })
     if (!result) return
     $(gridRef.current).dxDataGrid('instance').refresh()
   }

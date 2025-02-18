@@ -20,7 +20,7 @@ class UserController extends BasicController
     public $reactView = 'Users';
     public $prefix4filter = 'users';
 
-    public function setPaginationInstance(string $model)
+    public function setPaginationInstance(Request $request, string $model)
     {
         return $model::select([
             'users.*',

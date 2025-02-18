@@ -18,7 +18,7 @@ class TypeController extends BasicController
     public $model = Type::class;
     public $reactView = 'Types';
 
-    public function setPaginationInstance(string $model)
+    public function setPaginationInstance(Request $request, string $model)
     {
         return $model::with('table');
     }

@@ -33,11 +33,13 @@ class ProjectController extends BasicController
         ];
     }
 
-    public function setPaginationInstance(string $model)
+    public function setPaginationInstance(Request $request, string $model)
     {
         $finishedProjectStatus = Setting::get('finished-project-status');
-        return $model::with(['client', 'type', 'status', 'subdomain'])->select([
+
+        $query = $model::with(['client', 'type', 'status', 'subdomain'])->select([
             'projects.*',
+            'projects.status AS project_status',
             DB::raw('COALESCE(SUM(payments.amount), 0) AS total_payments'),
             DB::raw('MAX(payments.created_at) AS last_payment_date'),
         ])
@@ -46,9 +48,13 @@ class ProjectController extends BasicController
             ->leftJoin('payments', 'payments.project_id', 'projects.id')
             ->leftJoin('statuses AS status', 'status.id', 'projects.status_id')
             ->groupBy('projects.id')
+            ->where('projects.business_id', Auth::user()->business_id);
+
+        if (!$request->isLoadingAll)  $query = $query
             ->where('projects.status_id', '<>', $finishedProjectStatus)
-            ->where('projects.business_id', Auth::user()->business_id)
             ->whereNotNull('projects.status');
+
+        return $query;
     }
 
     static function projectStatus(Request $request)

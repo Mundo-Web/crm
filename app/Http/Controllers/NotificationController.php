@@ -3,15 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Models\Notification;
-use App\Http\Requests\StoreNotificationRequest;
-use App\Http\Requests\UpdateNotificationRequest;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class NotificationController extends BasicController
 {
     public $model = Notification::class;
 
-    public function setPaginationInstance(string $model)
+    public function setPaginationInstance(Request $request, string $model)
     {
         return $model::with(['creator'])
             ->where(function ($query) {

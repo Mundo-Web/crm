@@ -31,7 +31,7 @@ class ProjectDoneController extends BasicController
         ];
     }
 
-    public function setPaginationInstance(string $model)
+    public function setPaginationInstance(Request $request, string $model)
     {
         $finishedProjectStatus = Setting::get('finished-project-status');
         return $model::with(['client', 'type', 'status', 'subdomain'])->select([

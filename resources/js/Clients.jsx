@@ -381,14 +381,25 @@ const Clients = ({ projectStatuses, finishedProjectStatus, clientStatuses, produ
                 </thead>
                 <tbody>
                   {
-                    dataSource.map(project => {
+                    dataSource?.sort((a, b) => b.project_status == null ? -1 : 1).map(project => {
                       const percent = ((project.total_payments / project.cost) * 100).toFixed(2)
                       const payments = Number(project.total_payments).toLocaleString('en-US', { maximumFractionDigits: 2, minimumFractionDigits: 2 })
                       const rest = Number(project.cost - project.total_payments).toLocaleString('en-US', { maximumFractionDigits: 2, minimumFractionDigits: 2 })
                       const relatives = (project.users || '').split('|').filter(Boolean)
 
                       return <tr key={`project-${project.id}`}>
-                        <td valign='middle'>{project.type.name}</td>
+                        <td valign='middle'>
+                          {
+                            project.status_id == finishedProjectStatus ? <Tippy content='Este proyecto esta terminado'>
+                              <i className='mdi mdi-18px mdi-check me-1 text-success'></i>
+                            </Tippy> : ''
+                          }
+                          {
+                            project.project_status == null ? <Tippy content='Este proyecto esta archivado'>
+                              <i className='mdi mdi-18px mdi-archive me-1 text-danger'></i>
+                            </Tippy> : ''
+                          }
+                          {project.type.name}</td>
                         <td valign='middle'>{Assigneds(relatives)}</td>
                         <td valign='middle'>{`S/. ${Number2Currency(project.cost)}`}</td>
                         <td valign='middle'>

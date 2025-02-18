@@ -21,6 +21,8 @@ import ClientNotesCard from './Reutilizables/ClientNotes/ClientNotesCard.jsx'
 import ClientNotesRest from './actions/ClientNotesRest.js'
 import ProductsByClients from './actions/ProductsByClientsRest.js'
 import { renderToString } from 'react-dom/server'
+import Number2Currency from './Utils/Number2Currency.jsx'
+import TippyButton from './components/form/TippyButton.jsx'
 
 const archivedRest = new ArchivedRest()
 const clientsRest = new ClientsRest()
