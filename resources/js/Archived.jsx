@@ -27,7 +27,7 @@ const clientsRest = new ClientsRest()
 const clientNotesRest = new ClientNotesRest();
 const productsByClients = new ProductsByClients()
 
-const Archived = ({ projectStatuses, archived, can, session, noteTypes }) => {
+const Archived = ({ projectStatuses, finishedProjectStatus, archived, can, session, noteTypes }) => {
   const gridRef = useRef()
   const detailModalRef = useRef()
 
@@ -209,7 +209,7 @@ const Archived = ({ projectStatuses, archived, can, session, noteTypes }) => {
                         </td>
                         <td valign='middle'>{DateRange(project.starts_at, project.ends_at)}</td>
                         <td valign='middle'>
-                          <ProjectStatusDropdown can={can} statuses={projectStatuses} data={project} onChange={() => {
+                          <ProjectStatusDropdown can={can} statuses={projectStatuses} finishedProjectStatus={finishedProjectStatus} data={project} onChange={() => {
                             $(gridRef.current).dxDataGrid('instance').refresh()
                           }} />
                         </td>

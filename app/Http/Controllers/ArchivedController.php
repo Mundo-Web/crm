@@ -18,9 +18,11 @@ class ArchivedController extends BasicController
 
     public function setReactViewProperties(Request $request)
     {
+        $finishedProjectStatus = Setting::get('finished-project-status');
         $defaultLeadStatus = Setting::get('default-lead-status');
         $noteTypes = NoteType::all();
         return [
+            'finishedProjectStatus' => $finishedProjectStatus,
             'archived' => $request->archived,
             'defaultLeadStatus' => $defaultLeadStatus,
             'noteTypes' => $noteTypes

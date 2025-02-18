@@ -22,10 +22,12 @@ class ClientController extends BasicController
 
     public function setReactViewProperties(Request $request)
     {
+        $finishedProjectStatus = Setting::get('finished-project-status');
         $defaultClientStatus = Setting::get('default-client-status');
         $noteTypes = NoteType::all();
 
         $properties = [
+            'finishedProjectStatus' => $finishedProjectStatus,
             'client' => $request->client,
             'noteTypes' => $noteTypes,
             'defaultClientStatus' => $defaultClientStatus

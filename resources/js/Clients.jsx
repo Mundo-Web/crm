@@ -38,7 +38,7 @@ const leadsRest = new LeadsRest()
 const clientNotesRest = new ClientNotesRest();
 const productsByClients = new ProductsByClients()
 
-const Clients = ({ projectStatuses, clientStatuses, products = [], manageStatuses, session, can, noteTypes, defaultClientStatus, client }) => {
+const Clients = ({ projectStatuses, finishedProjectStatus, clientStatuses, products = [], manageStatuses, session, can, noteTypes, defaultClientStatus, client }) => {
   const gridRef = useRef()
   const modalRef = useRef()
   const detailModalRef = useRef()
@@ -405,7 +405,7 @@ const Clients = ({ projectStatuses, clientStatuses, products = [], manageStatuse
                         </td>
                         <td valign='middle'>{DateRange(project.starts_at, project.ends_at)}</td>
                         <td valign='middle'>
-                          <ProjectStatusDropdown can={can} statuses={projectStatuses} data={project} onChange={() => {
+                          <ProjectStatusDropdown can={can} statuses={projectStatuses} finishedProjectStatus={finishedProjectStatus} data={project} onChange={() => {
                             $(gridRef.current).dxDataGrid('instance').refresh()
                           }} />
                         </td>
