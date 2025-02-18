@@ -20,6 +20,7 @@ use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\ProcessController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProjectArchivedController;
+use App\Http\Controllers\ProjectDoneController;
 use App\Http\Controllers\RemainingHistoryController;
 use App\Http\Controllers\SettingController;
 use App\Http\Controllers\StatusController;
@@ -32,7 +33,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\UtilController;
 use App\Http\Controllers\ViewController;
 use App\Http\Controllers\WhatsAppController;
-
+use App\Models\Project;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -145,6 +146,9 @@ Route::middleware('auth')->group(function () {
     Route::patch('/projects/status', [ProjectController::class, 'status']);
     Route::patch('/projects/project-status', [ProjectController::class, 'projectStatus']);
     Route::delete('/projects/{id}', [ProjectController::class, 'delete']);
+
+    // Projects Archived routes
+    Route::post('/projects/done/paginate', [ProjectDoneController::class, 'paginate']);
 
     // Projects Archived routes
     Route::post('/projects/archived/paginate', [ProjectArchivedController::class, 'paginate']);

@@ -22,7 +22,7 @@ const SelectFormGroup = ({ id, col, className, label, eRef, required = false, ch
   }, [dropdownParent])
 
   return <div className={`form-group ${col} ${!noMargin && 'mb-2'}`}>
-    <label htmlFor={id} className="mb-1">
+    <label htmlFor={id} className="mb-1 form-label">
       {label} {(label && required) && <b className="text-danger">*</b>}
     </label>
     <select ref={eRef} id={id} required={required} className={`form-control ${className}`} style={{ width: '100%' }} disabled={disabled} multiple={multiple}>

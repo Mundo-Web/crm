@@ -15,6 +15,7 @@ use App\Http\Controllers\ProcessController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProjectArchivedController;
 use App\Http\Controllers\ProjectController;
+use App\Http\Controllers\ProjectDoneController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SettingController;
 use App\Http\Controllers\StatusController;
@@ -71,7 +72,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/processes', [ProcessController::class, 'reactView'])->name('Processes.jsx');
     Route::get('/views', [ViewController::class, 'reactView'])->name('Views.jsx');
     Route::get('/projects', [ProjectController::class, 'reactView'])->name('Projects.jsx');
-    Route::get('/projects/done', [ProjectController::class, 'reactView'])->name('Projects.jsx');
+    Route::get('/projects/done', [ProjectDoneController::class, 'reactView'])->name('ProjectsDone.jsx');
     Route::get('/projects/archived', [ProjectArchivedController::class, 'reactView'])->name('ProjectsArchived.jsx');
     Route::get('/pages/{correlative}', [SubdomainController::class, 'reactView'])->name('Pages.jsx');
     Route::get('/users', [UserController::class, 'reactView'])->name('Users.jsx');

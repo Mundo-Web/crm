@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from "react"
 import { Cookies, JSON } from "sode-extend-react"
 
-const SelectAPIFormGroup = ({ col, label, eRef, required = false, dropdownParent, searchAPI, searchBy, multiple = false, filter = null }) => {
+const SelectAPIFormGroup = ({ col, label, eRef, required = false, dropdownParent, searchAPI, searchBy, noMargin = false, multiple = false, filter = null }) => {
   if (!eRef) eRef = useRef()
 
   useEffect(() => {
@@ -54,8 +54,8 @@ const SelectAPIFormGroup = ({ col, label, eRef, required = false, dropdownParent
     })
   }, [dropdownParent])
 
-  return <div className={`form-group ${col} mb-2`}>
-    <label htmlFor='' className="mb-1">
+  return <div className={`form-group ${col} ${!noMargin && 'mb-2'}`}>
+    <label htmlFor='' className="mb-1 form-label">
       {label} {required && <b className="text-danger">*</b>}
     </label>
     <select ref={eRef} required={required} className='form-control' style={{ width: '100%' }} multiple={multiple}></select>

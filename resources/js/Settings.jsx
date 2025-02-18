@@ -1,5 +1,5 @@
 
-import React, { useRef, useState } from 'react'
+import React, { useRef, useState, useEffect } from 'react'
 import { createRoot } from 'react-dom/client'
 import CreateReactScript from './Utils/CreateReactScript.jsx'
 import SettingsRest from './actions/SettingsRest.js'
@@ -15,14 +15,15 @@ import TextareaFormGroup from './components/form/TextareaFormGroup.jsx'
 const settingsRest = new SettingsRest()
 
 const Settings = ({ can, constants, statuses }) => {
-
   const modalRef = useRef()
+
   // Form elements ref
   const typeRef = useRef()
   const nameRef = useRef()
   const valueRef = useRef()
   const quillRef = useRef()
   const tinyRef = useRef()
+  const finishedProjectStatusRef = useRef()
 
   const [constantType, setConstantType] = useState()
 
@@ -137,6 +138,21 @@ const Settings = ({ can, constants, statuses }) => {
     location.reload()
   }
 
+  const onFinishedProjectStatusChange = async (e) => {
+    const request = {
+      name: 'finished-project-status',
+      value: e.target.value
+    }
+    await settingsRest.save(request)
+  }
+
+  const finishedProjectStatus = getConstant('finished-project-status');
+
+
+  useEffect(() => {
+    $(finishedProjectStatusRef.current).val(finishedProjectStatus.value).select2()
+  }, [null])
+
   return (<>
     <div className="row" >
       <div className="col-12">
@@ -154,6 +170,9 @@ const Settings = ({ can, constants, statuses }) => {
                   <a className="nav-link mb-1" id="v-clients-leads-tab" data-bs-toggle="pill" href="#v-clients-leads" role="tab" aria-controls="v-clients-leads" aria-selected="false">
                     Clientes y leads
                   </a>
+                  <a className="nav-link mb-1" id="v-projects-leads-tab" data-bs-toggle="pill" href="#v-projects-leads" role="tab" aria-controls="v-projects-leads" aria-selected="false">
+                    Proyectos
+                  </a>
                   <a className="nav-link mb-1" id="v-email-tab" data-bs-toggle="pill" href="#v-email" role="tab" aria-controls="v-email" aria-selected="false">
                     Correo
                   </a>
@@ -161,7 +180,7 @@ const Settings = ({ can, constants, statuses }) => {
                     WhatsApp
                   </a>
                   <a className="nav-link mb-1" id="v-generativeai-tab" data-bs-toggle="pill" href="#v-generativeai" role="tab" aria-controls="v-generativeai" aria-selected="false">
-                    IA <i className='mdi mdi-star-four-points'></i>
+                    Chat IA <i className='mdi mdi-star-four-points'></i>
                   </a>
                 </div>
               </div>
@@ -212,6 +231,22 @@ const Settings = ({ can, constants, statuses }) => {
                         <div className="card card-body border p-2" onClick={onRevertionStatusClicked}>
                           <h5 className="card-title mb-1">Estados de reversion</h5>
                           <p className="card-text mb-0">Cuales son los estados que quitan la asignacion del usuario directamente?</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="tab-pane fade" id="v-projects-leads" role="tabpanel" aria-labelledby="v-projects-leads-tab">
+                    <h4>Configuracion de Proyectos</h4>
+                    <div className="row">
+                      <div className="col-md-4 col-sm-6 col-xs-12">
+                        <div className="card card-body border p-2">
+                          <h5 className="card-title mb-1">Estado de culminación</h5>
+                          <p className="card-text">¿Qué estado define mejor a un proyecto que ha sido terminado?</p>
+                          <SelectFormGroup eRef={finishedProjectStatusRef} label="Escoge un estado" noMargin onChange={onFinishedProjectStatusChange} >
+                            {statuses.filter(item => item.table_id == 'cd8bd48f-c73c-4a62-9935-024139f3be5f').map((status, index) => {
+                              return <option key={index} value={status.id}>{status.name}</option>
+                            })}
+                          </SelectFormGroup>
                         </div>
                       </div>
                     </div>
@@ -389,10 +424,10 @@ const Settings = ({ can, constants, statuses }) => {
         <input ref={nameRef} type='hidden' />
         <input ref={typeRef} type='hidden' />
         <div style={{ display: (constantType == 'text' || constantType == '' || constantType == null) ? 'block' : 'none' }}>
-          <TextareaFormGroup eRef={valueRef} label='Valor' col='col-12'  />
+          <TextareaFormGroup eRef={valueRef} label='Valor' col='col-12' />
         </div>
         <div style={{ display: constantType == 'simpleHTML' ? 'block' : 'none' }}>
-          <QuillFormGroup eRef={quillRef} label='Valor' col='col-12' theme='bubble'  />
+          <QuillFormGroup eRef={quillRef} label='Valor' col='col-12' theme='bubble' />
         </div>
         <div className='col-12' style={{ display: constantType == 'HTML' ? 'block' : 'none' }}>
           <label htmlFor="">Valor de la variable</label>

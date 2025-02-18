@@ -10,7 +10,7 @@ const PasswordFormGroup = ({ col, label, eRef, placeholder, required = false, va
   }
 
   return <div className={`form-group ${col} mb-2`}>
-    <label htmlFor=''>
+    <label htmlFor='' className='form-label'>
       {label} {required && <b className="text-danger">*</b>}
     </label>
     <div className='input-group input-group-merge'>

@@ -2,17 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Classes\dxResponse;
-use App\Models\dxDataGrid;
 use App\Models\Setting;
 use App\Models\Status;
-use Exception;
-use Illuminate\Contracts\Routing\ResponseFactory;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response as HttpResponse;
 use Illuminate\Support\Facades\Auth;
-use SoDe\Extend\JSON;
-use SoDe\Extend\Response;
 
 class SettingController extends BasicController
 {
