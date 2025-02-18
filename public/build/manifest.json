@@ -134,14 +134,15 @@
       "_Adminto-BIdJUGeV.js"
     ]
   },
-  "_ProjectStatusDropdown-C2Nt50u-.js": {
-    "file": "assets/ProjectStatusDropdown-C2Nt50u-.js",
+  "_ProjectStatusDropdown-vMdITa9x.js": {
+    "file": "assets/ProjectStatusDropdown-vMdITa9x.js",
     "name": "ProjectStatusDropdown",
     "imports": [
       "_CreateReactScript-Dcnwm1IN.js",
       "_Dropdown-BHkYo47k.js",
       "_DropdownItem-BUQ61x52.js",
-      "_ProjectsRest-6A1L85kN.js"
+      "_ProjectsRest-6A1L85kN.js",
+      "_Adminto-BIdJUGeV.js"
     ]
   },
   "_ProjectsRest-6A1L85kN.js": {
@@ -264,14 +265,14 @@
     ]
   },
   "resources/js/Archived.jsx": {
-    "file": "assets/Archived-ny2yJN4H.js",
+    "file": "assets/Archived-k7qTLT04.js",
     "name": "Archived",
     "src": "resources/js/Archived.jsx",
     "isEntry": true,
     "imports": [
       "_Adminto-BIdJUGeV.js",
       "_CreateReactScript-Dcnwm1IN.js",
-      "_ProjectStatusDropdown-C2Nt50u-.js",
+      "_ProjectStatusDropdown-vMdITa9x.js",
       "_ReactAppend-CKDNlHXC.js",
       "_ProductsByClientsRest-DQglLZOB.js",
       "_ProjectsRest-6A1L85kN.js",
@@ -295,7 +296,7 @@
     ]
   },
   "resources/js/Clients.jsx": {
-    "file": "assets/Clients-DBkINl7a.js",
+    "file": "assets/Clients-By9DuUhC.js",
     "name": "Clients",
     "src": "resources/js/Clients.jsx",
     "isEntry": true,
@@ -310,7 +311,7 @@
       "_DropdownItem-BUQ61x52.js",
       "_DropdownEnd-p6IoUG96.js",
       "_AssignUsersModal-Cuxw-ChK.js",
-      "_ProjectStatusDropdown-C2Nt50u-.js",
+      "_ProjectStatusDropdown-vMdITa9x.js",
       "_ReactAppend-CKDNlHXC.js",
       "_ProjectsRest-6A1L85kN.js",
       "_DxPanelButton-BUlFeEYR.js",
@@ -492,7 +493,7 @@
     ]
   },
   "resources/js/Projects.jsx": {
-    "file": "assets/Projects-D9miaIHh.js",
+    "file": "assets/Projects-aENaWiRs.js",
     "name": "Projects",
     "src": "resources/js/Projects.jsx",
     "isEntry": true,
@@ -500,7 +501,7 @@
       "_CreateReactScript-Dcnwm1IN.js",
       "_Adminto-BIdJUGeV.js",
       "_AssignUsersModal-Cuxw-ChK.js",
-      "_ProjectStatusDropdown-C2Nt50u-.js",
+      "_ProjectStatusDropdown-vMdITa9x.js",
       "_Number2Currency-e57Tgsuk.js",
       "_SetSelectValue-DFS7nktH.js",
       "_ProjectsRest-6A1L85kN.js",
@@ -539,7 +540,7 @@
     ]
   },
   "resources/js/ProjectsDone.jsx": {
-    "file": "assets/ProjectsDone-xitE2tGT.js",
+    "file": "assets/ProjectsDone-DnapmowT.js",
     "name": "ProjectsDone",
     "src": "resources/js/ProjectsDone.jsx",
     "isEntry": true,
@@ -547,7 +548,7 @@
       "_CreateReactScript-Dcnwm1IN.js",
       "_Adminto-BIdJUGeV.js",
       "_AssignUsersModal-Cuxw-ChK.js",
-      "_ProjectStatusDropdown-C2Nt50u-.js",
+      "_ProjectStatusDropdown-vMdITa9x.js",
       "_Number2Currency-e57Tgsuk.js",
       "_SetSelectValue-DFS7nktH.js",
       "_ProjectsRest-6A1L85kN.js",

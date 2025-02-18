@@ -2,9 +2,21 @@ import React from "react"
 import Dropdown from "../../components/dropdown/DropDown"
 import DropdownItem from "../../components/dropdown/DropdownItem"
 import ProjectsRest from "../../actions/ProjectsRest"
+import Swal from "sweetalert2"
 
-const ProjectStatusDropdown = ({ statuses, data, onChange }) => {
+const ProjectStatusDropdown = ({ statuses, finishedProjectStatus, data, onChange }) => {
   const onProjectStatusClicked = async (project, status) => {
+    if (status === finishedProjectStatus) {
+      const { isConfirmed } = await Swal.fire({
+        title: "¿Estás seguro de marcar este proyecto como terminado?",
+        text: "Este proyecto podras verlo en a ventana de proyectos a partir de ahora",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonText: "Continuar",
+        cancelButtonText: "Cancelar"
+      })
+      if (!isConfirmed) return
+    }
     const result = await ProjectsRest.projectStatus(project, status)
     if (!result) return
     onChange()

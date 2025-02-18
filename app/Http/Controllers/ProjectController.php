@@ -21,12 +21,14 @@ class ProjectController extends BasicController
 
     public function setReactViewProperties(Request $request)
     {
+        $finishedProjectStatus = Setting::get('finished-project-status');
         $statusesJpa = Status::select()
             ->where('table_id', 'cd8bd48f-c73c-4a62-9935-024139f3be5f')
             ->where('business_id', Auth::user()->business_id)
             ->get();
 
         return [
+            'finishedProjectStatus' => $finishedProjectStatus,
             'statuses' => $statusesJpa
         ];
     }

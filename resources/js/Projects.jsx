@@ -26,7 +26,7 @@ import SubdomainsRest from './actions/SubdomainsRest.js'
 
 const subdomainsRest = new SubdomainsRest()
 
-const Projects = ({ statuses, can }) => {
+const Projects = ({ statuses, finishedProjectStatus, can }) => {
 
   const gridRef = useRef()
   const modalRef = useRef()
@@ -270,7 +270,7 @@ const Projects = ({ statuses, can }) => {
             container.append(DxBox([
               {
                 height: '28px',
-                children: <ProjectStatusDropdown can={can} statuses={statuses} data={data} onChange={() => {
+                children: <ProjectStatusDropdown can={can} statuses={statuses} finishedProjectStatus={finishedProjectStatus} data={data} onChange={() => {
                   $(gridRef.current).dxDataGrid('instance').refresh()
                 }} />
               }
