@@ -13,7 +13,7 @@ import RemainingsHistoryRest from './actions/RemainingsHistoryRest';
 import DateRange from './Reutilizables/Projects/DateRange';
 import Assigneds from './Reutilizables/Projects/Assigneds';
 
-const KPIProjects = ({session}) => {
+const KPIProjects = ({ finishedProjectStatus }) => {
   const revenueRef = useRef();
   const chartRef = useRef(null); // Usar useRef para mantener la referencia del gráfico
   const pieRef = useRef(null);
@@ -111,15 +111,8 @@ const KPIProjects = ({session}) => {
         requireTotalCount: true,
         isLoadingAll: true,
         filter: [
-          // ['ends_at', '>=', moment().format('YYYY-MM-DD')], 'and',
-          // ['status', '<>', null], 'and',
-          // [
           '!',
-          [
-            ['status_id', '=', '10131f5e-559a-11ef-bfda-26a0a2e74226'], 'or',
-            ['status_id', '=', '10132091-559a-11ef-bfda-26a0a2e74226']
-          ]
-          // ]
+          ['status_id', '=', finishedProjectStatus]
         ]
       })
       .then(({ data = [], totalCount }) => {
@@ -173,7 +166,9 @@ const KPIProjects = ({session}) => {
         desc: true
       }],
       isLoadingAll: true,
-      filter: ["!remaining_amount", ">", 0]
+      // skip: 0,
+      // take: 100,
+      filter: [["!remaining_amount", ">", 0], 'and', ['status', 'isnotnull']]
     })
       .then(({ data }) => {
         setProjectsRemaining(data || [])
