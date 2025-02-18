@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Project;
+use App\Models\Setting;
 use App\Models\Status;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -32,6 +33,7 @@ class ProjectController extends BasicController
 
     public function setPaginationInstance(string $model)
     {
+        $finishedProjectStatus = Setting::get('finished-project-status');
         return $model::with(['client', 'type', 'status', 'subdomain'])->select([
             'projects.*',
             DB::raw('COALESCE(SUM(payments.amount), 0) AS total_payments'),
@@ -42,6 +44,7 @@ class ProjectController extends BasicController
             ->leftJoin('payments', 'payments.project_id', 'projects.id')
             ->leftJoin('statuses AS status', 'status.id', 'projects.status_id')
             ->groupBy('projects.id')
+            ->where('projects.status_id', '<>', $finishedProjectStatus)
             ->where('projects.business_id', Auth::user()->business_id)
             ->whereNotNull('projects.status');
     }
