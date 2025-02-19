@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Classes\dxResponse;
+use App\Jobs\SendNewLeadNotification;
 use App\Models\Message;
 use App\Models\Atalaya\Business;
 use App\Models\Client;
@@ -24,6 +25,41 @@ class MessageController extends BasicController
     public $model = Message::class;
     public $reactView = 'Messages';
 
+    private function registerNewLead(Request $request, Business $businessJpa, array $data)
+    {
+        Client::updateOrCreate([
+            'business_id' => $businessJpa->id,
+            'contact_phone' => $data['contact_phone'],
+            'status_id' => Setting::get('default-lead-status', $businessJpa->id),
+            'manage_status_id' => Setting::get('default-manage-lead-status', $businessJpa->id),
+            'complete_registration' => false,
+            'status' => true
+        ], [
+            'name' => $data['contact_name'] ?? 'Lead anonimo',
+            'contact_name' => $data['contact_name'] ?? 'Lead anonimo',
+            'message' => $data['message'],
+            'source' => 'Externo',
+            'triggered_by' => 'Gemini AI',
+            'origin' => 'WhatsApp',
+            'date' => Trace::getDate('date'),
+            'time' => Trace::getDate('time'),
+            'ip' => $request->ip()
+        ]);
+    }
+
+    private function cloneNewLead(Request $request, Business $businessJpa, Client $clientJpa)
+    {
+        $leadJpa = $clientJpa->replicate();
+        $leadJpa->assigned_to = null;
+        $leadJpa->status_id = Setting::get('default-lead-status', $clientJpa->business_id);
+        $leadJpa->manage_status_id = Setting::get('default-manage-lead-status', $clientJpa->business_id);
+        $leadJpa->complete_registration = true;
+        $leadJpa->message = $request->message;
+        $leadJpa->save();
+
+        SendNewLeadNotification::dispatchAfterResponse($leadJpa, $businessJpa, false);
+    }
+
     public function byPhone(Request $request, string $sessionId)
     {
         $response = dxResponse::simpleTryCatch(function ($response) use ($sessionId, $request) {
@@ -35,20 +71,57 @@ class MessageController extends BasicController
             $businessApiKey = Setting::get('gemini-api-key', $businessJpa->id);
             if (!$businessApiKey) throw new Exception('Esta empresa no tiene integracion con AI');
 
-            $clientExists = Client::with(['status.table'])
-            ->where('business_id', $businessJpa->id)
+            $clientExists = Client::select([
+                'clients.*',
+                'clients.status AS client_status'
+            ])
+                ->with(['status'])
+                ->where('business_id', $businessJpa->id)
                 ->where(function ($query) use ($request) {
                     return $query->where('contact_phone', $request->waId)
                         ->orWhere('contact_phone', $request->justPhone);
                 })
-                ->where('complete_registration', true)
+                // ->where('complete_registration', true)
                 // ->whereNotNull('assigned_to')
                 // ->where('status', true)
                 ->first();
 
-            dump($clientExists);
 
-            if ($clientExists) throw new Exception('El cliente ya ha sido registrado en Atalaya');
+            if (!$clientExists) {
+                $this->registerNewLead($request, $businessJpa, [
+                    'contact_phone' => $request->waId,
+                    'contact_name' => $request->contact_name,
+                    'message' => $request->message
+                ]);
+            } else {
+                if ($clientExists->client_status == null) {
+                    $leadJpa = $this->registerNewLead($request, $businessJpa, [
+                        'contact_phone' => $request->waId,
+                        'contact_name' => $request->contact_name,
+                        'message' => $request->message
+                    ]);
+                }
+                // ID tabla cliente: a8367789-666e-4929-aacb-7cbc2fbf74de
+                else  if ($clientExists->status->table_id == 'a8367789-666e-4929-aacb-7cbc2fbf74de') {
+                    $this->cloneNewLead($request, $businessJpa, $clientExists);
+                    new Fetch(\env('WA_URL') . '/api/send',  [
+                        'method' => 'POST',
+                        'headers' => [
+                            'Accept' => 'application/json',
+                            'Content-Type' => 'application/json',
+                        ],
+                        'body' => [
+                            'from' => $sessionId,
+                            'to' => [$request->waId],
+                            'content' => 'Hola ' . $clientExists->contact_name . ', veo que has sido cliente nuestro. En un momento un ejecutivo se pondra en contacto contigo.'
+                        ]
+                    ]);
+                    throw new Exception('El cliente ya ha sido registrado en Atalaya');
+                } else {
+                }
+            }
+
+            // if ($clientExists) throw new Exception('El cliente ya ha sido registrado en Atalaya');
 
             $clientJpa = Client::where('business_id', $businessJpa->id)
                 ->where(function ($query) use ($request) {

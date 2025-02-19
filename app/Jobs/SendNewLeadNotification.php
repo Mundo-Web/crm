@@ -22,16 +22,18 @@ class SendNewLeadNotification implements ShouldQueue
 
   private Client $client;
   private Business $business;
+  private bool $send2clientBool;
 
-  public function __construct(Client $client, Business $business)
+  public function __construct(Client $client, Business $business, bool $send2clientBool = true)
   {
     $this->client = $client;
     $this->business = $business;
+    $this->send2clientBool = $send2clientBool;
   }
 
   public function handle()
   {
-    $this->send2client();
+    if ($this->send2clientBool) $this->send2client();
     $this->send2owner();
   }
 
