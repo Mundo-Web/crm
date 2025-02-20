@@ -50,7 +50,7 @@ class MessageController extends BasicController
         $archiveJpa->save();
 
         if ($data['name'] && $data['email']) {
-            new Fetch(env('WA_URL') . '/api/send',  [
+            $resWA = new Fetch(env('WA_URL') . '/api/send',  [
                 'method' => 'POST',
                 'headers' => [
                     'Accept' => 'application/json',
@@ -62,6 +62,7 @@ class MessageController extends BasicController
                     'content' => 'Hola ' . $archiveJpa->contact_name . ', veo que has sido cliente nuestro. En un momento un ejecutivo se pondra en contacto contigo.'
                 ]
             ]);
+            dump($resWA->text());
             SendNewLeadNotification::dispatchAfterResponse($archiveJpa, $businessJpa, false);
             $this->createFirstNote($archiveJpa);
             throw new Exception('Se ha movido el registro de "archivado" a "lead"');
@@ -177,7 +178,6 @@ class MessageController extends BasicController
                     'message' => $request->message
                 ]);
             } else {
-                dump($clientExists->status());
                 $clientExists->contact_phone = $request->waId;
                 if ($clientExists->client_status == null) {
                     $leadJpa = $this->moveArchived2Lead($businessJpa, $clientExists);
