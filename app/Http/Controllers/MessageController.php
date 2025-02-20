@@ -144,7 +144,7 @@ class MessageController extends BasicController
 
     public function byPhone(Request $request, string $sessionId)
     {
-        $response = dxResponse::simpleTryCatch(function ($response) use ($sessionId, $request) {
+        $response = Response::simpleTryCatch(function ($response) use ($sessionId, $request) {
             [, $businessUUID] = \explode('-', $sessionId, 2);
 
             $businessJpa = Business::where('uuid', $businessUUID)->first();
@@ -225,7 +225,7 @@ class MessageController extends BasicController
                     ->exists(),
             ];
             return $messages;
-        });
+        }, fn($request, $th) => dump($th->getMessage()));
         return response($response->toArray(), $response->status);
     }
 
