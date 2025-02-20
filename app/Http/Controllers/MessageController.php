@@ -25,9 +25,53 @@ class MessageController extends BasicController
     public $model = Message::class;
     public $reactView = 'Messages';
 
+    private function getData(Client $jpa)
+    {
+        $data = ['name' => null, 'email' => null];
+        if ($jpa->contact_name && $jpa->contact_name != 'Lead anonimo') {
+            $data['name'] = $jpa->contact_name;
+        }
+        if ($jpa->contact_email && $jpa->contact_email != 'unknown@atalaya.pe') {
+            $data['email'] = $jpa->contact_email;
+        }
+        return $data;
+    }
+
+    private function moveArchived2Lead(Business $businessJpa, Client $archiveJpa)
+    {
+        $archiveJpa->status = true;
+        $archiveJpa->assigned_to = null;
+        $archiveJpa->status_id = Setting::get('default-lead-status', $businessJpa->id);
+        $archiveJpa->manage_status_id = Setting::get('default-manage-lead-status', $businessJpa->id);
+
+        $data = $this->getData($archiveJpa);
+
+        $archiveJpa->complete_registration = $data['name'] && $data['email'];
+        $archiveJpa->save();
+
+        if ($data['name'] && $data['email']) {
+            new Fetch(env('WA_URL') . '/api/send',  [
+                'method' => 'POST',
+                'headers' => [
+                    'Accept' => 'application/json',
+                    'Content-Type' => 'application/json',
+                ],
+                'body' => [
+                    'from' => 'atalaya-' . $businessJpa->uuid,
+                    'to' => [$archiveJpa->waId],
+                    'content' => 'Hola ' . $archiveJpa->contact_name . ', veo que has sido cliente nuestro. En un momento un ejecutivo se pondra en contacto contigo.'
+                ]
+            ]);
+            SendNewLeadNotification::dispatchAfterResponse($archiveJpa, $businessJpa, false);
+            $this->createFirstNote($archiveJpa);
+            throw new Exception('Se ha movido el registro de "archivado" a "lead"');
+        }
+        return $archiveJpa;
+    }
+
     private function registerNewLead(Request $request, Business $businessJpa, array $data)
     {
-        Client::updateOrCreate([
+        return Client::updateOrCreate([
             'business_id' => $businessJpa->id,
             'contact_phone' => $data['contact_phone'],
             'status_id' => Setting::get('default-lead-status', $businessJpa->id),
@@ -57,7 +101,45 @@ class MessageController extends BasicController
         $leadJpa->message = $request->message;
         $leadJpa->save();
 
+        new Fetch(\env('WA_URL') . '/api/send',  [
+            'method' => 'POST',
+            'headers' => [
+                'Accept' => 'application/json',
+                'Content-Type' => 'application/json',
+            ],
+            'body' => [
+                'from' => 'atalaya-' . $businessJpa->uuid,
+                'to' => [$request->waId],
+                'content' => 'Hola ' . $leadJpa->contact_name . ', veo que has sido cliente nuestro. En un momento un ejecutivo se pondra en contacto contigo.'
+            ]
+        ]);
+
         SendNewLeadNotification::dispatchAfterResponse($leadJpa, $businessJpa, false);
+        $this->createFirstNote($leadJpa);
+        throw new Exception('Se ha clonado el registro de "cliente" como "lead"');
+    }
+
+    private function createFirstNote(Client $leadJpa)
+    {
+        $noteJpa = ClientNote::create([
+            'note_type_id' => '8e895346-3d87-4a87-897a-4192b917c211',
+            'client_id' => $leadJpa->id,
+            'name' => 'Lead anonimo',
+            'description' => UtilController::replaceData(
+                Setting::get('whatsapp-new-lead-notification-message', $leadJpa->business_id),
+                $leadJpa->toArray()
+            )
+        ]);
+
+        Task::create([
+            'model_id' => ClientNote::class,
+            'note_id' => $noteJpa->id,
+            'name' => 'Revisar lead',
+            'description' => 'Debes revisar los requerimientos del lead',
+            'ends_at' => Carbon::now()->addDay()->format('Y-m-d H:i:s'),
+            'status' => 'Pendiente',
+            'asignable' => true
+        ]);
     }
 
     public function byPhone(Request $request, string $sessionId)
@@ -70,6 +152,8 @@ class MessageController extends BasicController
 
             $businessApiKey = Setting::get('gemini-api-key', $businessJpa->id);
             if (!$businessApiKey) throw new Exception('Esta empresa no tiene integracion con AI');
+
+            if (!$request->from_me) throw new Exception('El mensaje no es de un usuario');
 
             $clientExists = Client::select([
                 'clients.*',
@@ -86,97 +170,30 @@ class MessageController extends BasicController
                 // ->where('status', true)
                 ->first();
 
-
+            $leadJpa = new Client();
             if (!$clientExists) {
-                $this->registerNewLead($request, $businessJpa, [
+                $leadJpa = $this->registerNewLead($request, $businessJpa, [
                     'contact_phone' => $request->waId,
                     'contact_name' => $request->contact_name,
                     'message' => $request->message
                 ]);
             } else {
+                $clientExists->contact_phone = $request->waId;
                 if ($clientExists->client_status == null) {
-                    $leadJpa = $this->registerNewLead($request, $businessJpa, [
-                        'contact_phone' => $request->waId,
-                        'contact_name' => $request->contact_name,
-                        'message' => $request->message
-                    ]);
-                }
-                // ID tabla cliente: a8367789-666e-4929-aacb-7cbc2fbf74de
-                else  if ($clientExists->status->table_id == 'a8367789-666e-4929-aacb-7cbc2fbf74de') {
+                    $leadJpa = $this->moveArchived2Lead($businessJpa, $clientExists);
+                } else  if ($clientExists->status->table_id == 'a8367789-666e-4929-aacb-7cbc2fbf74de') {
                     $this->cloneNewLead($request, $businessJpa, $clientExists);
-                    new Fetch(\env('WA_URL') . '/api/send',  [
-                        'method' => 'POST',
-                        'headers' => [
-                            'Accept' => 'application/json',
-                            'Content-Type' => 'application/json',
-                        ],
-                        'body' => [
-                            'from' => $sessionId,
-                            'to' => [$request->waId],
-                            'content' => 'Hola ' . $clientExists->contact_name . ', veo que has sido cliente nuestro. En un momento un ejecutivo se pondra en contacto contigo.'
-                        ]
-                    ]);
-                    throw new Exception('El cliente ya ha sido registrado en Atalaya');
+                } else if ($clientExists->assigned_to) {
+                    throw new Exception('El lead ya esta siendo atendido');
+                } else if ($clientExists->complete_registration) {
+                    throw new Exception('El lead ya ha sido registrado en Atalaya');
                 } else {
+                    $leadJpa = $clientExists;
                 }
             }
 
-            // if ($clientExists) throw new Exception('El cliente ya ha sido registrado en Atalaya');
-
-            $clientJpa = Client::where('business_id', $businessJpa->id)
-                ->where(function ($query) use ($request) {
-                    return $query->where('contact_phone', $request->waId)
-                        ->orWhere('contact_phone', $request->justPhone);
-                })
-                // ->where('complete_registration', true)
-                // ->whereNotNull('assigned_to')
-                // ->where('status', true)
-                ->orderBy('updated_at', 'DESC')
-                ->first();
-
-            if (!$clientJpa) $clientJpa = new Client();
-
-            if (!$request->from_me) {
-                $leadJpa = Client::updateOrCreate([
-                    'business_id' => $businessJpa->id,
-                    'contact_phone' => $request->waId,
-                    'status_id' => Setting::get('default-lead-status', $businessJpa->id),
-                    'manage_status_id' => Setting::get('default-manage-lead-status', $businessJpa->id),
-                    'complete_registration' => false,
-                    'status' => true
-                ], [
-                    'name' => ((!$clientJpa->name || $clientJpa->name == 'Lead anonimo') ? $request->contact_name : $clientJpa->name) ?? 'Lead anonimo',
-                    'contact_name' => ((!$clientJpa->name || $clientJpa->contact_name == 'Lead anonimo') ? $request->contact_name : $clientJpa->contact_name) ?? 'Lead anonimo',
-                    'message' => $request->message,
-                    'source' => 'Externo',
-                    'triggered_by' => 'Gemini AI',
-                    'origin' => 'WhatsApp',
-                    'date' => Trace::getDate('date'),
-                    'time' => Trace::getDate('time'),
-                    'ip' => $request->ip()
-                ]);
-                if ($leadJpa->wasRecentlyCreated) {
-                    $noteJpa = ClientNote::create([
-                        'note_type_id' => '8e895346-3d87-4a87-897a-4192b917c211',
-                        'client_id' => $leadJpa->id,
-                        'name' => 'Lead anonimo',
-                        'description' => UtilController::replaceData(
-                            Setting::get('whatsapp-new-lead-notification-message', $leadJpa->business_id),
-                            $leadJpa->toArray()
-                        )
-                    ]);
-
-                    Task::create([
-                        'model_id' => ClientNote::class,
-                        'note_id' => $noteJpa->id,
-                        'name' => 'Revisar lead',
-                        'description' => 'Debes revisar los requerimientos del lead',
-                        'ends_at' => Carbon::now()->addDay()->format('Y-m-d H:i:s'),
-                        'status' => 'Pendiente',
-                        'asignable' => true
-                    ]);
-                }
-                // $clientJpa = $leadJpa;
+            if (!$request->from_me && $leadJpa->wasRecentlyCreated) {
+                $this->createFirstNote($leadJpa);
             }
 
             $needsExecutive = Message::where('business_id', $businessJpa->id)
@@ -206,13 +223,7 @@ class MessageController extends BasicController
                     ->where('message', $request->message)
                     ->where('role', 'AI')
                     ->exists(),
-                'client' => $clientJpa?->toArray() ?? null
             ];
-            $messages =
-                $messages->map(function ($message) use ($clientJpa) {
-                    if ($clientJpa) $message->role = $clientJpa->contact_name;
-                    return $message;
-                });
             return $messages;
         });
         return response($response->toArray(), $response->status);
