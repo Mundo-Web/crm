@@ -59,7 +59,7 @@ class MessageController extends BasicController
                 'body' => [
                     'from' => 'atalaya-' . $businessJpa->uuid,
                     'to' => [$archiveJpa->contact_phone],
-                    'content' => 'Hola ' . $archiveJpa->contact_name . ', veo que has sido cliente nuestro. En un momento un ejecutivo se pondra en contacto contigo.'
+                    'content' => 'Hola ' . explode(' ', $archiveJpa->contact_name)[0] . ', un gusto verte denuevo. En un momento un ejecutivo se pondra en contacto contigo.'
                 ]
             ]);
             SendNewLeadNotification::dispatchAfterResponse($archiveJpa, $businessJpa, false);
