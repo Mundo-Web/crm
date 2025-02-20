@@ -110,7 +110,7 @@ class MessageController extends BasicController
             'body' => [
                 'from' => 'atalaya-' . $businessJpa->uuid,
                 'to' => [$leadJpa->contact_phone],
-                'content' => 'Hola ' . $leadJpa->contact_name . ', veo que has sido cliente nuestro. En un momento un ejecutivo se pondra en contacto contigo.'
+                'content' => 'Hola ' . explode(' ', $leadJpa->contact_name)[0] . ', veo que has sido cliente nuestro. En un momento un ejecutivo se pondra en contacto contigo.'
             ]
         ]);
 
