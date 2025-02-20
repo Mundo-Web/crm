@@ -170,7 +170,7 @@ const KPIProjects = ({ finishedProjectStatus }) => {
       isLoadingAll: true,
       // skip: 0,
       // take: 100,
-      filter: [["!remaining_amount", ">", 0], 'and', ['status', 'isnotnull']]
+      filter: [["!remaining_amount", ">", 0], 'and', ['projects.status', 'isnotnull']]
     })
       .then(({ data }) => {
         setProjectsRemaining(data || [])
