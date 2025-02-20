@@ -95,6 +95,8 @@ class MessageController extends BasicController
 
     private function cloneNewLead(Request $request, Business $businessJpa, Client $clientJpa)
     {
+        unset($clientJpa->client_status);
+        unset($clientJpa->status_table_id);
         $leadJpa = $clientJpa->replicate();
         $leadJpa->assigned_to = null;
         $leadJpa->status_id = Setting::get('default-lead-status', $clientJpa->business_id);
