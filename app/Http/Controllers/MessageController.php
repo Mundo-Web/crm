@@ -159,10 +159,10 @@ class MessageController extends BasicController
                 'status.table_id AS status_table_id'
             ])
                 ->join('statuses AS status', 'status.id', 'clients.status_id')
-                ->where('business_id', $businessJpa->id)
+                ->where('clients.business_id', $businessJpa->id)
                 ->where(function ($query) use ($request) {
-                    return $query->where('contact_phone', $request->waId)
-                        ->orWhere('contact_phone', $request->justPhone);
+                    return $query->where('clients.contact_phone', $request->waId)
+                        ->orWhere('clients.contact_phone', $request->justPhone);
                 })
                 // ->where('complete_registration', true)
                 // ->whereNotNull('assigned_to')
