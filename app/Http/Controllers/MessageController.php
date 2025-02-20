@@ -223,7 +223,7 @@ class MessageController extends BasicController
                     ->exists(),
             ];
             return $messages;
-        }, fn($request, $th) => dump($th->getMessage()));
+        }, fn($request, $th) => dump($th));
         return response($response->toArray(), $response->status);
     }
 
