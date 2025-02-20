@@ -32,6 +32,7 @@ const KPIProjects = ({ finishedProjectStatus }) => {
   const [totalRemaining, setTotalRemaining] = useState(0)
   const [totalCost, setTotalCost] = useState(0)
   const [lastRemaining, setLastRemaining] = useState(0)
+  const [showDebtOnly, setShowDebtOnly] = useState(false);
 
   const [filterType, setFilterType] = useState('all');
 
@@ -104,18 +105,13 @@ const KPIProjects = ({ finishedProjectStatus }) => {
 
     ProjectsRest
       .paginate({
-        sort: [
-          {
-            selector: 'ends_at',
-            desc: false
-          }
-        ],
+        sort: [{
+          selector: 'ends_at',
+          desc: false
+        }],
         requireTotalCount: true,
-        isLoadingAll: true,
-        filter: [
-          '!',
-          ['status_id', '=', finishedProjectStatus]
-        ]
+        skip: 0,
+        take: 100
       })
       .then(({ data = [], totalCount }) => {
         let conteoEstados = {};
@@ -168,8 +164,6 @@ const KPIProjects = ({ finishedProjectStatus }) => {
         desc: true
       }],
       isLoadingAll: true,
-      // skip: 0,
-      // take: 100,
       filter: [["!remaining_amount", ">", 0], 'and', ['projects.status', '=', true]]
     })
       .then(({ data }) => {
@@ -233,12 +227,19 @@ const KPIProjects = ({ finishedProjectStatus }) => {
 
   const getFilteredProjects = () => {
     const now = moment();
+    let filtered = projects;
 
+    // Apply debt filter first
+    if (showDebtOnly) {
+      filtered = filtered.filter(p => Number(p.remaining_amount) > 0);
+    }
+
+    // Then apply date filters
     switch (filterType) {
       case 'delayed':
-        return projects.filter(p => moment(p.ends_at).isBefore(now, 'day'));
+        return filtered.filter(p => moment(p.ends_at).isBefore(now, 'day'));
       case 'thisMonth':
-        return projects.filter(p => {
+        return filtered.filter(p => {
           const endDate = moment(p.ends_at);
           return endDate.isSame(now, 'month') &&
             endDate.isSame(now, 'year') &&
@@ -247,9 +248,9 @@ const KPIProjects = ({ finishedProjectStatus }) => {
       default:
         if (filterType.startsWith('month_')) {
           const monthYear = filterType.replace('month_', '');
-          return projects.filter(p => moment(p.ends_at).format('MMMM YYYY') === monthYear);
+          return filtered.filter(p => moment(p.ends_at).format('MMMM YYYY') === monthYear);
         }
-        return projects;
+        return filtered;
     }
   };
 
@@ -402,7 +403,6 @@ const KPIProjects = ({ finishedProjectStatus }) => {
                   <thead>
                     <tr>
                       <th>Cliente</th>
-                      <th>Tipo proyecto</th>
                       <th>Fecha fin</th>
                       <th>Costo total</th>
                       <th>Debe</th>
@@ -412,8 +412,10 @@ const KPIProjects = ({ finishedProjectStatus }) => {
                     {
                       projectsRemaining.map(({ id, client, type, remaining_amount, cost, ends_at }) => {
                         return (<tr key={`remaining-project-${id}`}>
-                          <td>{client.tradename}</td>
-                          <td>{type.name}</td>
+                          <td>
+                            <b className='d-block'>{client.tradename}</b>
+                            <small>{type.name}</small>
+                          </td>
                           <td>{moment(ends_at).format('DD/MM/YYYY')}</td>
                           <td><div style={{ width: 'max-content' }}>S/. {Number2Currency(cost)}</div></td>
                           <td><div className='text-danger' style={{ width: 'max-content' }}><small className='fa fa-arrow-circle-down'></small> S/. {Number2Currency(remaining_amount)}</div></td>
@@ -439,8 +441,8 @@ const KPIProjects = ({ finishedProjectStatus }) => {
                   </a>
                 </Tippy>
               </div>
-              <h4 className='header-title mt-0 mb-0'>Proyectos prontos a terminar</h4>
-              <div className='mt-1 d-flex gap-1 flex-wrap'>
+              <h4 className='header-title mt-0 mb-0'>Proyectos pendientes</h4>
+              <div className='mt-2 d-flex gap-1 flex-wrap'>
                 {getProjectGroups().delayed.length > 0 && (
                   <button
                     className={`btn btn-xs ${filterType === 'delayed' ? 'btn-danger' : 'btn-soft-danger'}`}
@@ -477,14 +479,27 @@ const KPIProjects = ({ finishedProjectStatus }) => {
               </div>
             </div>
             <div className='card-body' style={{ height: '360px', overflow: 'auto' }}>
+              <div className="form-check form-switch mb-2 align-content-center">
+                <input
+                  className="form-check-input"
+                  type="checkbox"
+                  id="showDebtOnly"
+                  onChange={(e) => setShowDebtOnly(e.target.checked)}
+                  style={{ cursor: 'pointer' }}
+                />
+                <label className="form-check-label" htmlFor="showDebtOnly" style={{ cursor: 'pointer' }}>
+                  Solo mostrar proyectos con deuda
+                </label>
+              </div>
               <div className='table-responsive'>
                 <table className='table table-sm table-bordered table-striped mb-0'>
                   <thead>
                     <tr>
                       <th>Cliente</th>
-                      <th>Proyecto</th>
                       <th>Fecha de desarrollo</th>
                       <th>Estado</th>
+                      <th>Costo total</th>
+                      <th>Debe</th>
                       <th>Asignado a</th>
                     </tr>
                   </thead>
@@ -492,11 +507,15 @@ const KPIProjects = ({ finishedProjectStatus }) => {
                     {getFilteredProjects().map((project, i) => {
                       const relatives = project.users.map(user => user.relative_id);
                       // const relatives = [/*(project.users || '').split('|').filter(Boolean)*/]
-                      return <tr key={`project-${i}`} className={`${moment(project.ends_at).isBefore(moment()) ? 'text-danger' : ''}`}>
-                        <td>{project.client.tradename}</td>
-                        <td>{project.name}</td>
+                      return <tr key={`project-${i}`} >
+                        <td className={`${moment(project.ends_at).isBefore(moment()) ? 'text-danger' : ''}`}>
+                          <b className='d-block'>{project.client.tradename}</b>
+                          <small>{project.name}</small>
+                        </td>
                         <td>{DateRange(project.starts_at, project.ends_at)}</td>
                         <td><span className='badge' style={{ backgroundColor: project.status.color }}>{project.status.name}</span></td>
+                        <td>S/. {Number2Currency(project.cost)}</td>
+                        <td>S/. {Number2Currency(project.remaining_amount)}</td>
                         <td>{Assigneds(relatives)}</td>
                       </tr>
                     })}

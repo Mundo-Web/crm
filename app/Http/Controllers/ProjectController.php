@@ -9,6 +9,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use SoDe\Extend\JSON;
 use SoDe\Extend\Response;
 
 class ProjectController extends BasicController
@@ -35,14 +36,13 @@ class ProjectController extends BasicController
 
     public function setPaginationInstance(Request $request, string $model)
     {
-        $finishedProjectStatus = Setting::get('finished-project-status');
-
         $query = $model::with(['client', 'type', 'status', 'subdomain', 'users'])->select([
             'projects.*',
             'projects.status AS project_status',
             DB::raw('COALESCE(SUM(payments.amount), 0) AS total_payments'),
             DB::raw('MAX(payments.created_at) AS last_payment_date'),
         ])
+            ->distinct()
             ->leftJoin('types AS type', 'type.id', 'projects.type_id')
             ->leftJoin('clients AS client', 'client.id', 'projects.id')
             ->leftJoin('payments', 'payments.project_id', 'projects.id')
@@ -50,9 +50,12 @@ class ProjectController extends BasicController
             ->groupBy('projects.id')
             ->where('projects.business_id', Auth::user()->business_id);
 
-        if (!$request->isLoadingAll)  $query = $query
-            ->where('projects.status_id', '<>', $finishedProjectStatus)
-            ->whereNotNull('projects.status');
+        if (!$request->isLoadingAll) {
+            $finishedProjectStatus = Setting::get('finished-project-status');
+            $query = $query
+                ->where('projects.status_id', '<>', $finishedProjectStatus)
+                ->whereNotNull('projects.status');
+        }
 
         return $query;
     }
