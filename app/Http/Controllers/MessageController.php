@@ -58,7 +58,7 @@ class MessageController extends BasicController
                 ],
                 'body' => [
                     'from' => 'atalaya-' . $businessJpa->uuid,
-                    'to' => [$archiveJpa->waId],
+                    'to' => [$archiveJpa->contact_phone],
                     'content' => 'Hola ' . $archiveJpa->contact_name . ', veo que has sido cliente nuestro. En un momento un ejecutivo se pondra en contacto contigo.'
                 ]
             ]);
@@ -110,7 +110,7 @@ class MessageController extends BasicController
             ],
             'body' => [
                 'from' => 'atalaya-' . $businessJpa->uuid,
-                'to' => [$request->waId],
+                'to' => [$leadJpa->contact_phone],
                 'content' => 'Hola ' . $leadJpa->contact_name . ', veo que has sido cliente nuestro. En un momento un ejecutivo se pondra en contacto contigo.'
             ]
         ]);
