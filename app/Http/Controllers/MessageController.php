@@ -176,7 +176,7 @@ class MessageController extends BasicController
                     'message' => $request->message
                 ]);
             } else {
-                dump($clientExists->toArray());
+                dump($clientExists);
                 $clientExists->contact_phone = $request->waId;
                 if ($clientExists->client_status == null) {
                     $leadJpa = $this->moveArchived2Lead($businessJpa, $clientExists);
