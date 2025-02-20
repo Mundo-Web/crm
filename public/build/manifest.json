@@ -13,14 +13,14 @@
       "assets/Adminto-BSO65A8S.css"
     ]
   },
-  "_AssignUsersModal-DsZgHCVZ.js": {
-    "file": "assets/AssignUsersModal-DsZgHCVZ.js",
+  "_AssignUsersModal-BpusLDx4.js": {
+    "file": "assets/AssignUsersModal-BpusLDx4.js",
     "name": "AssignUsersModal",
     "imports": [
       "_CreateReactScript-BzwrR0sZ.js",
       "_Dropdown-sydwj0Do.js",
       "_DropdownItem-Bmz8ZgWp.js",
-      "_DateRange-BAof4H8g.js",
+      "_DateRange-Be0FdA5j.js",
       "_Adminto-BiO-cymU.js",
       "_Modal-ChNOGOpW.js",
       "_InputFormGroup-UB2lFvd0.js",
@@ -32,8 +32,8 @@
     "file": "assets/CreateReactScript-BzwrR0sZ.js",
     "name": "CreateReactScript"
   },
-  "_DateRange-BAof4H8g.js": {
-    "file": "assets/DateRange-BAof4H8g.js",
+  "_DateRange-Be0FdA5j.js": {
+    "file": "assets/DateRange-Be0FdA5j.js",
     "name": "DateRange",
     "imports": [
       "_CreateReactScript-BzwrR0sZ.js",
@@ -269,7 +269,7 @@
     ]
   },
   "resources/js/Clients.jsx": {
-    "file": "assets/Clients-1TikJMW3.js",
+    "file": "assets/Clients-BWaz-3Bu.js",
     "name": "Clients",
     "src": "resources/js/Clients.jsx",
     "isEntry": true,
@@ -283,9 +283,9 @@
       "_SetSelectValue-Cjw0rti6.js",
       "_DropdownItem-Bmz8ZgWp.js",
       "_DropdownEnd-D3wnIJPX.js",
-      "_AssignUsersModal-DsZgHCVZ.js",
+      "_AssignUsersModal-BpusLDx4.js",
       "_ReactAppend-CoTY4G2g.js",
-      "_DateRange-BAof4H8g.js",
+      "_DateRange-Be0FdA5j.js",
       "_DxPanelButton-B0o8aYX1.js",
       "_TippyButton-49AdcpMg.js",
       "_Number2Currency-e57Tgsuk.js",
@@ -309,7 +309,7 @@
     ]
   },
   "resources/js/KPIProjects.jsx": {
-    "file": "assets/KPIProjects-BeMVJInZ.js",
+    "file": "assets/KPIProjects-lXJYdpVH.js",
     "name": "KPIProjects",
     "src": "resources/js/KPIProjects.jsx",
     "isEntry": true,
@@ -318,7 +318,7 @@
       "_Adminto-BiO-cymU.js",
       "_DropdownEnd-D3wnIJPX.js",
       "_DropdownItem-Bmz8ZgWp.js",
-      "_DateRange-BAof4H8g.js",
+      "_DateRange-Be0FdA5j.js",
       "_Number2Currency-e57Tgsuk.js",
       "_server.browser-CLYKlTOS.js"
     ]
@@ -461,17 +461,17 @@
     ]
   },
   "resources/js/Projects.jsx": {
-    "file": "assets/Projects-D74A7G8A.js",
+    "file": "assets/Projects-Cm0g6gfW.js",
     "name": "Projects",
     "src": "resources/js/Projects.jsx",
     "isEntry": true,
     "imports": [
       "_CreateReactScript-BzwrR0sZ.js",
       "_Adminto-BiO-cymU.js",
-      "_AssignUsersModal-DsZgHCVZ.js",
+      "_AssignUsersModal-BpusLDx4.js",
       "_Number2Currency-e57Tgsuk.js",
       "_SetSelectValue-Cjw0rti6.js",
-      "_DateRange-BAof4H8g.js",
+      "_DateRange-Be0FdA5j.js",
       "_Modal-ChNOGOpW.js",
       "_DxPanelButton-B0o8aYX1.js",
       "_DxButton-CsjWvhyj.js",
@@ -487,7 +487,7 @@
     ]
   },
   "resources/js/ProjectsArchived.jsx": {
-    "file": "assets/ProjectsArchived-GcoaN2lQ.js",
+    "file": "assets/ProjectsArchived-BZJj-V1t.js",
     "name": "ProjectsArchived",
     "src": "resources/js/ProjectsArchived.jsx",
     "isEntry": true,
@@ -498,23 +498,23 @@
       "_DxPanelButton-B0o8aYX1.js",
       "_DxButton-CsjWvhyj.js",
       "_DxBox-CPKh0yyu.js",
-      "_DateRange-BAof4H8g.js",
+      "_DateRange-Be0FdA5j.js",
       "_ReactAppend-CoTY4G2g.js",
       "_server.browser-CLYKlTOS.js"
     ]
   },
   "resources/js/ProjectsDone.jsx": {
-    "file": "assets/ProjectsDone-EYjZG4ii.js",
+    "file": "assets/ProjectsDone-BOxlWKP_.js",
     "name": "ProjectsDone",
     "src": "resources/js/ProjectsDone.jsx",
     "isEntry": true,
     "imports": [
       "_CreateReactScript-BzwrR0sZ.js",
       "_Adminto-BiO-cymU.js",
-      "_AssignUsersModal-DsZgHCVZ.js",
+      "_AssignUsersModal-BpusLDx4.js",
       "_Number2Currency-e57Tgsuk.js",
       "_SetSelectValue-Cjw0rti6.js",
-      "_DateRange-BAof4H8g.js",
+      "_DateRange-Be0FdA5j.js",
       "_Modal-ChNOGOpW.js",
       "_DxPanelButton-B0o8aYX1.js",
       "_DxButton-CsjWvhyj.js",

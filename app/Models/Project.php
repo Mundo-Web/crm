@@ -46,6 +46,11 @@ class Project extends Model
         return $this->hasOne(Subdomain::class);
     }
 
+    public function users()
+    {
+        return $this->belongsToMany(User::class, UserByProject::class, 'project_id', 'user_id');
+    }
+
     public static function regularizeRemaining(string $projectId)
     {
         $total_amount = Payment::where('project_id', $projectId)->sum('amount');

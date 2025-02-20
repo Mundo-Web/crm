@@ -37,7 +37,7 @@ class ProjectController extends BasicController
     {
         $finishedProjectStatus = Setting::get('finished-project-status');
 
-        $query = $model::with(['client', 'type', 'status', 'subdomain'])->select([
+        $query = $model::with(['client', 'type', 'status', 'subdomain', 'users'])->select([
             'projects.*',
             'projects.status AS project_status',
             DB::raw('COALESCE(SUM(payments.amount), 0) AS total_payments'),

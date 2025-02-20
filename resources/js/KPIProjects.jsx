@@ -33,6 +33,8 @@ const KPIProjects = ({ finishedProjectStatus }) => {
   const [totalCost, setTotalCost] = useState(0)
   const [lastRemaining, setLastRemaining] = useState(0)
 
+  const [filterType, setFilterType] = useState('all');
+
   useEffect(() => {
     if (chartRef.current) {
       chartRef.current.destroy(); // Destruir el gráfico existente antes de crear uno nuevo
@@ -202,6 +204,55 @@ const KPIProjects = ({ finishedProjectStatus }) => {
   const suposeToBe = lastRevenues.actual * totalDays / daysPassed
   const trending = (suposeToBe / lastRevenues.last) - 1
 
+  const getProjectGroups = () => {
+    const now = moment();
+    const groups = {
+      delayed: [],
+      thisMonth: [],
+      future: {}
+    };
+
+    projects.forEach(project => {
+      const endDate = moment(project.ends_at);
+
+      if (endDate.isBefore(now, 'day')) {
+        groups.delayed.push(project);
+      } else if (endDate.isSame(now, 'month') && endDate.isSame(now, 'year')) {
+        groups.thisMonth.push(project);
+      } else {
+        const monthKey = endDate.format('MMMM YYYY');
+        if (!groups.future[monthKey]) {
+          groups.future[monthKey] = [];
+        }
+        groups.future[monthKey].push(project);
+      }
+    });
+
+    return groups;
+  };
+
+  const getFilteredProjects = () => {
+    const now = moment();
+
+    switch (filterType) {
+      case 'delayed':
+        return projects.filter(p => moment(p.ends_at).isBefore(now, 'day'));
+      case 'thisMonth':
+        return projects.filter(p => {
+          const endDate = moment(p.ends_at);
+          return endDate.isSame(now, 'month') &&
+            endDate.isSame(now, 'year') &&
+            !endDate.isBefore(now, 'day');
+        });
+      default:
+        if (filterType.startsWith('month_')) {
+          const monthYear = filterType.replace('month_', '');
+          return projects.filter(p => moment(p.ends_at).format('MMMM YYYY') === monthYear);
+        }
+        return projects;
+    }
+  };
+
   return (
     <>
       <div className='row'>
@@ -303,7 +354,7 @@ const KPIProjects = ({ finishedProjectStatus }) => {
                 </Tippy>
                 <div className='widget-detail-2 text-end'>
 
-                  {/* <span className='badge bg-pink rounded-pill float-start mt-3'>32% <i className='mdi mdi-trending-up'></i> </span> */}
+                  {/* <span className='badge bg-pink rounded-pill float-start mt-3'>32% <i className='mdi mdi-trending-up'></i> */}
                   <h3 className='fw-normal pt-1 mb-1'> S/. {Number2Currency(lastRemaining)} </h3>
                   <p className='text-muted mb-3'> S/. {Number2Currency(totalRemaining)} hasta hoy</p>
                 </div>
@@ -389,9 +440,43 @@ const KPIProjects = ({ finishedProjectStatus }) => {
                 </Tippy>
               </div>
               <h4 className='header-title mt-0 mb-0'>Proyectos prontos a terminar</h4>
+              <div className='mt-1 d-flex gap-1 flex-wrap'>
+                {getProjectGroups().delayed.length > 0 && (
+                  <button
+                    className={`btn btn-xs ${filterType === 'delayed' ? 'btn-danger' : 'btn-soft-danger'}`}
+                    onClick={() => setFilterType('delayed')}
+                  >
+                    Atrasados ({getProjectGroups().delayed.length})
+                  </button>
+                )}
+                {getProjectGroups().thisMonth.length > 0 && (
+                  <button
+                    className={`btn btn-xs ${filterType === 'thisMonth' ? 'btn-primary' : 'btn-soft-primary'}`}
+                    onClick={() => setFilterType('thisMonth')}
+                  >
+                    Este mes ({getProjectGroups().thisMonth.length})
+                  </button>
+                )}
+                {Object.entries(getProjectGroups().future).map(([month, monthProjects]) => (
+                  <button
+                    key={month}
+                    className={`btn btn-xs ${filterType === `month_${month}` ? 'btn-success' : 'btn-soft-success'}`}
+                    onClick={() => setFilterType(`month_${month}`)}
+                  >
+                    {month} ({monthProjects.length})
+                  </button>
+                ))}
+                {filterType !== 'all' && (
+                  <button
+                    className='btn btn-xs btn-soft-secondary'
+                    onClick={() => setFilterType('all')}
+                  >
+                    Mostrar todos
+                  </button>
+                )}
+              </div>
             </div>
             <div className='card-body' style={{ height: '360px', overflow: 'auto' }}>
-
               <div className='table-responsive'>
                 <table className='table table-sm table-bordered table-striped mb-0'>
                   <thead>
@@ -404,18 +489,17 @@ const KPIProjects = ({ finishedProjectStatus }) => {
                     </tr>
                   </thead>
                   <tbody>
-                    {
-                      projects.map((project, i) => {
-                        const relatives = (project.users || '').split('|').filter(Boolean)
-                        return <tr key={`project-${i}`} className={`${moment(project.ends_at).isBefore(moment()) ? 'text-danger' : ''}`}>
-                          <td>{project.client.tradename}</td>
-                          <td>{project.name}</td>
-                          <td>{DateRange(project.starts_at, project.ends_at)}</td>
-                          <td><span className='badge' style={{ backgroundColor: project.status.color }}>{project.status.name}</span></td>
-                          <td>{Assigneds(relatives)}</td>
-                        </tr>
-                      })
-                    }
+                    {getFilteredProjects().map((project, i) => {
+                      const relatives = project.users.map(user => user.relative_id);
+                      // const relatives = [/*(project.users || '').split('|').filter(Boolean)*/]
+                      return <tr key={`project-${i}`} className={`${moment(project.ends_at).isBefore(moment()) ? 'text-danger' : ''}`}>
+                        <td>{project.client.tradename}</td>
+                        <td>{project.name}</td>
+                        <td>{DateRange(project.starts_at, project.ends_at)}</td>
+                        <td><span className='badge' style={{ backgroundColor: project.status.color }}>{project.status.name}</span></td>
+                        <td>{Assigneds(relatives)}</td>
+                      </tr>
+                    })}
                   </tbody>
                 </table>
               </div>
