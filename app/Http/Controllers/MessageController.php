@@ -52,7 +52,7 @@ class MessageController extends BasicController
         $archiveJpa->save();
 
         if ($data['name'] && $data['email']) {
-            $resWA = new Fetch(env('WA_URL') . '/api/send',  [
+            new Fetch(env('WA_URL') . '/api/send',  [
                 'method' => 'POST',
                 'headers' => [
                     'Accept' => 'application/json',
@@ -226,7 +226,7 @@ class MessageController extends BasicController
                     ->exists(),
             ];
             return $messages;
-        });
+        }, fn($response, $th) => dump($th));
         return response($response->toArray(), $response->status);
     }
 
