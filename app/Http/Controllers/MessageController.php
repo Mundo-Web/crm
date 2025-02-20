@@ -43,6 +43,8 @@ class MessageController extends BasicController
         $archiveJpa->assigned_to = null;
         $archiveJpa->status_id = Setting::get('default-lead-status', $businessJpa->id);
         $archiveJpa->manage_status_id = Setting::get('default-manage-lead-status', $businessJpa->id);
+        $archiveJpa->created_at = Trace::getDate('mysql');
+        $archiveJpa->updated_at = Trace::getDate('mysql');
 
         $data = $this->getData($archiveJpa);
 
