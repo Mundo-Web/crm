@@ -176,11 +176,11 @@ class MessageController extends BasicController
                     'message' => $request->message
                 ]);
             } else {
-                dump($clientExists);
+                dump($clientExists->status());
                 $clientExists->contact_phone = $request->waId;
                 if ($clientExists->client_status == null) {
                     $leadJpa = $this->moveArchived2Lead($businessJpa, $clientExists);
-                } else  if ($clientExists->status->table_id == 'a8367789-666e-4929-aacb-7cbc2fbf74de') {
+                } else  if ($clientExists->status()->table_id == 'a8367789-666e-4929-aacb-7cbc2fbf74de') {
                     $this->cloneNewLead($request, $businessJpa, $clientExists);
                 } else if ($clientExists->assigned_to) {
                     throw new Exception('El lead ya esta siendo atendido');
