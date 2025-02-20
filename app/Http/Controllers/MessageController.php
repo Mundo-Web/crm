@@ -153,8 +153,6 @@ class MessageController extends BasicController
             $businessApiKey = Setting::get('gemini-api-key', $businessJpa->id);
             if (!$businessApiKey) throw new Exception('Esta empresa no tiene integracion con AI');
 
-            if (!$request->from_me) throw new Exception('El mensaje no es de un usuario');
-
             $clientExists = Client::select([
                 'clients.*',
                 'clients.status AS client_status'
