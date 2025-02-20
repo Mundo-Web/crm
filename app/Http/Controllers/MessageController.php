@@ -62,7 +62,6 @@ class MessageController extends BasicController
                     'content' => 'Hola ' . $archiveJpa->contact_name . ', veo que has sido cliente nuestro. En un momento un ejecutivo se pondra en contacto contigo.'
                 ]
             ]);
-            dump($resWA->text());
             SendNewLeadNotification::dispatchAfterResponse($archiveJpa, $businessJpa, false);
             $this->createFirstNote($archiveJpa);
             throw new Exception('Se ha movido el registro de "archivado" a "lead"');
@@ -225,7 +224,7 @@ class MessageController extends BasicController
                     ->exists(),
             ];
             return $messages;
-        }, fn($request, $th) => dump($th));
+        });
         return response($response->toArray(), $response->status);
     }
 
