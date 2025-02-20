@@ -155,9 +155,10 @@ class MessageController extends BasicController
 
             $clientExists = Client::select([
                 'clients.*',
-                'clients.status AS client_status'
+                'clients.status AS client_status',
+                'status.table_id AS status_table_id'
             ])
-                ->with(['status'])
+                ->join('statuses AS status', 'status.id', 'clients.status_id')
                 ->where('business_id', $businessJpa->id)
                 ->where(function ($query) use ($request) {
                     return $query->where('contact_phone', $request->waId)
@@ -180,7 +181,7 @@ class MessageController extends BasicController
                 $clientExists->contact_phone = $request->waId;
                 if ($clientExists->client_status == null) {
                     $leadJpa = $this->moveArchived2Lead($businessJpa, $clientExists);
-                } else  if ($clientExists->status()->table_id == 'a8367789-666e-4929-aacb-7cbc2fbf74de') {
+                } else  if ($clientExists->status_table_id == 'a8367789-666e-4929-aacb-7cbc2fbf74de') {
                     $this->cloneNewLead($request, $businessJpa, $clientExists);
                 } else if ($clientExists->assigned_to) {
                     throw new Exception('El lead ya esta siendo atendido');
