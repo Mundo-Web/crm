@@ -171,6 +171,7 @@ class MessageController extends BasicController
                 // ->where('complete_registration', true)
                 // ->whereNotNull('assigned_to')
                 // ->where('status', true)
+                ->orderBy('clients.created_at', 'DESC')
                 ->first();
 
             $leadJpa = new Client();
@@ -228,7 +229,7 @@ class MessageController extends BasicController
                     ->exists(),
             ];
             return $messages;
-        }, fn($response, $th) => dump($th));
+        });
         return response($response->toArray(), $response->status);
     }
 
