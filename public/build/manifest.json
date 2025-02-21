@@ -121,14 +121,6 @@
       "_CreateReactScript-BzwrR0sZ.js"
     ]
   },
-  "_ProductCard-B_4PvCDq.js": {
-    "file": "assets/ProductCard-B_4PvCDq.js",
-    "name": "ProductCard",
-    "imports": [
-      "_Adminto-DuoVWNzw.js",
-      "_CreateReactScript-BzwrR0sZ.js"
-    ]
-  },
   "_ProductsByClientsRest-Bxthq12P.js": {
     "file": "assets/ProductsByClientsRest-Bxthq12P.js",
     "name": "ProductsByClientsRest",
@@ -208,6 +200,10 @@
       "_CreateReactScript-BzwrR0sZ.js",
       "_Adminto-DuoVWNzw.js"
     ]
+  },
+  "_auto-tSUxE9xa.js": {
+    "file": "assets/auto-tSUxE9xa.js",
+    "name": "auto"
   },
   "_coming-soon-!~{00W}~.js": {
     "file": "assets/coming-soon-aMT53_Wt.css",
@@ -317,13 +313,14 @@
     ]
   },
   "resources/js/KPIProjects.jsx": {
-    "file": "assets/KPIProjects-BxyMGYvI.js",
+    "file": "assets/KPIProjects-BYPIet4K.js",
     "name": "KPIProjects",
     "src": "resources/js/KPIProjects.jsx",
     "isEntry": true,
     "imports": [
       "_CreateReactScript-BzwrR0sZ.js",
       "_Adminto-DuoVWNzw.js",
+      "_auto-tSUxE9xa.js",
       "_DropdownEnd-D3wnIJPX.js",
       "_DropdownItem-uEebZ_C2.js",
       "_DateRange-CKh1GjyI.js",
@@ -443,7 +440,7 @@
     ]
   },
   "resources/js/Products.jsx": {
-    "file": "assets/Products-Ri0-alx6.js",
+    "file": "assets/Products-BBf5vUr9.js",
     "name": "Products",
     "src": "resources/js/Products.jsx",
     "isEntry": true,
@@ -454,7 +451,6 @@
       "_InputFormGroup-UB2lFvd0.js",
       "_TextareaFormGroup-Dl-3XIPv.js",
       "_server.browser-CLYKlTOS.js",
-      "_ProductCard-B_4PvCDq.js",
       "_Number2Currency-e57Tgsuk.js"
     ]
   },
@@ -608,18 +604,16 @@
     ]
   },
   "resources/js/Taskboard.jsx": {
-    "file": "assets/Taskboard--FR_1HAi.js",
+    "file": "assets/Taskboard-BR5isaMA.js",
     "name": "Taskboard",
     "src": "resources/js/Taskboard.jsx",
     "isEntry": true,
     "imports": [
       "_CreateReactScript-BzwrR0sZ.js",
       "_Adminto-DuoVWNzw.js",
-      "_Modal-ChNOGOpW.js",
-      "_InputFormGroup-UB2lFvd0.js",
-      "_TextareaFormGroup-Dl-3XIPv.js",
-      "_ProductCard-B_4PvCDq.js",
-      "_Number2Currency-e57Tgsuk.js"
+      "_auto-tSUxE9xa.js",
+      "_DateRange-CKh1GjyI.js",
+      "_server.browser-CLYKlTOS.js"
     ]
   },
   "resources/js/Tasks.jsx": {

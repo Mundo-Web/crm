@@ -1,195 +1,189 @@
-
-import React, { useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { createRoot } from 'react-dom/client'
-import CreateReactScript from './Utils/CreateReactScript.jsx'
-import Adminto from './components/Adminto.jsx'
-import Modal from './components/Modal.jsx'
-import InputFormGroup from './components/form/InputFormGroup.jsx'
-import TextareaFormGroup from './components/form/TextareaFormGroup.jsx'
-import ProductsRest from './actions/ProductsRest.js'
-import ProductCard from './Reutilizables/Products/ProductCard.jsx'
-import Tippy from '@tippyjs/react'
-import Swal from 'sweetalert2'
-import Number2Currency from './Utils/Number2Currency.jsx'
+import Adminto from './components/Adminto'
+import CreateReactScript from './Utils/CreateReactScript'
+import Chart from 'chart.js/auto';
+import DashboardRest from './actions/DashboardRest';
+import Tippy from '@tippyjs/react';
+import ProjectsRest from './actions/ProjectsRest';
+import Number2Currency from './Utils/Number2Currency';
+import RemainingsHistoryRest from './actions/RemainingsHistoryRest';
+import DateRange from './Reutilizables/Projects/DateRange';
+import Assigneds from './Reutilizables/Projects/Assigneds';
 
-const productsRest = new ProductsRest()
+const Taskboard = () => {
 
-const Taskboard = ({ products: productsFromDB = [], types: typesFromDB = [], can }) => {
-  const modalRef = useRef()
+  const [projects, setProjects] = useState([]);
+  const [showDebtOnly, setShowDebtOnly] = useState(false);
 
-  // Form elements ref
-  const idRef = useRef()
-  // const typeRef = useRef()
-  const nameRef = useRef()
-  const priceRef = useRef()
-  const colorRef = useRef()
-  const descriptionRef = useRef()
+  const [filterType, setFilterType] = useState('all');
+  useEffect(() => {
+    ProjectsRest
+      .paginate({
+        sort: [{
+          selector: 'ends_at',
+          desc: false
+        }],
+        requireTotalCount: true,
+        skip: 0,
+        take: 100
+      })
+      .then(({ data = [] }) => {
+        setProjects(data)
+      })
+  }, [null])
 
-  const [isEditing, setIsEditing] = useState(false)
-  const [products, setProducts] = useState(productsFromDB)
-  // const [types, setTypes] = useState(typesFromDB)
+  const getProjectGroups = () => {
+    const now = moment();
+    const groups = {
+      delayed: [],
+      thisMonth: [],
+      future: {}
+    };
 
-  const onModalOpen = (data) => {
-    if (data?.id) setIsEditing(true)
-    else setIsEditing(false)
+    projects.forEach(project => {
+      const endDate = moment(project.ends_at);
 
-    idRef.current.value = data?.id || null
-    // $(typeRef.current).val(data?.type_id || null).trigger('change')
-    nameRef.current.value = data?.name || null
-    priceRef.current.value = data?.price || null
-    colorRef.current.value = data?.color || null
-    descriptionRef.current.value = data?.description || null
+      if (endDate.isBefore(now, 'day')) {
+        groups.delayed.push(project);
+      } else if (endDate.isSame(now, 'month') && endDate.isSame(now, 'year')) {
+        groups.thisMonth.push(project);
+      } else {
+        const monthKey = endDate.format('MMMM YYYY');
+        if (!groups.future[monthKey]) {
+          groups.future[monthKey] = [];
+        }
+        groups.future[monthKey].push(project);
+      }
+    });
 
-    $(modalRef.current).modal('show')
-  }
+    return groups;
+  };
 
-  const onModalSubmit = async (e) => {
-    e.preventDefault()
+  const getFilteredProjects = () => {
+    const now = moment();
+    let filtered = projects;
 
-    const request = {
-      id: idRef.current.value || undefined,
-      // type_id: typeRef.current.value,
-      name: nameRef.current.value,
-      price: priceRef.current.value,
-      color: colorRef.current.value,
-      description: descriptionRef.current.value
+    // Apply debt filter first
+    if (showDebtOnly) {
+      filtered = filtered.filter(p => Number(p.remaining_amount) > 0);
     }
 
-    const result = await productsRest.save(request)
-    if (!result) return
-
-    $(modalRef.current).modal('hide')
-
-    const newProducts = structuredClone(products).map(x => {
-      if (x.id == result.id) return result;
-      return x
-    })
-
-    if (!newProducts.find(x => x.id == result.id)) newProducts.push(result);
-
-    setProducts(newProducts)
-  }
-
-  const onStatusChange = async ({ id, status }) => {
-    const result = await productsRest.status({ id, status })
-    if (!result) return
-    setProducts(old => {
-      return old.map(x => {
-        if (x.id == id) x.status = 1
-        return x
-      })
-    })
-  }
-
-  const onDeleteClicked = async (id) => {
-    const { isConfirmed } = await Swal.fire({
-      title: "Estas seguro?",
-      text: `No podras revertir esta accion!`,
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonText: "Continuar",
-      cancelButtonText: `Cancelar`
-    })
-    if (!isConfirmed) return
-
-    const result = await productsRest.delete(id)
-    if (!result) return
-
-    setProducts(old => {
-      return old.filter(x => x.id != id)
-      // return old.map(x => {
-      //   if (x.id == id) x.status = null
-      //   return x
-      // })
-    })
-  }
+    // Then apply date filters
+    switch (filterType) {
+      case 'delayed':
+        return filtered.filter(p => moment(p.ends_at).isBefore(now, 'day'));
+      case 'thisMonth':
+        return filtered.filter(p => {
+          const endDate = moment(p.ends_at);
+          return endDate.isSame(now, 'month') &&
+            endDate.isSame(now, 'year') &&
+            !endDate.isBefore(now, 'day');
+        });
+      default:
+        if (filterType.startsWith('month_')) {
+          const monthYear = filterType.replace('month_', '');
+          return filtered.filter(p => moment(p.ends_at).format('MMMM YYYY') === monthYear);
+        }
+        return filtered;
+    }
+  };
 
   return (<>
     <div className='row'>
-      <div className="col-12">
-        <div className="card" >
+      <div className='col-12'>
+        <div className='card'>
           <div className="card-header">
-            <div className="float-end">
-              <button className='btn btn-success btn-sm' onClick={onModalOpen}>
-                <i className='fa fa-plus me-1'></i>
-                Agregar producto
-              </button>
+            <div className='dropdown float-end'>
+              <Tippy content='Ver proyectos' arrow={true}>
+                <a href='/projects' className='arrow-none card-drop'>
+                  <i className='mdi mdi-arrow-top-right'></i>
+                </a>
+              </Tippy>
             </div>
-            <h4 className="header-title my-0">Lista de productos</h4>
+            <h4 className='header-title mt-0 mb-0'>Proyectos pendientes</h4>
+            <div className='mt-2 d-flex gap-1 flex-wrap'>
+              {getProjectGroups().delayed.length > 0 && (
+                <button
+                  className={`btn btn-xs ${filterType === 'delayed' ? 'btn-danger' : 'btn-soft-danger'}`}
+                  onClick={() => setFilterType('delayed')}
+                >
+                  Atrasados ({getProjectGroups().delayed.length})
+                </button>
+              )}
+              {getProjectGroups().thisMonth.length > 0 && (
+                <button
+                  className={`btn btn-xs ${filterType === 'thisMonth' ? 'btn-primary' : 'btn-soft-primary'}`}
+                  onClick={() => setFilterType('thisMonth')}
+                >
+                  Este mes ({getProjectGroups().thisMonth.length})
+                </button>
+              )}
+              {Object.entries(getProjectGroups().future).map(([month, monthProjects]) => (
+                <button
+                  key={month}
+                  className={`btn btn-xs ${filterType === `month_${month}` ? 'btn-success' : 'btn-soft-success'}`}
+                  onClick={() => setFilterType(`month_${month}`)}
+                >
+                  {month} ({monthProjects.length})
+                </button>
+              ))}
+              {filterType !== 'all' && (
+                <button
+                  className='btn btn-xs btn-soft-secondary'
+                  onClick={() => setFilterType('all')}
+                >
+                  Mostrar todos
+                </button>
+              )}
+            </div>
           </div>
-          <div className="card-body" style={{ height: 'calc(100vh - 160px)', overflowY: 'auto' }}>
-            <div className="row mb-4">
-              <div className='text-center'>
-              </div>
+          <div className='card-body' style={{ height: 'calc(100vh - 250px)', overflow: 'auto' }}>
+            <div className="form-check form-switch mb-2 align-content-center">
+              <input
+                className="form-check-input"
+                type="checkbox"
+                id="showDebtOnly"
+                onChange={(e) => setShowDebtOnly(e.target.checked)}
+                style={{ cursor: 'pointer' }}
+              />
+              <label className="form-check-label" htmlFor="showDebtOnly" style={{ cursor: 'pointer' }}>
+                Solo mostrar proyectos con deuda
+              </label>
             </div>
-            <div className="d-flex flex-wrap align-items-center justify-content-center gap-3" style={{
-              height: 'max-height'
-            }}>
-              {
-                products.map((product, index) => {
-                  return <ProductCard key={index} style={{
-                    width: '300px',
-                    textDecorationLine: product.status == null && 'line-through',
-                    opacity: product.status == null && 0.5,
-                  }} cardStyle={{
-                    border: `1px solid ${product.color}44`,
-                    backgroundColor: `${product.color}11`
-                  }}>
-                    <h4 className={`${product.ribbon ? 'ms-4' : ''} text-center text-truncate line-clamp-2`} style={{ cursor: product.color }}>{product.name}</h4>
-                    <table>
-                      <tbody>
-                        <tr>
-                          <td style={{ width: '100%' }}>
-                            <small className='mb-1' style={{
-                              overflow: 'hidden',
-                              display: '-webkit-box',
-                              WebkitBoxOrient: 'vertical',
-                              WebkitLineClamp: 2,
-                              height: '36px'
-                            }}>{product.description || '- Sin descripción -'}</small>
-                            <b>S/. {Number2Currency(product.price)}</b>
-                          </td>
-                          <td className='text-end'>
-                            {
-                              product.status == null
-                                ? <Tippy content='Restaurar'>
-                                  <button className="btn btn-xs btn-soft-dark fas fa-trash-restore" onClick={() => onStatusChange({ id: product.id, status: false })}></button>
-                                </Tippy>
-                                : <>
-                                  <Tippy content='Editar'>
-                                    <button className="btn btn-xs btn-soft-primary fa fa-pen mb-1" onClick={() => onModalOpen(product)}></button>
-                                  </Tippy>
-                                  <Tippy content='Eliminar'>
-                                    <button className="btn btn-xs btn-soft-danger fa fa-times" onClick={() => onDeleteClicked(product.id)}></button>
-                                  </Tippy>
-                                </>
-                            }
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </ProductCard>
-                })
-              }
+            <div className='table-responsive'>
+              <table className='table table-sm table-bordered table-striped mb-0'>
+                <thead>
+                  <tr>
+                    <th>Cliente</th>
+                    <th>Fecha de desarrollo</th>
+                    <th>Estado</th>
+                    <th>Debe</th>
+                    <th>Asignado a</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {getFilteredProjects().map((project, i) => {
+                    const relatives = project.users.map(user => user.relative_id);
+                    // const relatives = [/*(project.users || '').split('|').filter(Boolean)*/]
+                    return <tr key={`project-${i}`} >
+                      <td className={`${moment(project.ends_at).isBefore(moment()) ? 'text-danger' : ''}`}>
+                        <b className='d-block'>{project.client.tradename}</b>
+                        <small>{project.name}</small>
+                      </td>
+                      <td>{DateRange(project.starts_at, project.ends_at)}</td>
+                      <td><span className='badge' style={{ backgroundColor: project.status.color }}>{project.status.name}</span></td>
+                      <td>{project.remaining_amount > 0 ? <b className='text-danger'>Debe</b> : 'No debe'}</td>
+                      <td>{Assigneds(relatives)}</td>
+                    </tr>
+                  })}
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
       </div>
     </div>
-    <Modal modalRef={modalRef} title={isEditing ? 'Editar producto' : 'Agregar producto'} onSubmit={onModalSubmit} size='sm'>
-      <div className='row' id='main-container'>
-        <input ref={idRef} type='hidden' />
-        {/* <SelectFormGroup eRef={typeRef} label='Tipo de producto' dropdownParent='#main-container' tags required>
-          {types.map((type, index) => {
-            return <option key={index} value={type.id}>{type.name}</option>
-          })}
-        </SelectFormGroup> */}
-        <InputFormGroup eRef={nameRef} label='Producto' col='col-12' required />
-        <InputFormGroup eRef={priceRef} label='Precio' col='col-7' type='number' step={0.01} />
-        <InputFormGroup eRef={colorRef} label='Color' col='col-5' type='color' />
-        <TextareaFormGroup eRef={descriptionRef} label='Descripcion' col='col-12' />
-      </div>
-    </Modal>
   </>
   )
 };
