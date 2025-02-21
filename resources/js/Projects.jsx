@@ -178,12 +178,13 @@ const Projects = ({ statuses, finishedProjectStatus, can }) => {
           caption: 'Asignados',
           dataType: 'string',
           cellTemplate: (container, { data }) => {
-            const relatives = (data.users || '').split('|').filter(Boolean)
+            // const relatives = (data.users || '').split('|').filter(Boolean)
+            const relatives = data.users.map(user => user.relative_id);
             container.append(DxBox([Assigneds(relatives)]))
           },
-          visible: false,
+          // visible: false,
           allowExporting: false,
-          // allowFiltering: false,
+          allowFiltering: false,
         },
         can('projects', 'root', 'all', 'addpayment') &&
         {
