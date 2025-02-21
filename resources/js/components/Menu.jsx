@@ -148,7 +148,7 @@ const Menu = ({ session, can, whatsAppStatus, APP_PROTOCOL, APP_DOMAIN, leadsCou
 
           {can('projects', 'root', 'all', 'list') && <MenuItemContainer title='Proyectos' icon='mdi mdi-page-next'>
             <MenuItem href="/projects" icon='mdi mdi-lan-pending'>En curso</MenuItem>
-            <MenuItem href="/projects/done" icon='mdi mdi-check'>Terminados</MenuItem>
+            <MenuItem href="/projects/done" icon='mdi mdi-check'>Entregados</MenuItem>
             <MenuItem href="/projects/archived" icon='mdi mdi-archive'>Archivados</MenuItem>
           </MenuItemContainer>
           }
