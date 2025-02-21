@@ -35,7 +35,7 @@ const Assigneds = (relatives) => {
         }}>
           <img
             className='avatar-group-item avatar-sm rounded-circle mb-0'
-            src={`/api/profile/thumbnail/${relative_id}`}
+            src={`//${Global.APP_DOMAIN}/api/profile/thumbnail/${relative_id}`}
             onError={e => e.target.src = `//${Global.APP_DOMAIN}/api/profile/thumbnail/undefined`}
             style={{ backdropFilter: 'blur(40px)', marginRight: '6px' }}
           />
