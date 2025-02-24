@@ -177,6 +177,7 @@ const Projects = ({ statuses, finishedProjectStatus, can }) => {
           dataField: 'users',
           caption: 'Asignados',
           dataType: 'string',
+          height: '48px',
           cellTemplate: (container, { data }) => {
             // const relatives = (data.users || '').split('|').filter(Boolean)
             const relatives = data.users.map(user => user.relative_id);
