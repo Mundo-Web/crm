@@ -1,13 +1,9 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import Adminto from './components/Adminto'
 import CreateReactScript from './Utils/CreateReactScript'
-import Chart from 'chart.js/auto';
-import DashboardRest from './actions/DashboardRest';
 import Tippy from '@tippyjs/react';
 import ProjectsRest from './actions/ProjectsRest';
-import Number2Currency from './Utils/Number2Currency';
-import RemainingsHistoryRest from './actions/RemainingsHistoryRest';
 import DateRange from './Reutilizables/Projects/DateRange';
 import Assigneds from './Reutilizables/Projects/Assigneds';
 
@@ -166,15 +162,17 @@ const Taskboard = () => {
                   {getFilteredProjects().map((project, i) => {
                     const relatives = project.users.map(user => user.relative_id);
                     // const relatives = [/*(project.users || '').split('|').filter(Boolean)*/]
-                    return <tr key={`project-${i}`} >
-                      <td className={`${moment(project.ends_at).isBefore(moment()) ? 'text-danger' : ''}`}>
+                    return <tr key={`project-${i}`} style={{
+                      backgroundColor: project.is_alert ? 'rgba(255,91,91,.18)' : 'unset',
+                    }}>
+                      <td className={`${moment(project.ends_at).isBefore(moment()) ? 'text-danger' : ''}`} style={{ boxShadow: project.is_alert ? 'unset' : '' }}>
                         <b className='d-block'>{project.client.tradename}</b>
                         <small>{project.name}</small>
                       </td>
-                      <td>{DateRange(project.starts_at, project.ends_at)}</td>
-                      <td><span className='badge' style={{ backgroundColor: project.status.color }}>{project.status.name}</span></td>
-                      <td>{project.remaining_amount > 0 ? <b className='text-danger'>Debe</b> : 'No debe'}</td>
-                      <td>{Assigneds(relatives)}</td>
+                      <td style={{ boxShadow: project.is_alert ? 'unset' : '' }}>{DateRange(project.starts_at, project.ends_at)}</td>
+                      <td style={{ boxShadow: project.is_alert ? 'unset' : '' }}><span className='badge' style={{ backgroundColor: project.status.color }}>{project.status.name}</span></td>
+                      <td style={{ boxShadow: project.is_alert ? 'unset' : '' }}>{project.remaining_amount > 0 ? <b className='text-danger'>Debe</b> : 'No debe'}</td>
+                      <td style={{ boxShadow: project.is_alert ? 'unset' : '' }}>{Assigneds(relatives)}</td>
                     </tr>
                   })}
                 </tbody>
