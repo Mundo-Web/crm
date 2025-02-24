@@ -163,7 +163,6 @@ const Projects = ({ statuses, finishedProjectStatus, can }) => {
           filterValue: GET.client || undefined,
           fixed: true,
           fixedPosition: 'left',
-          height: '48px',
         },
         {
           dataField: 'type.name',
@@ -178,11 +177,13 @@ const Projects = ({ statuses, finishedProjectStatus, can }) => {
           dataField: 'users',
           caption: 'Asignados',
           dataType: 'string',
-          height: '48px',
           cellTemplate: (container, { data }) => {
             // const relatives = (data.users || '').split('|').filter(Boolean)
             const relatives = data.users.map(user => user.relative_id);
-            container.append(DxBox([Assigneds(relatives)]))
+            container.append(DxBox([{
+              height: '36px',
+              children: Assigneds(relatives)
+            }]))
           },
           // visible: false,
           allowExporting: false,
@@ -240,7 +241,7 @@ const Projects = ({ statuses, finishedProjectStatus, can }) => {
           cellTemplate: (container, { data }) => {
             container.append(DxBox([{
               width: '200px',
-              height: '48px',
+              height: '30px',
               children: DateRange(data.starts_at, data.ends_at)
             }]))
           },
