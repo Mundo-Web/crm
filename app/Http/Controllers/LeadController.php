@@ -85,6 +85,7 @@ class LeadController extends BasicController
 
     public function setPaginationInstance(Request $request, string $model)
     {
+        $defaultLeadStatus = Setting::get('default-lead-status');
         return $model::select('clients.*')
             ->withCount(['notes', 'tasks', 'pendingTasks', 'products'])
             ->with(['status', 'assigned', 'manageStatus', 'creator'])
@@ -93,6 +94,7 @@ class LeadController extends BasicController
             ->leftJoin('users AS assigned', 'assigned.id', 'clients.assigned_to')
             ->where('status.table_id', 'e05a43e5-b3a6-46ce-8d1f-381a73498f33')
             ->where('clients.status', true)
+            ->where('clients.status_id','<>', $defaultLeadStatus)
             ->where('clients.business_id', Auth::user()->business_id);
     }
 

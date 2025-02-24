@@ -11,6 +11,7 @@ use App\Http\Controllers\GmailController;
 use App\Http\Controllers\KPILeadsController;
 use App\Http\Controllers\LeadController;
 use App\Http\Controllers\MetaController;
+use App\Http\Controllers\NewLeadController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\PaymentController;
@@ -213,6 +214,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/leads', [LeadController::class, 'all']);
     Route::post('/leads', [LeadController::class, 'save']);
     Route::post('/leads/paginate', [LeadController::class, 'paginate']);
+    Route::post('/leads/new/paginate', [NewLeadController::class, 'paginate']);
     Route::post('/leads/status', [LeadController::class, 'leadStatus']);
     Route::post('/leads/manage-status', [LeadController::class, 'manageStatus']);
     Route::put('/leads/attend/{lead}', [LeadController::class, 'attend']);

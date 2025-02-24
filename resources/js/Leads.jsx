@@ -42,8 +42,11 @@ import GmailRest from './actions/GmailRest.js'
 import HtmlContent from './Utils/HtmlContent.jsx'
 import MailingModal from './components/modals/MailingModal.jsx'
 import FormatBytes from './Utils/FormatBytes.js'
+import LeadTable from './Reutilizables/Leads/LeadTable.jsx'
+import NewLeadsRest from './actions/NewLeadsRest.js'
 
 const leadsRest = new LeadsRest()
+const newLeadsRest = new NewLeadsRest()
 const clientsRest = new ClientsRest()
 const clientNotesRest = new ClientNotesRest()
 const taskRest = new TasksRest()
@@ -56,6 +59,7 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
   const modalRef = useRef()
   const newLeadModalRef = useRef()
   const gridRef = useRef()
+  const managedGridRef = useRef()
   const composeModal = useRef()
   const mailModal = useRef()
 
@@ -98,6 +102,7 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
 
   const typeRefs = {};
   const idRefs = {}
+
   noteTypes.forEach(type => {
     typeRefs[type.id] = useRef()
     idRefs[type.id] = useRef()
@@ -308,7 +313,10 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
     })
 
     if (defaultView == 'kanban') getLeads()
-    else $(gridRef.current).dxDataGrid('instance').refresh()
+    else {
+      $(gridRef.current).dxDataGrid('instance').refresh()
+      $(managedGridRef.current).dxDataGrid('instance').refresh()
+    }
   }
 
   const onDeleteNote = async (noteId) => {
@@ -366,13 +374,19 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
     }
 
     if (defaultView == 'kanban') getLeads()
-    else $(gridRef.current).dxDataGrid('instance').refresh()
+    else {
+      $(gridRef.current).dxDataGrid('instance').refresh()
+      $(managedGridRef.current).dxDataGrid('instance').refresh()
+    }
   }
 
   const onAttendClient = async (lead, attend) => {
     await leadsRest.attend(lead, attend)
     if (defaultView == 'kanban') getLeads()
-    else $(gridRef.current).dxDataGrid('instance').refresh()
+    else {
+      $(gridRef.current).dxDataGrid('instance').refresh()
+      $(managedGridRef.current).dxDataGrid('instance').refresh()
+    }
   }
 
   const onTaskStatusChange = async (id, status) => {
@@ -380,7 +394,10 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
     if (!result) return
     if (result?.data?.refresh) {
       if (defaultView == 'kanban') getLeads()
-      else $(gridRef.current).dxDataGrid('instance').refresh()
+      else {
+        $(gridRef.current).dxDataGrid('instance').refresh()
+        $(managedGridRef.current).dxDataGrid('instance').refresh()
+      }
     }
     getNotes()
   }
@@ -392,7 +409,10 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
     setLeadLoaded(newLeadLoaded)
     history.pushState(null, null, `/leads/${newLeadLoaded.id}`)
     if (defaultView == 'kanban') getLeads()
-    else $(gridRef.current).dxDataGrid('instance').refresh()
+    else {
+      $(gridRef.current).dxDataGrid('instance').refresh()
+      $(managedGridRef.current).dxDataGrid('instance').refresh()
+    }
   }
 
   const onArchiveClicked = async (data, e = null) => {
@@ -412,7 +432,10 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
     if (!deleted) return
     if (defaultView == 'kanban') {
       $(`[id="${data.id}"]`).remove()
-    } else $(gridRef.current).dxDataGrid('instance').refresh()
+    } else {
+      $(gridRef.current).dxDataGrid('instance').refresh()
+      $(managedGridRef.current).dxDataGrid('instance').refresh()
+    }
 
     Send2Div(to)
   }
@@ -430,7 +453,10 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
     await leadsRest.delete(data.id)
     if (defaultView == 'kanban') {
       $(`[id="${data.id}"]`).remove()
-    } else $(gridRef.current).dxDataGrid('instance').refresh()
+    } else {
+      $(gridRef.current).dxDataGrid('instance').refresh()
+      $(managedGridRef.current).dxDataGrid('instance').refresh()
+    }
   }
 
   const onModalSubmit = async (e) => {
@@ -461,7 +487,10 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
 
     $(newLeadModalRef.current).modal('hide')
     if (defaultView == 'kanban') getLeads()
-    else $(gridRef.current).dxDataGrid('instance').refresh()
+    else {
+      $(gridRef.current).dxDataGrid('instance').refresh()
+      $(managedGridRef.current).dxDataGrid('instance').refresh()
+    }
 
   }
 
@@ -557,188 +586,192 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
     </div>
     {
       defaultView == 'table' ?
-        <Table gridRef={gridRef} title='Leads' rest={leadsRest} reloadWith={[statuses, manageStatuses]}
-          toolBar={(container) => {
-            container.unshift(DxPanelButton({
-              className: 'btn btn-xs btn-soft-dark text-nowrap',
-              text: 'Actualizar',
-              title: 'Refrescar tabla',
-              icon: 'fas fa-undo-alt',
-              onClick: () => $(gridRef.current).dxDataGrid('instance').refresh()
-            }))
-            can('leads', 'all', 'create') && container.unshift(DxPanelButton({
-              className: 'btn btn-xs btn-soft-primary text-nowrap',
-              text: 'Nuevo',
-              title: 'Agregar registro',
-              icon: 'fa fa-plus',
-              onClick: () => onOpenModal()
-            }))
-          }}
-          pageSize={50}
-          allowedPageSizes={[50, 100]}
-          // selection={{
-          //   mode: 'multiple',
-          //   selectAllMode: 'page'
-          // }}
-          columns={[
-            {
-              dataField: 'contact_name',
-              caption: 'Lead',
-              width: 250,
-              cellTemplate: (container, { data }) => {
-                container.attr('style', 'height: 48px; cursor: pointer')
-                container.on('click', () => onLeadClicked(data))
-                container.html(renderToString(<>
-                  {
-                    data.status_id == defaultLeadStatus
-                      ? <b className='d-block'>{data.contact_name}</b>
-                      : <span className='d-block'>{data.contact_name}</span>
-                  }
-                  {
-                    data.products_count > 0 &&
-                    <small className='text-muted'>{data.products_count} {data.products_count > 1 ? 'productos' : 'producto'}</small>
-                  }
-                </>))
-              },
-              fixed: true,
-              fixedPosition: 'left'
-            },
-            {
-              dataField: 'assigned.fullname',
-              caption: 'Usuario',
-              width: 58,
-              cellTemplate: (container, { data }) => {
-                container.attr('style', 'height: 48px')
-                ReactAppend(container, <div className='d-flex align-items-center gap-1'>
-                  {data.assigned_to
-                    ? <>
-                      <Tippy content={`Atendido por ${data.assigned.name} ${data.assigned.lastname}`}>
-                        <img className='avatar-sm rounded-circle' src={`//${Global.APP_DOMAIN}/api/profile/thumbnail/${data.assigned.relative_id}`} alt={data.assigned.name} />
-                      </Tippy>
-                    </>
-                    : ''}
-                </div>)
-              },
-              fixed: true,
-              fixedPosition: 'left'
-            },
-            {
-              dataField: 'contact_email',
-              caption: 'Correo'
-            },
-            {
-              dataField: 'contact_phone',
-              caption: 'Telefono'
-            },
-            {
-              dataField: 'status.name',
-              caption: 'Estado de gestión',
-              dataType: 'string',
-              width: 180,
-              cellTemplate: (container, { data }) => {
-                container.addClass('p-0')
-                container.attr('style', 'overflow: visible')
-                ReactAppend(container, <StatusDropdown
-                  items={statuses}
-                  defaultValue={data.status}
-                  base={{
-                    table_id: 'e05a43e5-b3a6-46ce-8d1f-381a73498f33'
-                  }}
-                  onItemClick={(status) => onClientStatusClicked(data.id, status.id)}
-                  canCreate={can('statuses', 'all', 'create')}
-                  canUpdate={can('statuses', 'all', 'update')}
-                  canDelete={can('statuses', 'all', 'delete')}
-                  onDropdownClose={(hasChanges, items) => {
-                    if (!hasChanges) return
-                    setStatuses(items)
-                  }}
-                />)
-              }
-            },
-            {
-              dataField: 'manage_status.name',
-              caption: 'Estado del lead',
-              dataType: 'string',
-              width: 180,
-              cellTemplate: (container, { data }) => {
-                container.addClass('p-0')
-                container.attr('style', 'overflow: visible')
-                ReactAppend(container, <StatusDropdown
-                  items={manageStatuses}
-                  defaultValue={data.manage_status}
-                  base={{
-                    table_id: '9c27e649-574a-47eb-82af-851c5d425434'
-                  }}
-                  onItemClick={(status) => onManageStatusChange(data, status)}
-                  canCreate={can('statuses', 'all', 'create')}
-                  canUpdate={can('statuses', 'all', 'update')}
-                  canDelete={can('statuses', 'all', 'delete')}
-                  onDropdownClose={(hasChanges, items) => {
-                    if (!hasChanges) return
-                    setManageStatuses(items)
-                  }}
-                />)
-              }
-            },
-            {
-              dataField: 'origin',
-              caption: 'Origen',
-              dataType: 'string'
-            },
-            {
-              dataField: 'triggered_by',
-              caption: 'Disparado por',
-              dataType: 'string'
-            },
-            {
-              dataField: 'created_at',
-              caption: 'Fecha creacion',
-              dataType: 'date',
-              cellTemplate: (container, { data }) => {
-                container.text(moment(data.created_at.replace('Z', '+05:00')).format('lll'))
-              },
-              sortOrder: 'desc',
-            },
-            {
-              caption: 'Acciones',
-              width: 240,
-              cellTemplate: (container, { data }) => {
-                container.attr('style', 'display: flex; gap: 4px; height: 47px; overflow: visible')
+        <>
+          <LeadTable gridRef={managedGridRef} rest={leadsRest} can={can} defaultLeadStatus={defaultLeadStatus} manageStatuses={manageStatuses} statuses={statuses} onClientStatusClicked={onClientStatusClicked} onManageStatusChange={onManageStatusChange} onLeadClicked={onLeadClicked} onAttendClient={onAttendClient} onOpenModal={onOpenModal} onMakeLeadClient={onMakeLeadClient} onArchiveClicked={onArchiveClicked} onDeleteClicked={onDeleteClicked} title={<h4 className='header-title my-0'>Leads - En Gestion</h4>} />
+          <LeadTable gridRef={gridRef} rest={newLeadsRest} can={can} defaultLeadStatus={defaultLeadStatus} manageStatuses={manageStatuses} statuses={statuses} onClientStatusClicked={onClientStatusClicked} onManageStatusChange={onManageStatusChange} onLeadClicked={onLeadClicked} onAttendClient={onAttendClient} onOpenModal={onOpenModal} onMakeLeadClient={onMakeLeadClient} onArchiveClicked={onArchiveClicked} onDeleteClicked={onDeleteClicked} title={<h4 className='header-title my-0'>Leads - Recien llegados</h4>} />
+        </>
+        // <Table gridRef={gridRef} title='Leads' rest={leadsRest} reloadWith={[statuses, manageStatuses]}
+        //   toolBar={(container) => {
+        //     container.unshift(DxPanelButton({
+        //       className: 'btn btn-xs btn-soft-dark text-nowrap',
+        //       text: 'Actualizar',
+        //       title: 'Refrescar tabla',
+        //       icon: 'fas fa-undo-alt',
+        //       onClick: () => $(gridRef.current).dxDataGrid('instance').refresh()
+        //     }))
+        //     can('leads', 'all', 'create') && container.unshift(DxPanelButton({
+        //       className: 'btn btn-xs btn-soft-primary text-nowrap',
+        //       text: 'Nuevo',
+        //       title: 'Agregar registro',
+        //       icon: 'fa fa-plus',
+        //       onClick: () => onOpenModal()
+        //     }))
+        //   }}
+        //   pageSize={50}
+        //   allowedPageSizes={[50, 100]}
+        //   // selection={{
+        //   //   mode: 'multiple',
+        //   //   selectAllMode: 'page'
+        //   // }}
+        //   columns={[
+        //     {
+        //       dataField: 'contact_name',
+        //       caption: 'Lead',
+        //       width: 250,
+        //       cellTemplate: (container, { data }) => {
+        //         container.attr('style', 'height: 48px; cursor: pointer')
+        //         container.on('click', () => onLeadClicked(data))
+        //         container.html(renderToString(<>
+        //           {
+        //             data.status_id == defaultLeadStatus
+        //               ? <b className='d-block'>{data.contact_name}</b>
+        //               : <span className='d-block'>{data.contact_name}</span>
+        //           }
+        //           {
+        //             data.products_count > 0 &&
+        //             <small className='text-muted'>{data.products_count} {data.products_count > 1 ? 'productos' : 'producto'}</small>
+        //           }
+        //         </>))
+        //       },
+        //       fixed: true,
+        //       fixedPosition: 'left'
+        //     },
+        //     {
+        //       dataField: 'assigned.fullname',
+        //       caption: 'Usuario',
+        //       width: 58,
+        //       cellTemplate: (container, { data }) => {
+        //         container.attr('style', 'height: 48px')
+        //         ReactAppend(container, <div className='d-flex align-items-center gap-1'>
+        //           {data.assigned_to
+        //             ? <>
+        //               <Tippy content={`Atendido por ${data.assigned.name} ${data.assigned.lastname}`}>
+        //                 <img className='avatar-sm rounded-circle' src={`//${Global.APP_DOMAIN}/api/profile/thumbnail/${data.assigned.relative_id}`} alt={data.assigned.name} />
+        //               </Tippy>
+        //             </>
+        //             : ''}
+        //         </div>)
+        //       },
+        //       fixed: true,
+        //       fixedPosition: 'left'
+        //     },
+        //     {
+        //       dataField: 'contact_email',
+        //       caption: 'Correo'
+        //     },
+        //     {
+        //       dataField: 'contact_phone',
+        //       caption: 'Telefono'
+        //     },
+        //     {
+        //       dataField: 'status.name',
+        //       caption: 'Estado de gestión',
+        //       dataType: 'string',
+        //       width: 180,
+        //       cellTemplate: (container, { data }) => {
+        //         container.addClass('p-0')
+        //         container.attr('style', 'overflow: visible')
+        //         ReactAppend(container, <StatusDropdown
+        //           items={statuses}
+        //           defaultValue={data.status}
+        //           base={{
+        //             table_id: 'e05a43e5-b3a6-46ce-8d1f-381a73498f33'
+        //           }}
+        //           onItemClick={(status) => onClientStatusClicked(data.id, status.id)}
+        //           canCreate={can('statuses', 'all', 'create')}
+        //           canUpdate={can('statuses', 'all', 'update')}
+        //           canDelete={can('statuses', 'all', 'delete')}
+        //           onDropdownClose={(hasChanges, items) => {
+        //             if (!hasChanges) return
+        //             setStatuses(items)
+        //           }}
+        //         />)
+        //       }
+        //     },
+        //     {
+        //       dataField: 'manage_status.name',
+        //       caption: 'Estado del lead',
+        //       dataType: 'string',
+        //       width: 180,
+        //       cellTemplate: (container, { data }) => {
+        //         container.addClass('p-0')
+        //         container.attr('style', 'overflow: visible')
+        //         ReactAppend(container, <StatusDropdown
+        //           items={manageStatuses}
+        //           defaultValue={data.manage_status}
+        //           base={{
+        //             table_id: '9c27e649-574a-47eb-82af-851c5d425434'
+        //           }}
+        //           onItemClick={(status) => onManageStatusChange(data, status)}
+        //           canCreate={can('statuses', 'all', 'create')}
+        //           canUpdate={can('statuses', 'all', 'update')}
+        //           canDelete={can('statuses', 'all', 'delete')}
+        //           onDropdownClose={(hasChanges, items) => {
+        //             if (!hasChanges) return
+        //             setManageStatuses(items)
+        //           }}
+        //         />)
+        //       }
+        //     },
+        //     {
+        //       dataField: 'origin',
+        //       caption: 'Origen',
+        //       dataType: 'string'
+        //     },
+        //     {
+        //       dataField: 'triggered_by',
+        //       caption: 'Disparado por',
+        //       dataType: 'string'
+        //     },
+        //     {
+        //       dataField: 'created_at',
+        //       caption: 'Fecha creacion',
+        //       dataType: 'date',
+        //       cellTemplate: (container, { data }) => {
+        //         container.text(moment(data.created_at.replace('Z', '+05:00')).format('lll'))
+        //       },
+        //       sortOrder: 'desc',
+        //     },
+        //     {
+        //       caption: 'Acciones',
+        //       width: 240,
+        //       cellTemplate: (container, { data }) => {
+        //         container.attr('style', 'display: flex; gap: 4px; height: 47px; overflow: visible')
 
-                ReactAppend(container, <TippyButton className='btn btn-xs btn-soft-warning' title='Editar lead' onClick={() => onOpenModal(data)}>
-                  <i className='fa fa-pen'></i>
-                </TippyButton>)
+        //         ReactAppend(container, <TippyButton className='btn btn-xs btn-soft-warning' title='Editar lead' onClick={() => onOpenModal(data)}>
+        //           <i className='fa fa-pen'></i>
+        //         </TippyButton>)
 
-                ReactAppend(container, <TippyButton className='btn btn-xs btn-soft-primary' title='Ver detalles' onClick={() => onLeadClicked(data)}>
-                  <i className='fa fa-eye'></i>
-                </TippyButton>)
+        //         ReactAppend(container, <TippyButton className='btn btn-xs btn-soft-primary' title='Ver detalles' onClick={() => onLeadClicked(data)}>
+        //           <i className='fa fa-eye'></i>
+        //         </TippyButton>)
 
-                if (!data.assigned_to) {
-                  ReactAppend(container, <TippyButton className='btn btn-xs btn-soft-dark' title="Atender lead"
-                    onClick={() => onAttendClient(data.id, true)}>
-                    <i className='fas fa-hands-helping'></i>
-                  </TippyButton>)
-                } else if (data.assigned_to == session.service_user.id) {
-                  ReactAppend(container, <TippyButton className='btn btn-xs btn-soft-danger' title="Dejar de atender"
-                    onClick={() => onAttendClient(data.id, false)}>
-                    <i className='fas fa-hands-wash'></i>
-                  </TippyButton>)
-                }
+        //         if (!data.assigned_to) {
+        //           ReactAppend(container, <TippyButton className='btn btn-xs btn-soft-dark' title="Atender lead"
+        //             onClick={() => onAttendClient(data.id, true)}>
+        //             <i className='fas fa-hands-helping'></i>
+        //           </TippyButton>)
+        //         } else if (data.assigned_to == session.service_user.id) {
+        //           ReactAppend(container, <TippyButton className='btn btn-xs btn-soft-danger' title="Dejar de atender"
+        //             onClick={() => onAttendClient(data.id, false)}>
+        //             <i className='fas fa-hands-wash'></i>
+        //           </TippyButton>)
+        //         }
 
-                ReactAppend(container, <TippyButton className='btn btn-xs btn-soft-success' title='Convertir en cliente' onClick={async () => onMakeLeadClient(data)}>
-                  <i className='fa fa-user-plus'></i>
-                </TippyButton>)
-                ReactAppend(container, <TippyButton className='btn btn-xs btn-soft-dark' title='Archivar lead' onClick={(e) => onArchiveClicked(data, e)}>
-                  <i className='mdi mdi-archive'></i>
-                </TippyButton>)
-                ReactAppend(container, <TippyButton className='btn btn-xs btn-soft-danger' title='Eliminar lead' onClick={() => onDeleteClicked(data)}>
-                  <i className='fa fa-trash'></i>
-                </TippyButton>)
-              },
-              allowFiltering: false,
-              allowExporting: false
-            }
-          ]} />
+        //         ReactAppend(container, <TippyButton className='btn btn-xs btn-soft-success' title='Convertir en cliente' onClick={async () => onMakeLeadClient(data)}>
+        //           <i className='fa fa-user-plus'></i>
+        //         </TippyButton>)
+        //         ReactAppend(container, <TippyButton className='btn btn-xs btn-soft-dark' title='Archivar lead' onClick={(e) => onArchiveClicked(data, e)}>
+        //           <i className='mdi mdi-archive'></i>
+        //         </TippyButton>)
+        //         ReactAppend(container, <TippyButton className='btn btn-xs btn-soft-danger' title='Eliminar lead' onClick={() => onDeleteClicked(data)}>
+        //           <i className='fa fa-trash'></i>
+        //         </TippyButton>)
+        //       },
+        //       allowFiltering: false,
+        //       allowExporting: false
+        //     }
+        //   ]} />
         : (<div className="d-flex gap-1 mb-3" style={{ overflowX: 'auto', minHeight: 'calc(100vh - 135px)' }}>
           {
             statuses.sort((a, b) => a.order - b.order).map((status, i) => {

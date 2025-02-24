@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react'
 
-const DataGrid = ({ gridRef: dataGridRef, rest, columns, toolBar, masterDetail, filterValue, defaultRows, selection, allowedPageSizes = [5, 10, 25, 50, 100], pageSize = 100, exportable, exportableName, customizeCell = () => { }, reloadWith = [null] }) => {
+const DataGrid = ({ gridRef: dataGridRef, rest, columns, toolBar, masterDetail, filterValue, defaultRows, selection, allowedPageSizes = [5, 10, 25, 50, 100], pageSize = 100, exportable, exportableName, customizeCell = () => { }, reloadWith = [null], height = 'calc(100vh - 185px)' }) => {
   useEffect(() => {
     DevExpress.localization.locale(navigator.language);
     if ($(dataGridRef.current).data('dxDataGrid')) {
@@ -53,7 +53,7 @@ const DataGrid = ({ gridRef: dataGridRef, rest, columns, toolBar, masterDetail, 
       filterPanel: { visible: true },
       searchPanel: { visible: true },
       headerFilter: { visible: true, search: { enabled: true } },
-      height: 'calc(100vh - 185px)',
+      height,
       filterValue,
       selection: selection || null,
       export: {
