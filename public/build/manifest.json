@@ -13,14 +13,14 @@
       "assets/Adminto-BSO65A8S.css"
     ]
   },
-  "_AssignUsersModal-BNdypKkf.js": {
-    "file": "assets/AssignUsersModal-BNdypKkf.js",
+  "_AssignUsersModal-CBVQdbO5.js": {
+    "file": "assets/AssignUsersModal-CBVQdbO5.js",
     "name": "AssignUsersModal",
     "imports": [
       "_CreateReactScript-Dcnwm1IN.js",
       "_Dropdown-DT9ENP9R.js",
       "_DropdownItem-D6bO2a8D.js",
-      "_DateRange-c-N2MWqq.js",
+      "_DateRange-CMaFDYuy.js",
       "_Adminto-D9rZW2Bq.js",
       "_Modal-CW4zanA6.js",
       "_InputFormGroup-Dl5Z44YR.js",
@@ -32,8 +32,8 @@
     "file": "assets/CreateReactScript-Dcnwm1IN.js",
     "name": "CreateReactScript"
   },
-  "_DateRange-c-N2MWqq.js": {
-    "file": "assets/DateRange-c-N2MWqq.js",
+  "_DateRange-CMaFDYuy.js": {
+    "file": "assets/DateRange-CMaFDYuy.js",
     "name": "DateRange",
     "imports": [
       "_CreateReactScript-Dcnwm1IN.js",
@@ -273,7 +273,7 @@
     ]
   },
   "resources/js/Clients.jsx": {
-    "file": "assets/Clients-k6DpUiV-.js",
+    "file": "assets/Clients-DMO7-OrI.js",
     "name": "Clients",
     "src": "resources/js/Clients.jsx",
     "isEntry": true,
@@ -287,9 +287,9 @@
       "_SetSelectValue-DFS7nktH.js",
       "_DropdownItem-D6bO2a8D.js",
       "_DropdownEnd-p6IoUG96.js",
-      "_AssignUsersModal-BNdypKkf.js",
+      "_AssignUsersModal-CBVQdbO5.js",
       "_ReactAppend-CKDNlHXC.js",
-      "_DateRange-c-N2MWqq.js",
+      "_DateRange-CMaFDYuy.js",
       "_DxPanelButton-BUlFeEYR.js",
       "_TippyButton-BQzjy8ed.js",
       "_Number2Currency-e57Tgsuk.js",
@@ -313,7 +313,7 @@
     ]
   },
   "resources/js/KPIProjects.jsx": {
-    "file": "assets/KPIProjects-DhNFv_jX.js",
+    "file": "assets/KPIProjects-7dr94bBA.js",
     "name": "KPIProjects",
     "src": "resources/js/KPIProjects.jsx",
     "isEntry": true,
@@ -323,7 +323,7 @@
       "_auto-tSUxE9xa.js",
       "_DropdownEnd-p6IoUG96.js",
       "_DropdownItem-D6bO2a8D.js",
-      "_DateRange-c-N2MWqq.js",
+      "_DateRange-CMaFDYuy.js",
       "_Number2Currency-e57Tgsuk.js",
       "_server.browser-CSCYH58z.js"
     ]
@@ -466,17 +466,17 @@
     ]
   },
   "resources/js/Projects.jsx": {
-    "file": "assets/Projects-Ckk0jZJX.js",
+    "file": "assets/Projects-BCapuhbf.js",
     "name": "Projects",
     "src": "resources/js/Projects.jsx",
     "isEntry": true,
     "imports": [
       "_CreateReactScript-Dcnwm1IN.js",
       "_Adminto-D9rZW2Bq.js",
-      "_AssignUsersModal-BNdypKkf.js",
+      "_AssignUsersModal-CBVQdbO5.js",
       "_Number2Currency-e57Tgsuk.js",
       "_SetSelectValue-DFS7nktH.js",
-      "_DateRange-c-N2MWqq.js",
+      "_DateRange-CMaFDYuy.js",
       "_Modal-CW4zanA6.js",
       "_DxPanelButton-BUlFeEYR.js",
       "_DxButton-CsjWvhyj.js",
@@ -492,7 +492,7 @@
     ]
   },
   "resources/js/ProjectsArchived.jsx": {
-    "file": "assets/ProjectsArchived-BrM3ltw-.js",
+    "file": "assets/ProjectsArchived-BrK0Aal7.js",
     "name": "ProjectsArchived",
     "src": "resources/js/ProjectsArchived.jsx",
     "isEntry": true,
@@ -503,23 +503,23 @@
       "_DxPanelButton-BUlFeEYR.js",
       "_DxButton-CsjWvhyj.js",
       "_DxBox-JwuIcuYO.js",
-      "_DateRange-c-N2MWqq.js",
+      "_DateRange-CMaFDYuy.js",
       "_ReactAppend-CKDNlHXC.js",
       "_server.browser-CSCYH58z.js"
     ]
   },
   "resources/js/ProjectsDone.jsx": {
-    "file": "assets/ProjectsDone-DwCYRQbu.js",
+    "file": "assets/ProjectsDone-D26mMDIB.js",
     "name": "ProjectsDone",
     "src": "resources/js/ProjectsDone.jsx",
     "isEntry": true,
     "imports": [
       "_CreateReactScript-Dcnwm1IN.js",
       "_Adminto-D9rZW2Bq.js",
-      "_AssignUsersModal-BNdypKkf.js",
+      "_AssignUsersModal-CBVQdbO5.js",
       "_Number2Currency-e57Tgsuk.js",
       "_SetSelectValue-DFS7nktH.js",
-      "_DateRange-c-N2MWqq.js",
+      "_DateRange-CMaFDYuy.js",
       "_Modal-CW4zanA6.js",
       "_DxPanelButton-BUlFeEYR.js",
       "_DxButton-CsjWvhyj.js",
@@ -604,7 +604,7 @@
     ]
   },
   "resources/js/Taskboard.jsx": {
-    "file": "assets/Taskboard-jUjKShkJ.js",
+    "file": "assets/Taskboard-BSDAGUlk.js",
     "name": "Taskboard",
     "src": "resources/js/Taskboard.jsx",
     "isEntry": true,
@@ -612,7 +612,7 @@
       "_CreateReactScript-Dcnwm1IN.js",
       "_Adminto-D9rZW2Bq.js",
       "_auto-tSUxE9xa.js",
-      "_DateRange-c-N2MWqq.js",
+      "_DateRange-CMaFDYuy.js",
       "_server.browser-CSCYH58z.js"
     ]
   },

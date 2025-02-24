@@ -19,13 +19,29 @@ const DateRange = (starts_at, ends_at) => {
     const elapsedDuration = currentDate.diff(startDate);
     const percentageElapsed = (elapsedDuration / totalDuration) * 100;
 
+    const getProgressBarColor = (percentage) => {
+      if (percentage <= 25) return 'success';
+      if (percentage <= 50) return 'primary';
+      if (percentage <= 75) return 'warning';
+      return 'danger';
+    }
+
+    const progressColor = getProgressBarColor(percentageElapsed);
+    
     dateElement = <div style={{ width: '200px' }}>
       <p className='mb-0 d-flex justify-content-between'>
         <span>{moment(starts_at).format('DD MMM YYYY')}</span>
         <span className='float-end'>{moment(ends_at).format('DD MMM YYYY')}</span>
       </p>
-      <div className="progress progress-bar-alt-primary progress-xl mb-0 mt-0">
-        <div className="progress-bar progress-bar-primary progress-bar-animated" role="progressbar" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100" style={{ width: `${percentageElapsed}%` }}>{percentageElapsed.toFixed(2)}%</div>
+      <div className={`progress progress-bar-alt-${progressColor} progress-xl mb-0 mt-0`}>
+        <div className={`progress-bar bg-${progressColor} progress-bar-animated`} 
+             role="progressbar" 
+             aria-valuenow={percentageElapsed} 
+             aria-valuemin="0" 
+             aria-valuemax="100" 
+             style={{ width: `${percentageElapsed}%` }}>
+          {percentageElapsed.toFixed(2)}%
+        </div>
       </div>
     </div>
   }
