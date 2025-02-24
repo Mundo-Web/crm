@@ -25,6 +25,7 @@ import DxPanelButton from './components/dx/DxPanelButton.jsx'
 import SubdomainsRest from './actions/SubdomainsRest.js'
 
 const subdomainsRest = new SubdomainsRest()
+const projectsRest = new ProjectsRest()
 
 const Projects = ({ statuses, finishedProjectStatus, can }) => {
 
@@ -88,8 +89,8 @@ const Projects = ({ statuses, finishedProjectStatus, can }) => {
     $(modalRef.current).modal('hide')
   }
 
-  const onStatusChange = async ({ id, status }) => {
-    const result = await ProjectsRest.status({ id, status })
+  const onBooleanChange = async ({ id, field, value }) => {
+    const result = await projectsRest.boolean({id, field, value})
     if (!result) return
     $(gridRef.current).dxDataGrid('instance').refresh()
   }
@@ -163,6 +164,10 @@ const Projects = ({ statuses, finishedProjectStatus, can }) => {
           filterValue: GET.client || undefined,
           fixed: true,
           fixedPosition: 'left',
+          cellTemplate: (container, {data}) => {
+            if (data.is_alert) container.parents('.dx-row').children().attr('style', 'background-color: rgba(255,91,91,.18) !important;')
+              container.text(data.client.tradename)
+          }
         },
         {
           dataField: 'type.name',
@@ -270,7 +275,7 @@ const Projects = ({ statuses, finishedProjectStatus, can }) => {
           caption: 'Estado del proyecto',
           dataType: 'string',
           cellTemplate: (container, { data }) => {
-            container.attr('style', 'overflow: visible')
+            container.attr('style', `overflow: visible; ${data.is_alert && 'background-color: rgba(255,91,91,.18)!important;'}`)
             container.append(DxBox([
               {
                 height: '28px',
@@ -304,9 +309,7 @@ const Projects = ({ statuses, finishedProjectStatus, can }) => {
           caption: 'Acciones',
           // width: 175,
           cellTemplate: (container, { data }) => {
-            // container.attr('style', 'display: flex; gap: 4px;')
-
-            // can('projects', 'root', 'all', 'update') && ReactAppend(container, <TippyButton className='btn btn-xs btn-soft-primary' title='Editar' onClick={() => onModalOpen(data)}>
+                        // can('projects', 'root', 'all', 'update') && ReactAppend(container, <TippyButton className='btn btn-xs btn-soft-primary' title='Editar' onClick={() => onModalOpen(data)}>
             //   <i className='fa fa-pen'></i>
             // </TippyButton>)
             can('projects', 'root', 'all', 'update') && container.append(DxButton({
@@ -314,6 +317,17 @@ const Projects = ({ statuses, finishedProjectStatus, can }) => {
               title: 'Editar',
               icon: 'fa fa-pen',
               onClick: () => onModalOpen(data)
+            }))
+
+            container.append(DxButton({
+              className: 'btn btn-xs btn-soft-danger',
+              title: data.is_alert ? 'Quitar alerta' : 'Alertar proyecto',
+              icon: `fa fa-bell${data.is_alert ? '-slash' : ''}`,
+              onClick: () => onBooleanChange({
+                id: data.id,
+                field: 'is_alert',
+                value: !data.is_alert
+              })
             }))
 
             can('projects', 'root', 'all', 'assignUsers') && container.append(DxButton({

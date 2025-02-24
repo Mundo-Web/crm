@@ -25,6 +25,7 @@ class Project extends Model
         'ends_at',
         'business_id',
         'status_id',
+        'is_alert',
         'remaining_amount'
     ];
 

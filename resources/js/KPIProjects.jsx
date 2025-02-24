@@ -507,16 +507,30 @@ const KPIProjects = ({ finishedProjectStatus }) => {
                     {getFilteredProjects().map((project, i) => {
                       const relatives = project.users.map(user => user.relative_id);
                       // const relatives = [/*(project.users || '').split('|').filter(Boolean)*/]
-                      return <tr key={`project-${i}`} >
-                        <td className={`${moment(project.ends_at).isBefore(moment()) ? 'text-danger' : ''}`}>
+                      return <tr key={`project-${i}`} style={{
+                        backgroundColor: project.is_alert ? 'rgba(255,91,91,.18)' : 'unset',
+                      }}>
+                        <td className={`${moment(project.ends_at).isBefore(moment()) ? 'text-danger' : ''}`} style={{
+                          boxShadow: project.is_alert ? 'unset' : ''
+                        }}>
                           <b className='d-block'>{project.client.tradename}</b>
                           <small>{project.name}</small>
                         </td>
-                        <td>{DateRange(project.starts_at, project.ends_at)}</td>
-                        <td><span className='badge' style={{ backgroundColor: project.status.color }}>{project.status.name}</span></td>
-                        <td>S/. {Number2Currency(project.cost)}</td>
-                        <td>S/. {Number2Currency(project.remaining_amount)}</td>
-                        <td>{Assigneds(relatives)}</td>
+                        <td style={{
+                          boxShadow: project.is_alert ? 'unset' : ''
+                        }}>{DateRange(project.starts_at, project.ends_at)}</td>
+                        <td style={{
+                          boxShadow: project.is_alert ? 'unset' : ''
+                        }}><span className='badge' style={{ backgroundColor: project.status.color }}>{project.status.name}</span></td>
+                        <td style={{
+                          boxShadow: project.is_alert ? 'unset' : ''
+                        }}>S/. {Number2Currency(project.cost)}</td>
+                        <td style={{
+                          boxShadow: project.is_alert ? 'unset' : ''
+                        }}>S/. {Number2Currency(project.remaining_amount)}</td>
+                        <td style={{
+                          boxShadow: project.is_alert ? 'unset' : ''
+                        }}>{Assigneds(relatives)}</td>
                       </tr>
                     })}
                   </tbody>

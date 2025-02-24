@@ -1,6 +1,10 @@
 import { Fetch, Notify } from "sode-extend-react"
+import BasicRest from "./BasicRest"
 
-class ProjectsRest {
+class ProjectsRest extends BasicRest {
+
+  path = 'projects'
+
   static paginate = async (params) => {
     const { result } = await Fetch(`/api/projects/paginate`, {
       method: 'POST',

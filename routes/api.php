@@ -146,6 +146,7 @@ Route::middleware('auth')->group(function () {
     Route::patch('/projects/status', [ProjectController::class, 'status']);
     Route::patch('/projects/project-status', [ProjectController::class, 'projectStatus']);
     Route::delete('/projects/{id}', [ProjectController::class, 'delete']);
+    Route::patch('/projects/boolean', [ProjectController::class, 'boolean']);
 
     // Projects Archived routes
     Route::post('/projects/done/paginate', [ProjectDoneController::class, 'paginate']);
