@@ -162,7 +162,8 @@ const Projects = ({ statuses, finishedProjectStatus, can }) => {
           caption: 'Nombre comercial',
           filterValue: GET.client || undefined,
           fixed: true,
-          fixedPosition: 'left'
+          fixedPosition: 'left',
+          height: '48px',
         },
         {
           dataField: 'type.name',
@@ -271,7 +272,7 @@ const Projects = ({ statuses, finishedProjectStatus, can }) => {
             container.attr('style', 'overflow: visible')
             container.append(DxBox([
               {
-                height: '48px',
+                height: '28px',
                 children: <ProjectStatusDropdown can={can} statuses={statuses} finishedProjectStatus={finishedProjectStatus} data={data} onChange={() => {
                   $(gridRef.current).dxDataGrid('instance').refresh()
                 }} />
