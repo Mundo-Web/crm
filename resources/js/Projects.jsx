@@ -239,7 +239,7 @@ const Projects = ({ statuses, finishedProjectStatus, can }) => {
           cellTemplate: (container, { data }) => {
             container.append(DxBox([{
               width: '200px',
-              height: '30px',
+              height: '48px',
               children: DateRange(data.starts_at, data.ends_at)
             }]))
           },
@@ -271,7 +271,7 @@ const Projects = ({ statuses, finishedProjectStatus, can }) => {
             container.attr('style', 'overflow: visible')
             container.append(DxBox([
               {
-                height: '28px',
+                height: '48px',
                 children: <ProjectStatusDropdown can={can} statuses={statuses} finishedProjectStatus={finishedProjectStatus} data={data} onChange={() => {
                   $(gridRef.current).dxDataGrid('instance').refresh()
                 }} />
