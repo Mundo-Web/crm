@@ -20,9 +20,9 @@ const DateRange = (starts_at, ends_at) => {
     const percentageElapsed = (elapsedDuration / totalDuration) * 100;
 
     const getProgressBarColor = (percentage) => {
-      if (percentage <= 25) return 'success';
-      if (percentage <= 50) return 'primary';
-      if (percentage <= 75) return 'warning';
+      if (percentage <= 33.333) return 'success';
+      // if (percentage <= 50) return 'primary';
+      if (percentage <= 66.667) return 'warning';
       return 'danger';
     }
 
