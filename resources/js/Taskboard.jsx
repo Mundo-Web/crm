@@ -33,6 +33,7 @@ const Taskboard = () => {
     const now = moment();
     const groups = {
       delayed: [],
+      // thisMonthDelayed: [], // Nuevo grupo
       thisMonth: [],
       future: {}
     };
@@ -41,7 +42,11 @@ const Taskboard = () => {
       const endDate = moment(project.ends_at);
 
       if (endDate.isBefore(now, 'day')) {
-        groups.delayed.push(project);
+        // if (endDate.isSame(now, 'month') && endDate.isSame(now, 'year')) {
+        //   groups.thisMonthDelayed.push(project);
+        // } else {
+          groups.delayed.push(project);
+        // }
       } else if (endDate.isSame(now, 'month') && endDate.isSame(now, 'year')) {
         groups.thisMonth.push(project);
       } else {
@@ -72,9 +77,7 @@ const Taskboard = () => {
       case 'thisMonth':
         return filtered.filter(p => {
           const endDate = moment(p.ends_at);
-          return endDate.isSame(now, 'month') &&
-            endDate.isSame(now, 'year') &&
-            !endDate.isBefore(now, 'day');
+          return endDate.isSame(now, 'month') && endDate.isSame(now, 'year') /*&& !endDate.isBefore(now, 'day')*/;
         });
       default:
         if (filterType.startsWith('month_')) {
