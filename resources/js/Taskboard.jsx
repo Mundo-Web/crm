@@ -42,11 +42,7 @@ const Taskboard = () => {
       const endDate = moment(project.ends_at);
 
       if (endDate.isBefore(now, 'day')) {
-        // if (endDate.isSame(now, 'month') && endDate.isSame(now, 'year')) {
-        //   groups.thisMonthDelayed.push(project);
-        // } else {
-          groups.delayed.push(project);
-        // }
+        groups.delayed.push(project);
       } else if (endDate.isSame(now, 'month') && endDate.isSame(now, 'year')) {
         groups.thisMonth.push(project);
       } else {

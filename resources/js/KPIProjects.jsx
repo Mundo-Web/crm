@@ -241,9 +241,7 @@ const KPIProjects = ({ finishedProjectStatus }) => {
       case 'thisMonth':
         return filtered.filter(p => {
           const endDate = moment(p.ends_at);
-          return endDate.isSame(now, 'month') &&
-            endDate.isSame(now, 'year') &&
-            !endDate.isBefore(now, 'day');
+          return endDate.isSame(now, 'month') && endDate.isSame(now, 'year') /*&& !endDate.isBefore(now, 'day')*/;
         });
       default:
         if (filterType.startsWith('month_')) {
