@@ -209,10 +209,10 @@ const KPIProjects = ({ finishedProjectStatus }) => {
     projects.forEach(project => {
       const endDate = moment(project.ends_at);
 
-      if (endDate.isBefore(now, 'day')) {
-        groups.delayed.push(project);
-      } else if (endDate.isSame(now, 'month') && endDate.isSame(now, 'year')) {
+      if (endDate.isSame(now, 'month') && endDate.isSame(now, 'year')) {
         groups.thisMonth.push(project);
+      } else if (endDate.isBefore(now, 'day')) {
+        groups.delayed.push(project);
       } else {
         const monthKey = endDate.format('MMMM YYYY');
         if (!groups.future[monthKey]) {
