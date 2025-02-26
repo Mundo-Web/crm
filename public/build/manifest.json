@@ -1,7 +1,7 @@
 {
-  "_Adminto-!~{00t}~.js": {
+  "_Adminto-!~{00u}~.js": {
     "file": "assets/Adminto-BSO65A8S.css",
-    "src": "_Adminto-!~{00t}~.js"
+    "src": "_Adminto-!~{00u}~.js"
   },
   "_Adminto-Cjg-Boss.js": {
     "file": "assets/Adminto-Cjg-Boss.js",
@@ -201,9 +201,9 @@
       "_Adminto-Cjg-Boss.js"
     ]
   },
-  "_coming-soon-!~{00V}~.js": {
+  "_coming-soon-!~{00W}~.js": {
     "file": "assets/coming-soon-aMT53_Wt.css",
-    "src": "_coming-soon-!~{00V}~.js"
+    "src": "_coming-soon-!~{00W}~.js"
   },
   "_index-CqPvMKGA.js": {
     "file": "assets/index-CqPvMKGA.js",
@@ -295,6 +295,17 @@
       "_server.browser-B5GrczRK.js"
     ]
   },
+  "resources/js/Integrations.jsx": {
+    "file": "assets/Integrations-DSxM1mJ7.js",
+    "name": "Integrations",
+    "src": "resources/js/Integrations.jsx",
+    "isEntry": true,
+    "imports": [
+      "_CreateReactScript-hZ7VpvBo.js",
+      "_Adminto-Cjg-Boss.js",
+      "_server.browser-B5GrczRK.js"
+    ]
+  },
   "resources/js/KPILeads.jsx": {
     "file": "assets/KPILeads-BdQ6zxlA.js",
     "name": "KPILeads",
@@ -309,7 +320,7 @@
     ]
   },
   "resources/js/KPIProjects.jsx": {
-    "file": "assets/KPIProjects-CkCgkHia.js",
+    "file": "assets/KPIProjects-BL7LPqUq.js",
     "name": "KPIProjects",
     "src": "resources/js/KPIProjects.jsx",
     "isEntry": true,
@@ -599,7 +610,7 @@
     ]
   },
   "resources/js/Taskboard.jsx": {
-    "file": "assets/Taskboard-DotEl99_.js",
+    "file": "assets/Taskboard-BLa-O4AK.js",
     "name": "Taskboard",
     "src": "resources/js/Taskboard.jsx",
     "isEntry": true,

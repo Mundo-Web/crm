@@ -13,7 +13,7 @@ import RemainingsHistoryRest from './actions/RemainingsHistoryRest';
 import DateRange from './Reutilizables/Projects/DateRange';
 import Assigneds from './Reutilizables/Projects/Assigneds';
 
-const KPIProjects = ({ finishedProjectStatus }) => {
+const KPIProjects = ({ }) => {
   const revenueRef = useRef();
   const chartRef = useRef(null); // Usar useRef para mantener la referencia del gráfico
   const pieRef = useRef(null);
@@ -211,7 +211,8 @@ const KPIProjects = ({ finishedProjectStatus }) => {
 
       if (endDate.isSame(now, 'month') && endDate.isSame(now, 'year')) {
         groups.thisMonth.push(project);
-      } else if (endDate.isBefore(now, 'day')) {
+      }
+      if (endDate.isBefore(now, 'day')) {
         groups.delayed.push(project);
       } else {
         const monthKey = endDate.format('MMMM YYYY');

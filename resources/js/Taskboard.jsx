@@ -43,7 +43,8 @@ const Taskboard = () => {
 
       if (endDate.isSame(now, 'month') && endDate.isSame(now, 'year')) {
         groups.thisMonth.push(project);
-      } else if (endDate.isBefore(now, 'day')) {
+      }
+      if (endDate.isBefore(now, 'day')) {
         groups.delayed.push(project);
       } else {
         const monthKey = endDate.format('MMMM YYYY');
