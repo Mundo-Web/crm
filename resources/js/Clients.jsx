@@ -385,7 +385,7 @@ const Clients = ({ projectStatuses, finishedProjectStatus, clientStatuses, produ
                       const percent = ((project.total_payments / project.cost) * 100).toFixed(2)
                       const payments = Number(project.total_payments).toLocaleString('en-US', { maximumFractionDigits: 2, minimumFractionDigits: 2 })
                       const rest = Number(project.cost - project.total_payments).toLocaleString('en-US', { maximumFractionDigits: 2, minimumFractionDigits: 2 })
-                      const relatives = (project.users || '').split('|').filter(Boolean)
+                      const relatives = data.users.map(user => user.relative_id);
 
                       return <tr key={`project-${project.id}`}>
                         <td valign='middle'>

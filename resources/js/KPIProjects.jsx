@@ -38,7 +38,7 @@ const KPIProjects = ({ }) => {
 
   useEffect(() => {
     if (chartRef.current) {
-      chartRef.current.destroy(); // Destruir el gráfico existente antes de crear uno nuevo
+      chartRef.current.destroy();
     }
     chartRef.current = new Chart(revenueRef.current, {
       type: 'bar',
