@@ -3,7 +3,7 @@ name: Deploy CRM to Atalaya
 on:
   push:
     branches:
-      - master
+      - main
 
 jobs:
   deploy:
