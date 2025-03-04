@@ -200,6 +200,8 @@ class MessageController extends BasicController
                 $this->createFirstNote($leadJpa);
             }
 
+            if ($request->from_me) return;
+
             $needsExecutive = Message::where('business_id', $businessJpa->id)
                 ->where('wa_id', $request->waId)
                 ->where('message', ':STOP')
