@@ -56,6 +56,50 @@ const KPILeads = ({ months = [], currentMonth, currentYear }) => {
       });
   }, [selectedMonth])
 
+useEffect(() => {
+  const ctx = document.getElementById('leadsStatusPie');
+  let chart;
+  
+  if (ctx) {
+    // Destroy existing chart if it exists
+    if (window.leadsStatusChart) {
+      window.leadsStatusChart.destroy();
+    }
+
+    // Create new chart
+    chart = new Chart(ctx, {
+      type: 'pie',
+      data: {
+        labels: ['Convertidos', 'No convertidos', 'En gestión'],
+        datasets: [{
+          data: [clientsCount, archivedCount, managingCount],
+          backgroundColor: ['#1abc9c', '#f1556c', '#4a81d4'],
+          borderWidth: 0
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'bottom'
+          }
+        }
+      }
+    });
+
+    // Store chart reference globally
+    window.leadsStatusChart = chart;
+  }
+
+  // Cleanup function to destroy chart when component unmounts
+  return () => {
+    if (window.leadsStatusChart) {
+      window.leadsStatusChart.destroy();
+    }
+  };
+}, [clientsCount, archivedCount, managingCount])
+
   return (
     <>
       <div className="row">
@@ -128,7 +172,14 @@ const KPILeads = ({ months = [], currentMonth, currentYear }) => {
       </div>
 
       <div className='row'>
-        <div className="col-12">
+        <div className="col-xl-3 col-md-12">
+          <div className="card">
+            <div className="card-body">
+              <canvas id="leadsStatusPie" width="400" height="400"></canvas>
+            </div>
+          </div>
+        </div>
+        <div className="col-xl-9 col-md-12">
           <div className='d-flex gap-1 mb-3' style={{
             overflowX: 'auto',
           }}>

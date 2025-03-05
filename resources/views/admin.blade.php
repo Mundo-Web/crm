@@ -123,6 +123,7 @@
   <script src="/lte/assets/js/vendor.min.js"></script>
 
   @if ($route == 'KPILeads.jsx' || $route == 'KPIProjects.jsx')
+    <script src="/lte/assets/libs/chart.js/Chart.bundle.min.js"></script>
     <script src="/lte/assets/libs/jquery-knob/jquery.knob.min.js"></script>
   @elseif($route == 'Calendar.jsx')
     <link href="/lte/assets/libs/fullcalendar/main.min.css" rel="stylesheet" type="text/css" />
@@ -148,7 +149,7 @@
       const modal = event.target;
       const backdrop = document.querySelector('.modal-backdrop:not([data-modal-id])');
       if (backdrop) {
-        backdrop.style.zIndex = window.getComputedStyle(modal).zIndex -1
+        backdrop.style.zIndex = window.getComputedStyle(modal).zIndex - 1
         backdrop.setAttribute('data-modal-id', modal.id);
       }
     });
