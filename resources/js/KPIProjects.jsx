@@ -211,8 +211,7 @@ const KPIProjects = ({ }) => {
 
       if (endDate.isSame(now, 'month') && endDate.isSame(now, 'year')) {
         groups.thisMonth.push(project);
-      }
-      if (endDate.isBefore(now, 'day')) {
+      } else if (endDate.isBefore(now, 'day')) {
         groups.delayed.push(project);
       } else {
         const monthKey = endDate.format('MMMM YYYY');
@@ -226,7 +225,9 @@ const KPIProjects = ({ }) => {
     return groups;
   };
 
-  const getFilteredProjects = () => {
+  const getFilteredProjects = (filterInput) => {
+    const filterApply = filterInput ?? filterType;
+
     const now = moment();
     let filtered = projects;
 
@@ -236,7 +237,7 @@ const KPIProjects = ({ }) => {
     }
 
     // Then apply date filters
-    switch (filterType) {
+    switch (filterApply) {
       case 'delayed':
         return filtered.filter(p => moment(p.ends_at).isBefore(now, 'day'));
       case 'thisMonth':
@@ -245,8 +246,8 @@ const KPIProjects = ({ }) => {
           return endDate.isSame(now, 'month') && endDate.isSame(now, 'year') /*&& !endDate.isBefore(now, 'day')*/;
         });
       default:
-        if (filterType.startsWith('month_')) {
-          const monthYear = filterType.replace('month_', '');
+        if (filterApply.startsWith('month_')) {
+          const monthYear = filterApply.replace('month_', '');
           return filtered.filter(p => moment(p.ends_at).format('MMMM YYYY') === monthYear);
         }
         return filtered;
@@ -447,7 +448,7 @@ const KPIProjects = ({ }) => {
                     className={`btn btn-xs ${filterType === 'delayed' ? 'btn-danger' : 'btn-soft-danger'}`}
                     onClick={() => setFilterType('delayed')}
                   >
-                    Atrasados ({getProjectGroups().delayed.length})
+                    Atrasados ({getFilteredProjects('delayed').length})
                   </button>
                 )}
                 {getProjectGroups().thisMonth.length > 0 && (
@@ -455,7 +456,7 @@ const KPIProjects = ({ }) => {
                     className={`btn btn-xs ${filterType === 'thisMonth' ? 'btn-primary' : 'btn-soft-primary'}`}
                     onClick={() => setFilterType('thisMonth')}
                   >
-                    Este mes ({getProjectGroups().thisMonth.length})
+                    Este mes ({getFilteredProjects('thisMonth').length})
                   </button>
                 )}
                 {Object.entries(getProjectGroups().future).map(([month, monthProjects]) => (

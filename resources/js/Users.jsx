@@ -43,7 +43,7 @@ const Users = ({ can, users, roles, APP_DOMAIN }) => {
                   </div>
                   <div>
                     <div className="flex-grow-1 overflow-hidden" style={{ width: '215px' }}>
-                      <h5 className="mt-0 mb-1">{user.name} {user.lastname}</h5>
+                      <h5 className="mt-0 mb-1 text-truncate">{user.name} {user.lastname}</h5>
                       <p className="text-muted mb-2 font-13 text-truncate">{user.email}</p>
                     </div>
                     <div>
