@@ -58,8 +58,8 @@ const KPILeads = ({ months = [], currentMonth, currentYear }) => {
         setArchivedSum(summary.archivedSum ?? 0)
         setManagingSum(summary.managingSum ?? 0)
 
-        setLeadSources(summary.lead_sources ?? {})
-        setOriginCounts(summary.origin_counts ?? [])
+        setLeadSources(summary.leadSources ?? {})
+        setOriginCounts(summary.originCounts ?? [])
       });
   }, [selectedMonth])
 
@@ -105,7 +105,7 @@ const KPILeads = ({ months = [], currentMonth, currentYear }) => {
         window.leadsStatusChart.destroy();
       }
     };
-  }, [null])
+  }, [leadSources])
 
   useEffect(() => {
     $('[data-plugin="knob"]').knob({
@@ -114,7 +114,7 @@ const KPILeads = ({ months = [], currentMonth, currentYear }) => {
         $(this.i).val(count)
       }
     })
-  })
+  }, [originCounts])
 
   const totalLeadSources = leadSources.crm_count + leadSources.whatsapp_count + leadSources.integration_count
 
