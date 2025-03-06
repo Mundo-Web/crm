@@ -81,6 +81,7 @@ class KPILeadsController extends BasicController
             ->whereMonth('created_at', $currentMonth)
             ->whereNotIn('origin', ['WhatsApp', 'CRM Atalaya'])
             ->groupBy('origin')
+            ->orderBy('count', 'desc')
             ->get();
 
         return [

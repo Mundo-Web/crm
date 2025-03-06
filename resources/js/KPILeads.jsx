@@ -112,6 +112,8 @@ const KPILeads = ({ months = [], currentMonth, currentYear, leadSources, originC
 
   const totalLeadSources = leadSources.crm_count + leadSources.whatsapp_count + leadSources.integration_count
 
+  console.log(originCounts)
+
   return (
     <>
       <div className="row">
@@ -158,23 +160,12 @@ const KPILeads = ({ months = [], currentMonth, currentYear, leadSources, originC
                   data-thickness=".15" style={{ outline: 'none', border: 'none' }} />
                 <small className='text-muted d-block text-center'>Integracion</small>
               </div>
-              {/* {
-                originCounts.map((origin, index) => {
-                  return <div key={index}>
-                    <input data-plugin="knob" data-width="60" data-height="60"
-                      data-fgcolor="#4a81d4" data-bgcolor="#4a81d433" defaultValue={origin.count / leadSources.integration_count * 100}
-                      data-count={origin.count} data-skin="tron" data-angleloffset="180" data-readonly={true}
-                      data-thickness=".15" style={{ outline: 'none', border: 'none' }} />
-                    <small className='text-muted d-block text-center'>{origin.origin}</small>
-                  </div>
-                })
-              } */}
             </div>
           </div>
         </div>
         <div className="col-md-8">
           <div className="row">
-            <div className="col-md-6 col-xs-12">
+            <div className="col-md-3 col-sm-6 col-xs-12">
               <div className="card">
                 <div className="card-body widget-user">
                   <div className="text-center">
@@ -187,7 +178,7 @@ const KPILeads = ({ months = [], currentMonth, currentYear, leadSources, originC
 
             </div>
 
-            <div className="col-md-6 col-xs-12">
+            <div className="col-md-3 col-sm-6 col-xs-12">
               <div className="card">
                 <div className="card-body widget-user">
                   <div className="text-center">
@@ -200,7 +191,7 @@ const KPILeads = ({ months = [], currentMonth, currentYear, leadSources, originC
 
             </div>
 
-            <div className="col-md-6 col-xs-12">
+            <div className="col-md-3 col-sm-6 col-xs-12">
               <div className="card">
                 <div className="card-body widget-user">
                   <div className="text-center">
@@ -213,7 +204,7 @@ const KPILeads = ({ months = [], currentMonth, currentYear, leadSources, originC
 
             </div>
 
-            <div className="col-md-6 col-xs-12">
+            <div className="col-md-3 col-sm-6 col-xs-12">
               <div className="card">
                 <div className="card-body widget-user">
                   <div className="text-center">
@@ -226,11 +217,37 @@ const KPILeads = ({ months = [], currentMonth, currentYear, leadSources, originC
 
             </div>
           </div>
+          <div className="row">
+            <div className="col-12">
+              <div className="card">
+                <div className="card-header">
+                  <h4 className="header-title text-center my-0">Ingreso de Leads por Integración</h4>
+                </div>
+                <div className=" card-body" style={{
+                  minHeight: '160px'
+                }}>
+                  <div className="d-flex flex-wrap gap-2 justify-content-evenly">
+                    {
+                      originCounts.map((origin, index) => {
+                        return <div key={index} className='text-center'>
+                          <input data-plugin="knob" data-width="80" data-height="80"
+                            data-fgcolor="#4a81d4" data-bgcolor="#4a81d433" defaultValue={origin.count / leadSources.integration_count * 100}
+                            data-count={origin.count} data-skin="tron" data-angleloffset="180" data-readonly={true}
+                            data-thickness=".15" style={{ outline: 'none', border: 'none' }} />
+                          <small className='text-muted d-block text-center mt-1'>{origin.origin}</small>
+                        </div>
+                      })
+                    }
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
       <div className='row'>
-        <div className="col-xl-9 col-md-12">
+        <div className="col-12">
           <div className='d-flex gap-3 mb-3' style={{
             overflowX: 'auto',
           }}>
