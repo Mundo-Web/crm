@@ -112,8 +112,6 @@ const KPILeads = ({ months = [], currentMonth, currentYear, leadSources, originC
 
   const totalLeadSources = leadSources.crm_count + leadSources.whatsapp_count + leadSources.integration_count
 
-  console.log(totalLeadSources)
-
   return (
     <>
       <div className="row">
@@ -139,21 +137,21 @@ const KPILeads = ({ months = [], currentMonth, currentYear, leadSources, originC
             </div>
             <h4 className="mt-3 mb-2 text-center">Ingreso de leads</h4>
             <div className="d-flex flex-wrap gap-2 justify-content-evenly">
-              <div>
+              <div className='text-center'>
                 <input data-plugin="knob" data-width="60" data-height="60"
                   data-fgcolor="#f1556c" data-bgcolor="#f1556c33" defaultValue={leadSources.crm_count / totalLeadSources * 100}
                   data-count={leadSources.crm_count} data-skin="tron" data-angleloffset="180" data-readonly={true}
                   data-thickness=".15" style={{ outline: 'none', border: 'none' }} />
                 <small className='text-muted d-block text-center'>{Global.APP_NAME}</small>
               </div>
-              <div>
+              <div className='text-center'>
                 <input data-plugin="knob" data-width="60" data-height="60"
                   data-fgcolor="#1abc9c" data-bgcolor="#1abc9c33" defaultValue={leadSources.whatsapp_count / totalLeadSources * 100}
                   data-count={leadSources.whatsapp_count} data-skin="tron" data-angleloffset="180" data-readonly={true}
                   data-thickness=".15" style={{ outline: 'none', border: 'none' }} />
                 <small className='text-muted d-block text-center'>WhatsApp</small>
               </div>
-              <div>
+              <div className='text-center'>
                 <input data-plugin="knob" data-width="60" data-height="60"
                   data-fgcolor="#4a81d4" data-bgcolor="#4a81d433" defaultValue={leadSources.integration_count / totalLeadSources * 100}
                   data-count={leadSources.integration_count} data-skin="tron" data-angleloffset="180" data-readonly={true}
