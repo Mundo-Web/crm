@@ -1,5 +1,5 @@
 class Global {
-
+  static APP_NAME = null;
   static WA_URL = null;
   static PUBLIC_RSA_KEY = null;
   static APP_PROTOCOL = null;

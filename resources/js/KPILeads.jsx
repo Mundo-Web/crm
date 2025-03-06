@@ -6,8 +6,9 @@ import SelectFormGroup from './components/form/SelectFormGroup';
 import { renderToString } from 'react-dom/server';
 import KPILeadsRest from './actions/KPILeadsRest';
 import Number2Currency from './Utils/Number2Currency';
+import Global from './Utils/Global';
 
-const KPILeads = ({ months = [], currentMonth, currentYear }) => {
+const KPILeads = ({ months = [], currentMonth, currentYear, leadSources }) => {
   const [selectedMonth, setSelectedMonth] = useState(`${currentYear}-${currentMonth}`)
   const [grouped, setGrouped] = useState([])
   const [groupedByManageStatus, setGroupedByManageStatus] = useState([])
@@ -56,49 +57,49 @@ const KPILeads = ({ months = [], currentMonth, currentYear }) => {
       });
   }, [selectedMonth])
 
-useEffect(() => {
-  const ctx = document.getElementById('leadsStatusPie');
-  let chart;
-  
-  if (ctx) {
-    // Destroy existing chart if it exists
-    if (window.leadsStatusChart) {
-      window.leadsStatusChart.destroy();
-    }
+  useEffect(() => {
+    const ctx = document.getElementById('leadsStatusPie');
+    let chart;
 
-    // Create new chart
-    chart = new Chart(ctx, {
-      type: 'pie',
-      data: {
-        labels: ['Convertidos', 'No convertidos', 'En gestión'],
-        datasets: [{
-          data: [clientsCount, archivedCount, managingCount],
-          backgroundColor: ['#1abc9c', '#f1556c', '#4a81d4'],
-          borderWidth: 0
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: {
-            position: 'bottom'
+    if (ctx) {
+      // Destroy existing chart if it exists
+      if (window.leadsStatusChart) {
+        window.leadsStatusChart.destroy();
+      }
+
+      // Create new chart
+      chart = new Chart(ctx, {
+        type: 'pie',
+        data: {
+          labels: [Global.APP_NAME, 'WhatsApp', 'Integración'],
+          datasets: [{
+            data: [leadSources.crm, leadSources.whatsapp, leadSources.integration],
+            backgroundColor: ['#f1556c', '#1abc9c', '#4a81d4'],
+            borderWidth: 0
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'bottom'
+            }
           }
         }
-      }
-    });
+      });
 
-    // Store chart reference globally
-    window.leadsStatusChart = chart;
-  }
-
-  // Cleanup function to destroy chart when component unmounts
-  return () => {
-    if (window.leadsStatusChart) {
-      window.leadsStatusChart.destroy();
+      // Store chart reference globally
+      window.leadsStatusChart = chart;
     }
-  };
-}, [clientsCount, archivedCount, managingCount])
+
+    // Cleanup function to destroy chart when component unmounts
+    return () => {
+      if (window.leadsStatusChart) {
+        window.leadsStatusChart.destroy();
+      }
+    };
+  }, [null])
 
   return (
     <>
@@ -180,7 +181,7 @@ useEffect(() => {
           </div>
         </div>
         <div className="col-xl-9 col-md-12">
-          <div className='d-flex gap-1 mb-3' style={{
+          <div className='d-flex gap-3 mb-3' style={{
             overflowX: 'auto',
           }}>
             {

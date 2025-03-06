@@ -54,10 +54,31 @@ class KPILeadsController extends BasicController
             ]);
         }
 
+        // tengo mi tabla clients, donde tiene dos campos triggered_by y origin, me interesa 3, dos principales que son (Origin: CRM Atalaya, triggered_by: Formulario) y el otro es (Origin: WhatsApp, triggered_by: Gemini AI), quiero que me agrupes y contabilices cuantos tienen ese, y cuantos tienen cualquier otro valor
+        $leadSources = Client::select([
+            DB::raw('COUNT(CASE 
+                WHEN origin = "CRM Atalaya" AND triggered_by = "Formulario" THEN 1 
+                END) as crm_count'),
+            DB::raw('COUNT(CASE 
+                WHEN origin = "WhatsApp" AND triggered_by = "Gemini AI" THEN 1 
+                END) as whatsapp_count'),
+            DB::raw('COUNT(CASE 
+                WHEN (origin != "CRM Atalaya" OR triggered_by != "Formulario") 
+                AND (origin != "WhatsApp" OR triggered_by != "Gemini AI") 
+                THEN 1 END) as integration_count')
+        ])
+            ->where('business_id', Auth::user()->business_id)
+            ->first();
+
         return [
             'months' => $months,
             'currentMonth' => $currentMonth,
             'currentYear' => $currentYear,
+            'leadSources' => [
+                'crm' => $leadSources->crm_count,
+                'whatsapp' => $leadSources->whatsapp_count,
+                'integration' => $leadSources->integration_count
+            ]
         ];
     }
 
