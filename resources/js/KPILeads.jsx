@@ -116,6 +116,7 @@ const KPILeads = ({ months = [], currentMonth, currentYear, leadSources, originC
 
   return (
     <>
+
       <div className="row">
         <div className='col-xl-3 col-lg-4 col-md-6 col-sm-8 col-12 mb-2'>
           <SelectFormGroup minimumResultsForSearch={-1} templateResult={monthTemplate} templateSelection={monthTemplate} onChange={e => setSelectedMonth(e.target.value)}>
@@ -129,6 +130,11 @@ const KPILeads = ({ months = [], currentMonth, currentYear, leadSources, originC
               })
             }
           </SelectFormGroup>
+        </div>
+      </div>
+      <div className="row">
+        <div className="col-12">
+          <h4 className='mt-0 mb-2'>Vista general de leads</h4>
         </div>
       </div>
       <div className="row">
@@ -230,7 +236,7 @@ const KPILeads = ({ months = [], currentMonth, currentYear, leadSources, originC
                     {
                       originCounts.map((origin, index) => {
                         return <div key={index} className='text-center'>
-                          <input data-plugin="knob" data-width="80" data-height="80"
+                          <input data-plugin="knob" data-width="100" data-height="100"
                             data-fgcolor="#4a81d4" data-bgcolor="#4a81d433" defaultValue={origin.count / leadSources.integration_count * 100}
                             data-count={origin.count} data-skin="tron" data-angleloffset="180" data-readonly={true}
                             data-thickness=".15" style={{ outline: 'none', border: 'none' }} />
