@@ -10,8 +10,8 @@ import Assigneds from './Reutilizables/Projects/Assigneds';
 const Taskboard = ({ }) => {
   const [projects, setProjects] = useState([]);
   const [showDebtOnly, setShowDebtOnly] = useState(false);
-
   const [filterType, setFilterType] = useState('all');
+
   useEffect(() => {
     ProjectsRest
       .paginate({
