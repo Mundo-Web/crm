@@ -71,15 +71,22 @@ class KPILeadsController extends BasicController
             ->where('created_at', '>=', now()->subDays(30))
             ->first();
 
+        $originCounts = Client::select([
+            'origin',
+            DB::raw('COUNT(*) as count')
+        ])
+            ->where('business_id', Auth::user()->business_id)
+            ->where('created_at', '>=', now()->subDays(30))
+            ->whereNotIn('origin', ['WhatsApp', 'CRM Atalaya'])
+            ->groupBy('origin')
+            ->get();
+
         return [
             'months' => $months,
             'currentMonth' => $currentMonth,
             'currentYear' => $currentYear,
-            'leadSources' => [
-                'crm' => $leadSources->crm_count,
-                'whatsapp' => $leadSources->whatsapp_count,
-                'integration' => $leadSources->integration_count
-            ]
+            'leadSources' => $leadSources,
+            'originCounts' => $originCounts,
         ];
     }
 

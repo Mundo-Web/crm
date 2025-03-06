@@ -8,7 +8,7 @@ import KPILeadsRest from './actions/KPILeadsRest';
 import Number2Currency from './Utils/Number2Currency';
 import Global from './Utils/Global';
 
-const KPILeads = ({ months = [], currentMonth, currentYear, leadSources }) => {
+const KPILeads = ({ months = [], currentMonth, currentYear, leadSources, originCounts }) => {
   const [selectedMonth, setSelectedMonth] = useState(`${currentYear}-${currentMonth}`)
   const [grouped, setGrouped] = useState([])
   const [groupedByManageStatus, setGroupedByManageStatus] = useState([])
@@ -73,7 +73,7 @@ const KPILeads = ({ months = [], currentMonth, currentYear, leadSources }) => {
         data: {
           labels: [Global.APP_NAME, 'WhatsApp', 'Integración'],
           datasets: [{
-            data: [leadSources.crm, leadSources.whatsapp, leadSources.integration],
+            data: [leadSources.crm_count, leadSources.whatsapp_count, leadSources.integration_count],
             backgroundColor: ['#f1556c', '#1abc9c', '#4a81d4'],
             borderWidth: 0
           }]
@@ -100,6 +100,15 @@ const KPILeads = ({ months = [], currentMonth, currentYear, leadSources }) => {
       }
     };
   }, [null])
+
+  useEffect(() => {
+    $('[data-plugin="knob"]').knob({
+      'draw': function () {
+        const count = this.$.attr('data-count')
+        $(this.i).val(count)
+      }
+    })
+  })
 
   return (
     <>
@@ -181,8 +190,25 @@ const KPILeads = ({ months = [], currentMonth, currentYear, leadSources }) => {
                 <small className='text-muted'>Los últimos 30 días</small>
               </h4>
             </div>
-            <div className="card-body" style={{ height: '330px' }}>
-              <canvas id="leadsStatusPie" width='100%' height='100%'></canvas>
+            <div className="card-body" >
+              <div style={{ height: '240px' }}>
+                <canvas id="leadsStatusPie" width='100%' height='100%'></canvas>
+              </div>
+              <hr className='my-3' />
+              <h4 className="header-title mt-0 mb-3 text-center">Leads de Integración</h4>
+              <div className="d-flex flex-wrap gap-2 justify-content-evenly">
+                {
+                  originCounts.map((origin, index) => {
+                    return <div key={index}>
+                      <input data-plugin="knob" data-width="60" data-height="60"
+                        data-fgcolor="#4a81d4" data-bgcolor="#4a81d433" defaultValue={origin.count / leadSources.integration_count * 100}
+                       data-count={origin.count} data-skin="tron" data-angleloffset="180" data-readonly={true}
+                        data-thickness=".15" style={{ outline: 'none', border: 'none' }} />
+                      <small className='text-muted d-block text-center'>{origin.origin}</small>
+                    </div>
+                  })
+                }
+              </div>
             </div>
           </div>
         </div>
