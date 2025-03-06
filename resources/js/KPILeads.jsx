@@ -128,90 +128,85 @@ const KPILeads = ({ months = [], currentMonth, currentYear, leadSources, originC
         </div>
       </div>
       <div className="row">
-        <div className="col-xl-3 col-md-6">
-          <div className="card">
-            <div className="card-body widget-user">
-              <div className="text-center">
-                <h2 className="fw-normal text-info" data-plugin="counterup">{totalCount}</h2>
-                <h5>Leads</h5>
-                <small>S/. {Number2Currency(totalSum)}</small>
-              </div>
+        <div className="col-md-4">
+          <div className="card card-body">
+            <div style={{ height: '180px' }}>
+              <canvas id="leadsStatusPie" width='100%' height='100%'></canvas>
+            </div>
+            <h4 className="mt-3 mb-2 text-center">Leads de Integración</h4>
+            <div className="d-flex flex-wrap gap-2 justify-content-evenly">
+              {
+                originCounts.map((origin, index) => {
+                  return <div key={index}>
+                    <input data-plugin="knob" data-width="60" data-height="60"
+                      data-fgcolor="#4a81d4" data-bgcolor="#4a81d433" defaultValue={origin.count / leadSources.integration_count * 100}
+                      data-count={origin.count} data-skin="tron" data-angleloffset="180" data-readonly={true}
+                      data-thickness=".15" style={{ outline: 'none', border: 'none' }} />
+                    <small className='text-muted d-block text-center'>{origin.origin}</small>
+                  </div>
+                })
+              }
             </div>
           </div>
-
         </div>
-
-        <div className="col-xl-3 col-md-6">
-          <div className="card">
-            <div className="card-body widget-user">
-              <div className="text-center">
-                <h2 className="fw-normal text-success" data-plugin="counterup">{clientsCount}</h2>
-                <h5>Convertidos</h5>
-                <small>S/. {Number2Currency(clientsSum)}</small>
+        <div className="col-md-8">
+          <div className="row">
+            <div className="col-md-6 col-xs-12">
+              <div className="card">
+                <div className="card-body widget-user">
+                  <div className="text-center">
+                    <h1 className="fw-normal text-info" data-plugin="counterup">{totalCount}</h1>
+                    <h4>Leads</h4>
+                    <span>S/. {Number2Currency(totalSum)}</span>
+                  </div>
+                </div>
               </div>
+
+            </div>
+
+            <div className="col-md-6 col-xs-12">
+              <div className="card">
+                <div className="card-body widget-user">
+                  <div className="text-center">
+                    <h1 className="fw-normal text-success" data-plugin="counterup">{clientsCount}</h1>
+                    <h4>Convertidos</h4>
+                    <span>S/. {Number2Currency(clientsSum)}</span>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            <div className="col-md-6 col-xs-12">
+              <div className="card">
+                <div className="card-body widget-user">
+                  <div className="text-center">
+                    <h1 className="fw-normal text-danger" data-plugin="counterup">{archivedCount}</h1>
+                    <h4>No convertidos</h4>
+                    <span>S/. {Number2Currency(archivedSum)}</span>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            <div className="col-md-6 col-xs-12">
+              <div className="card">
+                <div className="card-body widget-user">
+                  <div className="text-center">
+                    <h1 className="fw-normal text-primary" data-plugin="counterup">{managingCount}</h1>
+                    <h4>En gestion</h4>
+                    <span>S/. {Number2Currency(managingSum)}</span>
+                  </div>
+                </div>
+              </div>
+
             </div>
           </div>
-
-        </div>
-
-        <div className="col-xl-3 col-md-6">
-          <div className="card">
-            <div className="card-body widget-user">
-              <div className="text-center">
-                <h2 className="fw-normal text-danger" data-plugin="counterup">{archivedCount}</h2>
-                <h5>No convertidos</h5>
-                <small>S/. {Number2Currency(archivedSum)}</small>
-              </div>
-            </div>
-          </div>
-
-        </div>
-
-        <div className="col-xl-3 col-md-6">
-          <div className="card">
-            <div className="card-body widget-user">
-              <div className="text-center">
-                <h2 className="fw-normal text-primary" data-plugin="counterup">{managingCount}</h2>
-                <h5>En gestion</h5>
-                <small>S/. {Number2Currency(managingSum)}</small>
-              </div>
-            </div>
-          </div>
-
         </div>
       </div>
 
       <div className='row'>
-        <div className="col-xl-3 col-md-12">
-          <div className="card">
-            <div className="card-header">
-              <h4 className="header-title my-0">
-                <span className='d-block'>Orígenes de leads</span>
-                <small className='text-muted'>Los últimos 30 días</small>
-              </h4>
-            </div>
-            <div className="card-body" >
-              <div style={{ height: '240px' }}>
-                <canvas id="leadsStatusPie" width='100%' height='100%'></canvas>
-              </div>
-              <hr className='my-3' />
-              <h4 className="header-title mt-0 mb-3 text-center">Leads de Integración</h4>
-              <div className="d-flex flex-wrap gap-2 justify-content-evenly">
-                {
-                  originCounts.map((origin, index) => {
-                    return <div key={index}>
-                      <input data-plugin="knob" data-width="60" data-height="60"
-                        data-fgcolor="#4a81d4" data-bgcolor="#4a81d433" defaultValue={origin.count / leadSources.integration_count * 100}
-                       data-count={origin.count} data-skin="tron" data-angleloffset="180" data-readonly={true}
-                        data-thickness=".15" style={{ outline: 'none', border: 'none' }} />
-                      <small className='text-muted d-block text-center'>{origin.origin}</small>
-                    </div>
-                  })
-                }
-              </div>
-            </div>
-          </div>
-        </div>
         <div className="col-xl-9 col-md-12">
           <div className='d-flex gap-3 mb-3' style={{
             overflowX: 'auto',
