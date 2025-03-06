@@ -176,7 +176,10 @@ const KPILeads = ({ months = [], currentMonth, currentYear, leadSources }) => {
         <div className="col-xl-3 col-md-12">
           <div className="card">
             <div className="card-header">
-              <h4 className="header-title my-0">Origenes de leads</h4>
+              <h4 className="header-title my-0">
+                <span className='d-block'>Orígenes de leads</span>
+                <small className='text-muted'>Los últimos 30 días</small>
+              </h4>
             </div>
             <div className="card-body" style={{ height: '330px' }}>
               <canvas id="leadsStatusPie" width='100%' height='100%'></canvas>

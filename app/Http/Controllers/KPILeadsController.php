@@ -68,6 +68,7 @@ class KPILeadsController extends BasicController
                 THEN 1 END) as integration_count')
         ])
             ->where('business_id', Auth::user()->business_id)
+            ->where('created_at', '>=', now()->subDays(30))
             ->first();
 
         return [
