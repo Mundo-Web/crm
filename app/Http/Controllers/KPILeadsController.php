@@ -54,42 +54,10 @@ class KPILeadsController extends BasicController
             ]);
         }
 
-        // tengo mi tabla clients, donde tiene dos campos triggered_by y origin, me interesa 3, dos principales que son (Origin: CRM Atalaya, triggered_by: Formulario) y el otro es (Origin: WhatsApp, triggered_by: Gemini AI), quiero que me agrupes y contabilices cuantos tienen ese, y cuantos tienen cualquier otro valor
-        $leadSources = Client::select([
-            DB::raw('COUNT(CASE 
-                WHEN origin = "CRM Atalaya" AND triggered_by = "Formulario" THEN 1 
-                END) as crm_count'),
-            DB::raw('COUNT(CASE 
-                WHEN origin = "WhatsApp" AND triggered_by = "Gemini AI" THEN 1 
-                END) as whatsapp_count'),
-            DB::raw('COUNT(CASE 
-                WHEN (origin != "CRM Atalaya" OR triggered_by != "Formulario") 
-                AND (origin != "WhatsApp" OR triggered_by != "Gemini AI") 
-                THEN 1 END) as integration_count')
-        ])
-            ->where('business_id', Auth::user()->business_id)
-            ->whereYear('created_at', $currentYear)
-            ->whereMonth('created_at', $currentMonth)
-            ->first();
-
-        $originCounts = Client::select([
-            'origin',
-            DB::raw('COUNT(*) as count')
-        ])
-            ->where('business_id', Auth::user()->business_id)
-            ->whereYear('created_at', $currentYear)
-            ->whereMonth('created_at', $currentMonth)
-            ->whereNotIn('origin', ['WhatsApp', 'CRM Atalaya'])
-            ->groupBy('origin')
-            ->orderBy('count', 'desc')
-            ->get();
-
         return [
             'months' => $months,
             'currentMonth' => $currentMonth,
-            'currentYear' => $currentYear,
-            'leadSources' => $leadSources,
-            'originCounts' => $originCounts,
+            'currentYear' => $currentYear
         ];
     }
 
@@ -165,6 +133,33 @@ class KPILeadsController extends BasicController
                 ->orderBy('manage_status.order', 'asc')
                 ->get();
 
+            $leadSources = Client::byMonth($year, $month)
+                ->select([
+                    DB::raw('COUNT(CASE 
+                        WHEN origin = "CRM Atalaya" AND triggered_by = "Formulario" THEN 1 
+                        END) as crm_count'),
+                    DB::raw('COUNT(CASE 
+                        WHEN origin = "WhatsApp" AND triggered_by = "Gemini AI" THEN 1 
+                        END) as whatsapp_count'),
+                    DB::raw('COUNT(CASE 
+                        WHEN (origin != "CRM Atalaya" OR triggered_by != "Formulario") 
+                        AND (origin != "WhatsApp" OR triggered_by != "Gemini AI") 
+                        THEN 1 END) as integration_count')
+                ])
+                ->where('business_id', Auth::user()->business_id)
+                ->first();
+
+            $originCounts = Client::byMonth($year, $month)
+                ->select([
+                    'origin',
+                    DB::raw('COUNT(*) as count')
+                ])
+                ->where('business_id', Auth::user()->business_id)
+                ->whereNotIn('origin', ['WhatsApp', 'CRM Atalaya'])
+                ->groupBy('origin')
+                ->orderBy('count', 'desc')
+                ->get();
+
             $response->summary = [
                 'grouped' => $grouped,
                 'totalCount' => $totalCount,
@@ -175,6 +170,8 @@ class KPILeadsController extends BasicController
                 'archivedSum' => $archivedSum,
                 'managingCount' => $managingCount,
                 'managingSum' => $managingSum,
+                'leadSources' => $leadSources,
+                'originCounts' => $originCounts
             ];
             $response->data = $groupedByManageStatus;
         });

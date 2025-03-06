@@ -8,7 +8,7 @@ import KPILeadsRest from './actions/KPILeadsRest';
 import Number2Currency from './Utils/Number2Currency';
 import Global from './Utils/Global';
 
-const KPILeads = ({ months = [], currentMonth, currentYear, leadSources, originCounts }) => {
+const KPILeads = ({ months = [], currentMonth, currentYear }) => {
   const [selectedMonth, setSelectedMonth] = useState(`${currentYear}-${currentMonth}`)
   const [grouped, setGrouped] = useState([])
   const [groupedByManageStatus, setGroupedByManageStatus] = useState([])
@@ -22,6 +22,9 @@ const KPILeads = ({ months = [], currentMonth, currentYear, leadSources, originC
   const [clientsSum, setClientsSum] = useState(0)
   const [archivedSum, setArchivedSum] = useState(0)
   const [managingSum, setManagingSum] = useState(0)
+
+  const [leadSources, setLeadSources] = useState({})
+  const [originCounts, setOriginCounts] = useState([])
 
   const monthTemplate = ({
     id,
@@ -54,6 +57,9 @@ const KPILeads = ({ months = [], currentMonth, currentYear, leadSources, originC
         setClientsSum(summary.clientsSum ?? 0)
         setArchivedSum(summary.archivedSum ?? 0)
         setManagingSum(summary.managingSum ?? 0)
+
+        setLeadSources(summary.lead_sources ?? {})
+        setOriginCounts(summary.origin_counts ?? [])
       });
   }, [selectedMonth])
 
@@ -175,9 +181,9 @@ const KPILeads = ({ months = [], currentMonth, currentYear, leadSources, originC
               <div className="card">
                 <div className="card-body widget-user">
                   <div className="text-center">
-                    <h1 className="fw-normal text-info" data-plugin="counterup">{totalCount}</h1>
-                    <h4>Leads</h4>
-                    <span>S/. {Number2Currency(totalSum)}</span>
+                    <h2 className="fw-normal text-info" data-plugin="counterup">{totalCount}</h2>
+                    <h5>Leads</h5>
+                    <small>S/. {Number2Currency(totalSum)}</small>
                   </div>
                 </div>
               </div>
@@ -188,9 +194,9 @@ const KPILeads = ({ months = [], currentMonth, currentYear, leadSources, originC
               <div className="card">
                 <div className="card-body widget-user">
                   <div className="text-center">
-                    <h1 className="fw-normal text-success" data-plugin="counterup">{clientsCount}</h1>
-                    <h4>Convertidos</h4>
-                    <span>S/. {Number2Currency(clientsSum)}</span>
+                    <h2 className="fw-normal text-success" data-plugin="counterup">{clientsCount}</h2>
+                    <h5>Convertidos</h5>
+                    <small>S/. {Number2Currency(clientsSum)}</small>
                   </div>
                 </div>
               </div>
@@ -201,9 +207,9 @@ const KPILeads = ({ months = [], currentMonth, currentYear, leadSources, originC
               <div className="card">
                 <div className="card-body widget-user">
                   <div className="text-center">
-                    <h1 className="fw-normal text-danger" data-plugin="counterup">{archivedCount}</h1>
-                    <h4>No convertidos</h4>
-                    <span>S/. {Number2Currency(archivedSum)}</span>
+                    <h2 className="fw-normal text-danger" data-plugin="counterup">{archivedCount}</h2>
+                    <h5>No convertidos</h5>
+                    <small>S/. {Number2Currency(archivedSum)}</small>
                   </div>
                 </div>
               </div>
@@ -214,9 +220,9 @@ const KPILeads = ({ months = [], currentMonth, currentYear, leadSources, originC
               <div className="card">
                 <div className="card-body widget-user">
                   <div className="text-center">
-                    <h1 className="fw-normal text-primary" data-plugin="counterup">{managingCount}</h1>
-                    <h4>En gestion</h4>
-                    <span>S/. {Number2Currency(managingSum)}</span>
+                    <h2 className="fw-normal text-primary" data-plugin="counterup">{managingCount}</h2>
+                    <h5>En gestion</h5>
+                    <small>S/. {Number2Currency(managingSum)}</small>
                   </div>
                 </div>
               </div>
