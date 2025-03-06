@@ -7,10 +7,7 @@ import ProjectsRest from './actions/ProjectsRest';
 import DateRange from './Reutilizables/Projects/DateRange';
 import Assigneds from './Reutilizables/Projects/Assigneds';
 
-const Taskboard = ({can}) => {
-
-  console.log(can('projects', 'all', 'listall'))
-
+const Taskboard = ({ }) => {
   const [projects, setProjects] = useState([]);
   const [showDebtOnly, setShowDebtOnly] = useState(false);
 

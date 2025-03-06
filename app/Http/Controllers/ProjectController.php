@@ -64,7 +64,7 @@ class ProjectController extends BasicController
         if (!($userjpa->can('projects.listall') || $userjpa->can('projects.all'))) {
             $query = $query
                 ->leftJoin('users_by_projects AS ubp', 'ubp.project_id', 'projects.id')
-                ->where('ubp.user_id', Auth::user()->id);
+                ->where('ubp.user_id', Auth::user()->service_user->id);
         }
 
         return $query;
