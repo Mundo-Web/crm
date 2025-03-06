@@ -1,0 +1,1 @@
+import{C as a,c as n,R as e}from"./CreateReactScript-CTKv0V6s.js";import{A as c}from"./Adminto-DfAHW7sJ.js";import"./server.browser-BcQqf2GF.js";const m=()=>e.createElement(e.Fragment,null);a((r,t)=>{n(r).render(e.createElement(c,{...t,title:"Integraciones"},e.createElement(m,{...t})))});
