@@ -9,6 +9,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use PhpOffice\PhpSpreadsheet\Style\ConditionalFormatting\Wizard\Duplicates;
 use SoDe\Extend\JSON;
 use SoDe\Extend\Response;
 
@@ -55,6 +56,15 @@ class ProjectController extends BasicController
             $query = $query
                 ->where('projects.status_id', '<>', $finishedProjectStatus)
                 ->whereNotNull('projects.status');
+        }
+
+        $userjpa = User::find(Auth::user()->id);
+        $userjpa->getAllPermissions();
+
+        if (!($userjpa->can('projects.listall') || $userjpa->can('projects.all'))) {
+            $query = $query
+                ->leftJoin('users_by_projects AS ubp', 'ubp.project_id', 'projects.id')
+                ->where('ubp.user_id', Auth::user()->id);
         }
 
         return $query;

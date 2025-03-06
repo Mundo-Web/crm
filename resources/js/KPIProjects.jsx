@@ -13,7 +13,7 @@ import RemainingsHistoryRest from './actions/RemainingsHistoryRest';
 import DateRange from './Reutilizables/Projects/DateRange';
 import Assigneds from './Reutilizables/Projects/Assigneds';
 
-const KPIProjects = ({ }) => {
+const KPIProjects = ({ can }) => {
   const revenueRef = useRef();
   const chartRef = useRef(null); // Usar useRef para mantener la referencia del gráfico
   const pieRef = useRef(null);
