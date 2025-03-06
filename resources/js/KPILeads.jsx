@@ -126,11 +126,9 @@ const KPILeads = ({ months = [], currentMonth, currentYear }) => {
     return () => {
       $('[data-plugin="knob"][data-graph="counts"]').knob('destroy');
     }
-  }, [originCounts])
+  }, [leadSources, originCounts])
 
   const totalLeadSources = leadSources.crm_count + leadSources.whatsapp_count + leadSources.integration_count
-
-  console.log(originCounts)
 
   return (
     <>
