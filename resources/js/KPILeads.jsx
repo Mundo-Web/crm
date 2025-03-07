@@ -45,7 +45,7 @@ const KPILeads = ({ months = [], currentMonth, currentYear }) => {
   useEffect(() => {
     setLeadSources({})
     setOriginCounts([])
-    
+
     KPILeadsRest.kpi(selectedMonth)
       .then(({ data, summary }) => {
         setGroupedByManageStatus(data)
