@@ -198,7 +198,15 @@ class MessageController extends BasicController
                 $this->createFirstNote($leadJpa);
             }
 
-            if ($request->from_me) return;
+            if ($request->from_me) {
+                $response->summary = [
+                    'alreadySent' => Message::where('wa_id', 'like', "%{$request->waId}")
+                        ->where('message', $request->message)
+                        ->where('created_at', '>=', now()->subSeconds(10))
+                        ->exists(),
+                ];
+                return;
+            }
 
             $needsExecutive = Message::where('business_id', $businessJpa->id)
                 ->where('wa_id', $request->waId)
