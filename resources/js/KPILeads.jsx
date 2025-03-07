@@ -98,33 +98,24 @@ const KPILeads = ({ months = [], currentMonth, currentYear }) => {
       // Store chart reference globally
       window.leadsStatusChart = chart;
     }
-
-    $('[data-plugin="knob"][data-graph="sources"]').knob({
-      'draw': function () {
-        const count = this.$.attr('data-count')
-        $(this.i).val(count)
-      }
-    })
-
     // Cleanup function to destroy chart when component unmounts
     return () => {
       if (window.leadsStatusChart) {
         window.leadsStatusChart.destroy();
       }
-      $('[data-plugin="knob"][data-graph="sources"]').knob('destroy');
     };
   }, [leadSources])
 
   useEffect(() => {
-    $('[data-plugin="knob"][data-graph="counts"]').knob({
+    $('[data-plugin="knob"]').knob({
       'draw': function () {
-        const count = this.$.attr('data-count')
+        const count = this.i.attr('data-count')
         $(this.i).val(count)
       }
     })
 
     return () => {
-      $('[data-plugin="knob"][data-graph="counts"]').knob('destroy');
+      $('[data-plugin="knob"]').trigger('change');
     }
   }, [leadSources, originCounts])
 
@@ -163,22 +154,22 @@ const KPILeads = ({ months = [], currentMonth, currentYear }) => {
             <div className="d-flex flex-wrap gap-2 justify-content-evenly">
               <div className='text-center'>
                 <input data-plugin="knob" data-width="60" data-height="60" data-graph="sources"
-                  data-fgcolor="#f1556c" data-bgcolor="#f1556c33" defaultValue={leadSources.crm_count / totalLeadSources * 100}
-                  data-count={leadSources.crm_count} data-skin="tron" data-angleloffset="180" data-readonly={true}
+                  data-fgcolor="#f1556c" data-bgcolor="#f1556c33" value={(leadSources.crm_count / totalLeadSources * 100) || 0}
+                  data-count={leadSources.crm_count || 0} data-skin="tron" data-angleloffset="180" data-readonly={true}
                   data-thickness=".15" style={{ outline: 'none', border: 'none' }} />
                 <small className='text-muted d-block text-center'>{Global.APP_NAME}</small>
               </div>
               <div className='text-center'>
                 <input data-plugin="knob" data-width="60" data-height="60" data-graph="sources"
-                  data-fgcolor="#1abc9c" data-bgcolor="#1abc9c33" defaultValue={leadSources.whatsapp_count / totalLeadSources * 100}
-                  data-count={leadSources.whatsapp_count} data-skin="tron" data-angleloffset="180" data-readonly={true}
+                  data-fgcolor="#1abc9c" data-bgcolor="#1abc9c33" value={(leadSources.whatsapp_count / totalLeadSources * 100) || 0}
+                  data-count={leadSources.whatsapp_count || 0} data-skin="tron" data-angleloffset="180" data-readonly={true}
                   data-thickness=".15" style={{ outline: 'none', border: 'none' }} />
                 <small className='text-muted d-block text-center'>WhatsApp</small>
               </div>
               <div className='text-center'>
                 <input data-plugin="knob" data-width="60" data-height="60" data-graph="sources"
-                  data-fgcolor="#4a81d4" data-bgcolor="#4a81d433" defaultValue={leadSources.integration_count / totalLeadSources * 100}
-                  data-count={leadSources.integration_count} data-skin="tron" data-angleloffset="180" data-readonly={true}
+                  data-fgcolor="#4a81d4" data-bgcolor="#4a81d433" value={(leadSources.integration_count / totalLeadSources * 100) || 0}
+                  data-count={leadSources.integration_count || 0} data-skin="tron" data-angleloffset="180" data-readonly={true}
                   data-thickness=".15" style={{ outline: 'none', border: 'none' }} />
                 <small className='text-muted d-block text-center'>Integracion</small>
               </div>
@@ -251,11 +242,13 @@ const KPILeads = ({ months = [], currentMonth, currentYear }) => {
                   <div className="d-flex flex-wrap gap-2 justify-content-evenly">
                     {
                       originCounts.map((origin, index) => {
-                        console.log(origin.count)
-                        return <div key={index} className='text-center'>
-                          <input data-plugin="knob" data-width="100" data-height="100" data-graph="counts"
-                            data-fgcolor="#4a81d4" data-bgcolor="#4a81d433" defaultValue={origin.count / leadSources.integration_count * 100}
-                            data-count={origin.count} data-skin="tron" data-angleloffset="180" data-readonly={true}
+                        const count = origin.count || 0;
+                        const percent = count / leadSources.integration_count * 100
+                        const uniqueKey = `${count.origin}-${count.count}-${index}`
+                        return <div id={uniqueKey} key={uniqueKey} className='text-center'>
+                          <input data-plugin="knob" data-width="100" data-height="100"
+                            data-fgcolor="#4a81d4" data-bgcolor="#4a81d433" value={percent}
+                            data-count={count} data-skin="tron" data-angleloffset="180" data-readonly={true}
                             data-thickness=".15" style={{ outline: 'none', border: 'none' }} />
                           <small className='text-muted d-block text-center mt-1'>{origin.origin}</small>
                         </div>
