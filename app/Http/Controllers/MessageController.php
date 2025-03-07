@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Classes\dxResponse;
 use App\Jobs\SendNewLeadNotification;
 use App\Models\Message;
 use App\Models\Atalaya\Business;
@@ -15,7 +14,6 @@ use Exception;
 use Illuminate\Http\Request;
 use SoDe\Extend\Fetch;
 use SoDe\Extend\File;
-use SoDe\Extend\JSON;
 use SoDe\Extend\Response;
 use SoDe\Extend\Text;
 use SoDe\Extend\Trace;
@@ -227,7 +225,7 @@ class MessageController extends BasicController
                 ]),
                 'alreadySent' => Message::where('wa_id', 'like', "%{$request->waId}")
                     ->where('message', $request->message)
-                    ->where('role', 'AI')
+                    ->where('created_at', '>=', now()->subSeconds(10))
                     ->exists(),
             ];
             return $messages;
