@@ -21,7 +21,7 @@ const OffCanvas = ({ offCanvasRef, dataLoaded, setDataLoaded }) => {
       isLoadingAll: true,
       filter: ['wa_id', 'contains', dataLoaded?.contact_phone],
       sort: [{
-        selector: 'created_at',
+        selector: 'microtime',
         desc: true
       }]
     })
