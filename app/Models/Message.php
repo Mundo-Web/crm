@@ -17,6 +17,7 @@ class Message extends Model
         'wa_id',
         'role',
         'message',
+        'microtime',
         'business_id'
     ];
 

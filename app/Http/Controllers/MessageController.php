@@ -23,6 +23,17 @@ class MessageController extends BasicController
     public $model = Message::class;
     public $reactView = 'Messages';
 
+    private function send(Request $request)
+    {
+        $response = Response::simpleTryCatch(function () use ($request) {
+            $businessJpa = Business::where('uuid', $request->business_uuid)->first();
+            if (!$businessJpa) throw new Exception('No existe una empresa vinculada a esta sesion');
+            $businessApiKey = Setting::get('gemini-api-key', $businessJpa->id);
+            if (!$businessApiKey) throw new Exception('Esta empresa no tiene integracion con AI');
+        });
+        return response($response->toArray(), $response->status);
+    }
+
     private function getData(Client $jpa)
     {
         $data = ['name' => null, 'email' => null];
@@ -248,6 +259,7 @@ class MessageController extends BasicController
         $businessJpa = Business::where('uuid', $businessUUID)->first();
         if (!$businessJpa) throw new Exception('No existe una empresa vinculada a esta sesion');
         $body['business_id'] = $businessJpa->id;
+        $body['microtime'] = (int) (microtime(true) * 1_000_000);
         return $body;
     }
 

@@ -35,7 +35,7 @@ const OffCanvas = ({ offCanvasRef, dataLoaded, setDataLoaded }) => {
     });
   }, [null]);
 
-  return <div ref={offCanvasRef} className="offcanvas offcanvas-end" tabIndex="-1" aria-labelledby="offcanvasRightLabel" style={{
+  return <form ref={offCanvasRef} className="offcanvas offcanvas-end" tabIndex="-1" aria-labelledby="offcanvasRightLabel" style={{
     visibility: 'hidden',
     width: '95%',
     maxWidth: '480px'
@@ -47,7 +47,7 @@ const OffCanvas = ({ offCanvasRef, dataLoaded, setDataLoaded }) => {
     </div>
 
     <div className="offcanvas-body">
-      <ul className="conversation-list slimscroll w-100"
+      <ul className="conversation-list slimscroll w-100 align-items-bottom"
         data-simplebar>
         {
           messages.map((message, i) => {
@@ -77,14 +77,14 @@ const OffCanvas = ({ offCanvasRef, dataLoaded, setDataLoaded }) => {
     <div className="offcanvas-footer">
       <div className="form-group p-2">
         <div className="input-group">
-          <input type="text" className="form-control" placeholder="Ingrese su mensaje aqui" />
-          <button className="btn input-group-text btn-dark waves-effect waves-light" type="button">
+          <input type="text" className="form-control" placeholder="Ingrese su mensaje aqui" required/>
+          <button className="btn input-group-text btn-dark waves-effect waves-light" type="submit">
             <i className="mdi mdi-arrow-top-right"></i>
           </button>
         </div>
       </div>
     </div>
-  </div>
+  </form>
 }
 
 export default OffCanvas
