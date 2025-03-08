@@ -9,7 +9,7 @@ import StatusDropdown from "../Statuses/StatusDropdown"
 import TippyButton from "../../components/form/TippyButton"
 import LaravelSession from "../../Utils/LaravelSession"
 
-const LeadTable = ({ gridRef, rest, can, defaultLeadStatus, statuses, manageStatuses, onClientStatusClicked, onManageStatusChange, onLeadClicked, onAttendClient, onOpenModal, onMakeLeadClient, onArchiveClicked, onDeleteClicked, title }) => {
+const LeadTable = ({ gridRef, rest, can, defaultLeadStatus, statuses, manageStatuses, onClientStatusClicked, onManageStatusChange, onLeadClicked, onMessagesClicked, onAttendClient, onOpenModal, onMakeLeadClient, onArchiveClicked, onDeleteClicked, title }) => {
   return <Table gridRef={gridRef} title={title} rest={rest} reloadWith={[statuses, manageStatuses]}
     toolBar={(container) => {
       container.unshift(DxPanelButton({
@@ -40,19 +40,24 @@ const LeadTable = ({ gridRef, rest, can, defaultLeadStatus, statuses, manageStat
         caption: 'Lead',
         width: 250,
         cellTemplate: (container, { data }) => {
-          container.attr('style', `height: 48px; cursor: pointer; border-left: 4px solid ${data.status.color}`)
-          container.on('click', () => onLeadClicked(data))
-          container.html(renderToString(<>
-            {
-              data.status_id == defaultLeadStatus
-                ? <b className='d-block'>{data.contact_name}</b>
-                : <span className='d-block'>{data.contact_name}</span>
-            }
-            {
-              data.products_count > 0 &&
-              <small className='text-muted'>{data.products_count} {data.products_count > 1 ? 'productos' : 'producto'}</small>
-            }
-          </>))
+          container.attr('style', `height: 48px; border-left: 4px solid ${data.status.color}`)
+
+          ReactAppend(container, <div className="d-flex align-items-center gap-1">
+            <TippyButton className='btn btn-xs btn-white' title='Ver mensajes' onClick={() => onMessagesClicked(data)}>
+              <i className='mdi mdi-forum'></i>
+            </TippyButton>
+            <div onClick={() => onLeadClicked(data)} style={{ cursor: 'pointer' }}>
+              {
+                data.status_id == defaultLeadStatus
+                  ? <b className='d-block'>{data.contact_name}</b>
+                  : <span className='d-block'>{data.contact_name}</span>
+              }
+              {
+                data.products_count > 0 &&
+                <small className='text-muted'>{data.products_count} {data.products_count > 1 ? 'productos' : 'producto'}</small>
+              }
+            </div>
+          </div>)
         },
         fixed: true,
         fixedPosition: 'left'

@@ -5,6 +5,7 @@ import Swal from "sweetalert2";
 import '../../../css/qr-code.css';
 import WhatsAppStatuses from "../../Reutilizables/WhatsApp/WhatsAppStatuses";
 import WhatsAppRest from "../../actions/WhatsAppRest";
+import Global from "../../Utils/Global";
 
 const whatsAppRest = new WhatsAppRest()
 let eventSource = {}
@@ -178,7 +179,20 @@ const WhatsAppModal = ({ status: whatsAppStatus, setStatus: setWhatsAppStatus, W
             <button type='button' className='btn-close position-absolute top-0 end-0 me-2 mt-2' data-bs-dismiss='modal' aria-label='Close'></button>
             <i className={`${icon} h1 text-${color} my-2 d-block`}></i>
             <h4 className="mt-2">{text} {whatsAppStatus == 'loading_screen' && `[${percent}%]`}</h4>
-            <div ref={qrRef} id="qr-code" className={`mt-3 text-center ${whatsAppStatus == 'qr' ? 'd-block' : 'd-none'}`}>
+            <div className="position-relative" hidden={whatsAppStatus !== 'qr'}>
+              <img className="position-absolute" src={`//${Global.APP_DOMAIN}/assets/img/icon.svg`} alt='Atalaya' style={{
+                width: '30px',
+                aspectRatio: '30px',
+                top: '50%',
+                left: '50%',
+                transform: 'translate(-50%, -50%)',
+                filter: 'grayscale(100%)',
+                padding: '4px',
+                borderRadius: '8px',
+                backgroundColor: '#fff'
+              }} />
+              <div ref={qrRef} id="qr-code" className={`mt-3 text-center ${whatsAppStatus == 'qr' ? 'd-block' : 'd-none'}`}>
+              </div>
             </div>
             {
               whatsAppStatus == null &&

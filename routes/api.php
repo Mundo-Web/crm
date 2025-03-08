@@ -10,6 +10,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\GmailController;
 use App\Http\Controllers\KPILeadsController;
 use App\Http\Controllers\LeadController;
+use App\Http\Controllers\MessageController;
 use App\Http\Controllers\MetaController;
 use App\Http\Controllers\NewLeadController;
 use App\Http\Controllers\NotificationController;
@@ -101,6 +102,8 @@ Route::middleware('auth')->group(function () {
     Route::patch('/clients/status', [ClientController::class, 'status']);
     Route::patch('/clients/client-status', [ClientController::class, 'clientStatus']);
     Route::delete('/clients/{id}', [ClientController::class, 'delete']);
+
+    Route::post('/messages/paginate', [MessageController::class, 'paginate']);
 
     Route::post('/archived/paginate', [ArchivedController::class, 'paginate']);
     Route::patch('/archived/status', [ArchivedController::class, 'status']);
