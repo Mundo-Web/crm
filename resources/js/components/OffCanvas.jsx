@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react"
 import MessagesRest from "../actions/MessagesRest"
 import LaravelSession from "../Utils/LaravelSession"
+import Global from "../Utils/Global"
 
 const messagesRest = new MessagesRest()
 
@@ -55,7 +56,7 @@ const OffCanvas = ({ offCanvasRef, dataLoaded, setDataLoaded }) => {
             return <li key={i} className={message.role == 'Human' ? '' : 'odd'}>
               <div className="message-list">
                 <div className="chat-avatar">
-                  <img src={`http://atalaya.localhost/api/profile/thumbnail/${fromMe ? LaravelSession.relative_id : undefined}`} alt="" />
+                  <img src={fromMe ? `//${Global.APP_DOMAIN}/api/profile/thumbnail/${LaravelSession.relative_id}` :`${Global.WA_URL}/api/profile/${LaravelSession.business_id}/${message.wa_id}`} alt="" />
                 </div>
                 <div className="conversation-text">
                   <div className="ctext-wrap">
