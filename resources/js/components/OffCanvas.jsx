@@ -56,7 +56,7 @@ const OffCanvas = ({ offCanvasRef, dataLoaded, setDataLoaded }) => {
             return <li key={i} className={message.role == 'Human' ? '' : 'odd'}>
               <div className="message-list">
                 <div className="chat-avatar">
-                  <img src={fromMe ? `//${Global.APP_DOMAIN}/api/profile/thumbnail/${LaravelSession.relative_id}` :`${Global.WA_URL}/api/profile/${LaravelSession.business_id}/${message.wa_id}`} alt="" />
+                  <img src={fromMe ? `//${Global.APP_DOMAIN}/api/profile/thumbnail/${LaravelSession.relative_id}` :`${Global.WA_URL}/api/profile/${LaravelSession.business_uuid}/${message.wa_id}`} alt="" />
                 </div>
                 <div className="conversation-text">
                   <div className="ctext-wrap">
