@@ -44,7 +44,7 @@ const LeadTable = ({ gridRef, rest, can, defaultLeadStatus, statuses, manageStat
 
           ReactAppend(container, <div className="d-flex align-items-center gap-1">
             <TippyButton className='btn btn-xs btn-white' title='Ver mensajes' onClick={() => onMessagesClicked(data)}>
-              <i className='mdi mdi-forum'></i>
+              <i className='mdi mdi-whatsapp text-success'></i>
             </TippyButton>
             <div onClick={() => onLeadClicked(data)} style={{ cursor: 'pointer' }}>
               {
