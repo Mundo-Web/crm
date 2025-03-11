@@ -6,6 +6,7 @@ import '../../../css/qr-code.css';
 import WhatsAppStatuses from "../../Reutilizables/WhatsApp/WhatsAppStatuses";
 import WhatsAppRest from "../../actions/WhatsAppRest";
 import Global from "../../Utils/Global";
+import LaravelSession from "../../Utils/LaravelSession";
 
 const whatsAppRest = new WhatsAppRest()
 let eventSource = {}
@@ -203,6 +204,13 @@ const WhatsAppModal = ({ status: whatsAppStatus, setStatus: setWhatsAppStatus, W
             }
             {
               whatsAppStatus == 'ready' && <div className="d-block py-2">
+                <img className="d-block mb-2 avatar-md rounded-circle mx-auto"
+                  src={`${Global.WA_URL}/api/profile/${LaravelSession.business_uuid}/${sessionInfo?.me?.user}`}
+                  onError={(e) => {
+                    e.target.onerror = null
+                    e.target.src = `//${Global.APP_DOMAIN}/api/profile/thumbnail/undefined`;
+                  }}
+                  alt={sessionInfo?.pushname} />
                 <b>{sessionInfo?.pushname}</b>
                 <br />
                 <span className="text-muted">{sessionInfo?.me?.user}@{sessionInfo?.me?.server}</span>
