@@ -15,6 +15,7 @@ const OffCanvas = ({ offCanvasRef, dataLoaded, setDataLoaded }) => {
   const [messages, setMessages] = useState([])
   const [isSending, setIsSending] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [ttl, setTtl] = useState(500)
 
   useEffect(() => {
     if (!dataLoaded?.contact_phone) return
@@ -30,9 +31,9 @@ const OffCanvas = ({ offCanvasRef, dataLoaded, setDataLoaded }) => {
       if (!isLoading) {
         await getMessages()
       }
-    }, 1000);
+    }, ttl);
     return () => clearInterval(interval);
-  }, [dataLoaded, isLoading])
+  }, [dataLoaded, isLoading, ttl])
 
   const getMessages = async () => {
     const lastMessage = await getLastMessage()
@@ -52,6 +53,10 @@ const OffCanvas = ({ offCanvasRef, dataLoaded, setDataLoaded }) => {
     setIsLoading(false)
 
     if (!data || !dataLoaded.id) return
+    
+    if (data.length > 0) setTtl(500)
+    else setTtl(2000)
+    
     const newMessages = await getCacheMessages()
     newMessages.push(...data)
     setMessages(newMessages.sort((a, b) => b.microtime - a.microtime))
