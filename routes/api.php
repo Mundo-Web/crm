@@ -63,6 +63,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/authorize/{business}', [AuthController::class, 'activeService']);
 
     Route::get('/whatsapp', [WhatsAppController::class, 'verify']);
+    Route::post('/whatsapp/send', [WhatsAppController::class, 'send']);
 
     Route::get('/dashboard/{range}', [DashboardController::class, 'revenue']);
     Route::get('/dashboard/leads/kpi/{month}', [KPILeadsController::class, 'kpi']);
@@ -104,6 +105,7 @@ Route::middleware('auth')->group(function () {
     Route::delete('/clients/{id}', [ClientController::class, 'delete']);
 
     Route::post('/messages/paginate', [MessageController::class, 'paginate']);
+    Route::post('/messages/send', [WhatsAppController::class, 'send']);
 
     Route::post('/archived/paginate', [ArchivedController::class, 'paginate']);
     Route::patch('/archived/status', [ArchivedController::class, 'status']);

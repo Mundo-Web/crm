@@ -2,31 +2,94 @@ import React, { useEffect, useRef, useState } from "react"
 import MessagesRest from "../actions/MessagesRest"
 import LaravelSession from "../Utils/LaravelSession"
 import Global from "../Utils/Global"
+import WhatsAppRest from "../actions/WhatsAppRest"
 
 const messagesRest = new MessagesRest()
+const whatsAppRest = new WhatsAppRest()
 
 const OffCanvas = ({ offCanvasRef, dataLoaded, setDataLoaded }) => {
 
   if (!offCanvasRef) offCanvasRef = useRef()
+  const inputMessageRef = useRef()
 
   const [messages, setMessages] = useState([])
+  const [isSending, setIsSending] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
 
   useEffect(() => {
     if (!dataLoaded?.contact_phone) return
-    getMessages();
+    getCacheMessages().then(messages => {
+      setMessages(messages)
+      getMessages();
+    })
   }, [dataLoaded])
 
+  useEffect(() => {
+    if (!dataLoaded?.id) return
+    const interval = setInterval(async () => {
+      if (!isLoading) {
+        await getMessages()
+      }
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [dataLoaded, isLoading])
+
   const getMessages = async () => {
+    const lastMessage = await getLastMessage()
+    setIsLoading(true)
     const { data } = await messagesRest.paginate({
       isLoadingAll: true,
-      filter: ['wa_id', 'contains', dataLoaded?.contact_phone],
+      filter: [
+        ['wa_id', 'contains', dataLoaded?.contact_phone],
+        'and',
+        ['microtime', '>', lastMessage.microtime]
+      ],
       sort: [{
         selector: 'microtime',
-        desc: true
+        desc: false
       }]
     })
-    setMessages((data ?? []).reverse())
+    setIsLoading(false)
+
+    if (!data || !dataLoaded.id) return
+    const newMessages = await getCacheMessages()
+    newMessages.push(...data)
+    setMessages(newMessages.sort((a, b) => b.microtime - a.microtime))
   }
+
+  const getCacheMessages = async () => {
+    const cache = await caches.open('messages');
+    const chat = await cache.match(`${LaravelSession.business_uuid}/${dataLoaded.id}`)
+    if (!chat) return []
+    const messages = await chat.json()
+    return messages ?? []
+  }
+
+  const getLastMessage = async () => {
+    const messages = await getCacheMessages()
+    return messages.sort((a, b) => b.microtime - a.microtime)[0] ?? { microtime: 0 }
+  }
+
+  const onMessageSubmit = async (e) => {
+    e.preventDefault()
+
+    const message = inputMessageRef.current.value
+    const client_id = dataLoaded.id
+    setIsSending(true)
+    const result = await whatsAppRest.send(client_id, message)
+    setIsSending(false)
+
+    if (!result) return
+    inputMessageRef.current.value = ''
+    // obtener nuevos mensajes
+  }
+
+  useEffect(() => {
+    if (!dataLoaded?.id) return
+    caches.open('messages').then(cache => {
+      cache.put(`${LaravelSession.business_uuid}/${dataLoaded.id}`, new Response(JSON.stringify(messages)))
+    })
+  }, [messages])
 
   useEffect(() => {
     offCanvasRef.current.addEventListener('hidden.bs.offcanvas', () => {
@@ -40,7 +103,8 @@ const OffCanvas = ({ offCanvasRef, dataLoaded, setDataLoaded }) => {
     width: '95%',
     maxWidth: '480px'
   }}
-    aria-hidden="true">
+    aria-hidden="true"
+    onSubmit={onMessageSubmit}>
     <div className="offcanvas-header">
       <h5 id="offcanvasRightLabel">Mensajes - {dataLoaded?.contact_name}</h5>
       <button type="button" className="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
@@ -50,13 +114,19 @@ const OffCanvas = ({ offCanvasRef, dataLoaded, setDataLoaded }) => {
       <ul className="conversation-list slimscroll w-100 align-items-bottom"
         data-simplebar>
         {
-          messages.map((message, i) => {
+          messages.sort((a, b) => a.microtime - b.microtime).map((message, i) => {
             const content = message.message.replace(/\{\{.*?\}\}/gs, '')
             const fromMe = message.role !== 'Human'
             return <li key={i} className={message.role == 'Human' ? '' : 'odd'}>
               <div className="message-list">
                 <div className="chat-avatar">
-                  <img src={fromMe ? `//${Global.APP_DOMAIN}/api/profile/thumbnail/${LaravelSession.relative_id}` :`${Global.WA_URL}/api/profile/${LaravelSession.business_uuid}/${message.wa_id}`} alt="" />
+                  <img src={fromMe
+                    ? `//${Global.APP_DOMAIN}/api/profile/thumbnail/${LaravelSession.relative_id}`
+                    : `${Global.WA_URL}/api/profile/${LaravelSession.business_uuid}/${message.wa_id}`}
+                    onError={(e) => {
+                      e.target.onerror = null
+                      e.target.src = `//${Global.APP_DOMAIN}/api/profile/thumbnail/undefined`;
+                    }} alt={dataLoaded?.contact_name} />
                 </div>
                 <div className="conversation-text">
                   <div className="ctext-wrap">
@@ -77,9 +147,13 @@ const OffCanvas = ({ offCanvasRef, dataLoaded, setDataLoaded }) => {
     <div className="offcanvas-footer">
       <div className="form-group p-2">
         <div className="input-group">
-          <input type="text" className="form-control" placeholder="Ingrese su mensaje aqui" required/>
-          <button className="btn input-group-text btn-dark waves-effect waves-light" type="submit">
-            <i className="mdi mdi-arrow-top-right"></i>
+          <input ref={inputMessageRef} type="text" className="form-control" placeholder="Ingrese su mensaje aqui" required disabled={isSending} />
+          <button className="btn input-group-text btn-dark waves-effect waves-light" type="submit" disabled={isSending}>
+            {
+              isSending
+                ? <i className="mdi mdi-spinner "></i>
+                : <i className="mdi mdi-arrow-top-right"></i>
+            }
           </button>
         </div>
       </div>

@@ -91,6 +91,7 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
 
   const [leads, setLeads] = useState([])
   const [leadLoaded, setLeadLoaded] = useState(null)
+  const [leadLoadedForMessages, setLeadLoadedForMessages] = useState(null)
   const [notes, setNotes] = useState([]);
   const [defaultView, setDefaultView] = useState(Local.get('default-view') ?? 'kanban')
   const [clientProducts, setClientProducts] = useState([])
@@ -580,7 +581,7 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
   notes?.forEach(note => pendingTasks.push(...note.tasks.filter(x => x.status != 'Realizado')))
 
   const onMessagesClicked = (data) => {
-    setLeadLoaded(data)
+    setLeadLoadedForMessages(data)
     $(messagesOffCanvasRef.current).offcanvas('show')
   }
 
@@ -1204,7 +1205,7 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
       setNotes(old => ([...old, newNote]))
     }} />
 
-    <OffCanvas offCanvasRef={messagesOffCanvasRef} dataLoaded={leadLoaded} setDataLoaded={setLeadLoaded} title='Mensajes' size='lg' zIndex={1060} hideHeader hideFooter />
+    <OffCanvas offCanvasRef={messagesOffCanvasRef} dataLoaded={leadLoadedForMessages} setDataLoaded={setLeadLoadedForMessages}/>
   </>
   )
 };

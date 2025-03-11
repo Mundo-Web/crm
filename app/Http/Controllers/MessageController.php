@@ -12,6 +12,7 @@ use App\Models\Task;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use SoDe\Extend\Fetch;
 use SoDe\Extend\File;
 use SoDe\Extend\Response;
@@ -23,13 +24,20 @@ class MessageController extends BasicController
     public $model = Message::class;
     public $reactView = 'Messages';
 
-    private function send(Request $request)
+    public function send(Request $request)
     {
         $response = Response::simpleTryCatch(function () use ($request) {
-            $businessJpa = Business::where('uuid', $request->business_uuid)->first();
-            if (!$businessJpa) throw new Exception('No existe una empresa vinculada a esta sesion');
-            $businessApiKey = Setting::get('gemini-api-key', $businessJpa->id);
-            if (!$businessApiKey) throw new Exception('Esta empresa no tiene integracion con AI');
+            new Fetch(env('WA_URL') . '/api/send', [
+                'method' => 'POST',
+                'headers' => [
+                    'Content-Type' => 'application/json'
+                ],
+                'body' => [
+                    'from' => 'atalaya-' . Auth::user()->business_uuid,
+                    'to' => [$request->to],
+                    'content' => $request->message
+                ]
+            ]);
         });
         return response($response->toArray(), $response->status);
     }
