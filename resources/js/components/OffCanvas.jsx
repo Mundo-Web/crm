@@ -55,7 +55,7 @@ const OffCanvas = ({ offCanvasRef, dataLoaded, setDataLoaded }) => {
     if (!data || !dataLoaded.id) return
     
     if (data.length > 0) setTtl(500)
-    else setTtl(2000)
+    else setTtl(2500)
     
     const newMessages = await getCacheMessages()
     newMessages.push(...data)
