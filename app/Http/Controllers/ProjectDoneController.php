@@ -40,7 +40,7 @@ class ProjectDoneController extends BasicController
             DB::raw('MAX(payments.created_at) AS last_payment_date'),
         ])
             ->leftJoin('types AS type', 'type.id', 'projects.type_id')
-            ->leftJoin('clients AS client', 'client.id', 'projects.id')
+            ->leftJoin('clients AS client', 'client.id', 'projects.client_id')
             ->leftJoin('payments', 'payments.project_id', 'projects.id')
             ->leftJoin('statuses AS status', 'status.id', 'projects.status_id')
             ->groupBy('projects.id')
