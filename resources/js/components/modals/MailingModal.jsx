@@ -84,7 +84,7 @@ const MailingModal = ({ data, session, setSession, inReplyTo, modalRef, onSend =
     if (!file) return
     const formData = new FormData()
     formData.append('sign', file)
-    formData.append('business_id', LaravelSession.business_id)
+    formData.append('business_id', LaravelSession.business_uuid)
 
     e.target.value = null
 
