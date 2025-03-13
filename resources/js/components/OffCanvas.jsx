@@ -138,8 +138,12 @@ const OffCanvas = ({ offCanvasRef, dataLoaded, setDataLoaded }) => {
                     {/* <span className="user-name">{message.role == 'Human' ? dataLoaded?.contact_name : ''}</span> */}
                     {
                       content.startsWith('/signature:')
-                       ? <img src={content.replace('/signature:', '')} alt={`${LaravelSession.service_user.fullname} signature`} style={{ maxWidth: '100%', maxHeight: '360px' }} />
-                        : {content}
+                        ? <img src={content.replace('/signature:', '')} alt={`${LaravelSession.service_user.fullname} signature`} style={{
+                          maxWidth: '100%',
+                          maxHeight: '200px',
+                          borderRadius: '4px'
+                        }} />
+                        : { content }
                     }
                     {/* <p>
                       {content}
