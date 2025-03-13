@@ -165,7 +165,7 @@ const MailingModal = ({ data, session, setSession, inReplyTo, modalRef, onSend =
             session.service_user.mailing_sign
               ? <div className="position-relative mx-auto" style={{ width: 'max-content' }}>
                 <Tippy content='Cambiar firma'>
-                  <label htmlFor="sign-file" style={{ cursor: 'pointer' }}>
+                  {/* <label htmlFor="sign-file" style={{ cursor: 'pointer' }}>
                     <img className="border" src={`//${Global.APP_DOMAIN}/repository/signs/${session.service_user.mailing_sign}`} alt="" style={{
                       aspectRatio: 520 / 210,
                       height: '100%',
@@ -173,7 +173,16 @@ const MailingModal = ({ data, session, setSession, inReplyTo, modalRef, onSend =
                       maxWidth: '100%',
                       objectFit: 'contain',
                     }} />
-                  </label>
+                  </label> */}
+                  <a href={`${Global.APP_PROTOCOL}://${Global.APP_DOMAIN}/signs`}>
+                    <img className="border" src={`//${Global.APP_DOMAIN}/repository/signs/${session.service_user.mailing_sign}`} alt="" style={{
+                      aspectRatio: 520 / 210,
+                      height: '100%',
+                      maxHeight: '100px',
+                      maxWidth: '100%',
+                      objectFit: 'contain',
+                    }} />
+                  </a>
                 </Tippy>
                 <Tippy content="Quitar firma">
                   <button className="position-absolute btn btn-xs r-1 btn-soft-danger" type="button" style={{
