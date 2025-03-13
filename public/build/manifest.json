@@ -193,8 +193,8 @@
       "_Adminto-DstmRAl3.js"
     ]
   },
-  "_UsersRest-DDltMiQv.js": {
-    "file": "assets/UsersRest-DDltMiQv.js",
+  "_UsersRest-BLhgORWT.js": {
+    "file": "assets/UsersRest-BLhgORWT.js",
     "name": "UsersRest",
     "imports": [
       "_CreateReactScript-CdTrqrJ4.js",
@@ -335,7 +335,7 @@
     ]
   },
   "resources/js/Leads.jsx": {
-    "file": "assets/Leads-CLLeTsqh.js",
+    "file": "assets/Leads-JN5c91sE.js",
     "name": "Leads",
     "src": "resources/js/Leads.jsx",
     "isEntry": true,
@@ -345,7 +345,7 @@
       "_ProductsByClientsRest-TyBylBGF.js",
       "_LeadsRest-BGamVHiq.js",
       "_TasksRest-CsLqCIH-.js",
-      "_UsersRest-DDltMiQv.js",
+      "_UsersRest-BLhgORWT.js",
       "_Modal-BBIIvM30.js",
       "_InputFormGroup-ceOQVHbD.js",
       "_TextareaFormGroup-PMsFgv2I.js",
@@ -660,13 +660,13 @@
     ]
   },
   "resources/js/Users.jsx": {
-    "file": "assets/Users-CmrXsDwX.js",
+    "file": "assets/Users-DWmIcWn3.js",
     "name": "Users",
     "src": "resources/js/Users.jsx",
     "isEntry": true,
     "imports": [
       "_CreateReactScript-CdTrqrJ4.js",
-      "_UsersRest-DDltMiQv.js",
+      "_UsersRest-BLhgORWT.js",
       "_Adminto-DstmRAl3.js"
     ]
   },

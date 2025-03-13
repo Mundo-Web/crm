@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Atalaya\BusinessSign;
 use App\Models\ModelHasRoles;
 use App\Models\User;
 use Exception;
@@ -102,7 +103,7 @@ class UserController extends BasicController
 
             // Obtener el usuario autenticado
             $userJpa = User::where('business_id', Auth::user()->business_id)
-            ->where('user_id', Auth::user()->id)
+                ->where('user_id', Auth::user()->id)
                 ->first();
 
             if (!$userJpa) {
@@ -151,6 +152,11 @@ class UserController extends BasicController
 
             $userJpa->mailing_sign = null;
             $userJpa->save();
+
+            BusinessSign::where([
+                'business_id' => Auth::user()->business_id,
+                'user_id' => Auth::user()->id
+            ])->delete();
         });
 
         return response($response->toArray(), $response->status);

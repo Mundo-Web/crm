@@ -1,5 +1,6 @@
 import { Cookies, Fetch, JSON, Notify } from "sode-extend-react"
 import BasicRest from "./BasicRest"
+import Global from "../Utils/Global"
 
 class UsersRest extends BasicRest {
   path = 'users'
@@ -35,7 +36,7 @@ class UsersRest extends BasicRest {
     let status = false
     let result = null
 
-    const res = await fetch(`/api/users/sign`, {
+    const res = await fetch(`${Global.APP_PROTOCOL}://${Global.APP_DOMAIN}/api/signs`, {
       method: 'POST',
       headers: {
         'X-Xsrf-Token': decodeURIComponent(Cookies.get('XSRF-TOKEN'))

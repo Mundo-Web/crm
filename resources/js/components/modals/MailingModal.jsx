@@ -8,6 +8,7 @@ import SelectFormGroup from "../form/SelectFormGroup";
 import UsersRest from "../../actions/UsersRest";
 import Tippy from "@tippyjs/react";
 import Global from "../../Utils/Global";
+import LaravelSession from "../../Utils/LaravelSession";
 
 const gmailRest = new GmailRest();
 const usersRest = new UsersRest();
@@ -83,6 +84,7 @@ const MailingModal = ({ data, session, setSession, inReplyTo, modalRef, onSend =
     if (!file) return
     const formData = new FormData()
     formData.append('sign', file)
+    formData.append('business_id', LaravelSession.business_id)
 
     e.target.value = null
 

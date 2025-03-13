@@ -55,8 +55,6 @@ class Authenticate extends Middleware
             ->where('user_id', Auth::user()->id)
             ->first();
 
-        dump($signJpa->toArray());
-
         $serviceUser = User::updateOrCreate([
             'user_id' => $hasPermission->id,
             'business_id' => $hasPermission->business_id
@@ -70,8 +68,6 @@ class Authenticate extends Middleware
             'relative_id' => $hasPermission->relative_id,
             'mailing_sign' => $signJpa->sign ?? null
         ]);
-
-        dump($serviceUser->toArray());
 
         $serviceUser->getAllPermissions();
         Auth::user()->service_user = $serviceUser;
