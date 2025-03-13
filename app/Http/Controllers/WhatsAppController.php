@@ -38,7 +38,7 @@ class WhatsAppController extends Controller
             $business_id = Auth::user()->business_uuid;
             $clientJpa = Client::find($request->client_id);
             $message = $request->message;
-            if (Text::startsWith($message, ':signature/')) {
+            if (Text::startsWith($message, '/signature:')) {
                 $res = new Fetch(env('WA_URL') . '/api/send', [
                     'method' => 'POST',
                     'headers' => [
@@ -48,7 +48,7 @@ class WhatsAppController extends Controller
                         'from' => 'atalaya-' . $business_id,
                         'to' => [$clientJpa->contact_phone],
                         'attachment' => [[
-                            'uri' => str_replace(':signature/', '', $message),
+                            'uri' => str_replace('/signature:', '', $message),
                             'filename' => 'signature.png',
                         ]],
                     ]
@@ -57,8 +57,8 @@ class WhatsAppController extends Controller
                     'wa_id' => $clientJpa->contact_phone,
                     'role' => 'User',
                     'message' => $message,
+                    'microtime' => (int) (microtime(true) * 1_000_000),
                     'business_id' => Auth::user()->business_id,
-                    'microtime' => (int) (microtime(true) * 1_000_000)
                 ]);
             } else {
                 $res = new Fetch(env('WA_URL') . '/api/send', [
