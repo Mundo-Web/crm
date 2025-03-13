@@ -7,6 +7,7 @@ import { Notify } from "sode-extend-react";
 import SelectFormGroup from "../form/SelectFormGroup";
 import UsersRest from "../../actions/UsersRest";
 import Tippy from "@tippyjs/react";
+import Global from "../../Utils/Global";
 
 const gmailRest = new GmailRest();
 const usersRest = new UsersRest();
@@ -163,7 +164,7 @@ const MailingModal = ({ data, session, setSession, inReplyTo, modalRef, onSend =
               ? <div className="position-relative mx-auto" style={{ width: 'max-content' }}>
                 <Tippy content='Cambiar firma'>
                   <label htmlFor="sign-file" style={{ cursor: 'pointer' }}>
-                    <img className="border" src={`/storage/signs/${session.service_user.mailing_sign}`} alt="" style={{
+                    <img className="border" src={`//${Global.APP_DOMAIN}/repository/signs/${session.service_user.mailing_sign}`} alt="" style={{
                       aspectRatio: 520 / 210,
                       height: '100%',
                       maxHeight: '100px',

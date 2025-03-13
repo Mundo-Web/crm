@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Atalaya\BusinessSign;
 use App\Models\User;
 use App\Models\Atalaya\User as AtalayaUser;
 use Closure;
@@ -49,6 +50,13 @@ class Authenticate extends Middleware
         Auth::user()->business_id = $hasPermission->business_id;
         Auth::user()->business_uuid = $hasPermission->business_uuid;
 
+        $signJpa = BusinessSign::select('sign')
+            ->where('business_id', $hasPermission->business_id)
+            ->where('user_id', Auth::user()->id)
+            ->first();
+
+        dump($signJpa->toArray());
+
         $serviceUser = User::updateOrCreate([
             'user_id' => $hasPermission->id,
             'business_id' => $hasPermission->business_id
@@ -59,8 +67,11 @@ class Authenticate extends Middleware
             'lastname' => $hasPermission->lastname,
             'email' => $hasPermission->email,
             'fullname' => $hasPermission->name . ' ' . $hasPermission->lastname,
-            'relative_id' => $hasPermission->relative_id
+            'relative_id' => $hasPermission->relative_id,
+            'mailing_sign' => $signJpa->sign ?? null
         ]);
+
+        dump($serviceUser->toArray());
 
         $serviceUser->getAllPermissions();
         Auth::user()->service_user = $serviceUser;

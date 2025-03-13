@@ -39,7 +39,8 @@ class User extends Authenticable
         'user_id',
         'business_id',
         'has_mailing_sign',
-        'relative_id'
+        'relative_id',
+        'mailing_sign'
     ];
 
     /**
