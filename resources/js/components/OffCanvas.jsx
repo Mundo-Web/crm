@@ -144,6 +144,10 @@ const OffCanvas = ({ offCanvasRef, dataLoaded, setDataLoaded }) => {
                             maxHeight: '200px',
                             borderRadius: '4px'
                           }}
+                          onError={e => {
+                            e.target.onerror = null
+                            e.target.src = `//placehold.co/500x200?text=404`;
+                          }}
                         />
                         : <p>{content}</p>
                     }
@@ -161,7 +165,7 @@ const OffCanvas = ({ offCanvasRef, dataLoaded, setDataLoaded }) => {
     </div>
 
     <div className="offcanvas-footer">
-      <div className="d-flex gap-2 p-2">
+      <div className="d-flex gap-2 p-2 align-items-bottom">
         <textarea ref={inputMessageRef}
           className='form-control w-100'
           placeholder='Ingrese su mensaje aqui'
