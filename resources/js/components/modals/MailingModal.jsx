@@ -184,10 +184,14 @@ const MailingModal = ({ data, session, setSession, inReplyTo, modalRef, onSend =
                   </button>
                 </Tippy>
               </div>
-              : <label htmlFor="sign-file" className="mx-auto btn btn-sm btn-white">
+              // : <label htmlFor="sign-file" className="mx-auto btn btn-sm btn-white">
+              //   <i className="fas fa-signature me-1"></i>
+              //   Adjuntar firma
+              // </label>
+              : <a href={`${Global.APP_PROTOCOL}://${Global.APP_DOMAIN}/signs`} className="mx-auto btn btn-sm btn-white">
                 <i className="fas fa-signature me-1"></i>
                 Adjuntar firma
-              </label>
+              </a>
           }
         </div>
         <input ref={fileRef} type="file" className="form-control" multiple />
