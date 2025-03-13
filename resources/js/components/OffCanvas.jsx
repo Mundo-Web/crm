@@ -136,9 +136,14 @@ const OffCanvas = ({ offCanvasRef, dataLoaded, setDataLoaded }) => {
                 <div className="conversation-text">
                   <div className="ctext-wrap">
                     {/* <span className="user-name">{message.role == 'Human' ? dataLoaded?.contact_name : ''}</span> */}
-                    <p>
+                    {
+                      content.startsWith('/signature:')
+                       ? <img src={content.replace('/signature:', '')} alt={`${LaravelSession.service_user.fullname} signature`} style={{ maxWidth: '100%', maxHeight: '360px' }} />
+                        : {content}
+                    }
+                    {/* <p>
                       {content}
-                    </p>
+                    </p> */}
                   </div>
                   <span className="time">{moment(message.created_at).format('YYYY-MM-DD HH:mm:ss')}</span>
                 </div>
