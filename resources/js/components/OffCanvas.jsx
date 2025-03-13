@@ -53,10 +53,10 @@ const OffCanvas = ({ offCanvasRef, dataLoaded, setDataLoaded }) => {
     setIsLoading(false)
 
     if (!data || !dataLoaded.id) return
-    
+
     if (data.length > 0) setTtl(500)
     else setTtl(2500)
-    
+
     const newMessages = await getCacheMessages()
     newMessages.push(...data)
     setMessages(newMessages.sort((a, b) => b.microtime - a.microtime))
@@ -106,7 +106,7 @@ const OffCanvas = ({ offCanvasRef, dataLoaded, setDataLoaded }) => {
   return <form ref={offCanvasRef} className="offcanvas offcanvas-end" tabIndex="-1" aria-labelledby="offcanvasRightLabel" style={{
     visibility: 'hidden',
     width: '95%',
-    maxWidth: '480px'
+    maxWidth: '600px'
   }}
     aria-hidden="true"
     onSubmit={onMessageSubmit}>
@@ -150,7 +150,49 @@ const OffCanvas = ({ offCanvasRef, dataLoaded, setDataLoaded }) => {
     </div>
 
     <div className="offcanvas-footer">
-      <div className="form-group p-2">
+      <div className="d-flex gap-2 p-2">
+        <textarea ref={inputMessageRef}
+          className='form-control w-100'
+          placeholder='Ingrese su mensaje aqui'
+          rows={1}
+          style={{ minHeight: 27, fieldSizing: 'content' }}
+          disabled={isSending}
+          required />
+        <div className="d-flex gap-1">
+          <div className="dropdown">
+            <button className="btn btn-light dropdown-toggle px-1" type="button" id="message-options" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+              <i className="mdi mdi-dots-vertical"></i>
+            </button>
+            <div className="dropdown-menu" aria-labelledby="message-options">
+              {
+                LaravelSession.service_user.mailing_sign &&
+                <span className="dropdown-item" style={{ cursor: 'pointer' }} onClick={async () => {
+                  const mailing_sign = LaravelSession.service_user.mailing_sign
+                  const signature = `${Global.APP_PROTOCOL}://${Global.APP_DOMAIN}/repository/signs/${mailing_sign}`
+                  setIsSending(true)
+                  await whatsAppRest.send(dataLoaded?.id, `/signature:${signature}`)
+                  setIsSending(false)
+                }}>
+                  <i className="fa fa-signature me-1" style={{ width: '20px' }}></i>
+                  Enviar firma
+                </span>
+              }
+              <span className="dropdown-item" style={{ cursor: 'pointer' }}>
+                <i className="mdi mdi-message-bulleted me-1" style={{ width: '20px' }}></i>
+                Mensajes predeterminados
+              </span>
+            </div>
+          </div>
+          <button className="btn btn-dark waves-effect waves-light" type="submit" disabled={isSending}>
+            {
+              isSending
+                ? <i className="mdi mdi-spinner "></i>
+                : <i className="mdi mdi-arrow-top-right"></i>
+            }
+          </button>
+        </div>
+      </div>
+      {/* <div className="form-group p-2">
         <div className="input-group">
           <input ref={inputMessageRef} type="text" className="form-control" placeholder="Ingrese su mensaje aqui" required disabled={isSending} />
           <button className="btn input-group-text btn-dark waves-effect waves-light" type="submit" disabled={isSending}>
@@ -161,7 +203,7 @@ const OffCanvas = ({ offCanvasRef, dataLoaded, setDataLoaded }) => {
             }
           </button>
         </div>
-      </div>
+      </div> */}
     </div>
   </form>
 }
