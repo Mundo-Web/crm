@@ -145,7 +145,7 @@ const OffCanvas = ({ offCanvasRef, dataLoaded, setDataLoaded }) => {
                             borderRadius: '4px'
                           }}
                         />
-                        : { content }
+                        : <p>{content}</p>
                     }
                     {/* <p>
                       {content}
