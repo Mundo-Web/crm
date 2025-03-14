@@ -110,7 +110,7 @@ const MailingModal = ({ data, session, setSession, inReplyTo, modalRef, onSend =
   }
 
   return (
-    <Modal modalRef={modalRef} size="md" zIndex={1065} onSubmit={onSubmit} hideHeader hideFooter>
+    <Modal modalRef={modalRef} size="lg" zIndex={1065} onSubmit={onSubmit} hideHeader hideFooter>
       <div id="mailing-modal">
         <button type="button" className="btn-close float-end" data-bs-dismiss="modal" aria-label="Close"></button>
         <h4 className="header-title mb-0">Mensaje nuevo</h4>

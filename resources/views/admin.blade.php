@@ -1,11 +1,12 @@
 @php
-  $route = Route::currentRouteName();
+$route = Route::currentRouteName();
 @endphp
 
 <!DOCTYPE html>
 <html lang="es">
 
 <head>
+  @viteReactRefresh
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
   <title>Gestion de clientes | Atalaya</title>
@@ -123,13 +124,13 @@
   <script src="/lte/assets/js/vendor.min.js"></script>
 
   @if ($route == 'KPILeads.jsx' || $route == 'KPIProjects.jsx')
-    <script src="/lte/assets/libs/chart.js/Chart.bundle.min.js"></script>
-    <script src="/lte/assets/libs/jquery-knob/jquery.knob.min.js"></script>
+  <script src="/lte/assets/libs/chart.js/Chart.bundle.min.js"></script>
+  <script src="/lte/assets/libs/jquery-knob/jquery.knob.min.js"></script>
   @elseif($route == 'Calendar.jsx')
-    <link href="/lte/assets/libs/fullcalendar/main.min.css" rel="stylesheet" type="text/css" />
-    <script src="/lte/assets/libs/fullcalendar/main.min.js"></script>
+  <link href="/lte/assets/libs/fullcalendar/main.min.css" rel="stylesheet" type="text/css" />
+  <script src="/lte/assets/libs/fullcalendar/main.min.js"></script>
   @elseif ($route == 'Leads.jsx')
-    <script src="/lte/assets/libs/jquery-ui/jquery-ui.min.js"></script>
+  <script src="/lte/assets/libs/jquery-ui/jquery-ui.min.js"></script>
   @endif
   <script src="/lte/assets/libs/quill/quill.min.js"></script>
   <script src="/lte/assets/libs/quill/quill.mention.min.js"></script>

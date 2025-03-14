@@ -487,6 +487,7 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
     if (!result) return
 
     if (leadLoaded) setLeadLoaded(result)
+    if (leadLoadedForMessages) setLeadLoadedForMessages(result)
 
     $(newLeadModalRef.current).modal('hide')
     if (defaultView == 'kanban') getLeads()
@@ -1203,9 +1204,13 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
     <MailingModal modalRef={composeModal} data={leadLoaded} session={session} setSession={setSession} inReplyTo={inReplyTo} onSend={(newNote) => {
       setLeadLoaded(old => ({ ...old, refresh: crypto.randomUUID() }))
       setNotes(old => ([...old, newNote]))
-    }} defaultMessages={defaultMessages}/>
+    }} defaultMessages={defaultMessages} />
 
-    <OffCanvas offCanvasRef={messagesOffCanvasRef} dataLoaded={leadLoadedForMessages} setDataLoaded={setLeadLoadedForMessages} defaultMessages={defaultMessages}/>
+    <OffCanvas offCanvasRef={messagesOffCanvasRef} dataLoaded={leadLoadedForMessages} setDataLoaded={setLeadLoadedForMessages}
+      defaultMessages={defaultMessages}
+      onOpenModal={onOpenModal}
+      onLeadClicked={onLeadClicked}
+    />
   </>
   )
 };
