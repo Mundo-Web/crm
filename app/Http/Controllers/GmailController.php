@@ -192,8 +192,8 @@ class GmailController extends Controller
       $mailing_sign = Auth::user()->service_user->mailing_sign;
 
       if ($mailing_sign) {
-        $app_url = \env('APP_URL');
-        $rawMessage .= $request->input('body') . "<div><img src=\"{$app_url}/storage/signs/{$mailing_sign}\" style=\"width: 100%; max-width: 520px; max-height: 210px; object-fit: contain; object-position: center;\"></div>\r\n\r\n";
+        $app_url = \env('APP_PROTOCOL') . '://' . \env('APP_DOMAIN');
+        $rawMessage .= $request->input('body') . "<div><img src=\"{$app_url}/repository/signs/{$mailing_sign}\" style=\"width: 100%; max-width: 520px; max-height: 210px; object-fit: contain; object-position: center;\"></div>\r\n\r\n";
       } else {
         $rawMessage .= $request->input('body') . "\r\n\r\n";
       }
