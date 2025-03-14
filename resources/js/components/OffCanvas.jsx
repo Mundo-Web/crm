@@ -184,11 +184,11 @@ const OffCanvas = ({ offCanvasRef, dataLoaded, setDataLoaded, defaultMessages })
                 className="badge bg-light text-dark"
                 style={{ cursor: 'pointer' }}
                 onClick={async () => {
-                  setDefaultMessagesVisible(false)
-                  setIsSending(true)
-                  await whatsAppRest.send(dataLoaded?.id, message.description)
-                  setIsSending(false)
-                  inputMessageRef.current.value = ''
+                  // setDefaultMessagesVisible(false)
+                  // setIsSending(true)
+                  // await whatsAppRest.send(dataLoaded?.id, message.description)
+                  // setIsSending(false)
+                  inputMessageRef.current.value = message.description
                 }}
                 title={message.description}>
                 {message.name}
@@ -210,7 +210,7 @@ const OffCanvas = ({ offCanvasRef, dataLoaded, setDataLoaded, defaultMessages })
             (LaravelSession.service_user.mailing_sign || defaultMessages?.length > 0) &&
             <div className="dropdown">
               <button className="btn btn-light dropdown-toggle px-1" type="button" id="message-options" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                <i className="mdi mdi-dots-vertical"></i>
+                <i className="mdi mdi-cursor-default-click"></i>
               </button>
               <div className="dropdown-menu" aria-labelledby="message-options">
                 {
