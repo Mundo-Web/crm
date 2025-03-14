@@ -117,8 +117,20 @@ const OffCanvas = ({ offCanvasRef, dataLoaded, setDataLoaded, defaultMessages })
   }}
     aria-hidden="true"
     onSubmit={onMessageSubmit}>
-    <div className="offcanvas-header">
-      <h5 id="offcanvasRightLabel">Mensajes - {dataLoaded?.contact_name}</h5>
+    <div className="offcanvas-header border-bottom">
+      <div className="d-flex gap-2 align-items-center">
+        <img
+          className="avatar-sm rounded-circle border"
+          src={`${Global.WA_URL}/api/profile/${LaravelSession.business_uuid}/${dataLoaded?.contact_phone}`}
+          onError={(e) => {
+            e.target.onerror = null
+            e.target.src = `//${Global.APP_DOMAIN}/api/profile/thumbnail/undefined`;
+          }} alt={dataLoaded?.contact_name} />
+        <div>
+          <h5 className="my-0">{dataLoaded?.contact_name}</h5>
+          <small className="text-muted">+{dataLoaded?.contact_phone}</small>
+        </div>
+      </div>
       <button type="button" className="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
     </div>
 
@@ -132,9 +144,11 @@ const OffCanvas = ({ offCanvasRef, dataLoaded, setDataLoaded, defaultMessages })
             return <li key={i} className={message.role == 'Human' ? '' : 'odd'}>
               <div className="message-list">
                 <div className="chat-avatar">
-                  <img src={fromMe
-                    ? `//${Global.APP_DOMAIN}/api/profile/thumbnail/${LaravelSession.relative_id}`
-                    : `${Global.WA_URL}/api/profile/${LaravelSession.business_uuid}/${message.wa_id}`}
+                  <img
+                    className="border"
+                    src={fromMe
+                      ? `//${Global.APP_DOMAIN}/api/profile/thumbnail/${LaravelSession.relative_id}`
+                      : `${Global.WA_URL}/api/profile/${LaravelSession.business_uuid}/${message.wa_id}`}
                     onError={(e) => {
                       e.target.onerror = null
                       e.target.src = `//${Global.APP_DOMAIN}/api/profile/thumbnail/undefined`;
