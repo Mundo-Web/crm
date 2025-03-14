@@ -6,6 +6,7 @@ use App\Http\Controllers\BasicController;
 use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\DefaultMessageController;
 use App\Http\Controllers\KPILeadsController;
 use App\Http\Controllers\KPIProjectsController;
 use App\Http\Controllers\LeadController;
@@ -79,6 +80,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/pages/{correlative}', [SubdomainController::class, 'reactView'])->name('Pages.jsx');
     Route::get('/users', [UserController::class, 'reactView'])->name('Users.jsx');
     Route::get('/roles', [RoleController::class, 'reactView'])->name('Roles.jsx');
+    Route::get('/default-messages', [DefaultMessageController::class, 'reactView'])->name('DefaultMessages.jsx');
     Route::get('/statuses', [StatusController::class, 'reactView'])->name('Statuses.jsx');
     Route::get('/apikeys', [ApikeyController::class, 'reactView'])->name('Apikeys.jsx');
     Route::get('/types', [TypeController::class, 'reactView'])->name('Types.jsx');

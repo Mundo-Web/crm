@@ -7,6 +7,7 @@ use App\Jobs\SendNewLeadNotification;
 use App\Models\Atalaya\Business;
 use App\Models\Client;
 use App\Models\ClientNote;
+use App\Models\DefaultMessage;
 use App\Models\Message;
 use App\Models\NoteType;
 use App\Models\Process;
@@ -54,6 +55,8 @@ class LeadController extends BasicController
 
         $processes = Process::where('business_id', Auth::user()->business_id)->get();
 
+        $defaultMessages = DefaultMessage::where('business_id', Auth::user()->business_id)->get();
+
         return [
             'lead' => $request->lead,
             'manageStatuses' => $manageStatuses,
@@ -63,6 +66,7 @@ class LeadController extends BasicController
             'noteTypes' => $noteTypes,
             'products' => $products,
             'processes' => $processes,
+            'defaultMessages' => $defaultMessages,
         ];
     }
 
@@ -94,7 +98,7 @@ class LeadController extends BasicController
             ->leftJoin('users AS assigned', 'assigned.id', 'clients.assigned_to')
             ->where('status.table_id', 'e05a43e5-b3a6-46ce-8d1f-381a73498f33')
             ->where('clients.status', true)
-            ->where('clients.status_id','<>', $defaultLeadStatus)
+            ->where('clients.status_id', '<>', $defaultLeadStatus)
             ->where('clients.business_id', Auth::user()->business_id);
     }
 

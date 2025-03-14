@@ -55,7 +55,7 @@ const usetsRest = new UsersRest()
 const productsByClients = new ProductsByClients()
 const gmailRest = new GmailRest()
 
-const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatus, manageStatuses: manageStatusesFromDB, noteTypes, products = [], processes = [], session: sessionDB, can, lead }) => {
+const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatus, manageStatuses: manageStatusesFromDB, noteTypes, products = [], processes = [], defaultMessages = [], session: sessionDB, can, lead }) => {
 
   const modalRef = useRef()
   const newLeadModalRef = useRef()
@@ -1203,9 +1203,9 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
     <MailingModal modalRef={composeModal} data={leadLoaded} session={session} setSession={setSession} inReplyTo={inReplyTo} onSend={(newNote) => {
       setLeadLoaded(old => ({ ...old, refresh: crypto.randomUUID() }))
       setNotes(old => ([...old, newNote]))
-    }} />
+    }} defaultMessages={defaultMessages}/>
 
-    <OffCanvas offCanvasRef={messagesOffCanvasRef} dataLoaded={leadLoadedForMessages} setDataLoaded={setLeadLoadedForMessages}/>
+    <OffCanvas offCanvasRef={messagesOffCanvasRef} dataLoaded={leadLoadedForMessages} setDataLoaded={setLeadLoadedForMessages} defaultMessages={defaultMessages}/>
   </>
   )
 };

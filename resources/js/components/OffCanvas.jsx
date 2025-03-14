@@ -7,15 +7,17 @@ import WhatsAppRest from "../actions/WhatsAppRest"
 const messagesRest = new MessagesRest()
 const whatsAppRest = new WhatsAppRest()
 
-const OffCanvas = ({ offCanvasRef, dataLoaded, setDataLoaded }) => {
+const OffCanvas = ({ offCanvasRef, dataLoaded, setDataLoaded, defaultMessages }) => {
 
   if (!offCanvasRef) offCanvasRef = useRef()
   const inputMessageRef = useRef()
+  const defaultMessagesRef = useRef()
 
   const [messages, setMessages] = useState([])
   const [isSending, setIsSending] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [ttl, setTtl] = useState(500)
+  const [defaultMessagesVisible, setDefaultMessagesVisible] = useState(false)
 
   useEffect(() => {
     if (!dataLoaded?.contact_phone) return
@@ -101,6 +103,11 @@ const OffCanvas = ({ offCanvasRef, dataLoaded, setDataLoaded }) => {
       setDataLoaded(null)
       setMessages([]);
     });
+    document.addEventListener('click', (e) => {
+      if (!defaultMessagesRef.current.contains(e.target)) {
+        setDefaultMessagesVisible(false)
+      }
+    })
   }, [null]);
 
   return <form ref={offCanvasRef} className="offcanvas offcanvas-end" tabIndex="-1" aria-labelledby="offcanvasRightLabel" style={{
@@ -165,6 +172,31 @@ const OffCanvas = ({ offCanvasRef, dataLoaded, setDataLoaded }) => {
     </div>
 
     <div className="offcanvas-footer">
+
+      <div className="p-2" onClick={(e) => e.stopPropagation()} hidden={!defaultMessagesVisible} style={{
+        transition: 'all .125s'
+      }}>
+        <div className="d-flex gap-2">
+          {
+            defaultMessages.map((message, i) => {
+              console.log(message)
+              return <span key={i}
+                className="badge bg-light text-dark"
+                style={{ cursor: 'pointer' }}
+                onClick={async () => {
+                  setDefaultMessagesVisible(false)
+                  setIsSending(true)
+                  await whatsAppRest.send(dataLoaded?.id, message.description)
+                  setIsSending(false)
+                  inputMessageRef.current.value = ''
+                }}
+                title={message.description}>
+                {message.name}
+              </span>
+            })
+          }
+        </div>
+      </div>
       <div className="d-flex gap-2 p-2 align-items-bottom">
         <textarea ref={inputMessageRef}
           className='form-control w-100'
@@ -174,34 +206,40 @@ const OffCanvas = ({ offCanvasRef, dataLoaded, setDataLoaded }) => {
           disabled={isSending}
           required />
         <div className="d-flex gap-1">
-          <div className="dropdown">
-            <button className="btn btn-light dropdown-toggle px-1" type="button" id="message-options" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-              <i className="mdi mdi-dots-vertical"></i>
-            </button>
-            <div className="dropdown-menu" aria-labelledby="message-options">
-              {
-                LaravelSession.service_user.mailing_sign &&
-                <span className="dropdown-item" style={{ cursor: 'pointer' }} onClick={async () => {
-                  const mailing_sign = LaravelSession.service_user.mailing_sign
-                  const signature = `${Global.APP_PROTOCOL}://${Global.APP_DOMAIN}/repository/signs/${mailing_sign}`
-                  setIsSending(true)
-                  await whatsAppRest.send(dataLoaded?.id, `/signature:${signature}`)
-                  setIsSending(false)
-                }}>
-                  <i className="fa fa-signature me-1" style={{ width: '20px' }}></i>
-                  Enviar firma
-                </span>
-              }
-              <span className="dropdown-item" style={{ cursor: 'pointer' }}>
-                <i className="mdi mdi-message-bulleted me-1" style={{ width: '20px' }}></i>
-                Mensajes predeterminados
-              </span>
+          {
+            (LaravelSession.service_user.mailing_sign || defaultMessages?.length > 0) &&
+            <div className="dropdown">
+              <button className="btn btn-light dropdown-toggle px-1" type="button" id="message-options" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                <i className="mdi mdi-dots-vertical"></i>
+              </button>
+              <div className="dropdown-menu" aria-labelledby="message-options">
+                {
+                  LaravelSession.service_user.mailing_sign &&
+                  <span className="dropdown-item" style={{ cursor: 'pointer' }} onClick={async () => {
+                    const mailing_sign = LaravelSession.service_user.mailing_sign
+                    const signature = `${Global.APP_PROTOCOL}://${Global.APP_DOMAIN}/repository/signs/${mailing_sign}`
+                    setIsSending(true)
+                    await whatsAppRest.send(dataLoaded?.id, `/signature:${signature}`)
+                    setIsSending(false)
+                  }}>
+                    <i className="fa fa-signature me-1" style={{ width: '20px' }}></i>
+                    Enviar firma
+                  </span>
+                }
+                {
+                  defaultMessages?.length > 0 &&
+                  <span className="dropdown-item" style={{ cursor: 'pointer' }} onClick={() => setDefaultMessagesVisible(true)}>
+                    <i className="mdi mdi-message-bulleted me-1" style={{ width: '20px' }}></i>
+                    Mensajes predeterminados
+                  </span>
+                }
+              </div>
             </div>
-          </div>
+          }
           <button className="btn btn-dark waves-effect waves-light" type="submit" disabled={isSending}>
             {
               isSending
-                ? <i className="mdi mdi-spinner "></i>
+                ? <i className="mdi mdi-spinner mdi-loading"></i>
                 : <i className="mdi mdi-arrow-top-right"></i>
             }
           </button>

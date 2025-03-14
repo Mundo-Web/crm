@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\DefaultMessage;
 use Illuminate\Http\Request;
 
-class DefaultMessageController extends Controller
+class DefaultMessageController extends BasicController
 {
-    //
+    public $model = DefaultMessage::class;
+    public $reactView = 'DefaultMessages';
 }

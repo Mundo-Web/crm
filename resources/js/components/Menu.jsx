@@ -171,6 +171,8 @@ const Menu = ({ session, can, whatsAppStatus, APP_PROTOCOL, APP_DOMAIN, leadsCou
             </MenuItemContainer>
           }
 
+          <MenuItem href="/default-messages" icon='mdi mdi-message-bulleted'>Mensajes predeter...</MenuItem>
+
           {
             can('apikeys', 'all', 'list') &&
             <MenuItem href="/apikeys" icon='mdi mdi-account-convert'>API Keys</MenuItem>

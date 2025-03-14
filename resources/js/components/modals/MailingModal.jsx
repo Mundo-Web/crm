@@ -13,7 +13,7 @@ import LaravelSession from "../../Utils/LaravelSession";
 const gmailRest = new GmailRest();
 const usersRest = new UsersRest();
 
-const MailingModal = ({ data, session, setSession, inReplyTo, modalRef, onSend = () => { } }) => {
+const MailingModal = ({ data, session, setSession, inReplyTo, modalRef, onSend = () => { }, defaultMessages }) => {
   const ccRef = useRef();
   const bccRef = useRef();
   const subjectRef = useRef();
