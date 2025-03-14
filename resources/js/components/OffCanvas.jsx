@@ -210,7 +210,7 @@ const OffCanvas = ({ offCanvasRef, dataLoaded, setDataLoaded, defaultMessages })
             (LaravelSession.service_user.mailing_sign || defaultMessages?.length > 0) &&
             <div className="dropdown">
               <button className="btn btn-light dropdown-toggle px-1" type="button" id="message-options" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                <i className="mdi mdi-cursor-default-click"></i>
+                <i className="mdi mdi-plus"></i>
               </button>
               <div className="dropdown-menu" aria-labelledby="message-options">
                 {
