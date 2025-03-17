@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite';
 import laravel from 'laravel-vite-plugin';
 import glob from 'glob';
+import react from '@vitejs/plugin-react';
 
 export default defineConfig({
     server: {
@@ -13,6 +14,7 @@ export default defineConfig({
             input: glob.sync('resources/js/*.jsx'),
             refresh: true,
         }),
+        react(),
     ],
     resolve: name => {
         const pages = import.meta.glob('./Pages/**/*.jsx', { eager: true })

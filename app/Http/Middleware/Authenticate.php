@@ -50,10 +50,10 @@ class Authenticate extends Middleware
         Auth::user()->business_id = $hasPermission->business_id;
         Auth::user()->business_uuid = $hasPermission->business_uuid;
 
-        $signJpa = BusinessSign::select('sign')
-            ->where('business_id', $hasPermission->business_id)
-            ->where('user_id', Auth::user()->id)
-            ->first();
+        // $signJpa = BusinessSign::select('sign')
+        //     ->where('business_id', $hasPermission->business_id)
+        //     ->where('user_id', Auth::user()->id)
+        //     ->first();
 
         $serviceUser = User::updateOrCreate([
             'user_id' => $hasPermission->id,
@@ -66,7 +66,7 @@ class Authenticate extends Middleware
             'email' => $hasPermission->email,
             'fullname' => $hasPermission->name . ' ' . $hasPermission->lastname,
             'relative_id' => $hasPermission->relative_id,
-            'mailing_sign' => $signJpa->sign ?? null
+            // 'mailing_sign' => $signJpa->sign ?? null
         ]);
 
         $serviceUser->getAllPermissions();

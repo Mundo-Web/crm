@@ -623,12 +623,20 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
           {
             statuses.sort((a, b) => a.order - b.order).map((status, i) => {
               const correlative = Correlative(status.name)
+              const leadsCount = leads.filter(x => x.status_id == status.id).length
               return (<div key={`status-${i}`} style={{ minWidth: '270px', maxWidth: '270px' }}>
                 <div className="card mb-0">
                   <div className="card-header">
                     <h4 className="header-title my-0" style={{ color: status.color }}>{status.name}</h4>
                   </div>
                   <div className="card-body taskboard-box p-2" style={{ minHeight: '200px', maxHeight: 'calc(100vh - 190px)', overflow: 'auto' }}>
+                    {
+                      leadsCount > 50 &&
+                      <small class="d-block alert alert-warning py-1 px-2" role="alert">
+                        <i class="mdi mdi-alert-outline me-2"></i>
+                        <span>Tienes {leadsCount} leads en este estado, recuerda que tambien puedes archivar leads.</span>
+                      </small>
+                    }
                     <ul className="sortable-list list-unstyled taskList" id={`status-${correlative}`} data-id={status.id}>
                       {
                         leads.filter(x => x.status_id == status.id).sort((a, b) => {
