@@ -275,7 +275,7 @@ const OffCanvas = ({ offCanvasRef, dataLoaded, setDataLoaded, defaultMessages, s
           <div className="d-flex gap-1">
 
             <div className="dropdown">
-              <button className="btn btn-light dropdown-toggle px-1" type="button" id="message-options" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+              <button className="btn btn-white dropdown-toggle px-1" type="button" id="message-options" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                 <i className="mdi mdi-plus"></i>
               </button>
               <div className="dropdown-menu" aria-labelledby="message-options">
