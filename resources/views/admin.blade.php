@@ -102,7 +102,7 @@ $route = Route::currentRouteName();
 
     .ql-editor {
       color: #6c757d;
-      height: 100%;
+      min-height: 162px;
       max-height: 360px;
     }
   </style>
