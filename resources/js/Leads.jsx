@@ -1207,7 +1207,7 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
     <MailingModal modalRef={composeModal} data={leadLoaded} session={session} setSession={setSession} inReplyTo={inReplyTo} onSend={(newNote) => {
       setLeadLoaded(old => ({ ...old, refresh: crypto.randomUUID() }))
       setNotes(old => ([...old, newNote]))
-    }} defaultMessages={defaultMessages} />
+    }} defaultMessages={defaultMessages} signs={signs} />
 
     <OffCanvas offCanvasRef={messagesOffCanvasRef} dataLoaded={leadLoadedForMessages} setDataLoaded={setLeadLoadedForMessages}
       defaultMessages={defaultMessages}
