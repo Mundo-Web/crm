@@ -16,8 +16,11 @@ class BusinessSign extends Model
     protected $keyType = 'string';
 
     protected $fillable = [
+        'name',
         'sign',
         'user_id',
         'business_id',
+        'email',
+        'whatsapp',
     ];
 }

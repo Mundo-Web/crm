@@ -28,8 +28,8 @@ const LeadTable = ({ gridRef, rest, can, defaultLeadStatus, statuses, manageStat
       }))
     }}
     height={'calc(65vh - 90px)'}
-    pageSize={50}
-    allowedPageSizes={[50, 100]}
+    pageSize={25}
+    allowedPageSizes={[10, 25, 50, 100]}
     // selection={{
     //   mode: 'multiple',
     //   selectAllMode: 'page'

@@ -40,7 +40,8 @@ class User extends Authenticable
         'business_id',
         'has_mailing_sign',
         'relative_id',
-        'mailing_sign'
+        'mailing_sign',
+        'whatsapp_sign'
     ];
 
     /**

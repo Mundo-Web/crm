@@ -4,11 +4,14 @@ import LaravelSession from "../Utils/LaravelSession"
 import Global from "../Utils/Global"
 import WhatsAppRest from "../actions/WhatsAppRest"
 import Modal from "./Modal"
+import Tippy from "@tippyjs/react"
+import UsersRest from "../actions/UsersRest"
 
 const messagesRest = new MessagesRest()
 const whatsAppRest = new WhatsAppRest()
+const usersRest = new UsersRest()
 
-const OffCanvas = ({ offCanvasRef, dataLoaded, setDataLoaded, defaultMessages, onOpenModal = () => { }, onLeadClicked = () => { } }) => {
+const OffCanvas = ({ offCanvasRef, dataLoaded, setDataLoaded, defaultMessages, signs, onOpenModal = () => { }, onLeadClicked = () => { } }) => {
 
   if (!offCanvasRef) offCanvasRef = useRef()
   const inputMessageRef = useRef()
@@ -21,6 +24,7 @@ const OffCanvas = ({ offCanvasRef, dataLoaded, setDataLoaded, defaultMessages, o
   const [isLoading, setIsLoading] = useState(false)
   const [ttl, setTtl] = useState(500)
   const [defaultMessagesVisible, setDefaultMessagesVisible] = useState(false)
+  const [defaultSign, setDefaultSign] = useState(LaravelSession.service_user.whatsapp_sign)
 
   useEffect(() => {
     if (!dataLoaded?.contact_phone) return
@@ -113,6 +117,28 @@ const OffCanvas = ({ offCanvasRef, dataLoaded, setDataLoaded, defaultMessages, o
     })
   }, [null]);
 
+  const onDefaultSignChanged = async (e) => {
+    const signId = e.target.value
+    const result = await usersRest.setDefaultSign({
+      type: 'whatsapp',
+      sign: signId
+    })
+    if (!result) return
+    setDefaultSign(signId)
+  }
+
+  const onModalSignatureClicked = () => {
+    $(signsModalRef.current).modal('show')
+  }
+
+  const sendSignature = async () => {
+    const sign = signs.find(sign => sign.id == defaultSign)
+    const signature = `${Global.APP_PROTOCOL}://${Global.APP_DOMAIN}/repository/signs/${sign.sign}`
+    setIsSending(true)
+    await whatsAppRest.send(dataLoaded?.id, `/signature:${signature}`)
+    setIsSending(false)
+  }
+
   return <>
     <form ref={offCanvasRef} className="offcanvas offcanvas-end" tabIndex="-1" aria-labelledby="offcanvasRightLabel" style={{
       visibility: 'hidden',
@@ -121,7 +147,7 @@ const OffCanvas = ({ offCanvasRef, dataLoaded, setDataLoaded, defaultMessages, o
     }}
       aria-hidden="true"
       onSubmit={onMessageSubmit}>
-      <div className="offcanvas-header border-bottom">
+      <div className="offcanvas-header border-bottom gap-2">
         <div className="d-flex gap-2 align-items-center w-100" onClick={() => onLeadClicked(dataLoaded)} style={{ cursor: 'pointer' }}>
           <img
             className="avatar-sm rounded-circle border"
@@ -143,7 +169,7 @@ const OffCanvas = ({ offCanvasRef, dataLoaded, setDataLoaded, defaultMessages, o
                 <i className="mdi mdi-eye me-1" style={{ width: '20px' }}></i>
                 Editar datos del lead
               </span>
-              <span className="dropdown-item" style={{ cursor: 'pointer' }} onClick={() => $(signsModalRef.current).modal('show')}>
+              <span className="dropdown-item" style={{ cursor: 'pointer' }} onClick={onModalSignatureClicked}>
                 <i className="fa fa-signature me-1" style={{ width: '20px' }}></i>
                 Ver firmas disponibles
               </span>
@@ -169,6 +195,7 @@ const OffCanvas = ({ offCanvasRef, dataLoaded, setDataLoaded, defaultMessages, o
                   <div className="chat-avatar">
                     <img
                       className="border"
+                      style={{ aspectRatio: 1 }}
                       src={fromMe
                         ? `//${Global.APP_DOMAIN}/api/profile/thumbnail/${LaravelSession.relative_id}`
                         : `${Global.WA_URL}/api/profile/${LaravelSession.business_uuid}/${message.wa_id}`}
@@ -244,36 +271,34 @@ const OffCanvas = ({ offCanvasRef, dataLoaded, setDataLoaded, defaultMessages, o
             disabled={isSending}
             required />
           <div className="d-flex gap-1">
-            {
-              (LaravelSession.service_user.mailing_sign || defaultMessages?.length > 0) &&
-              <div className="dropdown">
-                <button className="btn btn-light dropdown-toggle px-1" type="button" id="message-options" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                  <i className="mdi mdi-plus"></i>
-                </button>
-                <div className="dropdown-menu" aria-labelledby="message-options">
-                  {
-                    LaravelSession.service_user.mailing_sign &&
-                    <span className="dropdown-item" style={{ cursor: 'pointer' }} onClick={async () => {
-                      const mailing_sign = LaravelSession.service_user.mailing_sign
-                      const signature = `${Global.APP_PROTOCOL}://${Global.APP_DOMAIN}/repository/signs/${mailing_sign}`
-                      setIsSending(true)
-                      await whatsAppRest.send(dataLoaded?.id, `/signature:${signature}`)
-                      setIsSending(false)
-                    }}>
+
+            <div className="dropdown">
+              <button className="btn btn-light dropdown-toggle px-1" type="button" id="message-options" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                <i className="mdi mdi-plus"></i>
+              </button>
+              <div className="dropdown-menu" aria-labelledby="message-options">
+                {
+                  defaultSign
+                    ? <span className="dropdown-item" style={{ cursor: 'pointer' }} onClick={sendSignature}>
                       <i className="fa fa-signature me-1" style={{ width: '20px' }}></i>
                       Enviar firma
                     </span>
-                  }
-                  {
-                    defaultMessages?.length > 0 &&
-                    <span ref={defaultMessagesButtonRef} className="dropdown-item" style={{ cursor: 'pointer' }} onClick={() => setDefaultMessagesVisible(true)}>
-                      <i className="mdi mdi-message-bulleted me-1" style={{ width: '20px' }}></i>
-                      Mensajes predeterminados
-                    </span>
-                  }
-                </div>
+                    : <Tippy content="Selecciona una firma por defecto">
+                      <span className="dropdown-item" style={{ cursor: 'pointer' }} onClick={onModalSignatureClicked}>
+                        <i className="fa fa-signature me-1" style={{ width: '20px' }}></i>
+                        Enviar firma
+                      </span>
+                    </Tippy>
+                }
+                {
+                  defaultMessages?.length > 0 &&
+                  <span ref={defaultMessagesButtonRef} className="dropdown-item" style={{ cursor: 'pointer' }} onClick={() => setDefaultMessagesVisible(true)}>
+                    <i className="mdi mdi-message-bulleted me-1" style={{ width: '20px' }}></i>
+                    Mensajes predeterminados
+                  </span>
+                }
               </div>
-            }
+            </div>
             <button className="btn btn-dark waves-effect waves-light" type="submit" disabled={isSending}>
               {
                 isSending
@@ -297,10 +322,40 @@ const OffCanvas = ({ offCanvasRef, dataLoaded, setDataLoaded, defaultMessages, o
       </div> */}
       </div>
     </form>
-    <Modal modalRef={signsModalRef} title="Tus firmas">
+    <Modal modalRef={signsModalRef} title="Tus firmas" hideFooter>
       <b className="d-block">¿Desea seleccionar una de sus firmas disponibles como predeterminado?</b>
-      <div>
-
+      <div className="row mt-2">
+        {signs.map((sign, index) => (
+          <div className="col-md-6">
+            <Tippy content='Marcar como predeterminado'>
+              <label htmlFor={`sign-${sign.id}`} key={index} className="card border" style={{ cursor: 'pointer' }}>
+                <div className="card-header d-flex gap-1 align-items-center py-1 px-2">
+                  <input
+                    type="radio"
+                    name="sign"
+                    className="form-check-input my-0"
+                    id={`sign-${sign.id}`}
+                    checked={sign.id == defaultSign}
+                    onChange={onDefaultSignChanged}
+                    value={sign.id}
+                  />
+                  <b className="d-block my-0 w-100 text-truncate">{sign.name || 'Sin nombre'}</b>
+                </div>
+                <div className="card-body p-0">
+                  <img
+                    src={`${Global.APP_PROTOCOL}://${Global.APP_DOMAIN}/repository/signs/${sign.sign}`}
+                    alt={sign.name}
+                    className="img-fluid w-100"
+                    style={{
+                      objectFit: 'cover',
+                      aspectRatio: 5 / 2
+                    }}
+                  />
+                </div>
+              </label>
+            </Tippy>
+          </div>
+        ))}
       </div>
     </Modal>
   </>

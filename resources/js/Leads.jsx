@@ -9,14 +9,12 @@ import ClientNotesCard from './Reutilizables/ClientNotes/ClientNotesCard.jsx'
 import TaskCard from './Reutilizables/Tasks/TaskCard.jsx'
 import Correlative from './Utils/Correlative.js'
 import CreateReactScript from './Utils/CreateReactScript.jsx'
-import ReactAppend from './Utils/ReactAppend.jsx'
 import ClientNotesRest from './actions/ClientNotesRest.js'
 import LeadsRest from './actions/LeadsRest.js'
 import TasksRest from './actions/TasksRest.js'
 import UsersRest from './actions/UsersRest.js'
 import Adminto from './components/Adminto.jsx'
 import Modal from './components/Modal.jsx'
-import Table from './components/Table.jsx'
 import InputFormGroup from './components/form/InputFormGroup.jsx'
 import TextareaFormGroup from './components/form/TextareaFormGroup.jsx'
 import SelectFormGroup from './components/form/SelectFormGroup.jsx'
@@ -29,14 +27,11 @@ import ClientsRest from './actions/ClientsRest.js'
 import Prepare2Send from './Utils/Prepare2Send.js'
 import Send2Div from './Utils/Send2Div.js'
 import Global from './Utils/Global.js'
-import DxPanelButton from './components/dx/DxPanelButton.jsx'
-import StatusDropdown from './Reutilizables/Statuses/StatusDropdown.jsx'
 import Dropdown from './components/dropdown/DropDown.jsx'
 import DropdownItem from './components/dropdown/DropdownItem.jsx'
 import Number2Currency from './Utils/Number2Currency.jsx'
 import ProductsByClients from './actions/ProductsByClientsRest.js'
 import SimpleProductCard from './Reutilizables/Products/SimpleProductCard.jsx'
-import { renderToString } from 'react-dom/server'
 import googleSVG from './components/svg/google.svg'
 import GmailRest from './actions/GmailRest.js'
 import HtmlContent from './Utils/HtmlContent.jsx'
@@ -55,7 +50,7 @@ const usetsRest = new UsersRest()
 const productsByClients = new ProductsByClients()
 const gmailRest = new GmailRest()
 
-const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatus, manageStatuses: manageStatusesFromDB, noteTypes, products = [], processes = [], defaultMessages = [], session: sessionDB, can, lead }) => {
+const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatus, manageStatuses: manageStatusesFromDB, noteTypes, products = [], processes = [], defaultMessages = [], session: sessionDB, can, lead, signs }) => {
 
   const modalRef = useRef()
   const newLeadModalRef = useRef()
@@ -1218,6 +1213,7 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
       defaultMessages={defaultMessages}
       onOpenModal={onOpenModal}
       onLeadClicked={onLeadClicked}
+      signs={signs}
     />
   </>
   )

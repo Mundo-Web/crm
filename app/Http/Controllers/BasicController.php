@@ -141,6 +141,7 @@ class BasicController extends Controller
     foreach ($this->setReactViewProperties($request) as $key => $value) {
       $properties[$key] = $value;
     }
+
     return Inertia::render($this->reactView, $properties)->rootView($this->reactRootView);
   }
 

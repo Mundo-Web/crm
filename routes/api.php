@@ -3,6 +3,7 @@
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\ArchivedController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\BusinessSignController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\ClientHasProductsController;
 use App\Http\Controllers\ClientNoteController;
@@ -72,6 +73,7 @@ Route::middleware('auth')->group(function () {
     // Users sign Routes
     Route::post('/users/sign', [UserController::class, 'addSign']);
     Route::delete('/users/sign', [UserController::class, 'deleteSign']);
+    Route::put('/users/sign/default', [UserController::class, 'setDefaultSign']);
 
     // Users routes
     Route::post('/users', [UserController::class, 'save']);

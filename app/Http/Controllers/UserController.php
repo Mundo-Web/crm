@@ -161,4 +161,21 @@ class UserController extends BasicController
 
         return response($response->toArray(), $response->status);
     }
+
+    public function setDefaultSign(Request $request)
+    {
+        $response = Response::simpleTryCatch(function () use ($request) {
+            $userJpa = User::select()
+                ->where('user_id', Auth::id())
+                ->where('business_id', Auth::user()->business_id)
+                ->first();
+            if ($request->type == 'email') {
+                $userJpa->mailing_sign = $request->sign;
+            } else if ($request->type == 'whatsapp') {
+                $userJpa->whatsapp_sign = $request->sign;
+            }
+            $userJpa->save();
+        });
+        return response($response->toArray(), $response->status);
+    }
 }

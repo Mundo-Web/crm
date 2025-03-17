@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Jobs\SaveNotification;
 use App\Jobs\SendNewLeadNotification;
 use App\Models\Atalaya\Business;
+use App\Models\Atalaya\BusinessSign;
 use App\Models\Client;
 use App\Models\ClientNote;
 use App\Models\DefaultMessage;
@@ -57,6 +58,11 @@ class LeadController extends BasicController
 
         $defaultMessages = DefaultMessage::where('business_id', Auth::user()->business_id)->get();
 
+        $signs = BusinessSign::select()
+            ->where('business_id', Auth::user()->business_id)
+            ->where('user_id', Auth::id())
+            ->get();
+
         return [
             'lead' => $request->lead,
             'manageStatuses' => $manageStatuses,
@@ -67,6 +73,7 @@ class LeadController extends BasicController
             'products' => $products,
             'processes' => $processes,
             'defaultMessages' => $defaultMessages,
+            'signs' => $signs
         ];
     }
 
