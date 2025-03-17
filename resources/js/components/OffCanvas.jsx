@@ -330,7 +330,7 @@ const OffCanvas = ({ offCanvasRef, dataLoaded, setDataLoaded, defaultMessages, s
         {signs.map((sign, index) => (
           <div className="col-md-6">
             <Tippy content='Marcar como predeterminado'>
-              <label htmlFor={`sign-${sign.id}`} key={index} className="card border" style={{ cursor: 'pointer' }}>
+              <label key={index} className="card border" style={{ cursor: 'pointer' }}>
                 <div className="card-header d-flex gap-1 align-items-center py-1 px-2">
                   <input
                     type="radio"

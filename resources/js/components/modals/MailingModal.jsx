@@ -121,6 +121,8 @@ const MailingModal = ({ data, session, setSession, inReplyTo, modalRef, onSend =
     setDefaultSign(signId)
   }
 
+  const sign2send = signs.find(sign => sign.id == defaultSign)
+
   return (
     <>
       <Modal modalRef={modalRef} size="lg" zIndex={1065} onSubmit={onSubmit} hideHeader hideFooter>
@@ -175,7 +177,7 @@ const MailingModal = ({ data, session, setSession, inReplyTo, modalRef, onSend =
           <div className="mb-2 text-center">
             <input type="file" id="sign-file" onChange={onSignChange} accept="image/*" hidden />
             {
-              session.service_user.mailing_sign
+              sign2send
                 ? <div className="position-relative mx-auto" style={{ width: 'max-content' }}>
                   <Tippy content='Cambiar firma'>
                     {/* <label htmlFor="sign-file" style={{ cursor: 'pointer' }}>
@@ -188,7 +190,7 @@ const MailingModal = ({ data, session, setSession, inReplyTo, modalRef, onSend =
                     }} />
                   </label> */}
                     <div onClick={() => $(signsModalRef.current).modal('show')} style={{ cursor: 'pointer' }}>
-                      <img className="border" src={`//${Global.APP_DOMAIN}/repository/signs/${session.service_user.mailing_sign}`} alt="" style={{
+                      <img className="border" src={`//${Global.APP_DOMAIN}/repository/signs/${sign2send.sign}`} alt="" style={{
                         aspectRatio: 520 / 210,
                         height: '100%',
                         maxHeight: '100px',
