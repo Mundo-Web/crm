@@ -264,7 +264,7 @@ const OffCanvas = ({ offCanvasRef, dataLoaded, setDataLoaded, defaultMessages, s
             }
           </div>
         </div>
-        <div className="d-flex gap-2 p-2 align-items-bottom">
+        <div className="d-flex gap-2 p-2 align-items-end">
           <textarea ref={inputMessageRef}
             className='form-control w-100'
             placeholder='Ingrese su mensaje aqui'
