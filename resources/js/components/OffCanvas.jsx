@@ -213,8 +213,10 @@ const OffCanvas = ({ offCanvasRef, dataLoaded, setDataLoaded, defaultMessages, s
                             style={{
                               minWidth: '300px',
                               maxWidth: '100%',
-                              maxHeight: '200px',
-                              borderRadius: '4px'
+                              minHeight: '200px',
+                              maxHeight: '300px',
+                              borderRadius: '4px',
+                              objectFit: 'cover',
                             }}
                             onError={e => {
                               e.target.onerror = null
