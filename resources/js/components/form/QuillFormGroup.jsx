@@ -24,7 +24,7 @@ const QuillFormGroup = ({ col, label, eRef = useRef(), value, required = false, 
     <label htmlFor='' className='form-label'>
       {label} {required && <b className="text-danger">*</b>}
     </label>
-    <div ref={quillRef} >{value}</div>
+    <div ref={quillRef} style={{minHeight: '162px'}}>{value}</div>
     <input ref={eRef} type="hidden" required={required} />
   </div>
 }
