@@ -13,6 +13,7 @@ import DxPanelButton from './components/dx/DxPanelButton.jsx'
 import DefaultMessagesRest from './actions/DefaultMessagesRest.js'
 import Swal from 'sweetalert2'
 import SelectFormGroup from './components/form/SelectFormGroup.jsx'
+import { renderToString } from 'react-dom/server'
 
 const defaultMessagesRest = new DefaultMessagesRest()
 
@@ -102,13 +103,15 @@ const DefaultMessages = ({ title }) => {
         {
           dataField: 'description',
           caption: 'Descripcion',
+          width: '60%',
           cellTemplate: (container, { value }) => {
-            if (!value) ReactAppend(container, <i className='text-muted'>- Sin descripcion -</i>)
-            else ReactAppend(container, value)
+            if (!value) container.html(renderToString(<i className='text-muted'>- Sin descripcion -</i>))
+            else container.text(value)
           }
         },
         {
           caption: 'Acciones',
+          width: '120px',
           cellTemplate: (container, { data }) => {
             container.attr('style', 'display: flex; gap: 4px; overflow: unset')
             ReactAppend(container, <TippyButton className='btn btn-xs btn-soft-primary' title='Editar' onClick={() => onModalOpen(data)}>
@@ -124,9 +127,12 @@ const DefaultMessages = ({ title }) => {
         }
       ]} />
     <Modal modalRef={modalRef} title={isEditing ? 'Editar mensaje predeterminado' : 'Agregar mensaje predeterminado'} onSubmit={onModalSubmit}>
-      <div className='row'>
+      <div className='row' id='default-messages-container'>
         <input ref={idRef} type='hidden' />
-        {/* <SelectFormGroup></SelectFormGroup> */}
+        <SelectFormGroup label='Tipo mensaje' dropdownParent='#default-messages-container'>
+          <option value="whatsapp" defaultChecked>WhatsApp</option>
+          <option value="email">Email</option>
+        </SelectFormGroup>
         <InputFormGroup eRef={nameRef} label='Alias' col='col-12' required />
         <TextareaFormGroup eRef={descriptionRef} label='Mensaje' col='col-12' required />
       </div>

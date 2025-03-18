@@ -129,8 +129,8 @@
       "_Adminto-BgFZ_Mu6.js"
     ]
   },
-  "_QuillFormGroup-D1hnQaqW.js": {
-    "file": "assets/QuillFormGroup-D1hnQaqW.js",
+  "_QuillFormGroup-TtmdvEv4.js": {
+    "file": "assets/QuillFormGroup-TtmdvEv4.js",
     "name": "QuillFormGroup",
     "imports": [
       "_CreateReactScript-DiT3hDbE.js"
@@ -296,7 +296,7 @@
     ]
   },
   "resources/js/DefaultMessages.jsx": {
-    "file": "assets/DefaultMessages-y0pctvi3.js",
+    "file": "assets/DefaultMessages-CW21CTh0.js",
     "name": "DefaultMessages",
     "src": "resources/js/DefaultMessages.jsx",
     "isEntry": true,
@@ -309,6 +309,7 @@
       "_InputFormGroup-CbQnIdio.js",
       "_TextareaFormGroup-BDSgQCfr.js",
       "_TippyButton-gfx7s0NW.js",
+      "_SelectFormGroup-CbSCTI9E.js",
       "_server.browser-DOmhYhu7.js"
     ]
   },
@@ -352,7 +353,7 @@
     ]
   },
   "resources/js/Leads.jsx": {
-    "file": "assets/Leads-CMgaXrHd.js",
+    "file": "assets/Leads-CIHFDW-c.js",
     "name": "Leads",
     "src": "resources/js/Leads.jsx",
     "isEntry": true,
@@ -372,7 +373,7 @@
       "_Dropdown-CRcEbQfu.js",
       "_DropdownItem-B6tIw-md.js",
       "_Number2Currency-e57Tgsuk.js",
-      "_QuillFormGroup-D1hnQaqW.js",
+      "_QuillFormGroup-TtmdvEv4.js",
       "_server.browser-DOmhYhu7.js",
       "_DxPanelButton-DPSOyTFz.js",
       "_ReactAppend-BXtQNJ7e.js",
@@ -576,7 +577,7 @@
     ]
   },
   "resources/js/Settings.jsx": {
-    "file": "assets/Settings-DZFPwoQm.js",
+    "file": "assets/Settings-Or2FOFL0.js",
     "name": "Settings",
     "src": "resources/js/Settings.jsx",
     "isEntry": true,
@@ -584,7 +585,7 @@
       "_CreateReactScript-DiT3hDbE.js",
       "_Adminto-BgFZ_Mu6.js",
       "_Modal-D-C5Rc0p.js",
-      "_QuillFormGroup-D1hnQaqW.js",
+      "_QuillFormGroup-TtmdvEv4.js",
       "_SelectFormGroup-CbSCTI9E.js",
       "_index-EIla-jgU.js",
       "_TextareaFormGroup-BDSgQCfr.js"

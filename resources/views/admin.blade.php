@@ -102,6 +102,9 @@ $route = Route::currentRouteName();
 
     .ql-editor {
       color: #6c757d;
+    }
+
+    [data-id="quill-form-group"] .ql-editor {
       min-height: 300px;
       max-height: 480px;
       font-size: small;
