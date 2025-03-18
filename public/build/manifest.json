@@ -129,8 +129,8 @@
       "_Adminto-BgFZ_Mu6.js"
     ]
   },
-  "_QuillFormGroup-WyfqC_sF.js": {
-    "file": "assets/QuillFormGroup-WyfqC_sF.js",
+  "_QuillFormGroup-D1hnQaqW.js": {
+    "file": "assets/QuillFormGroup-D1hnQaqW.js",
     "name": "QuillFormGroup",
     "imports": [
       "_CreateReactScript-DiT3hDbE.js"
@@ -352,7 +352,7 @@
     ]
   },
   "resources/js/Leads.jsx": {
-    "file": "assets/Leads-Bn63Dow3.js",
+    "file": "assets/Leads-BLof6NbL.js",
     "name": "Leads",
     "src": "resources/js/Leads.jsx",
     "isEntry": true,
@@ -372,9 +372,9 @@
       "_Dropdown-CRcEbQfu.js",
       "_DropdownItem-B6tIw-md.js",
       "_Number2Currency-e57Tgsuk.js",
-      "_QuillFormGroup-WyfqC_sF.js",
-      "_DxPanelButton-DPSOyTFz.js",
+      "_QuillFormGroup-D1hnQaqW.js",
       "_server.browser-DOmhYhu7.js",
+      "_DxPanelButton-DPSOyTFz.js",
       "_ReactAppend-BXtQNJ7e.js",
       "_StatusesRest-BbkcSqY-.js"
     ],
@@ -576,7 +576,7 @@
     ]
   },
   "resources/js/Settings.jsx": {
-    "file": "assets/Settings-BMGcZ7wc.js",
+    "file": "assets/Settings-DZFPwoQm.js",
     "name": "Settings",
     "src": "resources/js/Settings.jsx",
     "isEntry": true,
@@ -584,7 +584,7 @@
       "_CreateReactScript-DiT3hDbE.js",
       "_Adminto-BgFZ_Mu6.js",
       "_Modal-D-C5Rc0p.js",
-      "_QuillFormGroup-WyfqC_sF.js",
+      "_QuillFormGroup-D1hnQaqW.js",
       "_SelectFormGroup-CbSCTI9E.js",
       "_index-EIla-jgU.js",
       "_TextareaFormGroup-BDSgQCfr.js"

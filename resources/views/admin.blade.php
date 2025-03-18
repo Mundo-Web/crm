@@ -102,8 +102,9 @@ $route = Route::currentRouteName();
 
     .ql-editor {
       color: #6c757d;
-      min-height: 162px;
-      max-height: 360px;
+      min-height: 300px;
+      max-height: 480px;
+      font-size: small;
     }
   </style>
   <link rel="stylesheet" href="/assets/css/send2div.css">

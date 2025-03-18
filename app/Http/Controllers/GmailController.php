@@ -189,7 +189,8 @@ class GmailController extends Controller
       $rawMessage .= "--$boundary\r\n";
       $rawMessage .= "Content-Type: text/html; charset=UTF-8\r\n\r\n";
 
-      $mailing_sign = Auth::user()->service_user->mailing_sign;
+      // $mailing_sign = Auth::user()->service_user->mailing_sign;
+      $mailing_sign = null;
 
       if ($mailing_sign) {
         $app_url = \env('APP_PROTOCOL') . '://' . \env('APP_DOMAIN');

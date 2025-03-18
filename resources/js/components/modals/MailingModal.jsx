@@ -9,6 +9,7 @@ import UsersRest from "../../actions/UsersRest";
 import Tippy from "@tippyjs/react";
 import Global from "../../Utils/Global";
 import LaravelSession from "../../Utils/LaravelSession";
+import { renderToStaticMarkup, renderToString } from "react-dom/server";
 
 const gmailRest = new GmailRest();
 const usersRest = new UsersRest();
@@ -19,12 +20,62 @@ const MailingModal = ({ data, session, setSession, inReplyTo, modalRef, onSend =
   const subjectRef = useRef();
   const bodyRef = useRef();
   const fileRef = useRef();
-  const signsModalRef = useRef()
 
   const [sending, setSending] = useState(false);
   const [showCC, setShowCC] = useState(false);
   const [showBCC, setShowBCC] = useState(false);
-  const [defaultSign, setDefaultSign] = useState(LaravelSession.service_user.mailing_sign)
+  const [attachments, setAttachments] = useState([]);
+
+  const onFileChange = (e) => {
+    const files = Array.from(e.target.files);
+    setAttachments(prev => [...prev, ...files]);
+    fileRef.current.value = null; // Reset input
+  };
+
+  const removeAttachment = (index) => {
+    setAttachments(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const cleanForm = () => {
+    subjectRef.current.value = "";
+    bodyRef.current.value = "";
+    bodyRef.editor.root.innerHTML = "";
+    $(ccRef.current).val(null).trigger("change");
+    $(bccRef.current).val(null).trigger("change");
+    fileRef.current.value = null;
+    setShowCC(false);
+    setShowBCC(false);
+    setAttachments([]);
+  };
+
+  const onAddSignClicked = async (sign) => {
+    const root = $(bodyRef.editor.root)
+    if (!sign) {
+      root.find('#mailing-sign').remove()
+      return
+    }
+    const img = <img
+      id="mailing-sign"
+      src={`${Global.APP_PROTOCOL}://${Global.APP_DOMAIN}/repository/signs/${sign.sign}`}
+      alt={sign.name}
+      style={{ maxWidth: '480px' }} />
+    if (root.find('[id="mailing-sign-container"]').length === 0) {
+      const signContent = renderToString(<>
+        <p></p>
+        <p></p>
+        <p></p>
+        <p>--</p>
+        <p id="mailing-sign-container">
+          {img}
+        </p>
+      </>
+      )
+      root.append(signContent)
+    } else {
+      const container = root.find('[id="mailing-sign-container"]')
+      container.html(renderToString(img))
+    }
+  }
 
   const onSubmit = async (e) => {
     e.preventDefault();
@@ -46,11 +97,16 @@ const MailingModal = ({ data, session, setSession, inReplyTo, modalRef, onSend =
     if (bccEmails.length > 0) bccEmails.forEach(bcc => formData.append("bcc[]", bcc));
 
     // Agregar los archivos adjuntos si se han seleccionado
-    if (fileRef.current.files.length > 0) {
-      Array.from(fileRef.current.files).forEach((file) => {
-        formData.append("attachments[]", file);
-      });
-    }
+    // if (fileRef.current.files.length > 0) {
+    //   Array.from(fileRef.current.files).forEach((file) => {
+    //     formData.append("attachments[]", file);
+    //   });
+    // }
+
+    // Add attachments from state
+    attachments.forEach(file => {
+      formData.append("attachments[]", file);
+    });
 
     // Enviar la solicitud al backend
     const result = await gmailRest.send(formData);
@@ -69,59 +125,6 @@ const MailingModal = ({ data, session, setSession, inReplyTo, modalRef, onSend =
     $(modalRef.current).modal("hide");
     onSend(result);
   };
-
-  const cleanForm = () => {
-    subjectRef.current.value = "";
-    bodyRef.current.value = "";
-    bodyRef.editor.root.innerHTML = "";
-    $(ccRef.current).val(null).trigger("change");
-    $(bccRef.current).val(null).trigger("change");
-    fileRef.current.value = null;
-    setShowCC(false);
-    setShowBCC(false);
-  };
-
-  const onSignChange = async (e) => {
-    const file = e.target.files?.[0] ?? null
-    if (!file) return
-    const formData = new FormData()
-    formData.append('sign', file)
-    formData.append('business_id', LaravelSession.business_uuid)
-
-    e.target.value = null
-
-    const result = await usersRest.addSign(formData);
-    if (!result) return
-    setSession(old => ({
-      ...old, service_user: {
-        ...old.service_user,
-        mailing_sign: result
-      }
-    }))
-  }
-
-  const onDeleteSign = async () => {
-    const result = await usersRest.deleteSign()
-    if (!result) return
-    setSession(old => ({
-      ...old, service_user: {
-        ...old.service_user,
-        mailing_sign: null
-      }
-    }))
-  }
-
-  const onDefaultSignChanged = async (e) => {
-    const signId = e.target.value
-    const result = await usersRest.setDefaultSign({
-      type: 'whatsapp',
-      sign: signId
-    })
-    if (!result) return
-    setDefaultSign(signId)
-  }
-
-  const sign2send = signs.find(sign => sign.id == defaultSign)
 
   return (
     <>
@@ -174,97 +177,83 @@ const MailingModal = ({ data, session, setSession, inReplyTo, modalRef, onSend =
 
           <TextareaFormGroup eRef={subjectRef} label="Asunto" rows={1} required />
           <QuillFormGroup eRef={bodyRef} label="Mensaje" required />
-          <div className="mb-2 text-center">
-            <input type="file" id="sign-file" onChange={onSignChange} accept="image/*" hidden />
-            {
-              sign2send
-                ? <div className="position-relative mx-auto" style={{ width: 'max-content' }}>
-                  <Tippy content='Cambiar firma'>
-                    {/* <label htmlFor="sign-file" style={{ cursor: 'pointer' }}>
-                    <img className="border" src={`//${Global.APP_DOMAIN}/repository/signs/${session.service_user.mailing_sign}`} alt="" style={{
-                      aspectRatio: 520 / 210,
-                      height: '100%',
-                      maxHeight: '100px',
-                      maxWidth: '100%',
-                      objectFit: 'contain',
-                    }} />
-                  </label> */}
-                    <div onClick={() => $(signsModalRef.current).modal('show')} style={{ cursor: 'pointer' }}>
-                      <img className="border" src={`//${Global.APP_DOMAIN}/repository/signs/${sign2send.sign}`} alt="" style={{
-                        aspectRatio: 520 / 210,
-                        height: '100%',
-                        maxHeight: '100px',
-                        maxWidth: '100%',
-                        objectFit: 'contain',
-                      }} />
-                    </div>
-                  </Tippy>
-                  <Tippy content="Quitar firma">
-                    <button className="position-absolute btn btn-xs r-1 btn-soft-danger" type="button" style={{
-                      top: '4px',
-                      right: '4px'
-                    }} onClick={onDeleteSign}>
-                      <i className="fa fa-times"></i>
+
+          {/* Attachments preview */}
+          {attachments.length > 0 && (
+            <div className="border rounded p-2 mb-3">
+              <div className="d-flex align-items-center mb-2">
+                <i className="mdi mdi-paperclip me-1"></i>
+                <small className="text-muted">Archivos adjuntos ({attachments.length})</small>
+              </div>
+              <div className="d-flex flex-wrap gap-2">
+                {attachments.map((file, index) => (
+                  <div key={index} className="border rounded p-1 d-flex align-items-center gap-2" style={{ fontSize: '0.8rem' }}>
+                    <i className="mdi mdi-file"></i>
+                    <span>{file.name}</span>
+                    <button
+                      type="button"
+                      className="btn btn-xs btn-soft-danger py-0 px-1"
+                      onClick={() => removeAttachment(index)}
+                    >
+                      <i className="mdi mdi-close"></i>
                     </button>
-                  </Tippy>
-                </div>
-                // : <label htmlFor="sign-file" className="mx-auto btn btn-sm btn-white">
-                //   <i className="fas fa-signature me-1"></i>
-                //   Adjuntar firma
-                // </label>
-                : <a href={`${Global.APP_PROTOCOL}://${Global.APP_DOMAIN}/signs`} className="mx-auto btn btn-sm btn-white">
-                  <i className="fas fa-signature me-1"></i>
-                  Adjuntar firma
-                </a>
-            }
-          </div>
-          <input ref={fileRef} type="file" className="form-control" multiple />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           <hr className="my-2" />
           <div className="d-flex justify-content-between">
-            <button className="btn btn-sm btn-primary" type="submit" disabled={sending}>
-              Enviar
-              {sending ? <i className="fa fa-spin fa-spinner ms-1"></i> : <i className="fas fa-location-arrow ms-1"></i>}
-            </button>
+            <div className="d-flex gap-2">
+              <button className="btn btn-sm btn-primary" type="submit" disabled={sending}>
+                Enviar
+                {sending ? <i className="fa fa-spin fa-spinner ms-1"></i> : <i className="fas fa-location-arrow ms-1"></i>}
+              </button>
+              <div className="d-flex gap-1">
+                <input
+                  ref={fileRef}
+                  id="mailing-attachment-input"
+                  type="file"
+                  className="d-none"
+                  multiple
+                  onChange={onFileChange}
+                />
+                <Tippy content="Adjuntar archivos">
+                  <label htmlFor="mailing-attachment-input" className="btn btn-sm btn-white mb-0" style={{ cursor: 'pointer' }}>
+                    <i className="mdi mdi-paperclip"></i>
+                  </label>
+                </Tippy>
+                <div class="dropdown">
+                  <Tippy content='Insertar firma'>
+                    <button class="btn btn-sm  btn-white dropdown-toggle" type="button" id="dropdown-signs-button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                      <i class="mdi mdi-pen"></i>
+                    </button>
+                  </Tippy>
+                  <div class="dropdown-menu" aria-labelledby="dropdown-signs-button">
+                    <span class="dropdown-item" style={{ cursor: 'pointer' }} onClick={() => onAddSignClicked()}>Sin firma</span>
+                    {
+                      signs.map((sign, index) => {
+                        return <span key={index} class="dropdown-item d-flex gap-1 align-items-center" style={{ cursor: 'pointer' }} onClick={() => onAddSignClicked(sign)}>
+                          <img src={`${Global.APP_PROTOCOL}://${Global.APP_DOMAIN}/repository/signs/${sign.sign}`} alt={sign.name}
+                            style={{ width: '20px', aspectRatio: 1, objectFit: 'cover', objectPosition: 'center' }} />
+                          {sign.name || <i className="text-muted">Sin nombre</i>}
+                        </span>
+                      })
+                    }
+                    <div className="dropdown-divider"></div>
+                    <a class="dropdown-item" href={`${Global.APP_PROTOCOL}://${Global.APP_DOMAIN}/signs`} target="_blank">
+                      Gestionar firmas
+                      <i className="mdi mdi-arrow-top-right ms-1"></i>
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
             <button className="btn btn-sm btn-danger" type="button" onClick={cleanForm}>
               <i className="mdi mdi-delete"></i>
             </button>
           </div>
-        </div>
-      </Modal>
-      <Modal modalRef={signsModalRef} title="Tus firmas" zIndex={1070} hideFooter>
-        <b className="d-block">¿Desea seleccionar una de sus firmas disponibles como predeterminado?</b>
-        <div className="row mt-2">
-          {signs.map((sign, index) => (
-            <div className="col-md-6">
-              <Tippy content='Marcar como predeterminado'>
-                <label htmlFor={`sign-${sign.id}`} key={index} className="card border" style={{ cursor: 'pointer' }}>
-                  <div className="card-header d-flex gap-1 align-items-center py-1 px-2">
-                    <input
-                      type="radio"
-                      name="sign"
-                      className="form-check-input my-0"
-                      id={`sign-${sign.id}`}
-                      checked={sign.id == defaultSign}
-                      onChange={onDefaultSignChanged}
-                      value={sign.id}
-                    />
-                    <b className="d-block my-0 w-100 text-truncate">{sign.name || 'Sin nombre'}</b>
-                  </div>
-                  <div className="card-body p-0">
-                    <img
-                      src={`${Global.APP_PROTOCOL}://${Global.APP_DOMAIN}/repository/signs/${sign.sign}`}
-                      alt={sign.name}
-                      className="img-fluid w-100"
-                      style={{
-                        objectFit: 'cover',
-                        aspectRatio: 5 / 2
-                      }}
-                    />
-                  </div>
-                </label>
-              </Tippy>
-            </div>
-          ))}
         </div>
       </Modal>
     </>

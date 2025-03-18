@@ -4,13 +4,18 @@ const QuillFormGroup = ({ col, label, eRef = useRef(), value, required = false, 
   const quillRef = useRef()
 
   useEffect(() => {
+    $(quillRef.current).parent().find('.ql-toolbar').remove()
     const quill = new Quill(quillRef.current, {
       theme,
       modules: {
         toolbar: [
           ["bold", "italic", "underline", 'strike'],
           ["blockquote", "code-block"],
-          [{ list: "ordered" }, { list: "bullet" }]]
+          [
+            { list: "ordered" },
+            { list: "bullet" }
+          ]
+        ]
       }
     })
 
@@ -24,7 +29,7 @@ const QuillFormGroup = ({ col, label, eRef = useRef(), value, required = false, 
     <label htmlFor='' className='form-label'>
       {label} {required && <b className="text-danger">*</b>}
     </label>
-    <div ref={quillRef} style={{minHeight: '162px'}}>{value}</div>
+    <div ref={quillRef} style={{ minHeight: '162px' }}>{value}</div>
     <input ref={eRef} type="hidden" required={required} />
   </div>
 }
