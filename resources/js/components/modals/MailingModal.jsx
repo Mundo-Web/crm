@@ -244,7 +244,7 @@ const MailingModal = ({ data, session, setSession, inReplyTo, modalRef, onSend =
                     <span class="dropdown-item" style={{ cursor: 'pointer' }} onClick={() => onUseTemplateClicked()}>
                       <i className="mdi mdi-broom me-1"></i>
                       Limpiar contenido
-                      </span>
+                    </span>
                     {
                       defaultMessages.filter(tmp => tmp.type == 'email').map((tmp, index) => {
                         return <span key={index} class="dropdown-item" style={{ cursor: 'pointer' }} onClick={() => onUseTemplateClicked(tmp)}>
