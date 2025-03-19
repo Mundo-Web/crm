@@ -6,7 +6,9 @@ const Modal = ({ modalRef, title = 'Modal', isStatic = false, size = 'md', posit
   return (<form id={`modal-${modalId}`} className='modal fade' ref={modalRef} tabIndex='-1' aria-hidden='true' {...staticProp} onSubmit={onSubmit} autoComplete='off' style={{
     zIndex
   }}>
-    <div className={`modal-dialog modal-${position} modal-${size ?? 'md'}`}>
+    <div className={`modal-dialog modal-${position} modal-${size ?? 'md'}`} style={{
+      transition: '.25s all ease-in-out'
+    }}>
       <div className='modal-content ' style={{ boxShadow: position == 'dialog-centered' && '0 0 10px rgba(0,0,0,0.25)', width }}>
         {
           !hideHeader &&

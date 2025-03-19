@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\DefaultMessage;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class DefaultMessageController extends BasicController
 {
@@ -12,6 +13,8 @@ class DefaultMessageController extends BasicController
 
     public function beforeSave(Request $request)
     {
-        $request->merge(['user_id' => $request->user()->id]);
+        $body = $request->all();
+        $body['user_id'] = Auth::id();
+        return $body;
     }
 }

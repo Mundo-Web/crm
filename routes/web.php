@@ -17,6 +17,7 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProjectArchivedController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProjectDoneController;
+use App\Http\Controllers\RepositoryController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SettingController;
 use App\Http\Controllers\StatusController;
@@ -81,8 +82,13 @@ Route::middleware('auth')->group(function () {
     Route::get('/users', [UserController::class, 'reactView'])->name('Users.jsx');
     Route::get('/roles', [RoleController::class, 'reactView'])->name('Roles.jsx');
     Route::get('/default-messages', [DefaultMessageController::class, 'reactView'])->name('DefaultMessages.jsx');
+    Route::get('/repository', [RepositoryController::class, 'reactView'])->name('Repository.jsx');
     Route::get('/statuses', [StatusController::class, 'reactView'])->name('Statuses.jsx');
     Route::get('/apikeys', [ApikeyController::class, 'reactView'])->name('Apikeys.jsx');
     Route::get('/types', [TypeController::class, 'reactView'])->name('Types.jsx');
     Route::get('/settings', [SettingController::class, 'reactView'])->name('Settings.jsx');
 });
+
+if (env('APP_ENV') === 'local') {
+    Route::get('/repository/{uuid}', [RepositoryController::class, 'media']);
+}

@@ -26,7 +26,7 @@ class BasicRest {
     return await res.json()
   }
 
-  save = async (request) => {
+  save = async (request, showNotification = true) => {
     try {
       let status = false
       let result = {}
@@ -51,7 +51,7 @@ class BasicRest {
 
       if (!status) throw new Error(result?.message || 'Ocurrio un error inesperado')
 
-      Notify.add({
+      showNotification && Notify.add({
         icon: '/assets/img/icon.svg',
         title: 'Correcto',
         body: result.message,
@@ -59,7 +59,7 @@ class BasicRest {
       })
       return result.data || true
     } catch (error) {
-      Notify.add({
+      showNotification && Notify.add({
         icon: '/assets/img/icon.svg',
         title: 'Error',
         body: error.message,
@@ -78,7 +78,7 @@ class BasicRest {
       if (!fetchStatus) throw new Error(result?.message ?? 'Ocurrio un error inesperado')
 
       Notify.add({
-        icon: '/assets/img/logo-login.svg',
+        icon: '/assets/img/icon.svg',
         title: 'Correcto',
         body: result.message,
         type: 'success'
@@ -87,7 +87,7 @@ class BasicRest {
       return result
     } catch (error) {
       Notify.add({
-        icon: '/assets/img/logo-login.svg',
+        icon: '/assets/img/icon.svg',
         title: 'Error',
         body: error.message,
         type: 'danger'
@@ -133,7 +133,7 @@ class BasicRest {
       if (!fetchStatus) throw new Error(result?.message ?? 'Ocurrio un error inesperado')
 
       Notify.add({
-        icon: '/assets/img/logo-login.svg',
+        icon: '/assets/img/icon.svg',
         title: 'Correcto',
         body: result.message,
         type: 'success'
@@ -142,7 +142,7 @@ class BasicRest {
       return true
     } catch (error) {
       Notify.add({
-        icon: '/assets/img/logo-login.svg',
+        icon: '/assets/img/icon.svg',
         title: 'Error',
         body: error.message,
         type: 'danger'

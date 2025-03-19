@@ -3,7 +3,6 @@
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\ArchivedController;
 use App\Http\Controllers\AuthController;
-use App\Http\Controllers\BusinessSignController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\ClientHasProductsController;
 use App\Http\Controllers\ClientNoteController;
@@ -26,6 +25,7 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProjectArchivedController;
 use App\Http\Controllers\ProjectDoneController;
 use App\Http\Controllers\RemainingHistoryController;
+use App\Http\Controllers\RepositoryController;
 use App\Http\Controllers\SettingController;
 use App\Http\Controllers\StatusController;
 use App\Http\Controllers\SubdomainController;
@@ -37,7 +37,6 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\UtilController;
 use App\Http\Controllers\ViewController;
 use App\Http\Controllers\WhatsAppController;
-use App\Models\Project;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -190,6 +189,10 @@ Route::middleware('auth')->group(function () {
     Route::post('/default-messages', [DefaultMessageController::class, 'save']);
     Route::post('/default-messages/paginate', [DefaultMessageController::class, 'paginate']);
     Route::delete('/default-messages/{id}', [DefaultMessageController::class, 'delete']);
+
+    Route::post('/repository', [RepositoryController::class, 'save']);
+    Route::post('/repository/paginate', [RepositoryController::class, 'paginate']);
+    Route::delete('/repository/{id}', [RepositoryController::class, 'delete']);
 
     // Route::post('/notifications', [NotificationController::class, 'save']);
     Route::post('/notifications/paginate', [NotificationController::class, 'paginate']);

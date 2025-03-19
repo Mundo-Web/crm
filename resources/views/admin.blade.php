@@ -100,6 +100,10 @@ $route = Route::currentRouteName();
 
     }
 
+    .cursor-pointer {
+      cursor: pointer;
+    }
+
     .ql-editor {
       color: #6c757d;
     }

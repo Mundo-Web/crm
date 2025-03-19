@@ -24,6 +24,7 @@ use SoDe\Extend\Response;
 use SoDe\Extend\Text;
 use SoDe\Extend\Crypto;
 use Illuminate\Support\Facades\Schema;
+use SoDe\Extend\File;
 
 class BasicController extends Controller
 {
@@ -44,7 +45,7 @@ class BasicController extends Controller
       if (Text::has($uuid, '.')) {
         $route = "images/{$snake_case}/{$uuid}";
       } else {
-        $route = "images/{$snake_case}/{$uuid}.img";
+        $route = "images/{$snake_case}/{$uuid}.enc";
       }
       $content = Storage::get($route);
       if (!$content) throw new Exception('Imagen no encontrado');
@@ -261,6 +262,7 @@ class BasicController extends Controller
         $full = $request->file($field);
         $uuid = Crypto::randomUUID();
         $ext = $full->getClientOriginalExtension();
+        if (!$ext) $ext = File::getExtention($full->getMimeType());
         $path = "images/{$snake_case}/{$uuid}.{$ext}";
         Storage::put($path, file_get_contents($full));
         $body[$field] = "{$uuid}.{$ext}";
@@ -364,14 +366,24 @@ class BasicController extends Controller
     try {
       $body = $this->beforeDelete($request);
 
-      $dataBeforeDelete = new $this->model;
+      $dataBeforeDelete = $this->model::find($id);
       if ($this->softDeletion) {
         $deleted = $this->model::where('id', $id)
           ->update(\array_merge(['status' => null], $body));
-        $dataBeforeDelete = $this->model::find($id);
       } else {
         $deleted = $this->model::where('id', $id)
           ->delete();
+      }
+      if ($deleted) {
+        $snake_case = Text::camelToSnakeCase(str_replace('App\\Models\\', '', $this->model));
+        foreach ($this->imageFields as $field) {
+          $filename = $dataBeforeDelete->{$field};
+          if (!Text::has($filename, '.')) {
+            $filename = "{$filename}.enc";
+          }
+          $path = "images/{$snake_case}/{$filename}";
+          Storage::delete($path);
+        }
       }
 
       $this->afterDelete($dataBeforeDelete);
