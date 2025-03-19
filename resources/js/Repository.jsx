@@ -134,7 +134,7 @@ const Repository = ({ files: filesDB }) => {
   }
 
   const onDownloadLinkClicked = ({ name, file }) => {
-    const download_link = `${Global.APP_URL}/repository/${file}`
+    const download_link = `${Global.APP_URL}/cloud/${file}`
     Clipboard.copy(download_link, () => {
       Notify.add({
         title: 'Enlace copiado',
@@ -214,7 +214,7 @@ const Repository = ({ files: filesDB }) => {
                     style={{ aspectRatio: 5 / 3 }}>
                     {
                       file.file_mimetype.startsWith('image/') && file.file_mimetype !== 'image/svg+xml'
-                        ? <img className="rounded img-fluid w-100 h-100" src={`/repository/${file.file}`} alt={file.name} style={{
+                        ? <img className="rounded img-fluid w-100 h-100" src={`/cloud/${file.file}`} alt={file.name} style={{
                           objectFit: 'cover',
                           objectPosition: 'center',
                           aspectRatio: 5 / 3

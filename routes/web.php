@@ -90,5 +90,5 @@ Route::middleware('auth')->group(function () {
 });
 
 if (env('APP_ENV') === 'local') {
-    Route::get('/repository/{uuid}', [RepositoryController::class, 'media']);
+    Route::get('/cloud/{uuid}', [RepositoryController::class, 'media']);
 }
