@@ -133,7 +133,7 @@ const Repository = ({ files: filesDB }) => {
     $(modalRef.current).modal('hide')
   }
 
-  const onDownloadLinkClicked = ({ name, file }) => {
+  const onCopyLinkClicked = ({ name, file }) => {
     const download_link = `${Global.APP_URL}/cloud/${file}`
     Clipboard.copy(download_link, () => {
       Notify.add({
@@ -210,8 +210,8 @@ const Repository = ({ files: filesDB }) => {
                     height: 'max-content',
                     boxShadow: '5px 5px 10px rgba(0, 0, 0, 0.2)',
                   }}>
-                  <div className="rounded w-100 bg-dark d-flex align-items-center justify-content-center"
-                    style={{ aspectRatio: 5 / 3 }}>
+                  <a href={`${Global.APP_URL}/cloud/${file.file}`} className="rounded w-100 bg-dark d-flex align-items-center justify-content-center text-white"
+                    style={{ aspectRatio: 5 / 3 }} download={`${file.name}.${file.file_extension || 'enc'}`} target='_blank'>
                     {
                       file.file_mimetype.startsWith('image/') && file.file_mimetype !== 'image/svg+xml'
                         ? <img className="rounded img-fluid w-100 h-100" src={`/cloud/${file.file}`} alt={file.name} style={{
@@ -221,14 +221,14 @@ const Repository = ({ files: filesDB }) => {
                         }} />
                         : <i className={`mdi ${getFileIcon(file.file_mimetype)} mdi-36px`}></i>
                     }
-                  </div>
+                  </a>
                   <div className="card-body p-1">
                     <small className="d-block text-truncate w-100 my-0" title={file.name}><b>{file.name}</b></small>
                     <div className='d-flex gap-2 justify-content-between align-items-center'>
                       <small className="card-text">{formatFileSize(file.file_size)}</small>
                       <div className='d-flex gap-1'>
                         <Tippy content='Copiar enlace'>
-                          <i className='mdi mdi-link cursor-pointer' onClick={() => onDownloadLinkClicked(file)}></i>
+                          <i className='mdi mdi-link cursor-pointer' onClick={() => onCopyLinkClicked(file)}></i>
                         </Tippy>
                         <Tippy content='Cambiar nombre'>
                           <i className='mdi mdi-pencil cursor-pointer' onClick={() => onModalOpen(file)}></i>
