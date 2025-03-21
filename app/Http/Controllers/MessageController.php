@@ -268,6 +268,14 @@ class MessageController extends BasicController
         if (!$businessJpa) throw new Exception('No existe una empresa vinculada a esta sesion');
         $body['business_id'] = $businessJpa->id;
         $body['microtime'] = (int) (microtime(true) * 1_000_000);
+
+        $messageJpa = Message::where('business_id', $businessJpa->id)
+            ->where('wa_id', $body['wa_id'])
+            ->where('message', 'like', '%' . $body['message'])
+            ->where('created_at', '>=', now()->subSeconds(10))
+            ->first();
+        if ($messageJpa) throw new Exception('Ya se ha registrado este mensaje');
+
         return $body;
     }
 
