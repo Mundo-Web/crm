@@ -245,10 +245,15 @@ const OffCanvas = ({ offCanvasRef, dataLoaded, setDataLoaded, defaultMessages, s
                                     objectFit: 'cover',
                                   }}
                                   onError={e => {
-                                    e.target.onerror = null
-                                    e.target.src = `//placehold.co/500x200?text=404`;
+                                    $(e.target).remove()
                                   }}
                                 />
+                                <div className="d-flex justify-content-end">
+                                  <button className="btn btn-xs btn-white mb-1 text-nowrap d-flex text-end">
+                                    <i className="mdi mdi-download me-1"></i>
+                                    <span>Descargar adjunto</span>
+                                  </button>
+                                </div>
                               </>
                             }
                             <p>{content.replace(attachment, '')}</p>
