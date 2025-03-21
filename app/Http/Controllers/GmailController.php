@@ -206,8 +206,8 @@ class GmailController extends Controller
           $fileContent = file_get_contents($fileUrl);
           $encodedFile = base64_encode($fileContent);
           $filename = $attachment['name'];
-          if (!str_ends_with($filename, $attachment['extension'])) {
-            $filename .= '.' . $attachment['extension'];
+          if (!str_ends_with($filename, $attachment['file_extension'])) {
+            $filename .= '.' . $attachment['file_extension'];
           }
 
           $rawMessage .= "--$boundary\r\n";
