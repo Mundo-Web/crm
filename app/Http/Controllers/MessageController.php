@@ -271,6 +271,7 @@ class MessageController extends BasicController
 
         $messageJpa = Message::where('business_id', $businessJpa->id)
             ->where('wa_id', $body['wa_id'])
+            ->where('message', 'like', '/attachment:%')
             ->where('message', 'like', '%' . $body['message'])
             ->where('created_at', '>=', now()->subSeconds(10))
             ->first();
