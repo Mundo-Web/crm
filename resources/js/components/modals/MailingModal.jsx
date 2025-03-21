@@ -10,6 +10,7 @@ import Tippy from "@tippyjs/react";
 import Global from "../../Utils/Global";
 import LaravelSession from "../../Utils/LaravelSession";
 import { renderToStaticMarkup, renderToString } from "react-dom/server";
+import RepositoryDropzone from "../../Reutilizables/Repository/RepositoryDropzone";
 
 const gmailRest = new GmailRest();
 const usersRest = new UsersRest();
@@ -20,6 +21,7 @@ const MailingModal = ({ data, session, setSession, inReplyTo, modalRef, onSend =
   const subjectRef = useRef();
   const bodyRef = useRef();
   const fileRef = useRef();
+  const repositoryModalRef = useRef();
 
   const [sending, setSending] = useState(false);
   const [showCC, setShowCC] = useState(false);
@@ -32,9 +34,9 @@ const MailingModal = ({ data, session, setSession, inReplyTo, modalRef, onSend =
     fileRef.current.value = null; // Reset input
   };
 
-  const removeAttachment = (index) => {
-    setAttachments(prev => prev.filter((_, i) => i !== index));
-  };
+  const removeAttachment = (fileId) => {
+    setAttachments(prev => prev.filter(x => x.id !== fileId))
+  }
 
   const cleanForm = () => {
     subjectRef.current.value = "";
@@ -130,10 +132,12 @@ const MailingModal = ({ data, session, setSession, inReplyTo, modalRef, onSend =
     if (!template) {
       bodyRef.current.value = "";
       bodyRef.editor.root.innerHTML = "";
+      setAttachments([])
       return
     }
     bodyRef.current.value = template.description;
     bodyRef.editor.root.innerHTML = template.description;
+    setAttachments(template.attachments)
   }
 
   return (
@@ -203,7 +207,7 @@ const MailingModal = ({ data, session, setSession, inReplyTo, modalRef, onSend =
                     <button
                       type="button"
                       className="btn btn-xs btn-soft-danger py-0 px-1"
-                      onClick={() => removeAttachment(index)}
+                      onClick={() => removeAttachment(file.id)}
                     >
                       <i className="mdi mdi-close"></i>
                     </button>
@@ -221,18 +225,18 @@ const MailingModal = ({ data, session, setSession, inReplyTo, modalRef, onSend =
                 {sending ? <i className="fa fa-spin fa-spinner ms-1"></i> : <i className="fas fa-location-arrow ms-1"></i>}
               </button>
               <div className="d-flex gap-1">
-                <input
+                {/* <input
                   ref={fileRef}
                   id="mailing-attachment-input"
                   type="file"
                   className="d-none"
                   multiple
                   onChange={onFileChange}
-                />
+                /> */}
                 <Tippy content="Adjuntar archivos">
-                  <label htmlFor="mailing-attachment-input" className="btn btn-sm btn-white mb-0" style={{ cursor: 'pointer' }}>
+                  <button className="btn btn-sm btn-white mb-0" onClick={() => $(repositoryModalRef.current).modal('show')}>
                     <i className="mdi mdi-paperclip"></i>
-                  </label>
+                  </button>
                 </Tippy>
                 <div class="dropdown">
                   <Tippy content='Usar plantilla'>
@@ -290,6 +294,13 @@ const MailingModal = ({ data, session, setSession, inReplyTo, modalRef, onSend =
             </button>
           </div>
         </div>
+      </Modal>
+      <Modal modalRef={repositoryModalRef} title='Repositorio' size='full-width' hideFooter zIndex={1070}>
+        <RepositoryDropzone height='calc(100vh - 300px)'
+          multiple
+          selectedFiles={attachments}
+          setSelectedFiles={setAttachments}
+          selectable />
       </Modal>
     </>
   );

@@ -372,7 +372,7 @@
     ]
   },
   "resources/js/Leads.jsx": {
-    "file": "assets/Leads-DEMbtjI0.js",
+    "file": "assets/Leads-O4JBwdBV.js",
     "name": "Leads",
     "src": "resources/js/Leads.jsx",
     "isEntry": true,
@@ -394,6 +394,7 @@
       "_Number2Currency-e57Tgsuk.js",
       "_QuillFormGroup-TtmdvEv4.js",
       "_server.browser-DOmhYhu7.js",
+      "_RepositoryDropzone-2XJOCBTR.js",
       "_DxPanelButton-DPSOyTFz.js",
       "_ReactAppend-BXtQNJ7e.js",
       "_StatusesRest-BcTMbEZx.js"
