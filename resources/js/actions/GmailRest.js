@@ -38,18 +38,13 @@ class GmailRest {
   }
 
   send = async (request) => {
-    let status = false
-    let result = null
-
-    const res = await fetch(`/api/gmail/send`, {
+    const { status, result } = await Fetch(`/api/gmail/send`, {
       method: 'POST',
       headers: {
         'X-Xsrf-Token': decodeURIComponent(Cookies.get('XSRF-TOKEN'))
       },
-      body: request
+      body: JSON.stringify(request)
     })
-    status = res.ok
-    result = JSON.parseable(await res.text())
 
     if (!status) return Notify.add({
       icon: '/assets/img/logo-login.svg',

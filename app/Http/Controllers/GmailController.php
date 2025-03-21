@@ -163,13 +163,11 @@ class GmailController extends Controller
 
       $ccs = $request->input('cc');
       if ($ccs && is_array($ccs) && count($ccs) > 0) {
-        $ccs = implode(',', $ccs);
-        $rawMessage .= "Cc: {$ccs}\r\n";
+        $rawMessage .= "Cc: " . implode("\r\n Cc: ", $ccs) . "\r\n";
       }
       $bccs = $request->input('bcc');
       if ($bccs && is_array($bccs) && count($bccs) > 0) {
-        $bccs = implode(',', $bccs);
-        $rawMessage .= "Bcc: {$bccs}\r\n";
+        $rawMessage .= "Bcc: " . implode("\r\n Bcc: ", $bccs) . "\r\n";
       }
 
       $rawMessage .= "Subject: {$request->input('subject')}\r\n";
@@ -200,14 +198,17 @@ class GmailController extends Controller
       }
 
       // Parte 2: Adjuntar archivos (si los hay)
-      if ($request->hasFile('attachments')) {
-        foreach ($request->file('attachments') as $file) {
-          $fileContent = file_get_contents($file->getRealPath());
+      // Handle attachments from Repository
+      $attachments = $request->input('attachments', []);
+      if (!empty($attachments)) {
+        foreach ($attachments as $attachment) {
+          $fileUrl = env('APP_URL') . '/cloud/' . $attachment['file'];
+          $fileContent = file_get_contents($fileUrl);
           $encodedFile = base64_encode($fileContent);
 
           $rawMessage .= "--$boundary\r\n";
-          $rawMessage .= "Content-Type: " . $file->getMimeType() . "; name=\"" . $file->getClientOriginalName() . "\"\r\n";
-          $rawMessage .= "Content-Disposition: attachment; filename=\"" . $file->getClientOriginalName() . "\"\r\n";
+          $rawMessage .= "Content-Type: " . ($attachment['properties']['mime_type'] ?? 'application/octet-stream') . "; name=\"" . $attachment['name'] . "\"\r\n";
+          $rawMessage .= "Content-Disposition: attachment; filename=\"" . $attachment['name'] . "\"\r\n";
           $rawMessage .= "Content-Transfer-Encoding: base64\r\n\r\n";
           $rawMessage .= chunk_split($encodedFile) . "\r\n\r\n";
         }

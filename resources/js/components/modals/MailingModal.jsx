@@ -84,34 +84,30 @@ const MailingModal = ({ data, session, setSession, inReplyTo, modalRef, onSend =
     setSending(true);
 
     // Crear un FormData para enviar la información al backend
-    const formData = new FormData();
-    formData.append("to", data?.id);
-    formData.append("subject", subjectRef.current.value);
-    formData.append("body", bodyRef.current.value);
+    const requestData = {
+      to: data?.id,
+      subject: subjectRef.current.value,
+      body: bodyRef.current.value,
+      cc: [],
+      bcc: [],
+      attachments: []
+    };
+
     if (inReplyTo) {
-      formData.append("inReplyTo", inReplyTo.id);
+      requestData.inReplyTo = inReplyTo.id;
     }
 
-    // Agregar los destinatarios CC y BCC si están visibles y tienen valores
+    // Add CC and BCC recipients if visible and have values
     const ccEmails = showCC ? $(ccRef.current).val() || [] : [];
     const bccEmails = showBCC ? $(bccRef.current).val() || [] : [];
-    if (ccEmails.length > 0) ccEmails.forEach(cc => formData.append("cc[]", cc));
-    if (bccEmails.length > 0) bccEmails.forEach(bcc => formData.append("bcc[]", bcc));
-
-    // Agregar los archivos adjuntos si se han seleccionado
-    // if (fileRef.current.files.length > 0) {
-    //   Array.from(fileRef.current.files).forEach((file) => {
-    //     formData.append("attachments[]", file);
-    //   });
-    // }
+    if (ccEmails.length > 0) requestData.cc = ccEmails;
+    if (bccEmails.length > 0) requestData.bcc = bccEmails;
 
     // Add attachments from state
-    attachments.forEach(file => {
-      formData.append("attachments[]", file);
-    });
+    requestData.attachments = attachments;
 
-    // Enviar la solicitud al backend
-    const result = await gmailRest.send(formData);
+    // Send request to backend
+    const result = await gmailRest.send(requestData);
     setSending(false);
 
     if (!result) return;
@@ -177,7 +173,7 @@ const MailingModal = ({ data, session, setSession, inReplyTo, modalRef, onSend =
                 checked={showBCC}
                 onChange={() => setShowBCC(!showBCC)}
               />
-              <label className="form-check-label" htmlFor="showBCC">BCC</label>
+              <label className="form-check-label" htmlFor="showBCC">CCO</label>
             </div>
           </div>
 
@@ -186,7 +182,7 @@ const MailingModal = ({ data, session, setSession, inReplyTo, modalRef, onSend =
             <SelectFormGroup eRef={ccRef} label="CC" tags dropdownParent="#mailing-modal" multiple />
           )}
           {showBCC && (
-            <SelectFormGroup eRef={bccRef} label="BCC" tags dropdownParent="#mailing-modal" multiple />
+            <SelectFormGroup eRef={bccRef} label="CCO" tags dropdownParent="#mailing-modal" multiple />
           )}
 
           <TextareaFormGroup eRef={subjectRef} label="Asunto" rows={1} required />
@@ -207,8 +203,7 @@ const MailingModal = ({ data, session, setSession, inReplyTo, modalRef, onSend =
                     <button
                       type="button"
                       className="btn btn-xs btn-soft-danger py-0 px-1"
-                      onClick={() => removeAttachment(file.id)}
-                    >
+                      onClick={() => removeAttachment(file.id)}>
                       <i className="mdi mdi-close"></i>
                     </button>
                   </div>

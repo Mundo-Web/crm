@@ -886,7 +886,7 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
                   const drawGoogleAuth = type.id == '37b1e8e2-04c4-4246-a8c9-838baa7f8187' && !hasGSToken
                   return <div key={`tab-note-type-${i}`} className='tab-pane' id={`note-type-${type.id}`}>
                     {
-                      // !drawGoogleAuth &&
+                      !drawGoogleAuth &&
                       <h4 className='header-title mb-2 d-flex justify-content-between align-items-center'>
                         <span>Lista de {type.name}</span>
                         {
