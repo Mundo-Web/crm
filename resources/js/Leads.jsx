@@ -767,7 +767,7 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
 
         </div>)
     }
-    <Modal modalRef={modalRef} title='Detalles del lead' btnSubmitText='Guardar' size='full-width' bodyClass='p-3 bg-light' isStatic onSubmit={(e) => e.preventDefault()}>
+    <Modal modalRef={modalRef} title='Detalles del lead' btnSubmitText='Guardar' size='full-width' bodyClass='p-3 bg-light' isStatic onSubmit={(e) => e.preventDefault()} zIndex={1040}>
       <div className="row">
         <div className="col-lg-3 col-md-4 col-sm-6 col-xs-12">
           <div className="d-flex mb-3">
@@ -886,7 +886,7 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
                   const drawGoogleAuth = type.id == '37b1e8e2-04c4-4246-a8c9-838baa7f8187' && !hasGSToken
                   return <div key={`tab-note-type-${i}`} className='tab-pane' id={`note-type-${type.id}`}>
                     {
-                      !drawGoogleAuth &&
+                      // !drawGoogleAuth &&
                       <h4 className='header-title mb-2 d-flex justify-content-between align-items-center'>
                         <span>Lista de {type.name}</span>
                         {
@@ -1115,7 +1115,7 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
       </div>
     </Modal>
 
-    <Modal modalRef={mailModal} title={mailLoaded?.subject} size='lg' zIndex={1060} hideHeader hideFooter>
+    <Modal modalRef={mailModal} title={mailLoaded?.subject} size='lg' zIndex={1055} hideHeader hideFooter>
       <button type="button" className="btn-close float-end" data-bs-dismiss="modal" aria-label="Close"></button>
       <table style={{
         width: 'max-content',

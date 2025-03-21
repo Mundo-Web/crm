@@ -9,6 +9,7 @@ import Tippy from "@tippyjs/react";
 import Global from "../../Utils/Global";
 import { renderToString } from "react-dom/server";
 import RepositoryDropzone from "../../Reutilizables/Repository/RepositoryDropzone";
+import Swal from "sweetalert2";
 
 const gmailRest = new GmailRest();
 
@@ -72,11 +73,31 @@ const MailingModal = ({ data, inReplyTo, modalRef, onSend = () => { }, defaultMe
     e.preventDefault();
     setSending(true);
 
-    // Crear un FormData para enviar la información al backend
+    const content = bodyRef.current.value
+    const rawContent = $(`<div>${content}</div>`).text()
+    // Check if content contains words starting with "adjunt" and no attachments are present
+    const adjuntWords = rawContent.toLowerCase().match(/\b(adjunt\w*)\b/g);
+
+    if (adjuntWords && adjuntWords.length > 0 && attachments.length === 0) {
+      const result = await Swal.fire({
+        title: '¿Enviar sin adjuntos?',
+        html: `En tu mensaje has escrito "${adjuntWords[0]}", pero no lleva ningun archivo adjunto ¿quieres enviarlo igualmente?`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, enviar',
+        cancelButtonText: 'Cancelar',
+      });
+
+      if (!result.isConfirmed) {
+        setSending(false);
+        return;
+      }
+    }
+
     const requestData = {
       to: data?.id,
       subject: subjectRef.current.value,
-      body: bodyRef.current.value,
+      body: content,
       cc: [],
       bcc: [],
       attachments: []
@@ -128,7 +149,7 @@ const MailingModal = ({ data, inReplyTo, modalRef, onSend = () => { }, defaultMe
 
   return (
     <>
-      <Modal modalRef={modalRef} size="lg" zIndex={1065} onSubmit={onSubmit} hideHeader hideFooter>
+      <Modal modalRef={modalRef} size="lg" zIndex={1050} onSubmit={onSubmit} hideHeader hideFooter>
         <div id="mailing-modal">
           <button type="button" className="btn-close float-end" data-bs-dismiss="modal" aria-label="Close"></button>
           <h4 className="header-title mb-0">Mensaje nuevo</h4>
@@ -219,7 +240,7 @@ const MailingModal = ({ data, inReplyTo, modalRef, onSend = () => { }, defaultMe
                   onChange={onFileChange}
                 /> */}
                 <Tippy content="Adjuntar archivos">
-                  <button className="btn btn-sm btn-white mb-0" onClick={() => $(repositoryModalRef.current).modal('show')}>
+                  <button className="btn btn-sm btn-white mb-0" type="button" onClick={() => $(repositoryModalRef.current).modal('show')}>
                     <i className="mdi mdi-paperclip"></i>
                   </button>
                 </Tippy>
