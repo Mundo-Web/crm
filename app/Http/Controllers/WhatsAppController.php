@@ -60,6 +60,34 @@ class WhatsAppController extends Controller
                     'microtime' => (int) (microtime(true) * 1_000_000),
                     'business_id' => Auth::user()->business_id,
                 ]);
+            } else if (Text::startsWith($message, '/attachment:')) {
+                [$attachment] = explode(Text::lineBreak(), $message);
+                $message2send = str_replace($attachment, '', $message);
+                $attachment = str_replace('/attachment:', '', $attachment);
+
+                $res = new Fetch(env('WA_URL') . '/api/send', [
+                    'method' => 'POST',
+                    'headers' => [
+                        'Content-Type' => 'application/json',
+                    ],
+                    'body' => [
+                        'from' => 'atalaya-' . $business_id,
+                        'to' => [$clientJpa->contact_phone],
+                        'content' => trim($message2send),
+                        'attachment' => [[
+                            'uri' => $attachment,
+                            'filename' => 'attachment.png',
+                        ]],
+                    ]
+                ]);
+
+                Message::create([
+                    'wa_id' => $clientJpa->contact_phone,
+                    'role' => 'User',
+                    'message' => $message,
+                    'microtime' => (int) (microtime(true) * 1_000_000),
+                    'business_id' => Auth::user()->business_id,
+                ]);
             } else {
                 $res = new Fetch(env('WA_URL') . '/api/send', [
                     'method' => 'POST',
@@ -73,7 +101,7 @@ class WhatsAppController extends Controller
                     ]
                 ]);
             }
-            if (!$res->ok) throw new Exception('Ocurrio un error al enviar el mensaje');
+            if (!$res?->ok) throw new Exception('Ocurrio un error al enviar el mensaje');
         });
         return response($response->toArray(), $response->status);
     }

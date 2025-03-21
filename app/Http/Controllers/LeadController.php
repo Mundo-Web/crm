@@ -56,7 +56,10 @@ class LeadController extends BasicController
 
         $processes = Process::where('business_id', Auth::user()->business_id)->get();
 
-        $defaultMessages = DefaultMessage::where('business_id', Auth::user()->business_id)->get();
+        $defaultMessages = DefaultMessage::with(['attachments'])
+            ->where('business_id', Auth::user()->business_id)
+            ->where('user_id', Auth::id())
+            ->get();
 
         $signs = BusinessSign::select()
             ->where('business_id', Auth::user()->business_id)

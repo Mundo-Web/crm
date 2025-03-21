@@ -111,7 +111,7 @@ const OffCanvas = ({ offCanvasRef, dataLoaded, setDataLoaded, defaultMessages, s
       setMessages([]);
     });
     document.addEventListener('click', (e) => {
-      if (!defaultMessagesRef.current.contains(e.target) && (defaultMessagesButtonRef.current != e.target || !defaultMessagesButtonRef.current.contains(e.target))) {
+      if (!defaultMessagesRef.current?.contains(e.target) && (defaultMessagesButtonRef.current != e.target || !defaultMessagesButtonRef.current?.contains(e.target))) {
         setDefaultMessagesVisible(false)
       }
     })
@@ -138,6 +138,8 @@ const OffCanvas = ({ offCanvasRef, dataLoaded, setDataLoaded, defaultMessages, s
     await whatsAppRest.send(dataLoaded?.id, `/signature:${signature}`)
     setIsSending(false)
   }
+
+  const finalDefaultMessages = defaultMessages.filter(({ type }) => type === 'whatsapp')
 
   return <>
     <form ref={offCanvasRef} className="offcanvas offcanvas-end" tabIndex="-1" aria-labelledby="offcanvasRightLabel" style={{
@@ -245,17 +247,24 @@ const OffCanvas = ({ offCanvasRef, dataLoaded, setDataLoaded, defaultMessages, s
         }}>
           <div className="d-flex gap-2">
             {
-              defaultMessages.map((message, i) => {
+              finalDefaultMessages.map((message, i) => {
                 return <span key={i}
                   className="badge bg-light text-dark"
                   style={{ cursor: 'pointer' }}
                   onClick={async () => {
-                    // setDefaultMessagesVisible(false)
-                    // setIsSending(true)
-                    // await whatsAppRest.send(dataLoaded?.id, message.description)
-                    // setIsSending(false)
                     setDefaultMessagesVisible(false)
-                    inputMessageRef.current.value = message.description
+                    setIsSending(true)
+                    if (message.attachments.length > 0) {
+                      const attachment = message.attachments[0]
+                      const attachmentURL = `${Global.APP_URL}/cloud/${attachment.file}`
+                      await whatsAppRest.send(dataLoaded?.id, `/attachment:${attachmentURL}\n${message.description}`)
+                      setIsSending(false)
+                      return
+                    }
+                    await whatsAppRest.send(dataLoaded?.id, message.description)
+                    setIsSending(false)
+                    // setDefaultMessagesVisible(false)
+                    // inputMessageRef.current.value = message.description
                   }}
                   title={message.description}>
                   {message.name}
@@ -293,7 +302,7 @@ const OffCanvas = ({ offCanvasRef, dataLoaded, setDataLoaded, defaultMessages, s
                     </Tippy>
                 }
                 {
-                  defaultMessages?.length > 0 &&
+                  finalDefaultMessages?.length > 0 &&
                   <span ref={defaultMessagesButtonRef} className="dropdown-item" style={{ cursor: 'pointer' }} onClick={() => setDefaultMessagesVisible(true)}>
                     <i className="mdi mdi-message-bulleted me-1" style={{ width: '20px' }}></i>
                     Mensajes predeterminados
