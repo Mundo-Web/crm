@@ -107,7 +107,16 @@ const OffCanvas = ({ offCanvasRef, dataLoaded, setDataLoaded, defaultMessages, s
 
     if (messagesContainerRef.current) {
       const element = messagesContainerRef.current;
-      $(element).parent()[0].scrollTop = element.scrollHeight;
+      const parent = $(element).parent()[0];
+      // Only auto-scroll if already at bottom
+      // Check if scrolled to bottom or top
+      const isAtBottom = parent.scrollHeight - parent.scrollTop === parent.clientHeight;
+      const isAtTop = parent.scrollTop === 0;
+      
+      // Auto-scroll if at bottom
+      if (isAtBottom || isAtTop) {
+        parent.scrollTop = element.scrollHeight;
+      }
     }
   }, [messages])
 
