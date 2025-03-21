@@ -215,7 +215,7 @@ const RepositoryDropzone = ({ files: filesDB, height = 'calc(100vh - 240px)', se
           </button>
         </div>
 
-        <div className="repository-dropzone" style={{ height }}>
+        <div className="repository-dropzone" style={{ height, userSelect: 'none' }}>
           {isDragging ? (
             <div className="drop-overlay">
               <i className="mdi mdi-cloud-upload mdi-48px mb-2"></i>
