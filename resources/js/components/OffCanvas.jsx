@@ -160,7 +160,8 @@ const OffCanvas = ({ offCanvasRef, dataLoaded, setDataLoaded, defaultMessages, s
     <form ref={offCanvasRef} className="offcanvas offcanvas-end" tabIndex="-1" aria-labelledby="offcanvasRightLabel" style={{
       visibility: 'hidden',
       width: '95%',
-      maxWidth: '600px'
+      maxWidth: '600px',
+      zIndex: 1030
     }}
       aria-hidden="true"
       onSubmit={onMessageSubmit}>
