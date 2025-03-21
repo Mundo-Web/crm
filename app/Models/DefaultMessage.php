@@ -20,4 +20,8 @@ class DefaultMessage extends Model
         'business_id',
         'user_id',
     ];
+
+    public function attachments() {
+        return $this->hasManyThrough(Repository::class, DefaultMessageHasAttachment::class, 'default_message_id', 'id', 'id', 'attachment_id');
+    }
 }

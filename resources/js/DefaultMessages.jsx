@@ -1,5 +1,5 @@
 
-import React, { useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import CreateReactScript from './Utils/CreateReactScript.jsx'
 import ReactAppend from './Utils/ReactAppend.jsx'
@@ -15,12 +15,14 @@ import Swal from 'sweetalert2'
 import SelectFormGroup from './components/form/SelectFormGroup.jsx'
 import { renderToString } from 'react-dom/server'
 import QuillFormGroup from './components/form/QuillFormGroup';
+import RepositoryDropzone from './Reutilizables/Repository/RepositoryDropzone.jsx'
 
 const defaultMessagesRest = new DefaultMessagesRest()
 
 const DefaultMessages = ({ title }) => {
   const gridRef = useRef()
   const modalRef = useRef()
+  const repositoryModalRef = useRef()
 
   // Form elements ref
   const idRef = useRef()
@@ -49,8 +51,8 @@ const DefaultMessages = ({ title }) => {
 
   // Add after QuillFormGroup in the Modal:
 
-  const removeAttachment = (index) => {
-    setAttachments(prev => prev.filter((_, i) => i !== index))
+  const removeAttachment = (fileId) => {
+    setAttachments(prev => prev.filter(x => x.id !== fileId))
   }
 
   const onModalOpen = (data) => {
@@ -59,7 +61,6 @@ const DefaultMessages = ({ title }) => {
 
     idRef.current.value = data?.id || null
     nameRef.current.value = data?.name || null
-    // typeRef.current.value = data?.type || 'whatsapp'
     $(typeRef.current).val(data?.type || 'whatsapp').trigger('change.select2')
     setMessageType(data?.type || 'whatsapp')
 
@@ -70,27 +71,22 @@ const DefaultMessages = ({ title }) => {
       descriptionRef.current.value = data?.description || null
     }
 
-    setAttachments([]) // Clear attachments when opening modal
+    setAttachments(data?.attachments || [])
     $(modalRef.current).modal('show')
   }
 
   const onModalSubmit = async (e) => {
     e.preventDefault()
 
-    const formData = new FormData()
-    if (idRef.current.value) formData.append("id", idRef.current.value)
-    formData.append("name", nameRef.current.value)
-    formData.append("type", typeRef.current.value)
-    formData.append("description", messageType === 'email' ? bodyRef.current.value : descriptionRef.current.value)
-
-    // Add attachments if type is email
-    if (messageType === 'email') {
-      attachments.forEach(file => {
-        formData.append("attachments[]", file)
-      })
+    const request = {
+      id: idRef.current.value,
+      name: nameRef.current.value,
+      type: typeRef.current.value,
+      description: messageType === 'email' ? bodyRef.current.value : descriptionRef.current.value,
+      attachments
     }
 
-    const result = await defaultMessagesRest.save(formData)
+    const result = await defaultMessagesRest.save(request)
     if (!result) return
 
     $(gridRef.current).dxDataGrid('instance').refresh()
@@ -134,6 +130,12 @@ const DefaultMessages = ({ title }) => {
     $(gridRef.current).dxDataGrid('instance').refresh()
   }
 
+  useEffect(() => {
+    if (messageType === 'whatsapp' && attachments.length > 1) {
+      setAttachments([attachments[0]])
+    }
+  }, [messageType])
+
   return (<>
     <Table gridRef={gridRef} title={title} rest={defaultMessagesRest}
       toolBar={(container) => {
@@ -164,7 +166,8 @@ const DefaultMessages = ({ title }) => {
           cellTemplate: (container, { value }) => {
             container.html(renderToString(
               <span className={`badge bg-${value === 'email' ? 'info' : 'success'}`}>
-                {value === 'email' ? 'Email' : 'WhatsApp'}
+                {value === 'email' ? <i className='mdi mdi-email'></i> : <i className='mdi mdi-whatsapp'></i>}
+                <span className='ms-1'>{value === 'email' ? 'Email' : 'WhatsApp'}</span>
               </span>
             ))
           }
@@ -219,64 +222,64 @@ const DefaultMessages = ({ title }) => {
         </div>
         <div hidden={messageType === 'whatsapp'}>
           <QuillFormGroup eRef={bodyRef} label='Mensaje' col='col-12' />
-
-          {/* File attachments section - Common for both types */}
-          <div className="col-12">
-            <input
-              ref={fileRef}
-              type="file"
-              className="d-none"
-              multiple={messageType === 'email'}
-              onChange={onFileChange}
-            />
-            <div className="d-flex align-items-center gap-2 mb-2">
-              <label className="btn btn-sm btn-soft-primary mb-0" style={{ cursor: 'pointer' }}>
-                <i className="mdi mdi-paperclip me-1"></i>
-                Adjuntar {messageType === 'whatsapp' ? 'archivo' : 'archivos'}
-                <input
-                  type="file"
-                  ref={fileRef}
-                  className="d-none"
-                  multiple={messageType === 'email'}
-                  onChange={onFileChange}
-                />
-              </label>
-              {messageType === 'whatsapp' && attachments.length > 0 && (
-                <small className="text-muted">
-                  Solo se permite un archivo para WhatsApp
-                </small>
-              )}
-            </div>
-
-            {/* Attachments preview */}
-            {attachments.length > 0 && (
-              <div className="border rounded p-2 mb-3">
-                <div className="d-flex align-items-center mb-2">
-                  <i className="mdi mdi-paperclip me-1"></i>
-                  <small className="text-muted">
-                    {messageType === 'whatsapp' ? 'Archivo adjunto' : `Archivos adjuntos (${attachments.length})`}
-                  </small>
-                </div>
-                <div className="d-flex flex-wrap gap-2">
-                  {attachments.map((file, index) => (
-                    <div key={index} className="border rounded p-1 d-flex align-items-center gap-2" style={{ fontSize: '0.8rem' }}>
-                      <i className="mdi mdi-file"></i>
-                      <span>{file.name}</span>
-                      <button
-                        type="button"
-                        className="btn btn-xs btn-soft-danger py-0 px-1"
-                        onClick={() => removeAttachment(index)}
-                      >
-                        <i className="mdi mdi-close"></i>
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </div>
+        </div>
+        {/* File attachments section - Common for both types */}
+        <div className="col-12">
+          <input
+            ref={fileRef}
+            type="file"
+            className="d-none"
+            multiple={messageType === 'email'}
+            onChange={onFileChange}
+          />
+          <div className="d-flex align-items-center gap-2 mb-2">
+            <button className="btn btn-sm btn-soft-primary mb-0" style={{ cursor: 'pointer' }} onClick={() => $(repositoryModalRef.current).modal('show')} type='button'>
+              <i className="mdi mdi-paperclip me-1"></i>
+              Adjuntar {messageType === 'whatsapp' ? 'archivo' : 'archivos'}
+            </button>
+            {messageType === 'whatsapp' && attachments.length > 0 && (
+              <small className="text-muted">
+                Solo se permite un archivo para WhatsApp
+              </small>
             )}
           </div>
+
+          {/* Attachments preview */}
+          {attachments.length > 0 && (
+            <div className="border rounded p-2 mb-3">
+              <div className="d-flex align-items-center mb-2">
+                <i className="mdi mdi-paperclip me-1"></i>
+                <small className="text-muted">
+                  {messageType === 'whatsapp' ? 'Archivo adjunto' : `Archivos adjuntos (${attachments.length})`}
+                </small>
+              </div>
+              <div className="d-flex flex-wrap gap-2">
+                {attachments.map((file, index) => (
+                  <div key={index} className="border rounded p-1 d-flex align-items-center gap-2" style={{ fontSize: '0.8rem' }}>
+                    <i className="mdi mdi-file"></i>
+                    <span>{file.name}</span>
+                    <button
+                      type="button"
+                      className="btn btn-xs btn-soft-danger py-0 px-1"
+                      onClick={() => removeAttachment(file.id)}
+                    >
+                      <i className="mdi mdi-close"></i>
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
+    </Modal>
+
+    <Modal modalRef={repositoryModalRef} title='Repositorio' size='full-width' hideFooter zIndex={1060}>
+      <RepositoryDropzone height='calc(100vh - 300px)'
+        multiple={messageType !== 'whatsapp'}
+        selectedFiles={attachments}
+        setSelectedFiles={setAttachments}
+        selectable />
     </Modal>
   </>
   )

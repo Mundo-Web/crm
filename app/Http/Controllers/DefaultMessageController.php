@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\DefaultMessage;
+use App\Models\DefaultMessageHasAttachment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -13,12 +14,24 @@ class DefaultMessageController extends BasicController
 
     function setPaginationInstance(Request $request, string $model)
     {
-        return $model::where('user_id', Auth::id());
+        return $model::with(['attachments'])
+            ->where('user_id', Auth::id());
     }
     public function beforeSave(Request $request)
     {
         $body = $request->all();
         $body['user_id'] = Auth::id();
         return $body;
+    }
+    public function afterSave(Request $request, object $jpa, ?bool $isNew)
+    {
+        $attachments = $request->attachments ?? [];
+        DefaultMessageHasAttachment::where('default_message_id', $jpa->id)->delete();
+        foreach ($attachments as $attachment) {
+            DefaultMessageHasAttachment::create([
+                'default_message_id' => $jpa->id,
+                'attachment_id' => $attachment['id']
+            ]);
+        }
     }
 }

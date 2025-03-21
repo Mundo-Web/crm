@@ -20,6 +20,11 @@ class RepositoryController extends BasicController
         return ['files' => $files];
     }
 
+    public function setPaginationInstance(Request $request, string $model)
+    {
+        return $model::where('business_id', Auth::user()->business_id);
+    }
+
     public function afterSave(Request $request, object $jpa, ?bool $isNew)
     {
         if ($isNew) {
