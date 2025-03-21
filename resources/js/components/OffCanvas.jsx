@@ -264,9 +264,6 @@ const OffCanvas = ({ offCanvasRef, dataLoaded, setDataLoaded, defaultMessages, s
                             <p>{content.replace(attachment, '')}</p>
                           </>
                       }
-                      {/* <p>
-                      {content}
-                    </p> */}
                     </div>
                     <span className="time">{moment(message.created_at).format('YYYY-MM-DD HH:mm:ss')}</span>
                   </div>
