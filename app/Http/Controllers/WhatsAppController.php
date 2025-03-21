@@ -65,6 +65,8 @@ class WhatsAppController extends Controller
                 $message2send = str_replace($attachment, '', $message);
                 $attachment = str_replace('/attachment:', '', $attachment);
 
+                $filename = end(explode('/', $attachment));
+
                 $res = new Fetch(env('WA_URL') . '/api/send', [
                     'method' => 'POST',
                     'headers' => [
@@ -76,7 +78,7 @@ class WhatsAppController extends Controller
                         'content' => trim($message2send),
                         'attachment' => [[
                             'uri' => $attachment,
-                            'filename' => 'attachment.png',
+                            'filename' => $filename,
                         ]],
                     ]
                 ]);
