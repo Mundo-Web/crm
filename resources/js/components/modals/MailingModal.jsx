@@ -5,34 +5,24 @@ import Modal from "../Modal";
 import GmailRest from "../../actions/GmailRest";
 import { Notify } from "sode-extend-react";
 import SelectFormGroup from "../form/SelectFormGroup";
-import UsersRest from "../../actions/UsersRest";
 import Tippy from "@tippyjs/react";
 import Global from "../../Utils/Global";
-import LaravelSession from "../../Utils/LaravelSession";
-import { renderToStaticMarkup, renderToString } from "react-dom/server";
+import { renderToString } from "react-dom/server";
 import RepositoryDropzone from "../../Reutilizables/Repository/RepositoryDropzone";
 
 const gmailRest = new GmailRest();
-const usersRest = new UsersRest();
 
-const MailingModal = ({ data, session, setSession, inReplyTo, modalRef, onSend = () => { }, defaultMessages, signs = [] }) => {
+const MailingModal = ({ data, inReplyTo, modalRef, onSend = () => { }, defaultMessages, signs = [] }) => {
   const ccRef = useRef();
   const bccRef = useRef();
   const subjectRef = useRef();
   const bodyRef = useRef();
-  const fileRef = useRef();
   const repositoryModalRef = useRef();
 
   const [sending, setSending] = useState(false);
   const [showCC, setShowCC] = useState(false);
   const [showBCC, setShowBCC] = useState(false);
   const [attachments, setAttachments] = useState([]);
-
-  const onFileChange = (e) => {
-    const files = Array.from(e.target.files);
-    setAttachments(prev => [...prev, ...files]);
-    fileRef.current.value = null; // Reset input
-  };
 
   const removeAttachment = (fileId) => {
     setAttachments(prev => prev.filter(x => x.id !== fileId))
@@ -44,7 +34,6 @@ const MailingModal = ({ data, session, setSession, inReplyTo, modalRef, onSend =
     bodyRef.editor.root.innerHTML = "";
     $(ccRef.current).val(null).trigger("change");
     $(bccRef.current).val(null).trigger("change");
-    fileRef.current.value = null;
     setShowCC(false);
     setShowBCC(false);
     setAttachments([]);
@@ -131,6 +120,7 @@ const MailingModal = ({ data, session, setSession, inReplyTo, modalRef, onSend =
       setAttachments([])
       return
     }
+    subjectRef.current.value = template.name;
     bodyRef.current.value = template.description;
     bodyRef.editor.root.innerHTML = template.description;
     setAttachments(template.attachments)

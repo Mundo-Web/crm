@@ -216,7 +216,7 @@ const DefaultMessages = ({ title }) => {
           <option value="whatsapp">WhatsApp</option>
           <option value="email">Email</option>
         </SelectFormGroup>
-        <InputFormGroup eRef={nameRef} label='Alias' col='col-12' required />
+        <InputFormGroup eRef={nameRef} label={messageType === 'whatsapp' ? 'Alias': 'Asunto'} col='col-12' required />
         <div hidden={messageType === 'email'}>
           <TextareaFormGroup eRef={descriptionRef} label='Mensaje' col='col-12' />
         </div>

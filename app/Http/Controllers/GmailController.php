@@ -170,7 +170,7 @@ class GmailController extends Controller
         $rawMessage .= "Bcc: " . implode("\r\n Bcc: ", $bccs) . "\r\n";
       }
 
-      $rawMessage .= "Subject: {$request->input('subject')}\r\n";
+      $rawMessage .= "Subject: =?UTF-8?B?" . base64_encode($request->input('subject')) . "?=\r\n";
       $rawMessage .= "MIME-Version: 1.0\r\n";
       $rawMessage .= "Content-Type: multipart/mixed; boundary=\"$boundary\"\r\n";
 
