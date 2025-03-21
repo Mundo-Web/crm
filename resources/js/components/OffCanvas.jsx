@@ -249,10 +249,15 @@ const OffCanvas = ({ offCanvasRef, dataLoaded, setDataLoaded, defaultMessages, s
                                   }}
                                 />
                                 <div className="d-flex justify-content-end">
-                                  <button className="btn btn-xs btn-white mb-1 text-nowrap d-flex text-end">
+                                  <a
+                                    className="btn btn-xs btn-white mb-1 text-nowrap d-flex text-end"
+                                    href={attachment.replace('/attachment:', '')}
+                                    target="_blank"
+                                    download
+                                  >
                                     <i className="mdi mdi-download me-1"></i>
                                     <span>Descargar adjunto</span>
-                                  </button>
+                                  </a>
                                 </div>
                               </>
                             }
