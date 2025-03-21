@@ -199,6 +199,7 @@ const RepositoryDropzone = ({ files: filesDB, height = 'calc(100vh - 240px)', se
             className="btn btn-sm btn-primary"
             onClick={() => fileInputRef.current.click()}
             disabled={uploading}
+            type='button'
           >
             {uploading ? (
               <>
