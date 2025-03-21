@@ -161,7 +161,7 @@ const OffCanvas = ({ offCanvasRef, dataLoaded, setDataLoaded, defaultMessages, s
       visibility: 'hidden',
       width: '95%',
       maxWidth: '600px',
-      zIndex: 1030
+      zIndex: 1041
     }}
       aria-hidden="true"
       onSubmit={onMessageSubmit}>

@@ -767,7 +767,7 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
 
         </div>)
     }
-    <Modal modalRef={modalRef} title='Detalles del lead' btnSubmitText='Guardar' size='full-width' bodyClass='p-3 bg-light' isStatic onSubmit={(e) => e.preventDefault()} zIndex={1040}>
+    <Modal modalRef={modalRef} title='Detalles del lead' btnSubmitText='Guardar' size='full-width' bodyClass='p-3 bg-light' isStatic onSubmit={(e) => e.preventDefault()} zIndex={1042}>
       <div className="row">
         <div className="col-lg-3 col-md-4 col-sm-6 col-xs-12">
           <div className="d-flex mb-3">
