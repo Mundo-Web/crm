@@ -192,6 +192,10 @@ const OffCanvas = ({ offCanvasRef, dataLoaded, setDataLoaded, defaultMessages, s
             messages.sort((a, b) => a.microtime - b.microtime).map((message, i) => {
               const content = message.message.replace(/\{\{.*?\}\}/gs, '')
               const fromMe = message.role !== 'Human'
+              let attachment = ''
+              if (content.startsWith('/attachment:')) {
+                attachment = content.split('\n')[0]
+              }
               return <li key={i} className={message.role == 'Human' ? '' : 'odd'}>
                 <div className="message-list">
                   <div className="chat-avatar">
@@ -225,7 +229,30 @@ const OffCanvas = ({ offCanvasRef, dataLoaded, setDataLoaded, defaultMessages, s
                               e.target.src = `//placehold.co/500x200?text=404`;
                             }}
                           />
-                          : <p>{content}</p>
+                          : <>
+                            {
+                              attachment && <>
+                                <img src={attachment.replace('/attachment:', '')}
+                                  className="mb-1"
+                                  alt='attachment'
+                                  style={{
+                                    minWidth: '300px',
+                                    width: '100%',
+                                    maxWidth: '100%',
+                                    minHeight: '200px',
+                                    maxHeight: '300px',
+                                    borderRadius: '4px',
+                                    objectFit: 'cover',
+                                  }}
+                                  onError={e => {
+                                    e.target.onerror = null
+                                    e.target.src = `//placehold.co/500x200?text=404`;
+                                  }}
+                                />
+                              </>
+                            }
+                            <p>{content.replace(attachment, '')}</p>
+                          </>
                       }
                       {/* <p>
                       {content}
