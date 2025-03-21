@@ -205,10 +205,14 @@ class GmailController extends Controller
           $fileUrl = env('APP_URL') . '/cloud/' . $attachment['file'];
           $fileContent = file_get_contents($fileUrl);
           $encodedFile = base64_encode($fileContent);
+          $filename = $attachment['name'];
+          if (!str_ends_with($filename, $attachment['extension'])) {
+            $filename .= '.' . $attachment['extension'];
+          }
 
           $rawMessage .= "--$boundary\r\n";
           $rawMessage .= "Content-Type: " . ($attachment['properties']['mime_type'] ?? 'application/octet-stream') . "; name=\"" . $attachment['name'] . "\"\r\n";
-          $rawMessage .= "Content-Disposition: attachment; filename=\"" . $attachment['name'] . "\"\r\n";
+          $rawMessage .= "Content-Disposition: attachment; filename=\"" . $filename . "\"\r\n";
           $rawMessage .= "Content-Transfer-Encoding: base64\r\n\r\n";
           $rawMessage .= chunk_split($encodedFile) . "\r\n\r\n";
         }
