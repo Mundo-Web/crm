@@ -18,6 +18,7 @@ const OffCanvas = ({ offCanvasRef, dataLoaded, setDataLoaded, defaultMessages, s
   const defaultMessagesRef = useRef()
   const defaultMessagesButtonRef = useRef()
   const signsModalRef = useRef()
+  const messagesContainerRef = useRef()
 
   const [messages, setMessages] = useState([])
   const [isSending, setIsSending] = useState(false)
@@ -103,6 +104,11 @@ const OffCanvas = ({ offCanvasRef, dataLoaded, setDataLoaded, defaultMessages, s
     caches.open('messages').then(cache => {
       cache.put(`${LaravelSession.business_uuid}/${dataLoaded.id}`, new Response(JSON.stringify(messages)))
     })
+
+    if (messagesContainerRef.current) {
+      const element = messagesContainerRef.current;
+      $(element).parent()[0].scrollTop = element.scrollHeight;
+    }
   }, [messages])
 
   useEffect(() => {
@@ -186,7 +192,7 @@ const OffCanvas = ({ offCanvasRef, dataLoaded, setDataLoaded, defaultMessages, s
       </div>
 
       <div className="offcanvas-body">
-        <ul className="conversation-list slimscroll w-100 align-items-bottom"
+        <ul ref={messagesContainerRef} className="conversation-list slimscroll w-100 align-items-bottom"
           data-simplebar>
           {
             messages.sort((a, b) => a.microtime - b.microtime).map((message, i) => {
