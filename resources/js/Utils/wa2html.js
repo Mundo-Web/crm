@@ -6,6 +6,7 @@ const wa2html = (input) => {
 
     // Replace all newlines with <br> tags
     input = input.replace(/\n/g, '<br>');
+    console.log(input);
 
     const convertInlineFormats = (text) => {
         // Convert bold (*text*)
