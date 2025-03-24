@@ -6,6 +6,8 @@ import WhatsAppRest from "../actions/WhatsAppRest"
 import Modal from "./Modal"
 import Tippy from "@tippyjs/react"
 import UsersRest from "../actions/UsersRest"
+import HtmlContent from "../Utils/HtmlContent"
+import '../../css/whatsapp.css'
 
 const messagesRest = new MessagesRest()
 const whatsAppRest = new WhatsAppRest()
@@ -227,7 +229,7 @@ const OffCanvas = ({ offCanvasRef, dataLoaded, setDataLoaded, defaultMessages, s
                       }} alt={dataLoaded?.contact_name} />
                   </div>
                   <div className="conversation-text">
-                    <div className="ctext-wrap">
+                    <div className="text-wrap">
                       {/* <span className="user-name">{message.role == 'Human' ? dataLoaded?.contact_name : ''}</span> */}
                       {
                         content.startsWith('/signature:')
@@ -277,7 +279,8 @@ const OffCanvas = ({ offCanvasRef, dataLoaded, setDataLoaded, defaultMessages, s
                                 </div>
                               </>
                             }
-                            <p>{content.replace(attachment, '')}</p>
+                            {/* <p>{content.replace(attachment, '')}</p> */}
+                            <HtmlContent className='text-start' html={content.replace(attachment, '')} />
                           </>
                       }
                     </div>

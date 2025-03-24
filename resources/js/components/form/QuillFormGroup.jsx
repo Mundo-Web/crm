@@ -18,8 +18,9 @@ const QuillFormGroup = ({ col, label, information, eRef = useRef(), value, requi
           ["blockquote", "code-block"],
           [
             { list: "ordered" },
-            { list: "bullet" }
-          ]
+            { list: "bullet" },
+          ],
+          ["clean"]
         ],
         mention: mention ? {
           allowedChars: /^[A-Za-z\sÅÄÖåäö]*$/,

@@ -7,7 +7,6 @@ import Adminto from './components/Adminto.jsx'
 import Modal from './components/Modal.jsx'
 import Table from './components/Table.jsx'
 import InputFormGroup from './components/form/InputFormGroup.jsx'
-import TextareaFormGroup from './components/form/TextareaFormGroup.jsx'
 import TippyButton from './components/form/TippyButton.jsx'
 import DxPanelButton from './components/dx/DxPanelButton.jsx'
 import DefaultMessagesRest from './actions/DefaultMessagesRest.js'
@@ -27,9 +26,8 @@ const DefaultMessages = ({ title, clientFields }) => {
   // Form elements ref
   const idRef = useRef()
   const nameRef = useRef()
-  const descriptionRef = useRef()
   const typeRef = useRef()
-  const bodyRef = useRef() // For email rich text editor
+  const bodyRef = useRef()
   const [isEditing, setIsEditing] = useState(false)
   const [messageType, setMessageType] = useState('whatsapp')
 
@@ -64,12 +62,8 @@ const DefaultMessages = ({ title, clientFields }) => {
     $(typeRef.current).val(data?.type || 'whatsapp').trigger('change.select2')
     setMessageType(data?.type || 'whatsapp')
 
-    if (data?.type === 'email') {
-      bodyRef.current.value = data?.description || ''
-      bodyRef.editor.root.innerHTML = data?.description || ''
-    } else {
-      descriptionRef.current.value = data?.description || null
-    }
+    bodyRef.current.value = data?.description || ''
+    bodyRef.editor.root.innerHTML = data?.description || ''
 
     setAttachments(data?.attachments || [])
     $(modalRef.current).modal('show')
@@ -82,7 +76,7 @@ const DefaultMessages = ({ title, clientFields }) => {
       id: idRef.current.value,
       name: nameRef.current.value,
       type: typeRef.current.value,
-      description: messageType === 'email' ? bodyRef.current.value : descriptionRef.current.value,
+      description: bodyRef.current.value,
       attachments
     }
 
@@ -91,21 +85,6 @@ const DefaultMessages = ({ title, clientFields }) => {
 
     $(gridRef.current).dxDataGrid('instance').refresh()
     $(modalRef.current).modal('hide')
-  }
-
-  // In the Modal JSX, add after QuillFormGroup:
-
-  const onTypeChange = (e) => {
-    const type = $(typeRef.current).val()
-    setMessageType(type)
-    // Clear message content when switching types
-    if (type === 'email') {
-      descriptionRef.current.value = ''
-      bodyRef.editor.root.innerHTML = ''
-    } else {
-      bodyRef.current.value = ''
-      descriptionRef.current.value = ''
-    }
   }
 
   const onStatusChange = async ({ id, status }) => {
@@ -174,15 +153,15 @@ const DefaultMessages = ({ title, clientFields }) => {
         },
         {
           dataField: 'description',
-          caption: 'Descripcion',
+          caption: 'Contenido',
           width: '60%',
           cellTemplate: (container, { value, data }) => {
             if (!value) container.html(renderToString(<i className='text-muted'>- Sin descripcion -</i>))
-            else if (data.type === 'email') {
+            // else if (data.type === 'email') {
               container.text($(`<div>${value}</div>`).text().trim())
-            } else {
-              container.text(value)
-            }
+            // } else {
+              // container.text(value)
+            // }
           }
         },
         {
@@ -210,29 +189,26 @@ const DefaultMessages = ({ title, clientFields }) => {
           label='Tipo mensaje'
           dropdownParent='#default-messages-container'
           minimumResultsForSearch={-1}
-          onChange={onTypeChange}
+          onChange={(e) => setMessageType(e.target.value)}
           disabled={isEditing}
           required>
           <option value="whatsapp">WhatsApp</option>
           <option value="email">Email</option>
         </SelectFormGroup>
         <InputFormGroup eRef={nameRef} label={messageType === 'whatsapp' ? 'Alias' : 'Asunto'} col='col-12' required />
-        <div hidden={messageType === 'email'}>
-          <TextareaFormGroup eRef={descriptionRef} label='Mensaje' col='col-12' />
-        </div>
-        <div hidden={messageType === 'whatsapp'}>
-          <QuillFormGroup eRef={bodyRef} label='Mensaje' col='col-12' mention
-            mentionDenotationChars={['#']}
-            mentionSource={(searchTerm, renderList, denotationChar) => {
-              renderList(clientFields
-                .filter(x => x.name.toLowerCase().includes(searchTerm.toLowerCase()))
-                .map(x => ({
-                  id: x.field,
-                  label: x.field,
-                  value: `${x.name}`
-                })))
-            }} information="Nota: puedes agregar variables usando # (Ej. #Nombre)" />
-        </div>
+
+        <QuillFormGroup eRef={bodyRef} label='Mensaje' col='col-12' mention
+          mentionDenotationChars={['#']}
+          mentionSource={(searchTerm, renderList, denotationChar) => {
+            renderList(clientFields
+              .filter(x => x.name.toLowerCase().includes(searchTerm.toLowerCase()))
+              .map(x => ({
+                id: x.field,
+                label: x.field,
+                value: `${x.name}`
+              })))
+          }} information="Nota: puedes agregar variables usando # (Ej. #Nombre)" />
+
         {/* File attachments section - Common for both types */}
         <div className="col-12">
           <input

@@ -38,6 +38,10 @@ class WhatsAppController extends Controller
             $business_id = Auth::user()->business_uuid;
             $clientJpa = Client::find($request->client_id);
             $message = $request->message;
+
+            dump($message);
+            dump(Text::html2wa($message));
+
             if (Text::startsWith($message, '/signature:')) {
                 $res = new Fetch(env('WA_URL') . '/api/send', [
                     'method' => 'POST',
@@ -76,7 +80,7 @@ class WhatsAppController extends Controller
                     'body' => [
                         'from' => 'atalaya-' . $business_id,
                         'to' => [$clientJpa->contact_phone],
-                        'content' => trim($message2send),
+                        'content' => Text::html2wa(trim($message2send ?: '')),
                         'attachment' => [[
                             'uri' => $attachment,
                             'filename' => $filename,
@@ -100,7 +104,7 @@ class WhatsAppController extends Controller
                     'body' => [
                         'from' => 'atalaya-' . $business_id,
                         'to' => [$clientJpa->contact_phone],
-                        'content' => $request->message,
+                        'content' => Text::html2wa($request->message),
                     ]
                 ]);
             }
