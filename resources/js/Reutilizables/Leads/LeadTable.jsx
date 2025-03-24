@@ -27,6 +27,7 @@ const LeadTable = ({ gridRef, rest, can, defaultLeadStatus, statuses, manageStat
         onClick: () => onOpenModal()
       }))
     }}
+    exportable
     height={'calc(65vh - 90px)'}
     pageSize={25}
     allowedPageSizes={[10, 25, 50, 100]}

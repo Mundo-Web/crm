@@ -112,7 +112,7 @@ const OffCanvas = ({ offCanvasRef, dataLoaded, setDataLoaded, defaultMessages, s
       // Check if scrolled to bottom or top
       const isAtBottom = parent.scrollHeight - parent.scrollTop === parent.clientHeight;
       const isAtTop = parent.scrollTop === 0;
-      
+
       // Auto-scroll if at bottom
       if (isAtBottom || isAtTop) {
         parent.scrollTop = element.scrollHeight;
@@ -387,9 +387,9 @@ const OffCanvas = ({ offCanvasRef, dataLoaded, setDataLoaded, defaultMessages, s
       <b className="d-block">¿Desea seleccionar una de sus firmas disponibles como predeterminado?</b>
       <div className="row mt-2">
         {signs.map((sign, index) => (
-          <div className="col-md-6">
+          <div key={index} className="col-md-6">
             <Tippy content='Marcar como predeterminado'>
-              <label key={index} className="card border" style={{ cursor: 'pointer' }}>
+              <label className="card border" style={{ cursor: 'pointer' }}>
                 <div className="card-header d-flex gap-1 align-items-center py-1 px-2">
                   <input
                     type="radio"

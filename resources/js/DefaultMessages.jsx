@@ -231,7 +231,7 @@ const DefaultMessages = ({ title, clientFields }) => {
                   label: x.field,
                   value: `${x.name}`
                 })))
-            }} />
+            }} information="Nota: puedes agregar variables usando # (Ej. #Nombre)" />
         </div>
         {/* File attachments section - Common for both types */}
         <div className="col-12">

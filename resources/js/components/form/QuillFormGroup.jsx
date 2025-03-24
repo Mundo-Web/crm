@@ -1,8 +1,9 @@
 import React, { useEffect, useRef } from "react"
 import Quill from 'quill'
 import "quill-mention/autoregister"
+import Tippy from "@tippyjs/react"
 
-const QuillFormGroup = ({ col, label, eRef = useRef(), value, required = false, theme = 'snow',
+const QuillFormGroup = ({ col, label, information, eRef = useRef(), value, required = false, theme = 'snow',
   mention, mentionSource, mentionDenotationChars = ['@', '#']
 }) => {
   const quillRef = useRef()
@@ -36,7 +37,7 @@ const QuillFormGroup = ({ col, label, eRef = useRef(), value, required = false, 
 
   return <div data-id="quill-form-group" className={`form-group ${col} mb-2`} style={{ height: 'max-content' }}>
     <label htmlFor='' className='form-label'>
-      {label} {required && <b className="text-danger">*</b>}
+      {label} {typeof information == 'string' && <Tippy content={information}><i className="mdi mdi-information"></i></Tippy>} {required && <b className="text-danger">*</b>}
     </label>
     <div ref={quillRef} style={{ minHeight: '162px' }}>{value}</div>
     <input ref={eRef} type="hidden" required={required} />
