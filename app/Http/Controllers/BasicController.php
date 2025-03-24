@@ -265,8 +265,6 @@ class BasicController extends Controller
         if (!$ext) $ext = File::getExtention($full->getMimeType());
         $path = "images/{$snake_case}/{$uuid}.{$ext}";
         $strg =  Storage::put($path, file_get_contents($full));
-        dump($path);
-        dump($strg);
         $body[$field] = "{$uuid}.{$ext}";
       }
 
