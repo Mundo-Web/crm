@@ -187,15 +187,7 @@ class GmailController extends Controller
       $rawMessage .= "--$boundary\r\n";
       $rawMessage .= "Content-Type: text/html; charset=UTF-8\r\n\r\n";
 
-      // $mailing_sign = Auth::user()->service_user->mailing_sign;
-      $mailing_sign = null;
-
-      if ($mailing_sign) {
-        $app_url = \env('APP_PROTOCOL') . '://' . \env('APP_DOMAIN');
-        $rawMessage .= $request->input('body') . "<div><img src=\"{$app_url}/repository/signs/{$mailing_sign}\" style=\"width: 100%; max-width: 520px; max-height: 210px; object-fit: contain; object-position: center;\"></div>\r\n\r\n";
-      } else {
-        $rawMessage .= $request->input('body') . "\r\n\r\n";
-      }
+      $rawMessage .= $request->input('body') . "\r\n\r\n";
 
       // Parte 2: Adjuntar archivos (si los hay)
       // Handle attachments from Repository
@@ -211,10 +203,11 @@ class GmailController extends Controller
           }
 
           $rawMessage .= "--$boundary\r\n";
-          $rawMessage .= "Content-Type: " . ($attachment['properties']['mime_type'] ?? 'application/octet-stream') . "; name=\"" . $attachment['name'] . "\"\r\n";
+          $rawMessage .= "Content-Type: " . ($attachment['file_mimetype'] ?? 'application/octet-stream') . "; name=\"" . $attachment['name'] . "\"\r\n";
           $rawMessage .= "Content-Disposition: attachment; filename=\"" . $filename . "\"\r\n";
           $rawMessage .= "Content-Transfer-Encoding: base64\r\n\r\n";
-          $rawMessage .= chunk_split($encodedFile) . "\r\n\r\n";
+          // $rawMessage .= chunk_split($encodedFile) . "\r\n\r\n";
+          $rawMessage .= $fileUrl . "\r\n\r\n";
         }
       }
 
