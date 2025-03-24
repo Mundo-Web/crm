@@ -4,19 +4,22 @@ const wa2html = (input) => {
     let inList = false;
     let listType = '';
 
+    // Replace all newlines with <br> tags
+    input = input.replace(/\n/g, '<br>');
+
     const convertInlineFormats = (text) => {
         // Convert bold (*text*)
         text = text.replace(/\*(.*?)\*/g, '<strong>$1</strong>');
-        
+
         // Convert italic (_text_)
         text = text.replace(/_(.*?)_/g, '<em>$1</em>');
-        
+
         // Convert strikethrough (~text~)
         text = text.replace(/~(.*?)~/g, '<s>$1</s>');
-        
+
         // Convert code (```text```)
         text = text.replace(/```(.*?)```/g, '<code>$1</code>');
-        
+
         return text;
     };
 
