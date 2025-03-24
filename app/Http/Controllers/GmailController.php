@@ -194,7 +194,8 @@ class GmailController extends Controller
       $attachments = $request->input('attachments', []);
       if (!empty($attachments)) {
         foreach ($attachments as $attachment) {
-          $fileUrl = env('APP_URL') . '/cloud/' . $attachment['file'];
+          // $fileUrl = env('APP_URL') . '/cloud/' . $attachment['file'];
+          $driveFileId = '1jmJvftEUiNNCCemjCITbktd4WDQPqJi-';
           // $fileContent = file_get_contents($fileUrl);
           // $encodedFile = base64_encode($fileContent);
           $filename = $attachment['name'];
@@ -205,9 +206,13 @@ class GmailController extends Controller
           $rawMessage .= "--$boundary\r\n";
           $rawMessage .= "Content-Type: " . ($attachment['file_mimetype'] ?? 'application/octet-stream') . "; name=\"" . $attachment['name'] . "\"\r\n";
           $rawMessage .= "Content-Disposition: attachment; filename=\"" . $filename . "\"\r\n";
+
+          $rawMessage .= "X-Attachment-Id: {$driveFileId}\r\n";
+          $rawMessage .= "Content-ID: <{$driveFileId}>\r\n";
+          
           $rawMessage .= "Content-Transfer-Encoding: base64\r\n\r\n";
           // $rawMessage .= chunk_split($encodedFile) . "\r\n\r\n";
-          $rawMessage .= $fileUrl . "\r\n\r\n";
+          $rawMessage .= "https://drive.google.com/uc?export=download&id={$driveFileId}\r\n\r\n";
         }
       }
 
