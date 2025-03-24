@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Client;
 use App\Models\DefaultMessage;
 use App\Models\DefaultMessageHasAttachment;
 use Illuminate\Http\Request;
@@ -12,6 +13,13 @@ class DefaultMessageController extends BasicController
     public $model = DefaultMessage::class;
     public $reactView = 'DefaultMessages';
     public $softDeletion = false;
+
+    public function setReactViewProperties(Request $request)
+    {
+        return [
+            'clientFields' => Client::getFields()
+        ];
+    }
 
     function setPaginationInstance(Request $request, string $model)
     {

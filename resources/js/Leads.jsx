@@ -46,7 +46,7 @@ const newLeadsRest = new NewLeadsRest()
 const clientsRest = new ClientsRest()
 const clientNotesRest = new ClientNotesRest()
 const taskRest = new TasksRest()
-const usetsRest = new UsersRest()
+const usersRest = new UsersRest()
 const productsByClients = new ProductsByClients()
 const gmailRest = new GmailRest()
 
@@ -186,7 +186,7 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
             allowedChars: /^[A-Za-z\sÅÄÖåäö]*$/,
             mentionDenotationChars: ["@", "#"],
             source: async function (searchTerm, renderList, ...others) {
-              const { data } = await usetsRest.paginate({ filter: ['fullname', 'contains', searchTerm] });
+              const { data } = await usersRest.paginate({ filter: ['fullname', 'contains', searchTerm] });
               renderList(data.map(({ relative_id, fullname }) => ({
                 id: relative_id,
                 value: fullname
@@ -886,7 +886,7 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
                   const drawGoogleAuth = type.id == '37b1e8e2-04c4-4246-a8c9-838baa7f8187' && !hasGSToken
                   return <div key={`tab-note-type-${i}`} className='tab-pane' id={`note-type-${type.id}`}>
                     {
-                      !drawGoogleAuth &&
+                      // !drawGoogleAuth &&
                       <h4 className='header-title mb-2 d-flex justify-content-between align-items-center'>
                         <span>Lista de {type.name}</span>
                         {

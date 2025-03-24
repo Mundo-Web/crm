@@ -19,7 +19,7 @@ import RepositoryDropzone from './Reutilizables/Repository/RepositoryDropzone.js
 
 const defaultMessagesRest = new DefaultMessagesRest()
 
-const DefaultMessages = ({ title }) => {
+const DefaultMessages = ({ title, clientFields }) => {
   const gridRef = useRef()
   const modalRef = useRef()
   const repositoryModalRef = useRef()
@@ -216,12 +216,22 @@ const DefaultMessages = ({ title }) => {
           <option value="whatsapp">WhatsApp</option>
           <option value="email">Email</option>
         </SelectFormGroup>
-        <InputFormGroup eRef={nameRef} label={messageType === 'whatsapp' ? 'Alias': 'Asunto'} col='col-12' required />
+        <InputFormGroup eRef={nameRef} label={messageType === 'whatsapp' ? 'Alias' : 'Asunto'} col='col-12' required />
         <div hidden={messageType === 'email'}>
           <TextareaFormGroup eRef={descriptionRef} label='Mensaje' col='col-12' />
         </div>
         <div hidden={messageType === 'whatsapp'}>
-          <QuillFormGroup eRef={bodyRef} label='Mensaje' col='col-12' />
+          <QuillFormGroup eRef={bodyRef} label='Mensaje' col='col-12' mention
+            mentionDenotationChars={['#']}
+            mentionSource={(searchTerm, renderList, denotationChar) => {
+              renderList(clientFields
+                .filter(x => x.name.toLowerCase().includes(searchTerm.toLowerCase()))
+                .map(x => ({
+                  id: x.field,
+                  label: x.field,
+                  value: `${x.name}`
+                })))
+            }} />
         </div>
         {/* File attachments section - Common for both types */}
         <div className="col-12">
@@ -246,7 +256,7 @@ const DefaultMessages = ({ title }) => {
 
           {/* Attachments preview */}
           {attachments.length > 0 && (
-            <div className="border rounded p-2 mb-3">
+            <div className="border rounded p-2">
               <div className="d-flex align-items-center mb-2">
                 <i className="mdi mdi-paperclip me-1"></i>
                 <small className="text-muted">

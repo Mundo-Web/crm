@@ -1,6 +1,10 @@
 import React, { useEffect, useRef } from "react"
+import Quill from 'quill'
+import "quill-mention/autoregister"
 
-const QuillFormGroup = ({ col, label, eRef = useRef(), value, required = false, theme = 'snow' }) => {
+const QuillFormGroup = ({ col, label, eRef = useRef(), value, required = false, theme = 'snow',
+  mention, mentionSource, mentionDenotationChars = ['@', '#']
+}) => {
   const quillRef = useRef()
 
   useEffect(() => {
@@ -15,7 +19,12 @@ const QuillFormGroup = ({ col, label, eRef = useRef(), value, required = false, 
             { list: "ordered" },
             { list: "bullet" }
           ]
-        ]
+        ],
+        mention: mention ? {
+          allowedChars: /^[A-Za-z\sÅÄÖåäö]*$/,
+          mentionDenotationChars,
+          source: mentionSource,
+        } : undefined
       }
     })
 

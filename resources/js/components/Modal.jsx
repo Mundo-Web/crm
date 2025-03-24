@@ -1,8 +1,16 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 
-const Modal = ({ modalRef, title = 'Modal', isStatic = false, size = 'md', position = 'dialog-centered', children, bodyClass = '', btnCancelText, btnSubmitText, hideHeader, hideFooter, hideButtonSubmit, zIndex, width, onSubmit = (e) => { e.preventDefault(); $(modalRef.current).modal('hide') } }) => {
+const Modal = ({ modalRef, title = 'Modal', isStatic = false, size = 'md', position = 'dialog-centered', children, bodyClass = '', btnCancelText, btnSubmitText, hideHeader, hideFooter, hideButtonSubmit, zIndex, width, onSubmit = (e) => { e.preventDefault(); $(modalRef.current).modal('hide') }, onClose = () => { } }) => {
   const staticProp = isStatic ? { 'data-bs-backdrop': 'static' } : {}
   const modalId = crypto.randomUUID();
+
+  useEffect(() => {
+    modalRef.current.addEventListener('hidden.bs.modal', () => {
+      onClose()
+      console.log('Modal cerrado:', modalId)
+    });
+  }, [null])
+
   return (<form id={`modal-${modalId}`} className='modal fade' ref={modalRef} tabIndex='-1' aria-hidden='true' {...staticProp} onSubmit={onSubmit} autoComplete='off' style={{
     zIndex
   }}>

@@ -60,6 +60,24 @@ class Client extends Model
         'complete_registration'
     ];
 
+    static function getFields()
+    {
+        return [
+            ['field' => 'contact_name', 'name' => 'Nombre del contacto'],
+            ['field' => 'contact_phone', 'name' => 'Teléfono del contacto'],
+            ['field' => 'contact_email', 'name' => 'Correo del contacto'],
+            ['field' => 'contact_address', 'name' => 'Dirección del contacto'],
+            ['field' => 'ruc', 'name' => 'RUC'],
+            ['field' => 'name', 'name' => 'Nombre'],
+            ['field' => 'contact_position', 'name' => 'Cargo'],
+            ['field' => 'message', 'name' => 'Mensaje'],
+            ['field' => 'web_url', 'name' => 'URL'],
+            ['field' => 'tradename', 'name' => 'Nombre comercial'],
+            ['field' => 'sector', 'name' => 'Sector comercial'],
+            ['field' => 'workers', 'name' => 'N° Trabajadores'],
+        ];
+    }
+
     protected $hidden = [
         // 'business_id'
     ];

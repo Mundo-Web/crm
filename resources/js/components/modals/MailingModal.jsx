@@ -141,15 +141,24 @@ const MailingModal = ({ data, inReplyTo, modalRef, onSend = () => { }, defaultMe
       setAttachments([])
       return
     }
+
+    const content = $(`<div>${template.description}</div>`)
+    content.find('.mention').each((_, element) => {
+      const mention = $(element)
+      const mentionId = mention.attr('data-id')
+      mention.removeClass('mention')
+      mention.text(data[mentionId])
+    })
+
     subjectRef.current.value = template.name;
     bodyRef.current.value = template.description;
-    bodyRef.editor.root.innerHTML = template.description;
+    bodyRef.editor.root.innerHTML = content.html();
     setAttachments(template.attachments)
   }
 
   return (
     <>
-      <Modal modalRef={modalRef} size="lg" zIndex={1050} onSubmit={onSubmit} hideHeader hideFooter>
+      <Modal modalRef={modalRef} size="lg" zIndex={1050} onSubmit={onSubmit} hideHeader hideFooter onClose={cleanForm}>
         <div id="mailing-modal">
           <button type="button" className="btn-close float-end" data-bs-dismiss="modal" aria-label="Close"></button>
           <h4 className="header-title mb-0">Mensaje nuevo</h4>
