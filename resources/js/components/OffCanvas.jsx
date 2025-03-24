@@ -312,7 +312,7 @@ const OffCanvas = ({ offCanvasRef, dataLoaded, setDataLoaded, defaultMessages, s
                       const attachment = message.attachments[0]
                       const attachmentURL = `${Global.APP_URL}/cloud/${attachment.file}`
 
-                      const content = $(`<div>${template.description}</div>`)
+                      const content = $(`<div>${message.description}</div>`)
                       content.find('.mention').each((_, element) => {
                         const mention = $(element)
                         const mentionId = mention.attr('data-id')
