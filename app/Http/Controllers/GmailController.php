@@ -244,7 +244,7 @@ class GmailController extends Controller
       return ClientNote::where('id', $noteJpa->id)
         ->with(['type', 'user', 'tasks', 'tasks.assigned', 'status', 'manageStatus'])
         ->first();
-    });
+    }, fn($response, $th) => dump($th));
 
     return response($response->toArray(), $response->status);
   }
