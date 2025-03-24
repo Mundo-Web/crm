@@ -237,7 +237,7 @@ const RepositoryDropzone = ({ files: filesDB, height = 'calc(100vh - 240px)', se
                       else {
                         const a = document.createElement('a')
                         a.href = `${Global.APP_URL}/cloud/${file.file}`
-                        a.download = `${file.name}.${file.file_extension || 'enc'}`
+                        // a.download = `${file.name}.${file.file_extension || 'enc'}`
                         a.click()
                         a.remove()
                       }
