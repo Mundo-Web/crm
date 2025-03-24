@@ -1,7 +1,10 @@
 import React from 'react'
 import DataGrid from './DataGrid'
+import { renderToString } from 'react-dom/server'
 
 const Table = ({ title, gridRef, rest, columns, toolBar, masterDetail, filterValue = [], defaultRows, selection, className = '', allowedPageSizes, pageSize, exportable = false, customizeCell, reloadWith, height }) => {
+  const html = renderToString(<div>{title}</div>)
+  const text = $(html).text().trim().clean('-')
   return (<div className={`row ${className}`}>
     <div className="col-12">
       <div className="card">
@@ -18,7 +21,7 @@ const Table = ({ title, gridRef, rest, columns, toolBar, masterDetail, filterVal
               <span id="header-title-prefix"></span> Lista de {title} <span id="header-title-suffix"></span>
             </h4>
           }
-          <DataGrid gridRef={gridRef} rest={rest} columns={columns.filter(Boolean)} toolBar={toolBar} masterDetail={masterDetail} filterValue={filterValue} defaultRows={defaultRows} selection={selection} allowedPageSizes={allowedPageSizes} pageSize={pageSize} exportable={exportable} exportableName={title} customizeCell={customizeCell} reloadWith={reloadWith} height={height} />
+          <DataGrid gridRef={gridRef} rest={rest} columns={columns.filter(Boolean)} toolBar={toolBar} masterDetail={masterDetail} filterValue={filterValue} defaultRows={defaultRows} selection={selection} allowedPageSizes={allowedPageSizes} pageSize={pageSize} exportable={exportable} exportableName={text.toLowerCase()} customizeCell={customizeCell} reloadWith={reloadWith} height={height} />
         </div>
       </div>
     </div>
