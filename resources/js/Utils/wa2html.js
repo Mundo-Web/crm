@@ -83,7 +83,7 @@ const wa2html = (input) => {
         html += `</${listType}>\n`;
     }
 
-    input = input.replace(/\n/g, '<br>');
+    input = input.replace(/\\n/g, '<br>');
 
     return html.trim();
 };
