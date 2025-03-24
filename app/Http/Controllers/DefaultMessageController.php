@@ -11,6 +11,7 @@ class DefaultMessageController extends BasicController
 {
     public $model = DefaultMessage::class;
     public $reactView = 'DefaultMessages';
+    public $softDeletion = false;
 
     function setPaginationInstance(Request $request, string $model)
     {
