@@ -230,7 +230,7 @@ const OffCanvas = ({ offCanvasRef, dataLoaded, setDataLoaded, defaultMessages, s
                       }} alt={dataLoaded?.contact_name} />
                   </div>
                   <div className="conversation-text">
-                    <div className="text-wrap">
+                    <div className="ctext-wrap">
                       {/* <span className="user-name">{message.role == 'Human' ? dataLoaded?.contact_name : ''}</span> */}
                       {
                         content.startsWith('/signature:')
