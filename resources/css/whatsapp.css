@@ -1,3 +1,15 @@
 .conversation-text li {
     margin-bottom: 0px;
 }
+
+.conversation-text ul,
+.conversation-text ol {
+    display: block;
+    margin: 8px 0;
+}
+
+.conversation-text blockquote {
+    margin: 0px;
+    padding: 4px 0px 4px 16px;
+    border-left: 4px solid #ddd;
+}
