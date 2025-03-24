@@ -4,10 +4,6 @@ const wa2html = (input) => {
     let inList = false;
     let listType = '';
 
-    // Replace all newlines with <br> tags
-    input = input.replace(/\n/g, '<br>');
-    console.log(input);
-
     const convertInlineFormats = (text) => {
         // Convert bold (*text*)
         text = text.replace(/\*(.*?)\*/g, '<strong>$1</strong>');
@@ -86,6 +82,8 @@ const wa2html = (input) => {
     if (inList) {
         html += `</${listType}>\n`;
     }
+
+    input = input.replace(/\n/g, '<br>');
 
     return html.trim();
 };
