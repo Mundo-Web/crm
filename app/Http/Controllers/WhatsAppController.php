@@ -39,9 +39,6 @@ class WhatsAppController extends Controller
             $clientJpa = Client::find($request->client_id);
             $message = $request->message;
 
-            dump($message);
-            dump(Text::html2wa($message));
-
             if (Text::startsWith($message, '/signature:')) {
                 $res = new Fetch(env('WA_URL') . '/api/send', [
                     'method' => 'POST',
