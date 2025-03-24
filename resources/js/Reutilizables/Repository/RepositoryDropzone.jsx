@@ -9,7 +9,7 @@ import Modal from '../../components/Modal.jsx'
 import InputFormGroup from '../../components/form/InputFormGroup.jsx'
 
 const repositoryRest = new RepositoryRest()
-const MAX_FILE_SIZE = 40 * 1024 * 1024 // 40MB in bytes
+const MAX_FILE_SIZE = 100 * 1024 * 1024 // 40MB in bytes
 
 const getFileIcon = (type) => {
   if (type.startsWith('image/')) return 'mdi-image'
