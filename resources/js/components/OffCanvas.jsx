@@ -8,6 +8,7 @@ import Tippy from "@tippyjs/react"
 import UsersRest from "../actions/UsersRest"
 import HtmlContent from "../Utils/HtmlContent"
 import '../../css/whatsapp.css'
+import wa2html from "../Utils/wa2html"
 
 const messagesRest = new MessagesRest()
 const whatsAppRest = new WhatsAppRest()
@@ -280,7 +281,7 @@ const OffCanvas = ({ offCanvasRef, dataLoaded, setDataLoaded, defaultMessages, s
                               </>
                             }
                             {/* <p>{content.replace(attachment, '')}</p> */}
-                            <HtmlContent className='text-start' html={content.replace(attachment, '')} />
+                            <p>{wa2html(content.replace(attachment, ''))}</p>
                           </>
                       }
                     </div>

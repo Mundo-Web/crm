@@ -66,7 +66,7 @@ class WhatsAppController extends Controller
                 ]);
             } else if (Text::startsWith($message, '/attachment:')) {
                 [$attachment] = explode(Text::lineBreak(), $message);
-                $message2send = str_replace($attachment, '', $message);
+                $message2send = Text::html2wa(trim(str_replace($attachment, '', $message) ?: ''));
                 $attachment = str_replace('/attachment:', '', $attachment);
 
                 $filename = explode('/', $attachment);
@@ -80,7 +80,7 @@ class WhatsAppController extends Controller
                     'body' => [
                         'from' => 'atalaya-' . $business_id,
                         'to' => [$clientJpa->contact_phone],
-                        'content' => Text::html2wa(trim($message2send ?: '')),
+                        'content' => $message2send,
                         'attachment' => [[
                             'uri' => $attachment,
                             'filename' => $filename,
