@@ -281,7 +281,7 @@ const OffCanvas = ({ offCanvasRef, dataLoaded, setDataLoaded, defaultMessages, s
                               </>
                             }
                             {/* <p>{content.replace(attachment, '')}</p> */}
-                            <p>{wa2html(content.replace(attachment, ''))}</p>
+                            <HtmlContent html={wa2html(content.replace(attachment, ''))} />
                           </>
                       }
                     </div>
