@@ -195,8 +195,8 @@ class GmailController extends Controller
       if (!empty($attachments)) {
         foreach ($attachments as $attachment) {
           $fileUrl = env('APP_URL') . '/cloud/' . $attachment['file'];
-          $fileContent = file_get_contents($fileUrl);
-          $encodedFile = base64_encode($fileContent);
+          // $fileContent = file_get_contents($fileUrl);
+          // $encodedFile = base64_encode($fileContent);
           $filename = $attachment['name'];
           if (!str_ends_with($filename, $attachment['file_extension'])) {
             $filename .= '.' . $attachment['file_extension'];
