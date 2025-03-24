@@ -88,7 +88,7 @@ class WhatsAppController extends Controller
                 Message::create([
                     'wa_id' => $clientJpa->contact_phone,
                     'role' => 'User',
-                    'message' => $message,
+                    'message' => Text::html2wa($message),
                     'microtime' => (int) (microtime(true) * 1_000_000),
                     'business_id' => Auth::user()->business_id,
                 ]);

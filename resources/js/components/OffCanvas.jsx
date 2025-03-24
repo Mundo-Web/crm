@@ -311,7 +311,16 @@ const OffCanvas = ({ offCanvasRef, dataLoaded, setDataLoaded, defaultMessages, s
                     if (message.attachments.length > 0) {
                       const attachment = message.attachments[0]
                       const attachmentURL = `${Global.APP_URL}/cloud/${attachment.file}`
-                      await whatsAppRest.send(dataLoaded?.id, `/attachment:${attachmentURL}\n${message.description}`)
+
+                      const content = $(`<div>${template.description}</div>`)
+                      content.find('.mention').each((_, element) => {
+                        const mention = $(element)
+                        const mentionId = mention.attr('data-id')
+                        mention.removeClass('mention')
+                        mention.text(dataLoaded[mentionId])
+                      })
+
+                      await whatsAppRest.send(dataLoaded?.id, `/attachment:${attachmentURL}\n${content.html()}`)
                       setIsSending(false)
                       return
                     }
