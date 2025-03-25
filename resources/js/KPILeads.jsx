@@ -295,9 +295,8 @@ const KPILeads = ({ months = [], currentMonth, currentYear }) => {
                               border: index <= 1 ? '2px solid' : 0,
                             }}
                             onError={e => {
-                              e.onError = null
-                              console.log(e)
-                              e.target.src = `https://ui-avatars.com/api/?name=${fullname.replaceAll(' ', '+')}&color=7F9CF5&background=EBF4FF`
+                              e.target.onerror = null
+                              e.target.src = `//ui-avatars.com/api/?name=${fullname.replaceAll(' ', '+')}&color=7F9CF5&background=EBF4FF`
                             }}
                           />
                         </div>
