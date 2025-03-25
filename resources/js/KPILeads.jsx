@@ -7,6 +7,7 @@ import { renderToString } from 'react-dom/server';
 import KPILeadsRest from './actions/KPILeadsRest';
 import Number2Currency from './Utils/Number2Currency';
 import Global from './Utils/Global';
+import '../css/kpileads.css'
 
 const KPILeads = ({ months = [], currentMonth, currentYear }) => {
   const [selectedMonth, setSelectedMonth] = useState(`${currentYear}-${currentMonth}`)
@@ -273,19 +274,26 @@ const KPILeads = ({ months = [], currentMonth, currentYear }) => {
         <div className="col-xl-3 col-lg-4 col-sm-6 col-xs-12">
           <div className="card">
             <div className="card-body">
-              <h4 className="header-title mb-3">Top 5 usuarios</h4>
+              <h4 className="header-title mb-3">Empleado del mes</h4>
 
               <div className="inbox-widget">
-
                 {
                   topUsers
                     .sort((a, b) => b.count - a.count)
                     .map((row, index) => {
                       const fullname = `${row.assigned.name.split(' ')[0]} ${row.assigned.lastname.split(' ')[0]}`
                       return <div key={index} className="inbox-item">
-                        <div className="inbox-item-img">
-                          <img className="rounded-circle aspect-square"
+                        <div className="inbox-item-img position-relative">
+                          {
+                            index <= 1 &&
+                            <i className={`user-featured position-absolute mdi mdi-star ${index == 0 && 'text-warning'}`} />
+                          }
+                          <img className={`rounded-circle aspect-square ${index == 0 && 'border-warning'}`}
                             src={`//${Global.APP_DOMAIN}/api/profile/thumbnail/${row.assigned.relative_id}`}
+                            style={{
+                              padding: index <= 1 ? '2px' : 0,
+                              border: index <= 1 ? '2px solid' : 0,
+                            }}
                             onError={e => {
                               e.onError = null
                               console.log(e)

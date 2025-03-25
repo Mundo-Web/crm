@@ -9,7 +9,7 @@ const CreateReactScript = (render) => {
     resolve: name => `/${name}.jsx`,
     setup: ({ el, props }) => {
       const properties = props.initialPage.props
-      
+
       const global = { ...properties?.global }
       for (const name in global) {
         Global.set(name, global[name])
@@ -36,6 +36,7 @@ const CreateReactScript = (render) => {
         'X-Xsrf-Token': decodeURIComponent(Cookies.get('XSRF-TOKEN'))
       }
       render(el, { ...properties, can })
+      el.removeAttribute('data-page')
     },
   });
 }
