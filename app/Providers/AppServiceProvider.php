@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Models\Client;
 use App\Observers\ClientAssignationObserver;
+use App\Observers\ClientStatusObserver;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -23,6 +24,7 @@ class AppServiceProvider extends ServiceProvider
     {
         Client::observe([
             ClientAssignationObserver::class,
+            ClientStatusObserver::class
         ]);
     }
 }

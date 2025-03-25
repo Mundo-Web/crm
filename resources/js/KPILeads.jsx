@@ -26,6 +26,8 @@ const KPILeads = ({ months = [], currentMonth, currentYear }) => {
   const [leadSources, setLeadSources] = useState({})
   const [originCounts, setOriginCounts] = useState([])
 
+  const [topUsers, setTopUsers] = useState([])
+
   const monthTemplate = ({
     id,
     text,
@@ -63,6 +65,8 @@ const KPILeads = ({ months = [], currentMonth, currentYear }) => {
 
         setLeadSources(summary.leadSources ?? {})
         setOriginCounts(summary.originCounts ?? [])
+
+        setTopUsers(summary.usersAssignation ?? [])
       });
   }, [selectedMonth])
 
@@ -266,7 +270,42 @@ const KPILeads = ({ months = [], currentMonth, currentYear }) => {
       </div>
 
       <div className='row'>
-        <div className="col-12">
+        <div className="col-xl-3 col-lg-4 col-sm-6 col-xs-12">
+          <div className="card">
+            <div className="card-body">
+              <h4 className="header-title mb-3">Top 5 usuarios</h4>
+
+              <div className="inbox-widget">
+
+                {
+                  topUsers
+                    .sort((a, b) => b.count - a.count)
+                    .map((row, index) => {
+                      const fullname = `${row.assigned.name.split(' ')[0]} ${row.assigned.lastname.split(' ')[0]}`
+                      return <div key={index} className="inbox-item">
+                        <div className="inbox-item-img">
+                          <img className="rounded-circle aspect-square"
+                            src={`//${Global.APP_DOMAIN}/api/profile/thumbnail/${row.assigned.relative_id}`}
+                            onError={e => {
+                              e.onError = null
+                              console.log(e)
+                              e.target.src = `https://ui-avatars.com/api/?name=${fullname.replaceAll(' ', '+')}&color=7F9CF5&background=EBF4FF`
+                            }}
+                          />
+                        </div>
+                        <h6 className="inbox-item-author mt-0 mb-1 text-truncate">{fullname}</h6>
+                        <p className="inbox-item-text">
+                          <small className='d-block'>{row.count} lead{row.count != 1 && 's'} atendido{row.count != 1 && 's'}</small>
+                          <small className='d-block'>{row.emails_sent} mail{row.emails_sent != 1 && 's'} enviado{row.emails_sent != 1 && 's'}</small>
+                        </p>
+                      </div>
+                    })
+                }
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="col-xl-9 col-lg-8 col-sm-6 col-xs-12">
           <div className='d-flex gap-3 mb-3' style={{
             overflowX: 'auto',
           }}>

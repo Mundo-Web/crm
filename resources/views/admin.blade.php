@@ -104,6 +104,10 @@ $route = Route::currentRouteName();
       cursor: pointer;
     }
 
+    .aspect-square {
+      aspect-ratio: 1;
+    }
+
     .ql-editor {
       color: #6c757d;
     }

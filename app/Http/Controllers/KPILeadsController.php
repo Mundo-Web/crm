@@ -160,6 +160,28 @@ class KPILeadsController extends BasicController
                 ->orderBy('count', 'desc')
                 ->get();
 
+            $usersAssignation = Client::byMonth($year, $month)
+                ->select([
+                    'assigned_to',
+                    DB::raw('MAX(assignation_date) as assignation_date'),
+                    DB::raw('COUNT(*) as count'),
+                    DB::raw('(SELECT COUNT(*) 
+                        FROM client_notes 
+                        WHERE client_notes.user_id = clients.assigned_to
+                        AND client_notes.note_type_id = "37b1e8e2-04c4-4246-a8c9-838baa7f8187"
+                        AND YEAR(client_notes.created_at) = ' . $year . '
+                        AND MONTH(client_notes.created_at) = ' . $month . '
+                    ) as emails_sent')
+                ])
+                ->with('assigned')
+                ->where('business_id', Auth::user()->business_id)
+                ->whereNotNull('assigned_to')
+                ->groupBy('assigned_to')
+                ->orderBy('count', 'desc')
+                ->orderBy('assignation_date', 'desc')
+                ->limit(5)
+                ->get();
+
             $response->summary = [
                 'grouped' => $grouped,
                 'totalCount' => $totalCount,
@@ -171,7 +193,8 @@ class KPILeadsController extends BasicController
                 'managingCount' => $managingCount,
                 'managingSum' => $managingSum,
                 'leadSources' => $leadSources,
-                'originCounts' => $originCounts
+                'originCounts' => $originCounts,
+                'usersAssignation' => $usersAssignation
             ];
             $response->data = $groupedByManageStatus;
         });
