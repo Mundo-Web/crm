@@ -53,6 +53,7 @@ class Client extends Model
         'updated_by',
         'tradename',
         'assigned_to',
+        'assignation_date',
         'sector',
         'country_prefix',
         'workers',
