@@ -1,1 +1,0 @@
-import{j as t}from"./CreateReactScript-xvpUtUf-.js";import{i as p}from"./Adminto-DIU1NFHn.js";const u=({title:r,className:o,onClick:n,children:e,eRef:s,...i})=>t.jsx(p,{content:r,arrow:!0,children:t.jsx("button",{ref:s,className:o,onClick:n,...i,children:e})});export{u as T};
