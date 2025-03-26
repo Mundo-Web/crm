@@ -277,7 +277,7 @@ const KPILeads = ({ months = [], currentMonth, currentYear }) => {
               <h4 className="header-title mb-3">Ranking de atenciones</h4>
 
               <div className="inbox-widget" style={{
-                maxHeight: '400px',
+                maxHeight: '360px',
                 overflowY: 'auto',
               }}>
                 {
