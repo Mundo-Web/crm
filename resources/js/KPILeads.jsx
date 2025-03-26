@@ -277,7 +277,7 @@ const KPILeads = ({ months = [], currentMonth, currentYear }) => {
               <h4 className="header-title mb-3">Ranking de atenciones</h4>
 
               <div className="inbox-widget" style={{
-                maxHeight: '360px',
+                maxHeight: '400px',
                 overflowY: 'auto',
               }}>
                 {
@@ -323,7 +323,9 @@ const KPILeads = ({ months = [], currentMonth, currentYear }) => {
               grouped.map((kpi, index) => {
                 return <div key={index} className="card" style={{
                   minWidth: '270px',
-                  maxWidth: '270px'
+                  maxWidth: '270px',
+                  maxHeight: '400px',
+                  overflowY: 'auto',
                 }}>
                   <div className="card-header">
                     <div className="float-end">
