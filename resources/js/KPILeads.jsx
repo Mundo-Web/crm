@@ -273,13 +273,17 @@ const KPILeads = ({ months = [], currentMonth, currentYear }) => {
       <div className='row'>
         <div className="col-xl-3 col-lg-4 col-sm-6 col-xs-12">
           <div className="card">
-            <div className="card-body">
-              <h4 className="header-title mb-3">Ranking de atenciones</h4>
-
-              <div className="inbox-widget" style={{
-                maxHeight: '360px',
-                overflowY: 'auto',
-              }}>
+            <div className="card-header bg-danger">
+              <h4 className="header-title my-0 text-white">
+                <i className='mdi mdi-podium-gold me-1'></i>
+                Ranking de atenciones
+              </h4>
+            </div>
+            <div className="card-body" style={{
+              maxHeight: '360px',
+              overflowY: 'auto',
+            }}>
+              <div className="inbox-widget">
                 {
                   topUsers
                     .sort((a, b) => b.count - a.count)
@@ -323,17 +327,16 @@ const KPILeads = ({ months = [], currentMonth, currentYear }) => {
               grouped.map((kpi, index) => {
                 return <div key={index} className="card" style={{
                   minWidth: '270px',
-                  maxWidth: '270px',
-                  maxHeight: '400px',
-                  overflowY: 'auto',
+                  maxWidth: '270px'
                 }}>
-                  <div className="card-header">
-                    <div className="float-end">
-                      <b>{kpi.quantity}</b>
-                    </div>
-                    <h4 className="header-title my-0 text-truncate" style={{ color: kpi.color }}>{kpi.name}</h4>
+                  <div className="card-header d-flex justify-content-between align-items-center">
+                    <h4 className="header-title my-0 text-truncate w-100" style={{ color: kpi.color }}>{kpi.name}</h4>
+                    <small className='font-bold'><b>{kpi.quantity}</b></small>
                   </div>
-                  <div className="card-body">
+                  <div className="card-body" style={{
+                    maxHeight: '360px',
+                    overflowY: 'auto'
+                  }}>
                     <div className='d-flex gap-3 flex-column'>
                       {
                         groupedByManageStatus.filter(({ status_id }) => status_id == kpi.id).sort((a, b) => b.quantity - a.quantity).map((row, index) => {
