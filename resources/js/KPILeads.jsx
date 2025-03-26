@@ -276,7 +276,10 @@ const KPILeads = ({ months = [], currentMonth, currentYear }) => {
             <div className="card-body">
               <h4 className="header-title mb-3">Ranking de atenciones</h4>
 
-              <div className="inbox-widget">
+              <div className="inbox-widget" style={{
+                maxHeight: '360px',
+                overflowY: 'auto',
+              }}>
                 {
                   topUsers
                     .sort((a, b) => b.count - a.count)
