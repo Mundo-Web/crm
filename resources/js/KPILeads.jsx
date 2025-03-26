@@ -280,7 +280,7 @@ const KPILeads = ({ months = [], currentMonth, currentYear }) => {
               </h4>
             </div>
             <div className="card-body" style={{
-              maxHeight: '360px',
+              maxHeight: '400px',
               overflowY: 'auto',
             }}>
               <div className="inbox-widget">
@@ -334,7 +334,7 @@ const KPILeads = ({ months = [], currentMonth, currentYear }) => {
                     <small className='font-bold'><b>{kpi.quantity}</b></small>
                   </div>
                   <div className="card-body" style={{
-                    maxHeight: '360px',
+                    maxHeight: '400px',
                     overflowY: 'auto'
                   }}>
                     <div className='d-flex gap-3 flex-column'>
