@@ -274,7 +274,7 @@ const KPILeads = ({ months = [], currentMonth, currentYear }) => {
         <div className="col-xl-3 col-lg-4 col-sm-6 col-xs-12">
           <div className="card">
             <div className="card-body">
-              <h4 className="header-title mb-3">Top 5 usuarios</h4>
+              <h4 className="header-title mb-3">Ranking de atenciones</h4>
 
               <div className="inbox-widget">
                 {

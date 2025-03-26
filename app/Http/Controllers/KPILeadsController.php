@@ -179,7 +179,7 @@ class KPILeadsController extends BasicController
                 ->groupBy('assigned_to')
                 ->orderBy('count', 'desc')
                 ->orderBy('assignation_date', 'desc')
-                ->limit(5)
+                // ->limit(5)
                 ->get();
 
             $response->summary = [
