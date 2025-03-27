@@ -8,6 +8,7 @@ import KPILeadsRest from './actions/KPILeadsRest';
 import Number2Currency from './Utils/Number2Currency';
 import Global from './Utils/Global';
 import '../css/kpileads.css'
+import Tippy from '@tippyjs/react';
 
 const KPILeads = ({ months = [], currentMonth, currentYear }) => {
   const [selectedMonth, setSelectedMonth] = useState(`${currentYear}-${currentMonth}`)
@@ -307,10 +308,34 @@ const KPILeads = ({ months = [], currentMonth, currentYear }) => {
                             }}
                           />
                         </div>
-                        <h6 className="inbox-item-author mt-0 mb-1 text-truncate">{fullname}</h6>
+                        <h5 className="inbox-item-author mt-0 mb-2 text-truncate">{fullname}</h5>
                         <p className="inbox-item-text">
-                          <small className='d-block'>{row.count} lead{row.count != 1 && 's'} atendido{row.count != 1 && 's'}</small>
+                          <div className='d-flex gap-1 flex-wrap w-100'>
+                            <Tippy content='Leads atendidos'>
+                              <div className='text-start' style={{ width: '50px' }}>
+                                <i className='mdi mdi-account me-1'></i>
+                                {row.count}
+                              </div>
+                            </Tippy>
+                            <Tippy content='Mails enviados'>
+                              <div className='text-start' style={{ width: '50px' }}>
+                                <i className='mdi mdi-email-send me-1'></i>
+                                {row.emails_sent}
+                              </div>
+                            </Tippy>
+                            {
+                              row.converted !== null &&
+                              <Tippy content='Leads convertidos'>
+                                <div className='text-start' style={{ width: '50px' }}>
+                                  <i className='mdi mdi-account-check me-1'></i>
+                                  {row.converted}
+                                </div>
+                              </Tippy>
+                            }
+                          </div>
+                          {/* <small className='d-block'>{row.count} lead{row.count != 1 && 's'} atendido{row.count != 1 && 's'}</small>
                           <small className='d-block'>{row.emails_sent} mail{row.emails_sent != 1 && 's'} enviado{row.emails_sent != 1 && 's'}</small>
+                          <small className='d-block'>{row.converted} lead{row.converted != 1 && 's'} convertido{row.converted != 1 && 's'}</small> */}
                         </p>
                       </div>
                     })

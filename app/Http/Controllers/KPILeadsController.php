@@ -8,6 +8,7 @@ use App\Models\Status;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Mockery\Undefined;
 use SoDe\Extend\Response;
 
 class KPILeadsController extends BasicController
@@ -160,19 +161,32 @@ class KPILeadsController extends BasicController
                 ->orderBy('count', 'desc')
                 ->get();
 
+            $convertedLeadStatus = Setting::get('converted-lead-status');
+
+            $columns = [
+                'assigned_to',
+                DB::raw('MAX(assignation_date) as assignation_date'),
+                DB::raw('COUNT(*) as count'),
+                DB::raw('(SELECT COUNT(*) 
+                    FROM client_notes 
+                    WHERE client_notes.user_id = clients.assigned_to
+                    AND client_notes.note_type_id = "37b1e8e2-04c4-4246-a8c9-838baa7f8187"
+                    AND YEAR(client_notes.created_at) = ' . $year . '
+                    AND MONTH(client_notes.created_at) = ' . $month . '
+                ) as emails_sent'),
+
+            ];
+
+            if ($convertedLeadStatus) $columns[] = DB::raw('(SELECT COUNT(*)
+                FROM client_notes
+                WHERE client_notes.user_id = clients.assigned_to
+                AND client_notes.manage_status_id = "' . $convertedLeadStatus . '"
+                AND YEAR(client_notes.created_at) = ' . $year . '
+                AND MONTH(client_notes.created_at) = ' . $month . '
+            ) as converted');
+            else $columns[] = DB::raw("NULL as converted");
             $usersAssignation = Client::byMonth($year, $month)
-                ->select([
-                    'assigned_to',
-                    DB::raw('MAX(assignation_date) as assignation_date'),
-                    DB::raw('COUNT(*) as count'),
-                    DB::raw('(SELECT COUNT(*) 
-                        FROM client_notes 
-                        WHERE client_notes.user_id = clients.assigned_to
-                        AND client_notes.note_type_id = "37b1e8e2-04c4-4246-a8c9-838baa7f8187"
-                        AND YEAR(client_notes.created_at) = ' . $year . '
-                        AND MONTH(client_notes.created_at) = ' . $month . '
-                    ) as emails_sent')
-                ])
+                ->select($columns)
                 ->with('assigned')
                 ->where('business_id', Auth::user()->business_id)
                 ->whereNotNull('assigned_to')

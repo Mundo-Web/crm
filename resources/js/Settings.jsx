@@ -24,6 +24,7 @@ const Settings = ({ can, constants, statuses }) => {
   const quillRef = useRef()
   const tinyRef = useRef()
   const finishedProjectStatusRef = useRef()
+  const convertedLeadStatusRef = useRef()
 
   const [constantType, setConstantType] = useState()
 
@@ -146,11 +147,20 @@ const Settings = ({ can, constants, statuses }) => {
     await settingsRest.save(request)
   }
 
-  const finishedProjectStatus = getConstant('finished-project-status');
+  const onConvertedLeadStatusChange = async (e) => {
+    const request = {
+      name: 'converted-lead-status',
+      value: e.target.value
+    }
+    await settingsRest.save(request)
+  }
 
+  const finishedProjectStatus = getConstant('finished-project-status');
+  const convertedLeadStatus = getConstant('converted-lead-status');
 
   useEffect(() => {
     $(finishedProjectStatusRef.current).val(finishedProjectStatus.value).select2()
+    $(convertedLeadStatusRef.current).val(convertedLeadStatus.value).select2()
   }, [null])
 
   return (<>
@@ -167,10 +177,13 @@ const Settings = ({ can, constants, statuses }) => {
                   <a className="nav-link active show mb-1" id="v-general-tab" data-bs-toggle="pill" href="#v-general" role="tab" aria-controls="v-general" aria-selected="true">
                     General
                   </a>
+                  <a className="nav-link mb-1" id="v-dashboard-tab" data-bs-toggle="pill" href="#v-dashboard" role="tab" aria-controls="v-dashboard" aria-selected="true">
+                    Dashboard
+                  </a>
                   <a className="nav-link mb-1" id="v-clients-leads-tab" data-bs-toggle="pill" href="#v-clients-leads" role="tab" aria-controls="v-clients-leads" aria-selected="false">
                     Clientes y leads
                   </a>
-                  <a className="nav-link mb-1" id="v-projects-leads-tab" data-bs-toggle="pill" href="#v-projects-leads" role="tab" aria-controls="v-projects-leads" aria-selected="false">
+                  <a className="nav-link mb-1" id="v-projects-tab" data-bs-toggle="pill" href="#v-projects" role="tab" aria-controls="v-projects" aria-selected="false">
                     Proyectos
                   </a>
                   <a className="nav-link mb-1" id="v-email-tab" data-bs-toggle="pill" href="#v-email" role="tab" aria-controls="v-email" aria-selected="false">
@@ -218,6 +231,32 @@ const Settings = ({ can, constants, statuses }) => {
                       </div>
                     </div>
                   </div>
+                  <div className="tab-pane fade" id="v-dashboard" role="tabpanel" aria-labelledby="v-dashboard-tab">
+                    <h4>Configuracion de dashboard</h4>
+                    <div className="row">
+                      <div className="col-md-4 col-sm-6 col-xs-12">
+                        <div className="card card-body border p-2" style={{ cursor: 'default' }}>
+                          <h5 className="card-title mb-1">Estado de Conversión</h5>
+                          <p className="card-text mb-0">¿Cuál es el estado que define mejor a un lead que ha sido convertido exitosamente?</p>
+                          <blockquote className='my-1' style={{
+                            borderLeft: '4px solid #007bff',
+                            backgroundColor: 'var(--bs-gray-300)',
+                            padding: '5px 10px',
+                            // color: '#333',
+                          }}>
+                            <small>
+                              Esta configuración nos ayudará a identificar y medir las conversiones efectivas en el sistema.
+                            </small>
+                          </blockquote>
+                          <SelectFormGroup eRef={convertedLeadStatusRef} label="Escoge un estado" noMargin onChange={onConvertedLeadStatusChange} >
+                            {statuses.filter(item => item.table_id == '9c27e649-574a-47eb-82af-851c5d425434').map((status, index) => {
+                              return <option key={index} value={status.id}>{status.name}</option>
+                            })}
+                          </SelectFormGroup>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                   <div className="tab-pane fade" id="v-clients-leads" role="tabpanel" aria-labelledby="v-clients-leads-tab">
                     <h4>Configuracion de clientes y leads</h4>
                     <div className="row">
@@ -235,7 +274,7 @@ const Settings = ({ can, constants, statuses }) => {
                       </div>
                     </div>
                   </div>
-                  <div className="tab-pane fade" id="v-projects-leads" role="tabpanel" aria-labelledby="v-projects-leads-tab">
+                  <div className="tab-pane fade" id="v-projects" role="tabpanel" aria-labelledby="v-projects-tab">
                     <h4>Configuracion de Proyectos</h4>
                     <div className="row">
                       <div className="col-md-4 col-sm-6 col-xs-12">
