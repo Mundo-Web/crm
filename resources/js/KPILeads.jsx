@@ -311,13 +311,13 @@ const KPILeads = ({ months = [], currentMonth, currentYear }) => {
                         <h5 className="inbox-item-author mt-0 mb-2 text-truncate">{fullname}</h5>
                         <p className="inbox-item-text">
                           <div className='d-flex gap-1 flex-wrap w-100'>
-                            <Tippy content='Leads atendidos'>
+                            <Tippy content={`${row.count} leads atendidos`}>
                               <div className='text-start' style={{ width: '50px' }}>
                                 <i className='mdi mdi-account me-1'></i>
                                 {row.count}
                               </div>
                             </Tippy>
-                            <Tippy content='Mails enviados'>
+                            <Tippy content={`${row.emails_sent} mails enviados`}>
                               <div className='text-start' style={{ width: '50px' }}>
                                 <i className='mdi mdi-email-send me-1'></i>
                                 {row.emails_sent}
@@ -325,7 +325,7 @@ const KPILeads = ({ months = [], currentMonth, currentYear }) => {
                             </Tippy>
                             {
                               row.converted !== null &&
-                              <Tippy content='Leads convertidos'>
+                              <Tippy content={`${row.converted} leads convertidos`}>
                                 <div className='text-start' style={{ width: '50px' }}>
                                   <i className='mdi mdi-account-check me-1'></i>
                                   {row.converted}
