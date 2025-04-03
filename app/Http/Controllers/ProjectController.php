@@ -58,7 +58,7 @@ class ProjectController extends BasicController
                 ->whereNotNull('projects.status');
         }
 
-        $userjpa = User::find(Auth::user()->id);
+        $userjpa = User::find(Auth::user()->service_user->id);
         $userjpa->getAllPermissions();
 
         if (!($userjpa->can('projects.listall') || $userjpa->can('projects.all'))) {
