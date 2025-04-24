@@ -14,6 +14,7 @@ import Assigneds from './Reutilizables/Projects/Assigneds.jsx'
 import DxPanelButton from './components/dx/DxPanelButton.jsx'
 import ReactAppend from './Utils/ReactAppend.jsx'
 import ProjectsRest from './actions/ProjectsRest.js'
+import Swal from 'sweetalert2'
 
 const projectsArchivedRest = new ProjectsArchivedRest()
 
