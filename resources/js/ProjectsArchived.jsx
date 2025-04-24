@@ -177,7 +177,7 @@ const ProjectsArchived = ({ can }) => {
               className: 'btn btn-xs btn-soft-danger',
               title: 'Eliminar definitivamente',
               icon: 'fas fa-trash',
-              onClick: () => onDeleteClicked(data)
+              onClick: () => onDeleteClicked(data.id)
             }))
           },
           allowFiltering: false,
