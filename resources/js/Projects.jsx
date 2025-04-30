@@ -253,7 +253,7 @@ const Projects = ({ statuses, finishedProjectStatus, can }) => {
           sortOrder: 'asc'
         },
         {
-          dataField: 'last_payment_date',
+          dataField: 'last_payment.date',
           caption: 'Fecha ultimo pago',
           dataType: 'date',
           format: 'yyyy-MM-dd',
