@@ -254,6 +254,7 @@ const Projects = ({ statuses, finishedProjectStatus, can }) => {
         },
         {
           dataField: 'last_payment_date',
+          dataType: 'datetime',
           visible: false,
         },
         {
