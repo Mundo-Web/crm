@@ -61,7 +61,7 @@ class ProjectController extends BasicController
                 'projects.id'
             )
             ->leftJoin('statuses AS status', 'status.id', 'projects.status_id')
-            ->groupBy('projects.id')
+            ->groupBy('projects.id', 'last_payment.date')
             ->where('projects.business_id', Auth::user()->business_id);
 
         if (!$request->isLoadingAll) {
