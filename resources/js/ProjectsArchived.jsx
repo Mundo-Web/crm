@@ -144,12 +144,17 @@ const ProjectsArchived = ({ can }) => {
         },
         {
           dataField: 'last_payment_date',
+          dataType: 'datetime',
+          visible: false,
+        },
+        {
+          dataField: 'last_payment.date',
           caption: 'Fecha ultimo pago',
           dataType: 'date',
           format: 'yyyy-MM-dd',
           cellTemplate: (container, { data }) => {
-            if (!data.last_payment_date) return container.html('<i class="text-muted">- No hay pagos -</i>')
-            container.text(moment(data.last_payment_date).format('LL'))
+            if (!data?.last_payment_date) return container.html('<i class="text-muted">- No hay pagos -</i>')
+            container.text(moment(data?.last_payment_date).format('LL'))
           }
         },
         can('projects', 'root', 'all', 'changestatus') ? {
