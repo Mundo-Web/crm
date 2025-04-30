@@ -90,7 +90,7 @@ const Projects = ({ statuses, finishedProjectStatus, can }) => {
   }
 
   const onBooleanChange = async ({ id, field, value }) => {
-    const result = await projectsRest.boolean({id, field, value})
+    const result = await projectsRest.boolean({ id, field, value })
     if (!result) return
     $(gridRef.current).dxDataGrid('instance').refresh()
   }
@@ -164,9 +164,9 @@ const Projects = ({ statuses, finishedProjectStatus, can }) => {
           filterValue: GET.client || undefined,
           fixed: true,
           fixedPosition: 'left',
-          cellTemplate: (container, {data}) => {
+          cellTemplate: (container, { data }) => {
             if (data.is_alert) container.parents('.dx-row').children().attr('style', 'background-color: rgba(255,91,91,.18) !important;')
-              container.text(data.client.tradename)
+            container.text(data.client.tradename)
           }
         },
         {
@@ -255,11 +255,11 @@ const Projects = ({ statuses, finishedProjectStatus, can }) => {
         {
           dataField: 'last_payment_date',
           caption: 'Fecha ultimo pago',
-          dataType: 'datetime',
-          format: 'yyyy-MM-dd HH:mm:ss',
+          dataType: 'date',
+          format: 'yyyy-MM-dd',
           cellTemplate: (container, { data }) => {
             if (!data.last_payment_date) return container.html('<i class="text-muted">- No hay pagos -</i>')
-            container.text(moment(data.last_payment_date).format('LLL'))
+            container.text(moment(data.last_payment_date).format('LL'))
           }
         },
         // {
@@ -309,7 +309,7 @@ const Projects = ({ statuses, finishedProjectStatus, can }) => {
           caption: 'Acciones',
           // width: 175,
           cellTemplate: (container, { data }) => {
-                        // can('projects', 'root', 'all', 'update') && ReactAppend(container, <TippyButton className='btn btn-xs btn-soft-primary' title='Editar' onClick={() => onModalOpen(data)}>
+            // can('projects', 'root', 'all', 'update') && ReactAppend(container, <TippyButton className='btn btn-xs btn-soft-primary' title='Editar' onClick={() => onModalOpen(data)}>
             //   <i className='fa fa-pen'></i>
             // </TippyButton>)
             can('projects', 'root', 'all', 'update') && container.append(DxButton({

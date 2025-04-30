@@ -234,11 +234,11 @@ const ProjectsDone = ({ statuses, can }) => {
         {
           dataField: 'last_payment_date',
           caption: 'Fecha ultimo pago',
-          dataType: 'datetime',
-          format: 'yyyy-MM-dd HH:mm:ss',
+          dataType: 'date',
+          format: 'yyyy-MM-dd',
           cellTemplate: (container, { data }) => {
             if (!data.last_payment_date) return container.html('<i class="text-muted">- No hay pagos -</i>')
-            container.text(moment(data.last_payment_date).format('LLL'))
+            container.text(moment(data.last_payment_date).format('LL'))
           }
         },
         can('projects', 'root', 'all', 'changestatus') ? {
