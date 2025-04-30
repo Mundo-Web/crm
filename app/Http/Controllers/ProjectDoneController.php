@@ -37,7 +37,7 @@ class ProjectDoneController extends BasicController
         return $model::with(['client', 'type', 'status', 'subdomain'])->select([
             'projects.*',
             DB::raw('COALESCE(SUM(payments.amount), 0) AS total_payments'),
-            DB::raw('MAX(payments.created_at) AS last_payment_date'),
+            DB::raw('MAX(payments.date) AS last_payment_date'),
         ])
             ->leftJoin('types AS type', 'type.id', 'projects.type_id')
             ->leftJoin('clients AS client', 'client.id', 'projects.client_id')
