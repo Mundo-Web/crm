@@ -18,7 +18,7 @@ class ProjectController extends BasicController
     public $model = Project::class;
     public $reactView = 'ProjectsArchived';
     public $prefix4filter = 'projects';
-    public $ignorePrefix = ['remaining_amount', 'total_payments'];
+    public $ignorePrefix = ['remaining_amount', 'total_payments', 'last_payment_date'];
     public $softDeletion = true;
 
     public function setReactViewProperties(Request $request)
