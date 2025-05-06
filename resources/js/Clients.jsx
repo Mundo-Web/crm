@@ -211,13 +211,13 @@ const Clients = ({ projectStatuses, finishedProjectStatus, clientStatuses, produ
           icon: 'fas fa-undo-alt',
           onClick: () => $(gridRef.current).dxDataGrid('instance').refresh()
         }))
-        can('clients', 'all', 'create') && container.unshift(DxPanelButton({
-          className: 'btn btn-xs btn-soft-primary',
-          text: 'Nuevo',
-          title: 'Agregar registro',
-          icon: 'fa fa-plus',
-          onClick: () => onModalOpen()
-        }))
+        // can('clients', 'all', 'create') && container.unshift(DxPanelButton({
+        //   className: 'btn btn-xs btn-soft-primary',
+        //   text: 'Nuevo',
+        //   title: 'Agregar registro',
+        //   icon: 'fa fa-plus',
+        //   onClick: () => onModalOpen()
+        // }))
       }}
       columns={[
         can('projects', 'root', 'all', 'list') ? {
