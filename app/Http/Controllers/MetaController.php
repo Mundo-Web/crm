@@ -16,19 +16,19 @@ class MetaController extends Controller
     public function webhook(Request $request, string $business_id)
     {
         dump($request->all());
-        $data = $request->all();
-        $entry = $data['entry'] ?? [];
-        switch ($data['object']) {
-            case 'instagram':
-                if ($entry['id'] != $entry['messaging']['sender']['id']) {
-                    dump($entry['messaging']['message']['text']);
-                }
-                break;
+        // $data = $request->all();
+        // $entry = $data['entry'] ?? [];
+        // switch ($data['object']) {
+        //     case 'instagram':
+        //         if ($entry['id'] != $entry['messaging']['sender']['id']) {
+        //             dump($entry['messaging']['message']['text']);
+        //         }
+        //         break;
             
-            default:
-                # code...
-                break;
-        }
+        //     default:
+        //         # code...
+        //         break;
+        // }
         return \response('OK', 200);
     }
 }
