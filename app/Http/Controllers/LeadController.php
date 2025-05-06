@@ -115,7 +115,9 @@ class LeadController extends BasicController
     public function beforeSave(Request $request)
     {
         $body = $request->all();
-        $exists = Client::where('id', $request->id)->exists();
+        $exists = Client::query()
+            ->where('business_id', Auth::user()->business_id)
+            ->where('id', $request->id)->exists();
         if (!$exists) {
             $status = Setting::get('default-lead-status');
             $manage_status = Setting::get('default-manage-lead-status');
