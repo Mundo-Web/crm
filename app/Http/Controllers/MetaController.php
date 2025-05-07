@@ -8,7 +8,7 @@ class MetaController extends Controller
 {
     public function verify(Request $request)
     {
-        dump($request->all());
+        dump($request);
         $challenge = $request->query('hub_challenge');
         return \response($challenge, 200);
     }
