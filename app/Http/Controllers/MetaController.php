@@ -15,7 +15,7 @@ class MetaController extends Controller
 
     public function webhook(Request $request, string $business_id)
     {
-        dump($request->all());
+        dump($request);
         // $data = $request->all();
         // $entry = $data['entry'] ?? [];
         // switch ($data['object']) {
