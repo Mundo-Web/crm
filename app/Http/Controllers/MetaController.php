@@ -2,20 +2,31 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Atalaya\ServicesByBusiness;
 use Illuminate\Http\Request;
 
 class MetaController extends Controller
 {
-    public function verify(Request $request)
+    public function verify(Request $request, string $origin, string $business_id)
     {
-        dump($request);
         $challenge = $request->query('hub_challenge');
+        $verify_token = $request->query('hub_verify_token');
+
+        $businessExists = ServicesByBusiness::query()
+            ->join('businesses', 'services_by_businesses.business_id', '=', 'businesses.id')
+            ->where('businesses.uuid', $business_id)
+            ->where('businesses.status', true)
+            ->exists();
+        if (!$businessExists) return response('Error, negocio no encontrado o inactivo', 404);
+
+        if (hash('sha256', $business_id) != $verify_token) return response('Error, token de validación incorrecto', 403);
+
         return \response($challenge, 200);
     }
 
-    public function webhook(Request $request, string $business_id)
+    public function webhook(Request $request, string $origin, string $business_id)
     {
-        dump($request->headers->all());
+        dump($request->all());
         // $data = $request->all();
         // $entry = $data['entry'] ?? [];
         // switch ($data['object']) {
@@ -24,7 +35,7 @@ class MetaController extends Controller
         //             dump($entry['messaging']['message']['text']);
         //         }
         //         break;
-            
+
         //     default:
         //         # code...
         //         break;

@@ -55,8 +55,8 @@ Route::get('/start/{uuid}', [UtilController::class, 'start']);
 
 Route::get('/pages/media/{uuid}', [PageController::class, 'media']);
 
-Route::get('/meta/{business_id}', [MetaController::class, 'verify']);
-Route::post('/meta/{business_id}', [MetaController::class, 'webhook']);
+Route::get('/meta/{origin}/{business_id}', [MetaController::class, 'verify']);
+Route::post('/meta/{origin}/{business_id}', [MetaController::class, 'webhook']);
 
 Route::middleware('auth')->group(function () {
     Route::delete('/logout', [AuthController::class, 'destroy'])
