@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Atalaya\ServicesByBusiness;
 use Illuminate\Http\Request;
+use SoDe\Extend\JSON;
 
 class MetaController extends Controller
 {
@@ -26,7 +27,7 @@ class MetaController extends Controller
 
     public function webhook(Request $request, string $origin, string $business_id)
     {
-        dump($request->all());
+        dump($origin . ' (' . $business_id . '): ' . JSON::stringify($request->all()));
         // $data = $request->all();
         // $entry = $data['entry'] ?? [];
         // switch ($data['object']) {
