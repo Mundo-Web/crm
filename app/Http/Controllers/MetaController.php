@@ -27,7 +27,7 @@ class MetaController extends Controller
 
     public function webhook(Request $request, string $origin, string $business_id)
     {
-        dump($origin . ' (' . $business_id . '): ' . JSON::stringify($request->all()));
+        dump($origin . ' (' . $business_id . '): ' . JSON::stringify($request->all(), true));
         // $data = $request->all();
         // $entry = $data['entry'] ?? [];
         // switch ($data['object']) {
@@ -41,7 +41,7 @@ class MetaController extends Controller
         //         # code...
         //         break;
         // }
-        
+
         return \response('OK', 200);
     }
 }
