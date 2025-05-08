@@ -11,6 +11,7 @@ class MetaController extends Controller
 {
     public function verify(Request $request, string $origin, string $business_id)
     {
+        dump($request);
         $challenge = $request->query('hub_challenge');
         $verify_token = $request->query('hub_verify_token');
 
