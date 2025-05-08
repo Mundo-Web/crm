@@ -15,6 +15,8 @@ class MetaController extends Controller
         dump($request->all());
         $challenge = $request->query('hub_challenge');
         $verify_token = $request->query('hub_verify_token');
+        dump($origin);
+        dump($business_id);
 
         if (!in_array($origin, ['messenger', 'instagram'])) return response('Error, origen no permitido', 403);
 
