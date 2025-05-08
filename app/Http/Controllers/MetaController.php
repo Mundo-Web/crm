@@ -110,6 +110,8 @@ class MetaController extends Controller
             $profileRest = new Fetch(env('FACEBOOK_GRAPH_URL') . "/{$userId}?fields={$fieldsStr}&access_token={$integrationJpa->accessToken}");
             $profileData = $profileRest->json();
 
+            dump($profileData);
+
             if ($entry['id'] != $messaging['sender']['id']) {
                 Client::createOrUpdate([
                     'integration_id' => $integrationJpa->id,
