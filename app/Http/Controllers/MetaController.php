@@ -104,15 +104,11 @@ class MetaController extends Controller
 
             if (!$integrationJpa->meta_access_token) return;
 
-            dump($request->all());
-
             $userId = $messaging['sender']['id'];
             $fields = ['id', 'first_name', 'last_name', 'name', 'profile_pic', 'locale', 'timezone', 'gender'];
             $fieldsStr = implode(',', $fields);
             $profileRest = new Fetch(env('FACEBOOK_GRAPH_URL') . "/{$userId}?fields={$fieldsStr}&access_token={$integrationJpa->meta_access_token}");
             $profileData = $profileRest->json();
-
-            dump($profileData);
 
             if ($entry['id'] != $messaging['sender']['id']) {
                 Client::updateOrCreate([
@@ -120,6 +116,7 @@ class MetaController extends Controller
                     'integration_user_id' => $profileData['id'],
                     'business_id' => $businessJpa->id,
                 ], [
+                    'message' => $messaging['message']['text']?? 'Sin mensaje',
                     'name' => $profileData['name'],
                     'source' => 'Externo',
                     'date' => Trace::getDate('date'),
@@ -132,7 +129,6 @@ class MetaController extends Controller
                 ]);
             }
         });
-        dump($response->toArray());
         return response($response->toArray(), 200);
     }
 }
