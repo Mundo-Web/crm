@@ -23,7 +23,7 @@ class MetaController extends Controller
         $businessExists = ServicesByBusiness::query()
             ->join('businesses', 'services_by_businesses.business_id', '=', 'businesses.id')
             ->join('services', 'services_by_businesses.service_id', '=', 'services.id')
-            ->where('services.name', env('APP_CORRELATIVE'))
+            ->where('services.correlative', env('APP_CORRELATIVE'))
             ->where('businesses.uuid', $business_id)
             ->where('businesses.status', true)
             ->exists();
