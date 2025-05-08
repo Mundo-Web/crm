@@ -15,5 +15,5 @@ use App\Http\Controllers\MetaController;
 |
 */
 
-Route::get('/meta/{origin}/{business_id}', [MetaController::class, 'verify']);
-Route::post('/meta/{origin}/{business_id}', [MetaController::class, 'webhook']);
+Route::get('/{origin}/{business_id}', [MetaController::class, 'verify']);
+Route::post('/{origin}/{business_id}', [MetaController::class, 'webhook']);
