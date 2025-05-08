@@ -12,7 +12,6 @@ use App\Http\Controllers\GmailController;
 use App\Http\Controllers\KPILeadsController;
 use App\Http\Controllers\LeadController;
 use App\Http\Controllers\MessageController;
-use App\Http\Controllers\MetaController;
 use App\Http\Controllers\NewLeadController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PageController;
@@ -54,9 +53,6 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::get('/start/{uuid}', [UtilController::class, 'start']);
 
 Route::get('/pages/media/{uuid}', [PageController::class, 'media']);
-
-Route::get('/meta/{origin}/{business_id}', [MetaController::class, 'verify']);
-Route::post('/meta/{origin}/{business_id}', [MetaController::class, 'webhook']);
 
 Route::middleware('auth')->group(function () {
     Route::delete('/logout', [AuthController::class, 'destroy'])

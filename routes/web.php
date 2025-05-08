@@ -27,6 +27,7 @@ use App\Http\Controllers\TaskController;
 use App\Http\Controllers\TypeController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ViewController;
+use App\Http\Controllers\WebhookController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -85,6 +86,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/repository', [RepositoryController::class, 'reactView'])->name('Repository.jsx');
     Route::get('/statuses', [StatusController::class, 'reactView'])->name('Statuses.jsx');
     Route::get('/apikeys', [ApikeyController::class, 'reactView'])->name('Apikeys.jsx');
+    Route::get('/webhooks', [WebhookController::class,'reactView'])->name('Webhooks.jsx');
     Route::get('/types', [TypeController::class, 'reactView'])->name('Types.jsx');
     Route::get('/settings', [SettingController::class, 'reactView'])->name('Settings.jsx');
 });

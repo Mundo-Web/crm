@@ -37,9 +37,13 @@ class RouteServiceProvider extends ServiceProvider
             Route::middleware('web')
                 ->group(base_path('routes/web.php'));
 
-            // Rutas de la web
+            // Rutas libres de autenticación
             Route::prefix('free')
                 ->group(base_path('routes/free.php'));
+
+            // Rutas de servicios de Meta
+            Route::prefix('meta')
+                ->group(base_path('routes/meta.php'));
         });
     }
 }
