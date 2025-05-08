@@ -39,15 +39,12 @@ class MetaController extends Controller
 
             $data = $request->all();
 
-            dump($data);
-
             $entry = $data['entry'][0] ?? [];
+            $messaging = $entry['messaging'][0] ?? [];
 
-            dump($entry);
+            if ($entry['id'] == $messaging['sender']['id']) return;
 
-            if ($entry['id'] == $entry['messaging']['sender']['id']) return;
-
-            $userId = $entry['messaging']['sender']['id'];
+            $userId = $messaging['sender']['id'];
             $fields = ['id', 'first_name', 'last_name', 'name', 'profile_pic', 'locale', 'timezone', 'gender'];
             $accessToken = 'EAATRvPtpfZAMBO8FM65hJK1Vw1NAlZADDJvSzvWZAsqd4hgPwJMohfaCRFG7oD3ZBhpJZCWUTABWjaqJwUKgymaqYIluYJ9fEyk41O6UZAptOYozu5l58hz6A9Nmpb1qEEZBndqpZBTGukTvf6qV0giz5ViZCLaNoJtipvIyOdFLOGZAvk3vRvk8ZAUquFEbAj4Xtmq';
             $profileRest = new Fetch(env('META_GRAPH_URL') . "/{$userId}?fields={$fields}&access_token={$accessToken}");
@@ -55,8 +52,8 @@ class MetaController extends Controller
 
             dump($profileData);
 
-            if ($entry['id'] != $entry['messaging']['sender']['id']) {
-                dump($entry['messaging']['message']['text']);
+            if ($entry['id'] != $messaging['sender']['id']) {
+                dump($messaging['message']['text']);
             }
         });
         dump($response->toArray());
