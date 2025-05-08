@@ -54,7 +54,7 @@ class MetaController extends Controller
 
             $integrationJpa = Integration::updateOrCreate([
                 'meta_service' => $origin,
-                'meta_business_id' => $businessJpa->meta_business_id,
+                'meta_business_id' => $entry['id'],
                 'business_id' => $businessJpa->id,
             ]);
 
