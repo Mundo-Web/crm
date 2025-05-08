@@ -115,7 +115,7 @@ class MetaController extends Controller
             dump($profileData);
 
             if ($entry['id'] != $messaging['sender']['id']) {
-                Client::createOrUpdate([
+                Client::updateOrCreate([
                     'integration_id' => $integrationJpa->id,
                     'integration_user_id' => $profileData['id'],
                     'business_id' => $businessJpa->id,
