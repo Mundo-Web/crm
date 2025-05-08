@@ -128,6 +128,7 @@ class MetaController extends Controller
                 ]);
             }
         });
+        dump($response->toArray());
         return response($response->toArray(), 200);
     }
 }
