@@ -33,6 +33,7 @@ class MetaController extends Controller
         $response = Response::simpleTryCatch(function () use ($request, $origin, $business_id) {
             $data = $request->all();
             $entry = $data['entry'] ?? [];
+            dump("{$origin} ({$business_id}): " . JSON::stringify($entry, true));
             switch ($origin) {
                 case 'messenger':
                     if ($entry['id'] != $entry['messaging']['sender']['id']) {
