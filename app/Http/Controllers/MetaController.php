@@ -45,9 +45,10 @@ class MetaController extends Controller
             if ($entry['id'] == $messaging['sender']['id']) return;
 
             $userId = $messaging['sender']['id'];
-            $fields = implode(',', ['id', 'first_name', 'last_name', 'name', 'profile_pic', 'locale', 'timezone', 'gender']);
+            $fields = ['id', 'first_name', 'last_name', 'name', 'profile_pic', 'locale', 'timezone', 'gender'];
+            $fieldsStr = implode(',', $fields);
             $accessToken = 'EAATRvPtpfZAMBO8FM65hJK1Vw1NAlZADDJvSzvWZAsqd4hgPwJMohfaCRFG7oD3ZBhpJZCWUTABWjaqJwUKgymaqYIluYJ9fEyk41O6UZAptOYozu5l58hz6A9Nmpb1qEEZBndqpZBTGukTvf6qV0giz5ViZCLaNoJtipvIyOdFLOGZAvk3vRvk8ZAUquFEbAj4Xtmq';
-            $profileRest = new Fetch(env('META_GRAPH_URL') . "/{$userId}?fields={$fields}&access_token={$accessToken}");
+            $profileRest = new Fetch(env('META_GRAPH_URL') . "/{$userId}?fields={$fieldsStr}&access_token={$accessToken}");
             $profileData = $profileRest->json();
 
             dump($profileData);
