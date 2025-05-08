@@ -17,7 +17,7 @@ return new class extends Migration
 
             $table->string('meta_service');
             $table->string('meta_business_id');
-            $table->longText('meta_access_token');
+            $table->longText('meta_access_token')->nullable();
             $table->unsignedBigInteger('business_id');
 
             $table->timestamps();
