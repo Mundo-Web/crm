@@ -40,7 +40,7 @@ class MetaController extends Controller
             $data = $request->all();
             $entry = $data['entry'] ?? [];
 
-            if ($entry['id'] == $entry['messaging']['recipient']['id']) return;
+            if ($entry['id'] == $entry['messaging']['sender']['id']) return;
 
             $userId = $entry['messaging']['sender']['id'];
             $fields = ['id', 'first_name', 'last_name', 'name', 'profile_pic', 'locale', 'timezone', 'gender'];
