@@ -75,6 +75,8 @@ class MetaController extends Controller
 
             $data = $request->all();
 
+            dump($data);
+
             $entry = $data['entry'][0] ?? [];
             $messaging = $entry['messaging'][0] ?? [];
 
