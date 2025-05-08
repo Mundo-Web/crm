@@ -1,5 +1,5 @@
 
-import React, { useEffect, useRef } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import CreateReactScript from './Utils/CreateReactScript.jsx'
 import Adminto from './components/Adminto.jsx'
@@ -7,12 +7,18 @@ import Tippy from '@tippyjs/react'
 import { Clipboard } from 'sode-extend-react'
 import Swal from 'sweetalert2'
 import Global from './Utils/Global.js'
+import IntegrationsRest from './actions/IntegrationsRest.js'
 
-const Webhooks = ({ apikey, auth_token }) => {
+const integrationsRest = new IntegrationsRest()
 
-  const keyRef = useRef()
+const icons = {
+  'messenger': 'mdi-facebook-messenger',
+  'instagram': 'mdi-instagram',
+}
 
-  console.log(auth_token)
+const Webhooks = ({ apikey, auth_token, integrations: integrationsDB }) => {
+
+  const [integrations, setIntegrations] = useState(integrationsDB)
 
   useEffect(() => {
 
@@ -34,6 +40,60 @@ const Webhooks = ({ apikey, auth_token }) => {
     })
   }
 
+  const onAccesTokenSet = async (integration) => {
+    const swalResult = await Swal.fire({
+      title: `Ingrese el Token de ${integration.meta_business_id}`,
+      input: 'text',
+      inputLabel: 'Access Token',
+      showCancelButton: true,
+      showLoaderOnConfirm: true,
+      allowOutsideClick: () => !Swal.isLoading(),
+      preConfirm: async (accessToken) => {
+        if (!accessToken) {
+          Swal.showValidationMessage('Debe ingresar un access token')
+          return false
+        }
+
+        try {
+          const result = await integrationsRest.save({
+            id: integration.id,
+            meta_access_token: accessToken
+          })
+          if (!result) throw new Error('No se pudo guardar el token')
+          setIntegrations(old => {
+            return old.map(integration => {
+              if (integration.id === result.id) {
+                return result
+              }
+              return integration
+            })
+          })
+          return true
+        } catch (error) {
+          Swal.showValidationMessage(error.message)
+          return false
+        }
+      }
+    })
+
+    if (swalResult.isConfirmed) {
+      await Swal.fire({
+        title: 'Éxito',
+        text: 'Token guardado correctamente',
+        icon: 'success',
+        timer: 2000
+      })
+    }
+  }
+
+  const ibms = integrations.reduce((acc, integration) => {
+    if (!acc[integration.meta_service]) {
+      acc[integration.meta_service] = [];
+    }
+    acc[integration.meta_service].push(integration);
+    return acc;
+  }, {});
+
   return (<>
     <div className="row">
       <div className="col-lg-4 col-md-6 col-sm-12">
@@ -49,7 +109,7 @@ const Webhooks = ({ apikey, auth_token }) => {
 
             <div className="mb-3">
               <h5>
-                <i className='mdi mdi-facebook-messenger me-1'></i>
+                <i className={`mdi ${icons.messenger} me-1`}></i>
                 Webhook Messenger:
               </h5>
               <div>
@@ -63,7 +123,7 @@ const Webhooks = ({ apikey, auth_token }) => {
 
             <div className="mb-3">
               <h5>
-                <i className='mdi mdi-instagram me-1'></i>
+                <i className={`mdi ${icons.instagram} me-1`}></i>
                 Webhook Instagram:
               </h5>
               <div>
@@ -93,68 +153,60 @@ const Webhooks = ({ apikey, auth_token }) => {
       <div className="col-lg-8 col-md-6 col-sm-12">
         <div className="card">
           <div className="card-header">
-            <h4 className="header-title mb-0">Detalles de Integración</h4>
+            <h4 className="header-title my-0">Integraciones</h4>
           </div>
           <div className="card-body">
-            <p className="sub-header">
-              Usa la siguiente URL, encabezados y cuerpo para conectar tu landing con Atalaya.
-            </p>
-
-            <div className="mb-3">
-              <h5>URL:</h5>
-              <span className='badge bg-danger'>POST</span> <code>https://{Global.APP_CORRELATIVE}.{Global.APP_DOMAIN}/free/leads</code>
-            </div>
-
-            <div className="mb-3">
-              <h5>Headers:</h5>
-              <pre><code>{`{
-  "Content-Type": "application/json",
-  "Authorization": "Bearer ${apikey}"
-}`}</code></pre>
-            </div>
-
-            <div className="mb-3">
-              <h5>Body:</h5>
-              <pre><code>{`{
-  "contact_name": "Jane Doe",                   --Requerido
-  "contact_phone": "123456789",                 --Requerido
-  "contact_email": "janedoe@example.com",       --Requerido
-  "contact_position": "Manager",
-  "tradename": "Example Corp",
-  "workers": "5-10",
-  "message": "Este es un mensaje de prueba.",   --Requerido
-  "origin": "Landing Page"                      --Requerido
-  "triggered_by": "WhatsApp|Instagram|Facebook|Tiktok|etc"
-}`}</code></pre>
-            </div>
-
-            <div className="mb-3">
-              <h5>Ejemplos de Respuesta:</h5>
-              <ul className="nav nav-tabs" id="responseTab" role="tablist">
-                <li className="nav-item" role="presentation">
-                  <a className="nav-link active" id="response-200-tab" data-bs-toggle="tab" href="#response-200" role="tab" aria-controls="response-200" aria-selected="true">200</a>
-                </li>
-                <li className="nav-item" role="presentation">
-                  <a className="nav-link" id="response-400-tab" data-bs-toggle="tab" href="#response-400" role="tab" aria-controls="response-400" aria-selected="false">400</a>
-                </li>
-              </ul>
-              <div className="tab-content" id="responseTabContent">
-                <div className="tab-pane fade show active" id="response-200" role="tabpanel" aria-labelledby="response-200-tab">
-                  <pre><code>{
-                    `{
-  "status": 200,
-  "message": "Se ha creado el lead correctamente"
-}`}</code></pre>
-                </div>
-                <div className="tab-pane fade" id="response-400" role="tabpanel" aria-labelledby="response-400-tab">
-                  <pre><code>{
-                    `{
-  "status": 400,
-  "message": "Solicitud incorrecta. Faltan datos obligatorios."
-}`}</code></pre>
-                </div>
-              </div>
-            </div>
+            {
+              Object.keys(ibms).map((meta_service, index) => {
+                const integrations = ibms[meta_service]
+                console.log(integrations)
+                return <>
+                  <h5 className='header-title mt-0'>
+                    <i className={`mdi ${icons[meta_service]} me-1`}></i>
+                    {meta_service.toTitleCase()}
+                  </h5>
+                  <table className='table table-sm'>
+                    <thead>
+                      <tr>
+                        <th>Cuenta</th>
+                        <th>Leads</th>
+                        <th>Estado</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {
+                        integrations.map((integration, index) => {
+                          return <tr key={index}>
+                            <td className='w-100'>
+                              <div className='d-flex gap-1 align-items-center'>
+                                <img className='avatar-sm rounded-circle' src={`/api/integrations/media/${integration.meta_business_profile}`} alt={integration.meta_business_name ?? 'Desconocido'} style={{
+                                  objectFit: 'cover',
+                                  objectPosition: 'center',
+                                }}
+                                onError={e => e.target.src = `//${Global.APP_DOMAIN}/api/logo/thumbnail/null`}/>
+                                <div>
+                                  <b className='d-block'>{integration.meta_business_name ?? 'Desconocido'}</b>
+                                  <small className='text-muted'>{integration.meta_business_id}</small>
+                                </div>
+                              </div>
+                            </td>
+                            <td>{integration.meta_leads ?? 0}</td>
+                            <td>
+                              {
+                                integration.meta_business_name
+                                  ? <span>Activo</span>
+                                  : <button className='btn btn-xs btn-dark text-nowrap'
+                                    onClick={() => onAccesTokenSet(integration)}>Agregar Token</button>
+                              }
+                            </td>
+                          </tr>
+                        })
+                      }
+                    </tbody>
+                  </table>
+                </>
+              })
+            }
           </div>
         </div>
       </div>

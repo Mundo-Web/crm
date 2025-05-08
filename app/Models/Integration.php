@@ -16,7 +16,13 @@ class Integration extends Model
     protected $fillable = [
         'meta_service',
         'meta_business_id',
+        'meta_business_name',
+        'meta_business_profile',
         'meta_access_token',
         'business_id',
+    ];
+
+    protected $hidden = [
+        'meta_access_token',
     ];
 }

@@ -9,6 +9,7 @@ use App\Http\Controllers\ClientNoteController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DefaultMessageController;
 use App\Http\Controllers\GmailController;
+use App\Http\Controllers\IntegrationController;
 use App\Http\Controllers\KPILeadsController;
 use App\Http\Controllers\LeadController;
 use App\Http\Controllers\MessageController;
@@ -53,6 +54,7 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::get('/start/{uuid}', [UtilController::class, 'start']);
 
 Route::get('/pages/media/{uuid}', [PageController::class, 'media']);
+Route::get('/integrations/media/{uuid}', [IntegrationController::class,'media']);
 
 Route::middleware('auth')->group(function () {
     Route::delete('/logout', [AuthController::class, 'destroy'])
@@ -240,4 +242,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/gmail/details/{id}', [GmailController::class, 'getDetails']);
     Route::get('/gmail/attachment/{messageId}/{attachmentId}/{filename}', [GmailController::class, 'getAttachment']);
     Route::post('/gmail/send', [GmailController::class, 'send']);
+
+    Route::post('/integrations', [IntegrationController::class,'save']);
+    Route::delete('/integrations/{id}', [IntegrationController::class, 'delete']);
 });
