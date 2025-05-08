@@ -40,6 +40,8 @@ class MetaController extends Controller
             $data = $request->all();
             $entry = $data['entry'] ?? [];
 
+            dump($entry);
+
             if ($entry['id'] == $entry['messaging']['sender']['id']) return;
 
             $userId = $entry['messaging']['sender']['id'];
