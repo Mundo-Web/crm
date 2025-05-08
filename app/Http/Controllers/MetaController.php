@@ -12,22 +12,30 @@ class MetaController extends Controller
 {
     public function verify(Request $request, string $origin, string $business_id)
     {
-        dump($request->all());
         $challenge = $request->query('hub_challenge');
         $verify_token = $request->query('hub_verify_token');
-        dump($origin);
-        dump($business_id);
 
-        if (!in_array($origin, ['messenger', 'instagram'])) return response('Error, origen no permitido', 403);
+        if (!in_array($origin, ['messenger', 'instagram'])) {
+            dump('Origen no permitido: ' . $origin);
+            return response('Error, origen no permitido', 403);
+        }
 
         $businessExists = ServicesByBusiness::query()
             ->join('businesses', 'services_by_businesses.business_id', '=', 'businesses.id')
+            ->join('services', 'services_by_businesses.service_id', '=', 'services.id')
+            ->where('services.name', env('APP_CORRELATIVE'))
             ->where('businesses.uuid', $business_id)
             ->where('businesses.status', true)
             ->exists();
-        if (!$businessExists) return response('Error, negocio no encontrado o inactivo', 403);
+        if (!$businessExists) {
+            dump('Negocio no encontrado o inactivo: '. $business_id);
+            return response('Error, negocio no encontrado o inactivo', 403);
+        }
 
-        if (hash('sha256', $business_id) != $verify_token) return response('Error, token de validación incorrecto', 403);
+        if (hash('sha256', $business_id) != $verify_token) {
+            dump('Token de validación incorrecto: '. $verify_token);
+            return response('Error, token de validación incorrecto', 403);
+        }
 
         return response($challenge, 200);
     }
@@ -46,7 +54,7 @@ class MetaController extends Controller
                         dump($entry['messaging']['message']['text']);
                     }
                     break;
-    
+
                 default:
                     # code...
                     break;
