@@ -54,6 +54,7 @@ class MetaController extends Controller
                 dump($entry['messaging']['message']['text']);
             }
         });
+        dump($response->toArray());
         return response($response->toArray(), 200);
     }
 }
