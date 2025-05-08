@@ -38,7 +38,10 @@ class MetaController extends Controller
             if (!in_array($origin, ['messenger', 'instagram'])) throw new Exception('Error, origen no permitido');
 
             $data = $request->all();
-            $entry = $data['entry'] ?? [];
+
+            dump($data);
+
+            $entry = $data['entry'][0] ?? [];
 
             dump($entry);
 
