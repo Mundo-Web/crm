@@ -58,7 +58,9 @@ class Client extends Model
         'country_prefix',
         'workers',
         'business_id',
-        'complete_registration'
+        'complete_registration',
+        'integration_id',
+        'integration_user_id',
     ];
 
     static function getFields()
