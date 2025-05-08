@@ -117,6 +117,7 @@ class MetaController extends Controller
                     'business_id' => $businessJpa->id,
                 ], [
                     'message' => $messaging['message']['text']?? 'Sin mensaje',
+                    'contact_name' => $profileData['name'],
                     'name' => $profileData['name'],
                     'source' => 'Externo',
                     'date' => Trace::getDate('date'),
