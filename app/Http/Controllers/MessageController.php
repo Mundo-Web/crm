@@ -95,7 +95,7 @@ class MessageController extends BasicController
             'contact_phone' => $data['contact_phone'],
             'status_id' => Setting::get('default-lead-status', $businessJpa->id),
             'manage_status_id' => Setting::get('default-manage-lead-status', $businessJpa->id),
-            'complete_registration' => false,
+            // 'complete_registration' => false,
             'status' => true
         ], [
             'name' => $data['contact_name'] ?? 'Lead anonimo',
