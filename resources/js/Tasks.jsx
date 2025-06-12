@@ -129,15 +129,13 @@ const Tasks = () => {
           dataType: 'string',
           // width: '250px',
           cellTemplate: (container, { data }) => {
-            ReactAppend(container, <Tippy content='Ver lead'>
-              <div className="cursor-pointer" onClick={() => location.href = `/leads/${data.client_note.client.id}`}>
-                <b className="d-block my-0">{data.name}</b>
-                <div className="mb-0">
-                  <span class="badge bg-light text-dark me-1"><i className={types[data.type].icon}></i> {data.type}</span>
-                  <span class={`badge ${priorities[data.priority].color}`}>{data.priority}</span>
-                </div>
+            ReactAppend(container, <div className="cursor-pointer">
+              <b className="d-block my-0">{data.name}</b>
+              <div className="mb-0">
+                <span class="badge bg-light text-dark me-1"><i className={types[data.type].icon}></i> {data.type}</span>
+                <span class={`badge ${priorities[data.priority].color}`}>{data.priority}</span>
               </div>
-            </Tippy>)
+            </div>)
           }
         },
         {
@@ -166,14 +164,21 @@ const Tasks = () => {
           // width: '185px',
           cellTemplate: (container, { data }) => {
             const client = data.client_note.client
-            ReactAppend(container, <div
+            ReactAppend(container, <div className="d-flex align-items-center"
             // style={{ width: '185px' }}
             >
-              <b className="d-block my-0 text-truncate">{client.contact_name}</b>
-              <small>
-                <i className="mdi mdi-phone me-1"></i>
-                {client.country_prefix || ''}{client.contact_phone}
-              </small>
+              <div>
+                <b className="d-block my-0 text-truncate">{client.contact_name}</b>
+                <small>
+                  <i className="mdi mdi-phone me-1"></i>
+                  {client.country_prefix || ''}{client.contact_phone}
+                </small>
+              </div>
+              <Tippy content="Ver lead">
+              <a className="btn btn-white rounded-pill" href={`/leads/${client.id}`}>
+                <i className="mdi mdi-arrow-top-right"></i>
+              </a>
+              </Tippy>
             </div>)
           }
         },
