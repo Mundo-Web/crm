@@ -130,7 +130,7 @@ const Tasks = () => {
           // width: '250px',
           cellTemplate: (container, { data }) => {
             ReactAppend(container, <Tippy content='Ver lead'>
-              <div className="cursor-pointer" onClick={() => location.href = `/leads/${data.client_note.id}`}>
+              <div className="cursor-pointer" onClick={() => location.href = `/leads/${data.client_note.client.id}`}>
                 <b className="d-block my-0">{data.name}</b>
                 <div className="mb-0">
                   <span class="badge bg-light text-dark me-1"><i className={types[data.type].icon}></i> {data.type}</span>
