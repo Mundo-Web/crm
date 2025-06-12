@@ -12,6 +12,7 @@ import DxBox from "./components/dx/DxBox";
 import Dropdown from "./components/dropdown/DropDown";
 import DropdownItem from "./components/dropdown/DropdownItem";
 import DxPanelButton from "./components/dx/DxPanelButton";
+import Tippy from "@tippyjs/react";
 
 const tasksRest = new TasksRest();
 
@@ -128,13 +129,15 @@ const Tasks = () => {
           dataType: 'string',
           // width: '250px',
           cellTemplate: (container, { data }) => {
-            ReactAppend(container, <div>
-              <b className="d-block my-0">{data.name}</b>
-              <div className="mb-0">
-                <span class="badge bg-light text-dark me-1"><i className={types[data.type].icon}></i> {data.type}</span>
-                <span class={`badge ${priorities[data.priority].color}`}>{data.priority}</span>
+            ReactAppend(container, <Tippy content='Ver lead'>
+              <div className="cursor-pointer" onClick={() => location.href = `/leads/${data.client_note.id}`}>
+                <b className="d-block my-0">{data.name}</b>
+                <div className="mb-0">
+                  <span class="badge bg-light text-dark me-1"><i className={types[data.type].icon}></i> {data.type}</span>
+                  <span class={`badge ${priorities[data.priority].color}`}>{data.priority}</span>
+                </div>
               </div>
-            </div>)
+            </Tippy>)
           }
         },
         {

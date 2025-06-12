@@ -1,0 +1,57 @@
+.bs-wizard {
+    margin-top: 20px;
+    display: flex;
+    justify-content: space-between;
+}
+
+.bs-wizard-step {
+    flex: 1;
+    position: relative;
+    padding: 0 20px;
+}
+
+.bs-wizard-stepnum {
+    font-size: 14px;
+    margin-bottom: 10px;
+}
+
+.bs-wizard-dot {
+    position: absolute;
+    width: 30px;
+    height: 30px;
+    display: block;
+    background: #fff;
+    top: 45px;
+    left: 50%;
+    margin-top: -15px;
+    margin-left: -15px;
+    border-radius: 50%;
+    border: 4px solid #e5e5e5;
+    z-index: 1;
+}
+
+.bs-wizard-step.active .bs-wizard-dot,
+.bs-wizard-step.complete .bs-wizard-dot {
+    border-color: #3bafda;
+}
+
+.progress {
+    position: relative;
+    height: 8px;
+    margin: 20px 0;
+    background: #e5e5e5;
+}
+
+.progress-bar {
+    width: 100%;
+    background: #3bafda;
+}
+
+.bs-wizard-step.disabled .progress-bar {
+    background: #e5e5e5;
+}
+
+.avatar-sm {
+    width: 48px;
+    height: 48px;
+}
