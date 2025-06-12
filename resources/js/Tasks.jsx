@@ -175,9 +175,9 @@ const Tasks = () => {
                 </small>
               </div>
               <Tippy content="Ver lead">
-              <a className="btn btn-sm btn-white rounded-pill" href={`/leads/${client.id}`}>
-                <i className="mdi mdi-arrow-top-right"></i>
-              </a>
+                <a className="btn btn-sm btn-white rounded-pill" href={`/leads/${client.id}`}>
+                  <i className="mdi mdi-arrow-top-right"></i>
+                </a>
               </Tippy>
             </div>)
           }
