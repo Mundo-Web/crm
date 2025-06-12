@@ -164,7 +164,7 @@ const Tasks = () => {
           // width: '185px',
           cellTemplate: (container, { data }) => {
             const client = data.client_note.client
-            ReactAppend(container, <div className="d-flex align-items-center"
+            ReactAppend(container, <div className="d-flex align-items-center gap-2"
             // style={{ width: '185px' }}
             >
               <div>
@@ -175,7 +175,7 @@ const Tasks = () => {
                 </small>
               </div>
               <Tippy content="Ver lead">
-              <a className="btn btn-white rounded-pill" href={`/leads/${client.id}`}>
+              <a className="btn btn-sm btn-white rounded-pill" href={`/leads/${client.id}`}>
                 <i className="mdi mdi-arrow-top-right"></i>
               </a>
               </Tippy>
