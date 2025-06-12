@@ -129,7 +129,7 @@ const Tasks = () => {
           dataType: 'string',
           // width: '250px',
           cellTemplate: (container, { data }) => {
-            ReactAppend(container, <div className="cursor-pointer">
+            ReactAppend(container, <div>
               <b className="d-block my-0">{data.name}</b>
               <div className="mb-0">
                 <span class="badge bg-light text-dark me-1"><i className={types[data.type].icon}></i> {data.type}</span>
