@@ -41,7 +41,9 @@ class ProjectController extends BasicController
             'projects.*',
             'projects.status AS project_status',
             DB::raw('COALESCE(SUM(payments.amount), 0) AS total_payments'),
-            DB::raw('MAX(payments.date) AS last_payment_date'),
+            // DB::raw('MAX(payments.date) AS last_payment_date'),
+            'last_payment.date',
+            'last_payment.date AS last_payment_date',
         ])
             ->distinct()
             ->leftJoin('types AS type', 'type.id', 'projects.type_id')
