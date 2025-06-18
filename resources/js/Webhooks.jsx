@@ -33,30 +33,32 @@ const ServiceCard = ({ service, icon, description, integration, onIntegrate }) =
               <p className="text-muted mb-0">{description}</p>
             </div>
           </div>
-          {integration?.meta_business_name ? (
-            <div className="d-flex align-items-center">
-              <img
-                className="avatar-sm rounded-circle me-2"
-                src={`/api/integrations/media/${integration.meta_business_profile}`}
-                alt={integration.meta_business_name}
-                onError={e => e.target.src = `//${Global.APP_DOMAIN}/api/logo/thumbnail/null`}
-              />
-              <div>
-                <h5 className="mb-0">{integration.meta_business_name}</h5>
-                <small className="text-muted">
-                  {integration.meta_leads} leads generados
-                </small>
+          {
+            integration?.meta_business_name ? (
+              <div className="d-flex align-items-center">
+                <img
+                  className="avatar-sm rounded-circle me-2"
+                  src={`/api/integrations/media/${integration.meta_business_profile}`}
+                  alt={integration.meta_business_name}
+                  onError={e => e.target.src = `//${Global.APP_DOMAIN}/api/logo/thumbnail/null`}
+                />
+                <div>
+                  <h5 className="mb-0">{integration.meta_business_name}</h5>
+                  <small className="text-muted">
+                    {integration.meta_leads} leads generados
+                  </small>
+                </div>
               </div>
-            </div>
-          ) : (
-            <button
-              className="btn btn-primary w-100"
-              onClick={() => onIntegrate(service)}
-            >
-              <i className="mdi mdi-plus me-1"></i>
-              Integrar {service.toTitleCase()}
-            </button>
-          )}
+            ) : (
+              <button
+                className="btn btn-primary w-100"
+                onClick={() => onIntegrate(service)}
+              >
+                <i className="mdi mdi-plus me-1"></i>
+                Integrar {service.toTitleCase()}
+              </button>
+            )
+          }
         </div>
       </div>
     </div>
