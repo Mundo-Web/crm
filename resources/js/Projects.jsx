@@ -59,7 +59,7 @@ const Projects = ({ statuses, finishedProjectStatus, can }) => {
     nameRef.current.value = data?.name || null
     descriptionRef.current.value = data?.description || null
     costRef.current.value = data?.cost
-    signAtRef.current.value = data?.sign_at ? moment(data.sign_at).format('YYYY-MM-DD') : null
+    signAtRef.current.value = data?.signed_at ? moment(data.signed_at).format('YYYY-MM-DD') : null
     startsAtRef.current.value = data?.starts_at ? moment(data.starts_at).format('YYYY-MM-DD') : null
     endsAtRef.current.value = data?.ends_at ? moment(data.ends_at).format('YYYY-MM-DD') : null
 
@@ -77,7 +77,7 @@ const Projects = ({ statuses, finishedProjectStatus, can }) => {
       name: nameRef.current.value,
       description: descriptionRef.current.value,
       cost: costRef.current.value ?? undefined,
-      sign_at: signAtRef.current.value ?? undefined,
+      signed_at: signAtRef.current.value ?? undefined,
       starts_at: startsAtRef.current.value,
       ends_at: endsAtRef.current.value,
     }
