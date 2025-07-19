@@ -6,7 +6,8 @@ import Tippy from '@tippyjs/react'
 import 'tippy.js/dist/tippy.css';
 import BusinessCard from '../Reutilizables/Business/BusinessCard'
 
-const Menu = ({ session, can, whatsAppStatus, APP_PROTOCOL, APP_DOMAIN, leadsCount, tasksCount, businesses }) => {
+const Menu = ({ session, theme, can, whatsAppStatus, APP_PROTOCOL, APP_DOMAIN, leadsCount, tasksCount, businesses }) => {
+
   let mainRole = {}
   if (session.is_owner) {
     mainRole = {
@@ -25,9 +26,9 @@ const Menu = ({ session, can, whatsAppStatus, APP_PROTOCOL, APP_DOMAIN, leadsCou
 
   const idBirthday = moment(session.birthdate).format('MM-DD') == moment().format('MM-DD')
 
-  return (<div className="left-side-menu">
-    <div className="h-100" data-simplebar>
-      <div className="user-box text-center">
+  return (<div className="left-side-menu py-0">
+    <div className="h-100 pt-3" data-simplebar>
+      {/* <div className="user-box text-center">
         <img src={`//${APP_DOMAIN}/api/profile/thumbnail/${session.relative_id}?v=${new Date(session.updated_at).getTime()}`} alt={session.name} title={session.name}
           className="rounded-circle img-thumbnail avatar-md" style={{ backgroundColor: 'unset', borderColor: '#98a6ad', objectFit: 'cover', objectPosition: 'center' }} />
         <div className="dropdown">
@@ -64,29 +65,47 @@ const Menu = ({ session, can, whatsAppStatus, APP_PROTOCOL, APP_DOMAIN, leadsCou
         <Tippy content={mainRole.description} arrow={true}>
           <p className="text-muted left-user-info" >{mainRole.name}</p>
         </Tippy>
-
-        {/* <ul className="list-inline">
-          <li className="list-inline-item">
-            <Tippy content="Configuracion">
-              <a href="#" className="text-muted left-user-info right-bar-toggle dropdown notification-list">
-                <i className="mdi mdi-cog"></i>
-              </a>
-            </Tippy>
-          </li>
-
-          <li className="list-inline-item">
-            <Tippy content="Cerrar sesion">
-              <a href="#" className="text-danger" onClick={Logout}>
-                <i className="mdi mdi-power"></i>
-              </a>
-            </Tippy>
-          </li>
-        </ul> */}
+      </div> */}
+      <div className="user-box w-100 mb-2" style={{padding: '0px 20px'}}>
+        <img
+          src={`//${APP_DOMAIN}/api/profile/thumbnail/${session.relative_id}?v=${new Date(session.updated_at).getTime()}`}
+          alt={session.name}
+          title={session.name}
+          className="rounded-circle img-thumbnail avatar-md mb-2"
+          style={{
+            backgroundColor: 'unset',
+            borderColor: '#98a6ad',
+            objectFit: 'cover',
+            objectPosition: 'center'
+          }}
+        />
+        <div className="d-flex justify-content-between align-items-center">
+          <div className="pe-2" style={{ maxWidth: '70%' }}>
+            <span
+              className="user-name h4 mt-0 mb-0 d-block"
+              style={{
+                fontFamily: "'Nunito Sans', sans-serif",
+                color: theme == 'dark' ? '#fff' : undefined
+              }}
+            >
+              {session.name.split(' ')[0]} {session.lastname.split(' ')[0]}
+              {idBirthday &&
+                <Tippy content={`Feliz cumpleaños ${session.name}`} arrow={true}>
+                  <i className='fas fa-birthday-cake text-danger ms-1'></i>
+                </Tippy>
+              }
+            </span>
+            <small className="text-muted text-truncate d-block">{session.email}</small>
+          </div>
+          <Tippy content={mainRole.description} arrow={true}>
+            <span className="badge bg-soft-primary text-primary rounded-pill">{mainRole.name}</span>
+          </Tippy>
+        </div>
       </div>
 
-      <div className='px-2 py-1 text-center' style={{ position: 'relative' }}>
+      <div className={`px-2 py-1 text-center ${otherBusinesses.length > 1 ? 'd-block' : ''}`} style={{ position: 'relative' }}>
         <a className="btn dropdown-toggle waves-effect waves-light d-flex align-items-center justify-content-between gap-1 mx-auto" data-bs-toggle="dropdown"
-          href="#" role="button" aria-haspopup="false" aria-expanded="false" style={{ borderColor: 'rgba(187, 187, 187, .25)', width: 'max-content', boxShadow: '0 0 8px rgba(187, 187, 187, .125)', borderRadius: '8px' }}>
+          href="#" role="button" aria-haspopup="false" aria-expanded="false" style={{ borderColor: 'rgba(187, 187, 187, .25)', width: '200px', boxShadow: '0 0 8px rgba(187, 187, 187, .125)', borderRadius: '8px' }}>
           <div className="d-flex align-items-start">
             <img className="d-flex me-2 rounded-circle" src={`//${APP_DOMAIN}/api/logo/thumbnail/null`}
               alt={currentBusiness.name} height="32" />
@@ -126,19 +145,19 @@ const Menu = ({ session, can, whatsAppStatus, APP_PROTOCOL, APP_DOMAIN, leadsCou
 
         <ul id="side-menu">
           <li className="menu-title">Panel de navegacion</li>
-          <MenuItemContainer title='KPIs' icon='mdi mdi-view-dashboard'>
-            <MenuItem href="/home" icon='mdi mdi-account-multiple'>Leads</MenuItem>
+          <MenuItemContainer title='KPIs' icon='mdi mdi-chart-donut-variant'>
+            <MenuItem href="/home" icon='mdi mdi-account-multiple'>Personas</MenuItem>
             {can('dashboard', 'all', 'list') && <MenuItem href="/home/projects" icon='mdi mdi-page-next'>Proyectos</MenuItem>}
           </MenuItemContainer>
 
           {/* {can('dashboard', 'all', 'list') && <MenuItem href="/home" icon='mdi mdi-home'>Inicio</MenuItem>} */}
 
           {/* <MenuItem href="/calendar" icon='mdi mdi-calendar'>Calendario</MenuItem> */}
-          <MenuItem href="/tasks" icon='mdi mdi-clipboard' badge={tasksCount > 0 ? tasksCount : ''}>Tareas</MenuItem>
+          <MenuItem href="/tasks" icon='mdi mdi-format-list-checks' badge={tasksCount > 0 ? tasksCount : ''}>Tareas</MenuItem>
 
-          <MenuItemContainer title='Personas' icon='mdi mdi-account-multiple'>
-            <MenuItem href="/leads" icon='mdi mdi-texture' badge={leadsCount > 0 ? leadsCount : ''}>Leads</MenuItem>
-            {can('clients', 'all', 'list') && <MenuItem href="/clients" icon='mdi mdi-account-group'>Clientes</MenuItem>}
+          <MenuItemContainer title='Personas' icon='mdi mdi-account-group'>
+            <MenuItem href="/leads" icon='mdi mdi-check-bold' badge={leadsCount > 0 ? leadsCount : ''}>Leads</MenuItem>
+            {can('clients', 'all', 'list') && <MenuItem href="/clients" icon='mdi mdi-account-multiple'>Clientes</MenuItem>}
             <MenuItem id='archived-item' href="/archived" icon='mdi mdi-archive'>Archivados</MenuItem>
           </MenuItemContainer>
 
@@ -175,7 +194,7 @@ const Menu = ({ session, can, whatsAppStatus, APP_PROTOCOL, APP_DOMAIN, leadsCou
           <MenuItem href="/repository" icon='mdi mdi-database'>Repositorio</MenuItem>
 
           {
-            can('apikeys','root', 'all', 'list') &&
+            can('apikeys', 'root', 'all', 'list') &&
             <MenuItemContainer title='Integraciones' icon='mdi mdi-api'>
               <MenuItem href="/webhooks" icon='mdi mdi-webhook'>Webhooks</MenuItem>
               <MenuItem href="/apikeys" icon='mdi mdi-form-textbox'>Formulario Externo</MenuItem>

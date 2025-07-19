@@ -3,6 +3,7 @@ import BasicRest from "./BasicRest";
 
 class LeadsRest extends BasicRest {
   path = 'leads'
+  paginateSufix = 'served'
 
   get = async (lead) => {
     try {
@@ -77,7 +78,7 @@ class LeadsRest extends BasicRest {
   attend = async (lead, attend) => {
     try {
       const { status, result } = await Fetch(`/api/${this.path}/attend/${lead}`, {
-        method: attend ? 'PUT':'DELETE'
+        method: attend ? 'PUT' : 'DELETE'
       })
       if (!status) throw new Error(result?.message || 'Ocurrio un error inesperado')
       return true

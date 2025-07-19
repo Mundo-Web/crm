@@ -8,7 +8,7 @@ const Dropdown = ({ ddRef, className, title, icon = {}, children, tippy, show = 
     </button>
     {
       show &&
-      <ul className="dropdown-menu">
+      <ul className="dropdown-menu" style={{zIndex: 99999}}>
         {children}
       </ul>
     }

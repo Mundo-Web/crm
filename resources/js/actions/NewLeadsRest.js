@@ -2,7 +2,8 @@ import BasicRest from "./BasicRest";
 import LeadsRest from "./LeadsRest";
 
 class NewLeadsRest extends LeadsRest {
-  path = 'leads/new'
+  path = 'leads'
+  paginateSufix = 'new'
 }
 
 export default NewLeadsRest

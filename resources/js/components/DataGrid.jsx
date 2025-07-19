@@ -50,14 +50,17 @@ const DataGrid = ({ gridRef: dataGridRef, rest, columns, toolBar, masterDetail, 
       allowColumnReordering: true,
       columnAutoWidth: true,
       scrollbars: 'auto',
-      filterPanel: { visible: true },
-      searchPanel: { visible: true },
+      // filterPanel: { visible: true },
+      filterPanel: { visible: false },
+      // searchPanel: { visible: true },
+      searchPanel: { visible: false },
       headerFilter: { visible: true, search: { enabled: true } },
       height,
       filterValue,
       selection: selection || null,
       export: {
-        enabled: exportable
+        // enabled: exportable
+        enabled: false
       },
       onExporting: function (e) {
         var workbook = new ExcelJS.Workbook();
@@ -110,7 +113,8 @@ const DataGrid = ({ gridRef: dataGridRef, rest, columns, toolBar, masterDetail, 
       },
       columnChooser: {
         title: 'Mostrar/Ocultar columnas',
-        enabled: true,
+        // enabled: true,
+        enabled: false,
         mode: 'select',
         search: { enabled: true }
       },

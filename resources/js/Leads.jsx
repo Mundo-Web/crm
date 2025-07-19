@@ -1,6 +1,6 @@
 import Tippy from '@tippyjs/react'
 import Quill from 'quill'
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useContext, useEffect, useRef, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import { GET, Local, String } from 'sode-extend-react'
 import Swal from 'sweetalert2'
@@ -40,6 +40,8 @@ import FormatBytes from './Utils/FormatBytes.js'
 import LeadTable from './Reutilizables/Leads/LeadTable.jsx'
 import NewLeadsRest from './actions/NewLeadsRest.js'
 import OffCanvas from './components/OffCanvas.jsx'
+import LeadKanban from './Reutilizables/Leads/LeadKanban.jsx'
+import { LeadsContext, LeadsProvider } from './Reutilizables/Leads/LeadsProvider.jsx'
 
 const leadsRest = new LeadsRest()
 const newLeadsRest = new NewLeadsRest()
@@ -50,7 +52,11 @@ const usersRest = new UsersRest()
 const productsByClients = new ProductsByClients()
 const gmailRest = new GmailRest()
 
-const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatus, manageStatuses: manageStatusesFromDB, noteTypes, products = [], processes = [], defaultMessages = [], session: sessionDB, can, lead, signs }) => {
+
+const Leads = (properties) => {
+  const { statuses: statusesFromDB, defaultClientStatus, defaultLeadStatus, manageStatuses: manageStatusesFromDB, noteTypes, products = [], processes = [], defaultMessages = [], session: sessionDB, can, lead, signs } = properties
+
+  const { leads, setLeads, getLeads, refreshLeads, defaultView, setDefaultView } = useContext(LeadsContext)
 
   const modalRef = useRef()
   const newLeadModalRef = useRef()
@@ -84,11 +90,9 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
   const [statuses, setStatuses] = useState(statusesFromDB);
   const [manageStatuses, setManageStatuses] = useState(manageStatusesFromDB)
 
-  const [leads, setLeads] = useState([])
   const [leadLoaded, setLeadLoaded] = useState(null)
   const [leadLoadedForMessages, setLeadLoadedForMessages] = useState(null)
   const [notes, setNotes] = useState([]);
-  const [defaultView, setDefaultView] = useState(Local.get('default-view') ?? 'kanban')
   const [clientProducts, setClientProducts] = useState([])
   const [hasGSToken, setHasGSToken] = useState(false)
   const [tokenUUID, setTokenUUID] = useState(crypto.randomUUID())
@@ -156,27 +160,6 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
   }, [hasGSToken, leadLoaded])
 
   useEffect(() => {
-    const ids = statuses.map(x => `#status-${Correlative(x.name)}`).join(', ');
-    $(ids).sortable({
-      connectWith: '.taskList',
-      placeholder: 'task-placeholder',
-      forcePlaceholderSize: true,
-      receive: async function ({ target }, { item }) {
-        const ul = target;
-        const li = item.get(0);
-        const items = $(ul).sortable('toArray');
-        if (!items.includes(li.id)) return;
-        const result = await leadsRest.leadStatus({ status: ul.getAttribute('data-id'), lead: li.id });
-        if (!result) return;
-        // await getLeads();
-      },
-      update: function (event, ui) {
-        if (this === ui.item.parent()[0]) {
-          return;
-        }
-      }
-    }).disableSelection();
-
     noteTypes.forEach(type => {
       new Quill(`#editor-${type.id}`, {
         theme: "bubble",
@@ -210,11 +193,6 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
     $(statusRef.current).val(leadLoaded?.status?.id).trigger('change')
     $(manageStatusRef.current).val(leadLoaded?.manage_status?.id).trigger('change')
   }, [leadLoaded]);
-
-  const getLeads = async () => {
-    const newLeads = await leadsRest.all()
-    setLeads(newLeads)
-  }
 
   const getNotes = async () => {
     const newNotes = await clientNotesRest.byClient(leadLoaded?.id);
@@ -581,13 +559,33 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
     $(messagesOffCanvasRef.current).offcanvas('show')
   }
 
-  return (<>
-    <div className='d-flex mb-2 gap-1'>
+  return (<Adminto {...properties} title='Leads' description='Gerencie sus leads y oportunidades' floatEnd={<div className='d-flex gap-2 justify-content-between'>
+    {
+      defaultView == 'kanban' &&
+      <Tippy content='Refrescar'>
+        <button className='btn btn-sm btn-light rounded-pill' onClick={refreshLeads}>
+          <i className='mdi mdi-refresh'></i>
+        </button>
+      </Tippy>
+    }
+    <div className='d-flex gap-0'>
       <input id='view-as-table' type="radio" name='view-as' defaultChecked={defaultView == 'table'} onClick={() => onDefaultViewClicked('table')} />
-      <label htmlFor="view-as-table">Tabla</label>
+      <label htmlFor="view-as-table">
+        <i className='mdi mdi-table me-1'></i>
+        Tabla
+      </label>
       <input id='view-as-kanban' type="radio" name='view-as' defaultChecked={defaultView == 'kanban'} onClick={() => onDefaultViewClicked('kanban')} />
-      <label htmlFor="view-as-kanban">Pipelines</label>
+      <label htmlFor="view-as-kanban">
+        <i className='mdi mdi-view-week me-1'></i>
+        Pipeline
+      </label>
     </div>
+    <button className='btn btn-sm btn-purple' onClick={() => onOpenModal()}>
+      <i className='mdi mdi-plus me-1'></i>
+      Nuevo Lead
+    </button>
+  </div>}>
+
     {
       defaultView == 'table' ?
         <>
@@ -601,7 +599,9 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
             onMakeLeadClient={onMakeLeadClient}
             onArchiveClicked={onArchiveClicked}
             onDeleteClicked={onDeleteClicked}
-            title={<h4 className='header-title my-0'>Leads - En Gestion</h4>} />
+            setStatuses={setStatuses}
+            setManageStatuses={setManageStatuses}
+            title='Leads - En Gestion' />
           <LeadTable gridRef={gridRef} rest={newLeadsRest} can={can} defaultLeadStatus={defaultLeadStatus} manageStatuses={manageStatuses} statuses={statuses}
             onClientStatusClicked={onClientStatusClicked}
             onManageStatusChange={onManageStatusChange}
@@ -612,160 +612,173 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
             onMakeLeadClient={onMakeLeadClient}
             onArchiveClicked={onArchiveClicked}
             onDeleteClicked={onDeleteClicked}
-            title={<h4 className='header-title my-0'>Leads - Recien llegados</h4>} />
+            setStatuses={setStatuses}
+            setManageStatuses={setManageStatuses}
+            title='Leads - Recien llegados'
+            borderColor='#4CAF50' />
         </>
-        : (<div className="d-flex gap-1 mb-3" style={{ overflowX: 'auto', minHeight: 'calc(100vh - 135px)' }}>
-          {
-            statuses.sort((a, b) => a.order - b.order).map((status, i) => {
-              const correlative = Correlative(status.name)
-              const leadsCount = leads.filter(x => x.status_id == status.id).length
-              return (<div key={`status-${i}`} style={{ minWidth: '270px', maxWidth: '270px' }}>
-                <div className="card mb-0">
-                  <div className="card-header">
-                    <h4 className="header-title my-0" style={{ color: status.color }}>{status.name}</h4>
-                  </div>
-                  <div className="card-body taskboard-box p-2" style={{ minHeight: '200px', maxHeight: 'calc(100vh - 190px)', overflow: 'auto' }}>
-                    {
-                      leadsCount > 50 &&
-                      <small class="d-block alert alert-warning py-1 px-2" role="alert">
-                        <i class="mdi mdi-alert-outline me-2"></i>
-                        <span>Tienes {leadsCount} leads en este estado, recuerda que tambien puedes archivar leads.</span>
-                      </small>
-                    }
-                    <ul className="sortable-list list-unstyled taskList" id={`status-${correlative}`} data-id={status.id}>
-                      {
-                        leads.filter(x => x.status_id == status.id).sort((a, b) => {
-                          return a.created_at > b.created_at ? -1 : 1
-                        }).sort((a, b) => {
-                          return a.assigned_to == session.service_user.id ? -1 : 1
-                        }).map((lead, i) => {
-                          return <li id={`${lead.id}`} key={`lead-${i}`} style={{ cursor: 'move' }} className={`p-2 ${lead.assigned_to == session.service_user.id ? 'border border-primary' : ''}`}>
-                            <div className="kanban-box" >
-                              <div className="kanban-detail ms-0">
-                                <div className="dropdown float-end">
-                                  <a href="#" className="dropdown-toggle arrow-none card-drop" data-bs-toggle="dropdown" aria-expanded="false">
-                                    <i className="mdi mdi-dots-vertical"></i>
-                                  </a>
-                                  <div className="dropdown-menu dropdown-menu-end">
-                                    <a className="dropdown-item" style={{ cursor: 'pointer' }} onClick={() => onLeadClicked(lead)}>
-                                      <i className='fa fa-eye me-1'></i>
-                                      Ver detalles
-                                    </a>
-                                    <a className="dropdown-item" style={{ cursor: 'pointer' }} onClick={() => onOpenModal(lead)}>
-                                      <i className='fa fa-pen me-1'></i>
-                                      Editar lead
-                                    </a>
-                                    <a className="dropdown-item" style={{ cursor: 'pointer' }} onClick={() => onMakeLeadClient(lead)}>
-                                      <i className='fa fa-user-plus me-1'></i>
-                                      Convertir en cliente
-                                    </a>
-                                    <a className="dropdown-item" style={{ cursor: 'pointer' }} onClick={() => onArchiveClicked(lead)}>
-                                      <i className='mdi mdi-archive me-1'></i>
-                                      Archivar lead
-                                    </a>
-                                    <a className="dropdown-item" style={{ cursor: 'pointer' }} onClick={() => onDeleteClicked(lead)}>
-                                      <i className='fa fa-trash me-1'></i>
-                                      Eliminar lead
-                                    </a>
-                                  </div>
-                                </div>
-                                {/* <span className="badge float-end" style={{
-                                  backgroundColor: lead?.manage_status?.color || '#6c757d'
-                                }}>{lead?.manage_status?.name ?? 'Sin estado'}</span> */}
-                                <h5 className="mt-0 text-truncate">
-                                  <Tippy content='Ver detalles'>
-                                    <a href="#" onClick={() => onLeadClicked(lead)}
-                                      className="text-dark">
-                                      {lead.contact_name}
-                                    </a>
-                                  </Tippy>
-                                </h5>
-                                <ul className="list-inline d-flex align-items-center gap-1 mb-0">
-                                  <li className="list-inline-item">
-                                    {
-                                      !lead.assigned_to
-                                        ? <TippyButton className='btn btn-xs btn-soft-dark rounded-pill' title="Atender lead"
-                                          onClick={() => onAttendClient(lead.id, true)}>
-                                          <i className='fas fa-hands-helping'></i>
-                                        </TippyButton>
-                                        : (
-                                          lead.assigned_to == session.service_user.id
-                                            ? <TippyButton className='btn btn-xs btn-soft-danger' title="Dejar de atender"
-                                              onClick={() => onAttendClient(lead.id, false)}>
-                                              <i className='fas fa-hands-wash'></i>
-                                            </TippyButton>
-                                            : <Tippy content={`Atendido por ${lead?.assigned?.fullname}`}>
-                                              <a href="" data-bs-toggle="tooltip" data-bs-placement="top"
-                                                title="Username">
-                                                <img src={`//${Global.APP_DOMAIN}/api/profile/${lead?.assigned?.relative_id}`} alt="img"
-                                                  className="avatar-xs rounded-circle" />
-                                              </a>
-                                            </Tippy>
-                                        )
-                                    }
-                                  </li>
-                                  <li className="list-inline-item">
-                                    <span className="badge d-block" style={{
-                                      backgroundColor: lead?.manage_status?.color || '#6c757d',
-                                      width: 'max-content'
-                                    }}>{lead?.manage_status?.name ?? 'Sin estado'}</span>
-                                    <small className='text-muted'>{moment(lead.created_at).format('LLL')}</small>
-                                  </li>
-                                  {/* <li className="list-inline-item">
-                                    <Tippy content={`${lead.pending_tasks_count} tareas pendientes`}>
-                                      <span style={{ position: 'relative' }}>
-                                        <i className="mdi mdi-format-align-left"></i>
-                                        {
-                                          lead.notes_count > 0 &&
-                                          <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style={{ fontSize: '0.5rem' }}>
-                                            {lead.pending_tasks_count}<span className="visually-hidden">
-                                              Tareas pendientes
-                                            </span>
-                                          </span>
-                                        }
-                                      </span>
-                                    </Tippy>
-                                  </li>
-                                  <li className="list-inline-item">
-                                    <Tippy content={`${lead.notes_count} registros de actividad`}>
-                                      <span style={{ position: 'relative' }}>
-                                        <i className="mdi mdi-comment-outline"></i>
-                                        {
-                                          lead.notes_count > 0 &&
-                                          <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style={{ fontSize: '0.5rem' }}>
-                                            {lead.notes_count}<span className="visually-hidden">
-                                              Notas de {lead.contact_name}
-                                            </span>
-                                          </span>
-                                        }
-                                      </span>
-                                    </Tippy>
-                                  </li>
-                                  <li className="list-inline-item">
-                                    <Tippy content={`Eliminar lead`}>
-                                      <b style={{ cursor: 'pointer' }} onClick={() => onDeleteClicked(lead)}>
-                                        <i className="fa fa-trash text-danger"></i>
-                                      </b>
-                                    </Tippy>
-                                  </li> */}
-                                </ul>
-                                {/* <div>
-                                  <small className='text-muted'>{moment(lead.created_at).format('LLL')}</small>
-                                </div> */}
-                              </div>
-                            </div>
-                          </li>
-                        })
-                      }
-                    </ul>
-                  </div>
-                </div>
+        : (
+          <LeadKanban statuses={statuses} leads={leads} defaultView={defaultView} getLeads={getLeads}
+            onLeadClicked={onLeadClicked}
+            onOpenModal={onOpenModal}
+            onMakeLeadClient={onMakeLeadClient}
+            onArchiveClicked={onArchiveClicked}
+            onDeleteClicked={onDeleteClicked}
+            onAttendClient={onAttendClient}
+          />
+          // <div className="d-flex gap-1 mb-3" style={{ overflowX: 'auto', minHeight: 'calc(100vh - 236px)' }}>
+          //   {
+          //     statuses.sort((a, b) => a.order - b.order).map((status, i) => {
+          //       const correlative = Correlative(status.name)
+          //       const leadsCount = leads.filter(x => x.status_id == status.id).length
+          //       return (<div key={`status-${i}`} style={{ minWidth: '270px', maxWidth: '270px' }}>
+          //         <div className="card mb-0">
+          //           <div className="card-header">
+          //             <h4 className="header-title my-0" style={{ color: status.color }}>{status.name}</h4>
+          //           </div>
+          //           <div className="card-body taskboard-box p-2" style={{ minHeight: '200px', height: 'calc(100vh - 311px)', overflow: 'auto' }}>
+          //             {
+          //               leadsCount > 50 &&
+          //               <small class="d-block alert alert-warning py-1 px-2" role="alert">
+          //                 <i class="mdi mdi-alert-outline me-2"></i>
+          //                 <span>Tienes {leadsCount} leads en este estado, recuerda que tambien puedes archivar leads.</span>
+          //               </small>
+          //             }
+          //             <ul className="sortable-list list-unstyled taskList" id={`status-${correlative}`} data-id={status.id}>
+          //               {
+          //                 leads.filter(x => x.status_id == status.id).sort((a, b) => {
+          //                   return a.created_at > b.created_at ? -1 : 1
+          //                 }).sort((a, b) => {
+          //                   return a.assigned_to == session.service_user.id ? -1 : 1
+          //                 }).map((lead, i) => {
+          //                   return <li id={`${lead.id}`} key={`lead-${i}`} style={{ cursor: 'move' }} className={`p-2 ${lead.assigned_to == session.service_user.id ? 'border border-primary' : ''}`}>
+          //                     <div className="kanban-box" >
+          //                       <div className="kanban-detail ms-0">
+          //                         <div className="dropdown float-end">
+          //                           <a href="#" className="dropdown-toggle arrow-none card-drop" data-bs-toggle="dropdown" aria-expanded="false">
+          //                             <i className="mdi mdi-dots-vertical"></i>
+          //                           </a>
+          //                           <div className="dropdown-menu dropdown-menu-end">
+          //                             <a className="dropdown-item" style={{ cursor: 'pointer' }} onClick={() => onLeadClicked(lead)}>
+          //                               <i className='fa fa-eye me-1'></i>
+          //                               Ver detalles
+          //                             </a>
+          //                             <a className="dropdown-item" style={{ cursor: 'pointer' }} onClick={() => onOpenModal(lead)}>
+          //                               <i className='fa fa-pen me-1'></i>
+          //                               Editar lead
+          //                             </a>
+          //                             <a className="dropdown-item" style={{ cursor: 'pointer' }} onClick={() => onMakeLeadClient(lead)}>
+          //                               <i className='fa fa-user-plus me-1'></i>
+          //                               Convertir en cliente
+          //                             </a>
+          //                             <a className="dropdown-item" style={{ cursor: 'pointer' }} onClick={() => onArchiveClicked(lead)}>
+          //                               <i className='mdi mdi-archive me-1'></i>
+          //                               Archivar lead
+          //                             </a>
+          //                             <a className="dropdown-item" style={{ cursor: 'pointer' }} onClick={() => onDeleteClicked(lead)}>
+          //                               <i className='fa fa-trash me-1'></i>
+          //                               Eliminar lead
+          //                             </a>
+          //                           </div>
+          //                         </div>
+          //                         {/* <span className="badge float-end" style={{
+          //                           backgroundColor: lead?.manage_status?.color || '#6c757d'
+          //                         }}>{lead?.manage_status?.name ?? 'Sin estado'}</span> */}
+          //                         <h5 className="mt-0 text-truncate">
+          //                           <Tippy content='Ver detalles'>
+          //                             <a href="#" onClick={() => onLeadClicked(lead)}
+          //                               className="text-dark">
+          //                               {lead.contact_name}
+          //                             </a>
+          //                           </Tippy>
+          //                         </h5>
+          //                         <ul className="list-inline d-flex align-items-center gap-1 mb-0">
+          //                           <li className="list-inline-item">
+          //                             {
+          //                               !lead.assigned_to
+          //                                 ? <TippyButton className='btn btn-xs btn-soft-dark rounded-pill' title="Atender lead"
+          //                                   onClick={() => onAttendClient(lead.id, true)}>
+          //                                   <i className='fas fa-hands-helping'></i>
+          //                                 </TippyButton>
+          //                                 : (
+          //                                   lead.assigned_to == session.service_user.id
+          //                                     ? <TippyButton className='btn btn-xs btn-soft-danger' title="Dejar de atender"
+          //                                       onClick={() => onAttendClient(lead.id, false)}>
+          //                                       <i className='fas fa-hands-wash'></i>
+          //                                     </TippyButton>
+          //                                     : <Tippy content={`Atendido por ${lead?.assigned?.fullname}`}>
+          //                                       <a href="" data-bs-toggle="tooltip" data-bs-placement="top"
+          //                                         title="Username">
+          //                                         <img src={`//${Global.APP_DOMAIN}/api/profile/${lead?.assigned?.relative_id}`} alt="img"
+          //                                           className="avatar-xs rounded-circle" />
+          //                                       </a>
+          //                                     </Tippy>
+          //                                 )
+          //                             }
+          //                           </li>
+          //                           <li className="list-inline-item">
+          //                             <span className="badge d-block" style={{
+          //                               backgroundColor: lead?.manage_status?.color || '#6c757d',
+          //                               width: 'max-content'
+          //                             }}>{lead?.manage_status?.name ?? 'Sin estado'}</span>
+          //                             <small className='text-muted'>{moment(lead.created_at).format('LLL')}</small>
+          //                           </li>
+          //                           {/* <li className="list-inline-item">
+          //                             <Tippy content={`${lead.pending_tasks_count} tareas pendientes`}>
+          //                               <span style={{ position: 'relative' }}>
+          //                                 <i className="mdi mdi-format-align-left"></i>
+          //                                 {
+          //                                   lead.notes_count > 0 &&
+          //                                   <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style={{ fontSize: '0.5rem' }}>
+          //                                     {lead.pending_tasks_count}<span className="visually-hidden">
+          //                                       Tareas pendientes
+          //                                     </span>
+          //                                   </span>
+          //                                 }
+          //                               </span>
+          //                             </Tippy>
+          //                           </li>
+          //                           <li className="list-inline-item">
+          //                             <Tippy content={`${lead.notes_count} registros de actividad`}>
+          //                               <span style={{ position: 'relative' }}>
+          //                                 <i className="mdi mdi-comment-outline"></i>
+          //                                 {
+          //                                   lead.notes_count > 0 &&
+          //                                   <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style={{ fontSize: '0.5rem' }}>
+          //                                     {lead.notes_count}<span className="visually-hidden">
+          //                                       Notas de {lead.contact_name}
+          //                                     </span>
+          //                                   </span>
+          //                                 }
+          //                               </span>
+          //                             </Tippy>
+          //                           </li>
+          //                           <li className="list-inline-item">
+          //                             <Tippy content={`Eliminar lead`}>
+          //                               <b style={{ cursor: 'pointer' }} onClick={() => onDeleteClicked(lead)}>
+          //                                 <i className="fa fa-trash text-danger"></i>
+          //                               </b>
+          //                             </Tippy>
+          //                           </li> */}
+          //                         </ul>
+          //                         {/* <div>
+          //                           <small className='text-muted'>{moment(lead.created_at).format('LLL')}</small>
+          //                         </div> */}
+          //                       </div>
+          //                     </div>
+          //                   </li>
+          //                 })
+          //               }
+          //             </ul>
+          //           </div>
+          //         </div>
 
-              </div>)
-            })
-          }
+          //       </div>)
+          //     })
+          //   }
 
-        </div>)
+          // </div>
+        )
     }
     <Modal modalRef={modalRef} title='Detalles del lead' btnSubmitText='Guardar' size='full-width' bodyClass='p-3 bg-light' isStatic onSubmit={(e) => e.preventDefault()} zIndex={1042}>
       <div className="row">
@@ -1215,14 +1228,11 @@ const Leads = ({ statuses: statusesFromDB, defaultClientStatus, defaultLeadStatu
       onLeadClicked={onLeadClicked}
       signs={signs}
     />
-  </>
-  )
+  </Adminto>)
 };
 
 CreateReactScript((el, properties) => {
-  createRoot(el).render(
-    <Adminto {...properties} title='Leads'>
-      <Leads {...properties} />
-    </Adminto>
-  );
+  createRoot(el).render(<LeadsProvider statuses={properties.statuses}>
+    <Leads {...properties} />
+  </LeadsProvider>);
 })

@@ -57,6 +57,7 @@ Route::get('/pages/media/{uuid}', [PageController::class, 'media']);
 Route::get('/integrations/media/{uuid}', [IntegrationController::class,'media']);
 
 Route::middleware('auth')->group(function () {
+    Route::post('/init', [AuthController::class, 'init']);
     Route::delete('/logout', [AuthController::class, 'destroy'])
         ->name('logout');
     Route::get('/authorize/{business}', [AuthController::class, 'activeService']);
@@ -226,8 +227,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/leads/{lead}', [LeadController::class, 'get']);
     Route::get('/leads', [LeadController::class, 'all']);
     Route::post('/leads', [LeadController::class, 'save']);
-    Route::post('/leads/paginate', [LeadController::class, 'paginate']);
-    Route::post('/leads/new/paginate', [NewLeadController::class, 'paginate']);
+    Route::post('/leads/paginate/{suffix?}', [LeadController::class, 'paginate']);
+    // Route::post('/leads/paginate/{recentOnly?}', [NewLeadController::class, 'paginate']);
     Route::post('/leads/status', [LeadController::class, 'leadStatus']);
     Route::post('/leads/manage-status', [LeadController::class, 'manageStatus']);
     Route::put('/leads/attend/{lead}', [LeadController::class, 'attend']);

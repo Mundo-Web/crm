@@ -9,23 +9,23 @@ import StatusDropdown from "../Statuses/StatusDropdown"
 import TippyButton from "../../components/form/TippyButton"
 import LaravelSession from "../../Utils/LaravelSession"
 
-const LeadTable = ({ gridRef, rest, can, defaultLeadStatus, statuses, manageStatuses, onClientStatusClicked, onManageStatusChange, onLeadClicked, onMessagesClicked, onAttendClient, onOpenModal, onMakeLeadClient, onArchiveClicked, onDeleteClicked, title }) => {
+const LeadTable = ({ gridRef, rest, can, defaultLeadStatus, statuses, manageStatuses, onClientStatusClicked, onManageStatusChange, onLeadClicked, onMessagesClicked, onAttendClient, onOpenModal, onMakeLeadClient, onArchiveClicked, onDeleteClicked, title, borderColor = '#315AFE', setStatuses, setManageStatuses }) => {
   return <Table gridRef={gridRef} title={title} rest={rest} reloadWith={[statuses, manageStatuses]}
     toolBar={(container) => {
-      container.unshift(DxPanelButton({
-        className: 'btn btn-xs btn-soft-dark text-nowrap',
-        text: 'Actualizar',
-        title: 'Refrescar tabla',
-        icon: 'fas fa-undo-alt',
-        onClick: () => $(gridRef.current).dxDataGrid('instance').refresh()
-      }))
-      can('leads', 'all', 'create') && container.unshift(DxPanelButton({
-        className: 'btn btn-xs btn-soft-primary text-nowrap',
-        text: 'Nuevo',
-        title: 'Agregar registro',
-        icon: 'fa fa-plus',
-        onClick: () => onOpenModal()
-      }))
+      // container.unshift(DxPanelButton({
+      //   className: 'btn btn-xs btn-soft-dark text-nowrap',
+      //   text: 'Actualizar',
+      //   title: 'Refrescar tabla',
+      //   icon: 'fas fa-undo-alt',
+      //   onClick: () => $(gridRef.current).dxDataGrid('instance').refresh()
+      // }))
+      // can('leads', 'all', 'create') && container.unshift(DxPanelButton({
+      //   className: 'btn btn-xs btn-soft-primary text-nowrap',
+      //   text: 'Nuevo',
+      //   title: 'Agregar registro',
+      //   icon: 'fa fa-plus',
+      //   onClick: () => onOpenModal()
+      // }))
     }}
     exportable
     height={'calc(65vh - 90px)'}
@@ -84,11 +84,23 @@ const LeadTable = ({ gridRef, rest, can, defaultLeadStatus, statuses, manageStat
       },
       {
         dataField: 'contact_email',
-        caption: 'Correo'
+        caption: 'Correo',
+        cellTemplate: (container, { data }) => {
+          container.html(renderToString(<>
+            <i className="mdi mdi-email-outline text-blue me-1"></i>
+            {data.contact_email}
+          </>))
+        }
       },
       {
         dataField: 'contact_phone',
-        caption: 'Telefono'
+        caption: 'Telefono',
+        cellTemplate: (container, { data }) => {
+          container.html(renderToString(<>
+            <i className="mdi mdi-cellphone text-blue me-1"></i>
+            {data.contact_phone}
+          </>))
+        }
       },
       {
         dataField: 'status.name',
@@ -96,7 +108,7 @@ const LeadTable = ({ gridRef, rest, can, defaultLeadStatus, statuses, manageStat
         dataType: 'string',
         width: 180,
         cellTemplate: (container, { data }) => {
-          container.addClass('p-0')
+          // container.addClass('p-0')
           container.attr('style', 'overflow: visible')
           ReactAppend(container, <StatusDropdown
             items={statuses}
@@ -121,7 +133,7 @@ const LeadTable = ({ gridRef, rest, can, defaultLeadStatus, statuses, manageStat
         dataType: 'string',
         width: 180,
         cellTemplate: (container, { data }) => {
-          container.addClass('p-0')
+          // container.addClass('p-0')
           container.attr('style', 'overflow: visible')
           ReactAppend(container, <StatusDropdown
             items={manageStatuses}
@@ -155,7 +167,10 @@ const LeadTable = ({ gridRef, rest, can, defaultLeadStatus, statuses, manageStat
         caption: 'Fecha creacion',
         dataType: 'date',
         cellTemplate: (container, { data }) => {
-          container.text(moment(data.created_at.replace('Z', '+05:00')).format('lll'))
+          container.html(renderToString(<>
+            <i className="mdi mdi-calendar-blank text-blue me-1"></i>
+            {moment(data.created_at.replace('Z', '+05:00')).format('lll')}
+          </>))
         },
         sortOrder: 'desc',
       },
@@ -163,7 +178,7 @@ const LeadTable = ({ gridRef, rest, can, defaultLeadStatus, statuses, manageStat
         caption: 'Acciones',
         width: 240,
         cellTemplate: (container, { data }) => {
-          container.attr('style', 'display: flex; gap: 4px; height: 47px; overflow: visible')
+          container.attr('style', 'display: flex; gap: 8px; height: 47px; overflow: visible; align-items: center')
 
           ReactAppend(container, <TippyButton className='btn btn-xs btn-soft-warning' title='Editar lead' onClick={() => onOpenModal(data)}>
             <i className='fa fa-pen'></i>
@@ -198,7 +213,10 @@ const LeadTable = ({ gridRef, rest, can, defaultLeadStatus, statuses, manageStat
         allowFiltering: false,
         allowExporting: false
       }
-    ]} />
+    ]}
+    cardStyle={{
+      borderRight: `6px solid ${borderColor}`
+    }} />
 }
 
 export default LeadTable

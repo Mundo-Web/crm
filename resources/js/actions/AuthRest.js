@@ -50,6 +50,14 @@ class AuthRest {
       return false
     }
   }
+
+  init = async (request) => {
+    const { status, result } = await Fetch('/api/init', {
+      method: 'POST',
+      body: JSON.stringify(request)
+    })
+    return { ...result, status }
+  }
 }
 
 export default AuthRest

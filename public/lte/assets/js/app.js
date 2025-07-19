@@ -438,6 +438,8 @@ File: Layout
 
           const settings = Local.get('adminto_settings') ?? {}
           settings.theme = theme
+          settings.menuColor = theme
+          settings.nabvarColor = theme
           Local.set('adminto_settings', settings)
 
           target.next().text(theme == 'dark' ? 'Modo oscuro' : 'Modo claro')

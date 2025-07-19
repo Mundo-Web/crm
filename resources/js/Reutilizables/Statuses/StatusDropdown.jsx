@@ -26,7 +26,7 @@ export default function StatusDropdown({
   const [items, setItems] = useState(propItems)
   const [shouldScroll, setShouldScroll] = useState(false)
   const [dropdownHasChanges, setDropdownHasChanges] = useState(false)
-  
+
   const selected = items.find(x => x.id == defaultValue.id)
 
   const smoothScroll = useCallback((element, target, duration) => {
@@ -189,19 +189,23 @@ export default function StatusDropdown({
       tippy='Actualizar estado'
       style={{
         border: 'none',
-        borderRadius: '0',
-        width: '179px',
-        height: '47px',
-        color: '#fff',
+        // borderRadius: '0',
+        borderRadius: '25px',
+        padding: '2px 12px',
+        // width: '179px',
+        // height: '47px',
+        // color: '#fff',
+        color: selected.color,
         fontWeight: 'bolder',
-        backgroundColor: selected.color
+        backgroundColor: `${selected.color}22`
       }}
     >
       <div
         ref={containerRef}
         style={{
           maxHeight: '173px',
-          overflowY: 'auto'
+          overflowY: 'auto',
+          zIndex: 99999
         }}
       >
         {items.sort((a, b) => a.order - b.order).map((item, index) => {
@@ -267,7 +271,7 @@ export default function StatusDropdown({
                     {
                       canUpdate &&
                       <Tippy content='Editar'>
-                        <span style={{cursor: 'pointer'}} className="btn btn-xs btn-soft-primary " onClick={e => onUpdateStatusClicked(e, item)} type='button'>
+                        <span style={{ cursor: 'pointer' }} className="btn btn-xs btn-soft-primary " onClick={e => onUpdateStatusClicked(e, item)} type='button'>
                           <i className="fa fa-pen" aria-hidden="true"></i>
                           <span className="sr-only">Editar</span>
                         </span>
@@ -276,7 +280,7 @@ export default function StatusDropdown({
                     {
                       canDelete &&
                       <Tippy content='Eliminar'>
-                        <span style={{cursor: 'pointer'}} className="btn btn-xs btn-soft-danger" onClick={e => onDeleteStatusClicked(e, item)} type='button'>
+                        <span style={{ cursor: 'pointer' }} className="btn btn-xs btn-soft-danger" onClick={e => onDeleteStatusClicked(e, item)} type='button'>
                           <i className="fa fa-trash" aria-hidden="true"></i>
                           <span className="sr-only">Eliminar</span>
                         </span>

@@ -7,21 +7,20 @@ import NotificationItem from "./notification/NotificationItem"
 
 const notificationsRest = new NotificationsRest();
 
-const NavBar = ({ can, session = {}, title = '', whatsappStatus, businesses, APP_PROTOCOL, APP_DOMAIN, notificationsCount }) => {
-
-  const settings = Local.get('adminto_settings') ?? {}
-
+const NavBar = ({ can, session = {}, theme, setTheme, title = '', whatsappStatus, businesses, APP_PROTOCOL, APP_DOMAIN, notificationsCount }) => {
   const { color } = WhatsAppStatuses[whatsappStatus]
 
   const [notifications, setNotifications] = useState([]);
-  const [theme, setTheme] = useState(settings.theme ?? 'ligth');
 
   useEffect(() => {
     document.title = `${title} | Atalaya`
     $(document).on('change', '#light-mode-check', (e) => {
-      setTheme(e.target.checked ? 'dark' : 'ligth')
+      setTheme(e.target.checked ? 'dark' : 'light')
     })
-  }, [null])
+    return () => {
+      $(document).off('change', '#light-mode-check')
+    }
+  }, [theme])
 
   const otherBusinesses = businesses.filter(({ id }) => session.business_id != id)
 
@@ -33,7 +32,7 @@ const NavBar = ({ can, session = {}, title = '', whatsappStatus, businesses, APP
   }
 
   return (
-    <div className="navbar-custom">
+    <div className={`navbar-custom border-bottom ${theme == 'light' ? 'bg-white' : ''}`} style={{ backgroundColor: (theme == 'light' ? undefined: '#313844') }}>
       <ul className="list-unstyled topnav-menu float-end mb-0">
 
         {/* <li className="d-none d-lg-block">
@@ -123,7 +122,7 @@ const NavBar = ({ can, session = {}, title = '', whatsappStatus, businesses, APP
             <label htmlFor="light-mode-check" type="button" className={`btn btn-xs ${theme == 'dark' ? 'btn-secondary' : 'btn-secondary'} rounded-pill waves-effect waves-light`}>
               {theme == 'dark'
                 ? <>
-                  Ligth
+                  Light
                   <span className="btn-label-right ms-1" style={{ paddingLeft: '6px' }}>
                     <i className="mdi mdi-weather-sunny"></i>
                   </span>
@@ -157,8 +156,8 @@ const NavBar = ({ can, session = {}, title = '', whatsappStatus, businesses, APP
             <i className="fe-bell noti-icon"></i>
             {
               notificationsCount > 0 ?
-              <span className="badge bg-danger rounded-circle noti-icon-badge">{notificationsCount}</span>
-              : ''
+                <span className="badge bg-danger rounded-circle noti-icon-badge">{notificationsCount}</span>
+                : ''
             }
           </a>
           <div id="notifications" className="dropdown-menu dropdown-menu-end dropdown-lg">
@@ -239,22 +238,21 @@ const NavBar = ({ can, session = {}, title = '', whatsappStatus, businesses, APP
           </div>
         </li>
 
-        <li className="dropdown notification-list">
+        {/* <li className="dropdown notification-list">
           <a href="#" className="nav-link right-bar-toggle waves-effect waves-light">
             <i className="fe-settings noti-icon"></i>
           </a>
-        </li>
+        </li> */}
 
       </ul>
 
-
-      <div className="logo-box">
+      <div className="logo-box border-bottom">
         <a href="/" className="logo logo-light text-center">
           <span className="logo-sm">
             <img src="/assets/img/icon.svg?v=gracias-manuel-de-nada-manuel" alt="" height="22" />
           </span>
           <span className="logo-lg">
-            <img src="/assets/img/logo.svg?v=gracias-manuel-de-nada-manuel" alt="" height="16" />
+            <img src="/assets/img/logo.svg?v=gracias-manuel-de-nada-manuel" alt="" height="32" />
           </span>
         </a>
         <a href="/" className="logo logo-dark text-center">
@@ -262,7 +260,7 @@ const NavBar = ({ can, session = {}, title = '', whatsappStatus, businesses, APP
             <img src="/assets/img/icon-dark.svg?v=gracias-manuel-de-nada-manuel" alt="" height="22" />
           </span>
           <span className="logo-lg">
-            <img src="/assets/img/logo-dark.svg?v=gracias-manuel-de-nada-manuel" alt="" height="16" />
+            <img src="/assets/img/logo-dark.svg?v=gracias-manuel-de-nada-manuel" alt="" height="32" />
           </span>
         </a>
       </div>
@@ -274,9 +272,9 @@ const NavBar = ({ can, session = {}, title = '', whatsappStatus, businesses, APP
           </button>
         </li>
 
-        <li>
+        {/* <li>
           <h4 className="page-title-main">{title}</h4>
-        </li>
+        </li> */}
 
       </ul>
 

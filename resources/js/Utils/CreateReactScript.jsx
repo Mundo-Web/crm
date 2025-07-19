@@ -4,7 +4,6 @@ import Global from './Global';
 import LaravelSession from './LaravelSession';
 
 const CreateReactScript = (render) => {
-
   createInertiaApp({
     resolve: name => `/${name}.jsx`,
     setup: ({ el, props }) => {

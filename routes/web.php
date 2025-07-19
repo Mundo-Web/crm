@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ApikeyController;
 use App\Http\Controllers\ArchivedController;
+use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BasicController;
 use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\ClientController;
@@ -60,6 +61,8 @@ Route::get('/', function (Request $request) {
     return redirect('/login');
 });
 
+Route::get('join', [AuthController::class, 'joinView'])->name('Join.jsx');
+
 Route::middleware('auth')->group(function () {
     Route::get('/home', [KPILeadsController::class, 'reactView'])->name('KPILeads.jsx');
     Route::get('/home/projects', [KPIProjectsController::class, 'reactView'])->name('KPIProjects.jsx');
@@ -86,7 +89,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/repository', [RepositoryController::class, 'reactView'])->name('Repository.jsx');
     Route::get('/statuses', [StatusController::class, 'reactView'])->name('Statuses.jsx');
     Route::get('/apikeys', [ApikeyController::class, 'reactView'])->name('Apikeys.jsx');
-    Route::get('/webhooks', [WebhookController::class,'reactView'])->name('Webhooks.jsx');
+    Route::get('/webhooks', [WebhookController::class, 'reactView'])->name('Webhooks.jsx');
     Route::get('/types', [TypeController::class, 'reactView'])->name('Types.jsx');
     Route::get('/settings', [SettingController::class, 'reactView'])->name('Settings.jsx');
 });
