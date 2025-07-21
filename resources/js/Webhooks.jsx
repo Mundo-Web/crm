@@ -47,7 +47,7 @@ const ServiceCard = ({ service, icon, description, integration, onIntegrate, onU
                   <div>
                     <h5 className="mb-0">{integration.meta_business_name}</h5>
                     <small className="text-muted">
-                      {integration.meta_leads ?? 0} leads generados
+                      {integration.leads_count ?? 0} lead(s) generados
                     </small>
                   </div>
                 </div>

@@ -107,7 +107,7 @@ class LeadController extends BasicController
         $defaultLeadStatus = Setting::get('default-lead-status');
         $query = $model::select('clients.*')
             ->withCount(['notes', 'tasks', 'pendingTasks', 'products'])
-            ->with(['status', 'assigned', 'manageStatus', 'creator'])
+            ->with(['status', 'assigned', 'manageStatus', 'creator', 'integration'])
             ->join('statuses AS status', 'status.id', 'status_id')
             ->leftJoin('statuses AS manage_status', 'manage_status.id', 'manage_status_id')
             ->leftJoin('users AS assigned', 'assigned.id', 'clients.assigned_to')

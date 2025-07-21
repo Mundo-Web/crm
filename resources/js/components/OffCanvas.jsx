@@ -9,6 +9,7 @@ import UsersRest from "../actions/UsersRest"
 import HtmlContent from "../Utils/HtmlContent"
 import '../../css/whatsapp.css'
 import wa2html from "../Utils/wa2html"
+import ArrayJoin from "../Utils/ArrayJoin"
 
 const messagesRest = new MessagesRest()
 const whatsAppRest = new WhatsAppRest()
@@ -50,14 +51,28 @@ const OffCanvas = ({ offCanvasRef, dataLoaded, setDataLoaded, defaultMessages, s
 
   const getMessages = async () => {
     const lastMessage = await getLastMessage()
+
+    const filter = [['microtime', '>', lastMessage.microtime]]
+    if (dataLoaded?.integration) {
+      switch (dataLoaded?.integration?.meta_service) {
+        case 'messenger':
+          filter.push(['wa_id', '=', dataLoaded?.integration_user_id])
+          break;
+
+        case 'instagram':
+          filter.push(['wa_id', '=', dataLoaded?.integration_user_id])
+          break;
+        default:
+          if (dataLoaded?.contact_phone)
+            filter.push(['wa_id', 'contains', dataLoaded?.contact_phone])
+          break;
+      }
+    }
+
     setIsLoading(true)
     const { data } = await messagesRest.paginate({
       isLoadingAll: true,
-      filter: [
-        ['wa_id', 'contains', dataLoaded?.contact_phone],
-        'and',
-        ['microtime', '>', lastMessage.microtime]
-      ],
+      filter: ArrayJoin(filter, 'and'),
       sort: [{
         selector: 'microtime',
         desc: false

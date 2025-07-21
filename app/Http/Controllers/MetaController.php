@@ -5,8 +5,12 @@ namespace App\Http\Controllers;
 use App\Models\Atalaya\Business;
 use App\Models\Atalaya\ServicesByBusiness;
 use App\Models\Client;
+use App\Models\ClientNote;
 use App\Models\Integration;
+use App\Models\Message;
 use App\Models\Setting;
+use App\Models\Task;
+use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\Request;
 use PHPUnit\Framework\MockObject\Generator\OriginalConstructorInvocationRequiredException;
@@ -20,6 +24,15 @@ class MetaController extends Controller
 {
     public static function getInstagramProfile(string $id, string $accessToken, bool $external = false)
     {
+        if ($external) {
+            $igRest = new Fetch(env('INSTAGRAM_GRAPH_URL') . "/{$id}?fields=id,name,username&access_token={$accessToken}");
+            $igData = $igRest->json();
+
+            if (isset($igData['error'])) throw new Exception('Error, token de acceso inválido');
+
+            return $igData;
+        }
+
         $igMeRest = new Fetch(env('INSTAGRAM_GRAPH_URL') . "/me?fields,id,name,username&access_token={$accessToken}");
         $igRest = new Fetch(env('INSTAGRAM_GRAPH_URL') . "/{$id}?fields=id,name,username&access_token={$accessToken}");
 
@@ -31,8 +44,17 @@ class MetaController extends Controller
 
         return $igData;
     }
-    public static function getFacebookProfile(string $id, string $accessToken)
+    public static function getFacebookProfile(string $id, string $accessToken, bool $external = false)
     {
+        if ($external) {
+            $fbRest = new Fetch(env('FACEBOOK_GRAPH_URL') . "/{$id}?access_token={$accessToken}");
+            $fbData = $fbRest->json();
+
+            if (isset($fbData['error'])) throw new Exception('Error, token de acceso inválido');
+
+            return $fbData;
+        }
+
         $fbMeRest = new Fetch(env('FACEBOOK_GRAPH_URL') . "/me?fields,id,name,username,picture&access_token={$accessToken}");
         $fbRest = new Fetch(env('FACEBOOK_GRAPH_URL') . "/{$id}?fields=id,name,username,picture&access_token={$accessToken}");
 
@@ -78,13 +100,19 @@ class MetaController extends Controller
         $response = Response::simpleTryCatch(function () use ($request, $origin, $business_uuid) {
             $data = $request->all();
 
-            dump('JSON: ' . JSON::stringify($data));
-
             if (!in_array($origin, ['messenger', 'instagram'])) throw new Exception('Error, origen no permitido');
 
 
             $entry = $data['entry'][0] ?? [];
             $messaging = $entry['messaging'][0] ?? [];
+
+            $inOut = $entry['id'] == $messaging['sender']['id'] ? 'out' : 'in';
+
+            Message::create([
+                'wa_id' => $inOut ? $messaging['recipient']['id'] : $messaging['sender']['id'],
+                'role' => $inOut ? 'AI': 'Human',
+                'message' => $messaging['message']['text']
+            ]);
 
             if ($entry['id'] == $messaging['sender']['id']) return;
 
@@ -115,41 +143,65 @@ class MetaController extends Controller
             $userId = $messaging['sender']['id'];
             $fields = ['id', 'first_name', 'last_name', 'name', 'profile_pic', 'locale', 'timezone', 'gender'];
             $fieldsStr = implode(',', $fields);
-            $profileRest = new Fetch(env('FACEBOOK_GRAPH_URL') . "/{$userId}?fields={$fieldsStr}&access_token={$integrationJpa->meta_access_token}");
-            $profileData = $profileRest->json();
+            // $profileRest = new Fetch(env('FACEBOOK_GRAPH_URL') . "/{$userId}?fields={$fieldsStr}&access_token={$integrationJpa->meta_access_token}");
+            // $profileData = $profileRest->json();
 
             switch ($origin) {
                 case 'messenger':
-                    $profileData = MetaController::getFacebookProfile($userId, $integrationJpa->meta_access_token);
+                    $profileData = MetaController::getFacebookProfile($userId, $integrationJpa->meta_access_token, true);
                     break;
                 case 'instagram':
-                    $profileData = MetaController::getInstagramProfile($userId, $integrationJpa->meta_access_token);
+                    $profileData = MetaController::getInstagramProfile($userId, $integrationJpa->meta_access_token, true);
                 default:
-                    $profileData = MetaController::getFacebookProfile($userId, $integrationJpa->meta_access_token);
+                    $profileData = MetaController::getFacebookProfile($userId, $integrationJpa->meta_access_token, true);
                     break;
             }
 
-            if ($entry['id'] != $messaging['sender']['id']) {
-                Client::updateOrCreate([
-                    'integration_id' => $integrationJpa->id,
-                    'integration_user_id' => $profileData['id'],
-                    'business_id' => $businessJpa->id,
-                ], [
-                    'message' => $messaging['message']['text'] ?? 'Sin mensaje',
-                    'contact_name' => $profileData['name'],
-                    'name' => $profileData['name'],
-                    'source' => 'Externo',
-                    'date' => Trace::getDate('date'),
-                    'time' => Trace::getDate('time'),
-                    'ip' => $request->ip(),
-                    'status_id' => Setting::get('default-lead-status', $businessJpa->id),
-                    'manage_status_id' => Setting::get('default-manage-lead-status', $businessJpa->id),
-                    'origin' => Text::toTitleCase($origin),
-                    'triggered_by' => 'Gemini AI'
-                ]);
-            }
+            $alreadyExists = Client::query()
+                ->where('integration_id', $integrationJpa->id)
+                ->where('integration_user_id', $profileData['id'])
+                ->where('business_id', $businessJpa->id)
+                ->where('status', true)
+                ->exists();
+            $clientJpa = Client::updateOrCreate([
+                'integration_id' => $integrationJpa->id,
+                'integration_user_id' => $profileData['id'],
+                'business_id' => $businessJpa->id,
+            ], [
+                'message' => $messaging['message']['text'] ?? 'Sin mensaje',
+                'contact_name' => $profileData['first_name'] . ' ' . $profileData['last_name'],
+                'name' => $profileData['first_name'] . ' ' . $profileData['last_name'],
+                'source' => 'Externo',
+                'date' => Trace::getDate('date'),
+                'time' => Trace::getDate('time'),
+                'ip' => $request->ip(),
+                'status_id' => Setting::get('default-lead-status', $businessJpa->id),
+                'manage_status_id' => Setting::get('default-manage-lead-status', $businessJpa->id),
+                'origin' => Text::toTitleCase($origin),
+                'triggered_by' => 'Gemini AI',
+                'status' => true
+            ]);
+            if ($alreadyExists) return;
+            $noteJpa = ClientNote::create([
+                'note_type_id' => '8e895346-3d87-4a87-897a-4192b917c211',
+                'client_id' => $clientJpa->id,
+                'name' => 'Lead nuevo',
+                'description' => UtilController::replaceData(
+                    Setting::get('whatsapp-new-lead-notification-message', $clientJpa->business_id),
+                    $clientJpa->toArray()
+                )
+            ]);
+
+            Task::create([
+                'model_id' => ClientNote::class,
+                'note_id' => $noteJpa->id,
+                'name' => 'Revisar lead',
+                'description' => 'Debes revisar los requerimientos del lead',
+                'ends_at' => Carbon::now()->addDay()->format('Y-m-d H:i:s'),
+                'status' => 'Pendiente',
+                'asignable' => true
+            ]);
         });
-        dump($response);
         return response($response->toArray(), 200);
     }
 }

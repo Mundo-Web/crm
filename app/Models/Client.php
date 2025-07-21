@@ -105,6 +105,11 @@ class Client extends Model
         return $this->hasOne(Status::class, 'id', 'status_id');
     }
 
+    public function integration()
+    {
+        return $this->hasOne(Integration::class, 'id', 'integration_id');
+    }
+
     public function manageStatus()
     {
         return $this->hasOne(Status::class, 'id', 'manage_status_id');

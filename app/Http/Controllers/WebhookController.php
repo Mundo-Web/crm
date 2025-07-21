@@ -12,7 +12,7 @@ class WebhookController extends BasicController
 
     public function setReactViewProperties(Request $request)
     {
-        $integrations = Integration::query()
+        $integrations = Integration::withCount(['leads'])
             ->where('business_id', Auth::user()->business_id)
             ->where('status', true)
             ->get();

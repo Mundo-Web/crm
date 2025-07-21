@@ -109,7 +109,7 @@ const LeadTable = ({ gridRef, otherGridRef, rest, can, defaultLeadStatus, status
     } else {
       grid.filter(ArrayJoin(selectedUsersId.map(id => (['assigned_to', '=', id])), 'or'));
     }
-    
+
   }, [selectedUsersId, defaultView])
 
   return <Table gridRef={gridRef} title={<>
@@ -243,10 +243,27 @@ const LeadTable = ({ gridRef, otherGridRef, rest, can, defaultLeadStatus, status
         cellTemplate: (container, { data }) => {
           container.attr('style', `height: 48px; border-left: 4px solid ${data.status.color}`)
 
+          let integrationIcon = null
+
+          switch (data?.integration?.meta_service) {
+            case 'messenger':
+              integrationIcon = <i className='mdi mdi-facebook-messenger text-blue'></i>
+              break;
+            case 'instagram':
+              integrationIcon = <i className='mdi mdi-instagram text-red'></i>
+              break;
+            default:
+              integrationIcon = <i className='mdi mdi-whatsapp text-success'></i>
+              break;
+          }
+
           ReactAppend(container, <div className="d-flex align-items-center gap-1">
-            <TippyButton className='btn btn-xs btn-white' title='Ver mensajes' onClick={() => onMessagesClicked(data)}>
-              <i className='mdi mdi-whatsapp text-success'></i>
-            </TippyButton>
+            {
+              integrationIcon &&
+              <TippyButton className='btn btn-xs btn-white' title='Ver mensajes' onClick={() => onMessagesClicked(data)}>
+                {integrationIcon}
+              </TippyButton>
+            }
             <div onClick={() => onLeadClicked(data)} style={{ cursor: 'pointer' }}>
               {
                 data.status_id == defaultLeadStatus
