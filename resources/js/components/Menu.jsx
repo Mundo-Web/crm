@@ -146,7 +146,7 @@ const Menu = ({ session, theme, can, whatsAppStatus, APP_PROTOCOL, APP_DOMAIN, l
         <ul id="side-menu">
           <li className="menu-title">Panel de navegacion</li>
           <MenuItemContainer title='KPIs' icon='mdi mdi-chart-donut-variant'>
-            <MenuItem href="/home" icon='mdi mdi-account-multiple'>Personas</MenuItem>
+            <MenuItem href="/home" icon='mdi mdi-account-multiple'>Leads</MenuItem>
             {can('dashboard', 'all', 'list') && <MenuItem href="/home/projects" icon='mdi mdi-page-next'>Proyectos</MenuItem>}
           </MenuItemContainer>
 
@@ -196,7 +196,7 @@ const Menu = ({ session, theme, can, whatsAppStatus, APP_PROTOCOL, APP_DOMAIN, l
           {
             can('apikeys', 'root', 'all', 'list') &&
             <MenuItemContainer title='Integraciones' icon='mdi mdi-api'>
-              <MenuItem href="/webhooks" icon='mdi mdi-webhook'>Webhooks</MenuItem>
+              <MenuItem href="/webhooks" icon='mdi mdi-webhook'>Redes sociales</MenuItem>
               <MenuItem href="/apikeys" icon='mdi mdi-form-textbox'>Formulario Externo</MenuItem>
             </MenuItemContainer>
           }
