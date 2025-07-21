@@ -164,7 +164,10 @@ class MetaController extends Controller
                 ->where('integration_user_id', $profileData['id'])
                 ->where('business_id', $businessJpa->id)
                 ->where('status', true)
-                ->exists();
+                ->first();
+
+            if ($alreadyExists && $alreadyExists->complete_registration) return;
+
             $clientJpa = Client::updateOrCreate([
                 'integration_id' => $integrationJpa->id,
                 'integration_user_id' => $profileData['id'],
@@ -181,7 +184,8 @@ class MetaController extends Controller
                 'manage_status_id' => Setting::get('default-manage-lead-status', $businessJpa->id),
                 'origin' => Text::toTitleCase($origin),
                 'triggered_by' => 'Gemini AI',
-                'status' => true
+                'status' => true,
+                'complete_registration' => false
             ]);
 
             $hasApikey = Setting::get('gemini-api-key', $businessJpa->id);
@@ -281,167 +285,210 @@ class MetaController extends Controller
 
     public static function assistant(Client $clientJpa, Message $messageJpa)
     {
-        while (true) {
-            // Get latest message for this client
-            $latestMessage = Message::query()
-                ->where('wa_id', $clientJpa->integration_user_id)
-                ->where('business_id', $clientJpa->business_id)
-                ->orderBy('microtime', 'desc')
-                ->first();
+        try {
+            while (true) {
+                // Get latest message for this client
+                $latestMessage = Message::query()
+                    ->where('wa_id', $clientJpa->integration_user_id)
+                    ->where('business_id', $clientJpa->business_id)
+                    ->orderBy('microtime', 'desc')
+                    ->first();
 
-            // If latest message is different from current message, stop processing
-            if ($latestMessage->id !== $messageJpa->id) {
-                break;
-            }
+                // If latest message is different from current message, stop processing
+                if ($latestMessage->id !== $messageJpa->id) {
+                    break;
+                }
 
-            // Calculate time difference in seconds
-            $timeDiff = (microtime(true) * 1_000_000 - $latestMessage->microtime) / 1_000_000;
+                // Calculate time difference in seconds
+                $timeDiff = (microtime(true) * 1_000_000 - $latestMessage->microtime) / 1_000_000;
 
-            // If less than 10 seconds have passed, wait and continue checking
-            if ($timeDiff < 10) {
-                sleep(10);
-                continue;
-            }
+                // If less than 10 seconds have passed, wait and continue checking
+                if ($timeDiff < 10) {
+                    sleep(10);
+                    continue;
+                }
 
-            // Check if registration is already complete
-            if ($clientJpa->complete_registration) {
-                break;
-            }
+                // Check if registration is already complete
+                if ($clientJpa->complete_registration) {
+                    break;
+                }
 
-            // Get last 40 messages
-            $messages = Message::query()
-                ->where('wa_id', $clientJpa->integration_user_id)
-                ->where('business_id', $clientJpa->business_id)
-                ->orderBy('microtime', 'desc')
-                ->limit(40)
-                ->get();
+                // Get last 40 messages
+                $messages = Message::query()
+                    ->where('wa_id', $clientJpa->integration_user_id)
+                    ->where('business_id', $clientJpa->business_id)
+                    ->orderBy('microtime', 'desc')
+                    ->limit(40)
+                    ->get();
 
-            // Get Gemini API key from settings
-            $apiKey = Setting::get('gemini-api-key', $clientJpa->business_id);
+                // Get Gemini API key from settings
+                $apiKey = Setting::get('gemini-api-key', $clientJpa->business_id);
 
-            $businessJpa = Business::query()
-                ->where('id', $clientJpa->business_id)
-                ->first();
+                $businessJpa = Business::query()
+                    ->where('id', $clientJpa->business_id)
+                    ->first();
 
-            $businessEmail = Setting::get('email-new-lead-notification-message-owneremail', $businessJpa->id);
-            $businessServices = Setting::get('gemini-what-business-do', $businessJpa->id);
-            $prompt = File::get('../storage/app/utils/gemini-prompt-meta.txt');
-            $prompt = Text::replaceData($prompt, [
-                'nombreEmpresa' => $businessJpa->name,
-                'correoEmpresa' => $businessEmail ?? 'hola@mundoweb.pe',
-                'servicios' => $businessServices ?? 'algunos servicios',
-            ]);
+                $businessEmail = Setting::get('email-new-lead-notification-message-owneremail', $businessJpa->id);
+                $businessServices = Setting::get('gemini-what-business-do', $businessJpa->id);
+                $prompt = File::get('../storage/app/utils/gemini-prompt-meta.txt');
+                $prompt = Text::replaceData($prompt, [
+                    'nombreEmpresa' => $businessJpa->name,
+                    'correoEmpresa' => $businessEmail ?? 'hola@mundoweb.pe',
+                    'servicios' => $businessServices ?? 'algunos servicios',
+                ]);
 
-            $messageString = '';
-            foreach ($messages->sortBy('microtime') as $msg) {
-                $messageString .= "{$msg->role}: {$msg->message}\n";
-            }
+                $messageString = '';
+                foreach ($messages->sortBy('microtime') as $msg) {
+                    $messageString .= "{$msg->role}: {$msg->message}\n";
+                }
 
-            $geminiRest = new Fetch(env('GEMINI_API_URL'), [
-                'method' => 'POST',
-                'headers' => [
-                    'Content-Type' => 'application/json',
-                    'X-goog-api-key' => $apiKey
-                ],
-                'body' => [
-                    'contents' => [
-                        [
-                            'parts' => [
-                                [
-                                    'text' => $prompt . Text::lineBreak(2) . $messageString . 'AI:'
+                $geminiRest = new Fetch(env('GEMINI_API_URL'), [
+                    'method' => 'POST',
+                    'headers' => [
+                        'Content-Type' => 'application/json',
+                        'X-goog-api-key' => $apiKey
+                    ],
+                    'body' => [
+                        'contents' => [
+                            [
+                                'parts' => [
+                                    [
+                                        'text' => $prompt . Text::lineBreak(2) . $messageString . 'AI:'
+                                    ]
                                 ]
                             ]
                         ]
                     ]
-                ]
-            ]);
-            $geminiResponse = $geminiRest->json();
-            if (isset($geminiResponse['error']['message'])) break;
-
-            $answer = $geminiResponse['candidates'][0]['content']['parts'][0]['text'];
-
-            Message::create([
-                'wa_id' => $clientJpa->integration_user_id,
-                'role' => 'AI',
-                'message' => $answer,
-                'microtime' => (int) (microtime(true) * 1_000_000),
-                'business_id' => $clientJpa->business_id
-            ]);
-
-            $result = self::searchCommand($answer);
-            if (!$result['found']) {
-                // Create and send message with cleaned response
-                $message = trim(preg_replace('/^AI:\s*/', '', $result['message'])) ?: 'Lo siento, parece que no he entendido bien tu solicitud. ¿Podrías intentar formularla de nuevo o indicarme si necesitas ayuda de uno de nuestros ejecutivos?';
-
-                // Send message through Meta integration
-                $integrationJpa = Integration::query()
-                    ->where('id', $clientJpa->integration_id)
-                    ->where('business_id', $clientJpa->business_id)
-                    ->where('status', true)
-                    ->first();
-
-                if ($integrationJpa && $integrationJpa->meta_access_token) {
-                    $baseUrl = $integrationJpa->meta_service === 'instagram'
-                        ? env('INSTAGRAM_GRAPH_URL')
-                        : env('FACEBOOK_GRAPH_URL');
-
-                    $messageEndpoint = "{$baseUrl}/me/messages";
-                    $messageData = [
-                        'recipient' => ['id' => $clientJpa->integration_user_id],
-                        'message' => ['text' => $message]
-                    ];
-
-                    $sendRest = new Fetch($messageEndpoint, [
-                        'method' => 'POST',
-                        'headers' => [
-                            'Content-Type' => 'application/json',
-                            'Authorization' => "Bearer {$integrationJpa->meta_access_token}"
-                        ],
-                        'body' => $messageData
-                    ]);
-                }
-
-                // Store message in database
-                Message::create([
-                    'wa_id' => $clientJpa->integration_user_id,
-                    'role' => 'AI',
-                    'message' => $message,
-                    'microtime' => (int) (microtime(true) * 1_000_000),
-                    'business_id' => $clientJpa->business_id
                 ]);
-                return;
-            }
+                $geminiResponse = $geminiRest->json();
+                if (isset($geminiResponse['error']['message'])) break;
 
-            // Get last command and parse it
-            $lastCommand = end($result['commands']);
-            $collected = self::pseudoToObject($lastCommand);
+                $answer = $geminiResponse['candidates'][0]['content']['parts'][0]['text'];
 
-            // Update client contact information if available
-            $updateData = [];
-            if (!empty($collected['email'])) {
-                $updateData['contact_email'] = $collected['email'];
-            }
-            if (!empty($collected['name'])) {
-                $updateData['contact_name'] = $collected['name'];
-            }
-            if (!empty($collected['phone'])) {
-                $updateData['contact_phone'] = $collected['phone'];
-            }
+                $result = self::searchCommand($answer);
+                if (!$result['found']) {
+                    // Create and send message with cleaned response
+                    $message = trim(preg_replace('/^AI:\s*/', '', $result['message'])) ?: 'Lo siento, parece que no he entendido bien tu solicitud. ¿Podrías intentar formularla de nuevo o indicarme si necesitas ayuda de uno de nuestros ejecutivos?';
 
-            if (!empty($updateData)) {
-                $clientJpa->update($updateData);
+                    // Send message through Meta integration
+                    $integrationJpa = Integration::find($clientJpa->integration_id);
 
-                // Check if all required fields are now complete
-                if (
-                    $clientJpa->contact_name &&
-                    $clientJpa->contact_email &&
-                    $clientJpa->contact_phone
-                ) {
-                    $clientJpa->update(['complete_registration' => true]);
+                    if ($integrationJpa && $integrationJpa->meta_access_token) {
+                        $baseUrl = $integrationJpa->meta_service === 'instagram'
+                            ? env('INSTAGRAM_GRAPH_URL')
+                            : env('FACEBOOK_GRAPH_URL');
+
+                        $messageEndpoint = "{$baseUrl}/me/messages";
+                        $messageData = [
+                            'recipient' => ['id' => $clientJpa->integration_user_id],
+                            'message' => ['text' => $message]
+                        ];
+
+                        new Fetch($messageEndpoint, [
+                            'method' => 'POST',
+                            'headers' => [
+                                'Content-Type' => 'application/json',
+                                'Authorization' => "Bearer {$integrationJpa->meta_access_token}"
+                            ],
+                            'body' => $messageData
+                        ]);
+                    }
+
+                    // Store message in database
+                    Message::create([
+                        'wa_id' => $clientJpa->integration_user_id,
+                        'role' => 'AI',
+                        'message' => $message,
+                        'microtime' => (int) (microtime(true) * 1_000_000),
+                        'business_id' => $clientJpa->business_id
+                    ]);
+                    return;
                 }
-            }
 
-            break;
+                // Get last command and parse it
+                $lastCommand = end($result['commands']);
+                $collected = self::pseudoToObject($lastCommand);
+
+                // Update client contact information if available
+                $updateData = [];
+                if (!empty($collected['correoCliente'])) {
+                    $updateData['contact_email'] = $collected['correoCliente'];
+                }
+                if (!empty($collected['nombreCliente']) && $collected['nombreCliente'] != '-') {
+                    $updateData['contact_name'] = $collected['nombreCliente'];
+                }
+                if (!empty($collected['telefonoCliente']) && $collected['telefonoCliente'] != '-') {
+                    $updateData['contact_phone'] = $collected['telefonoCliente'];
+                }
+
+                if (!empty($updateData)) {
+                    $clientJpa->update($updateData);
+
+                    // Check if all required fields are now complete
+                    if (
+                        $clientJpa->contact_name &&
+                        $clientJpa->contact_email &&
+                        $clientJpa->contact_phone
+                    ) {
+                        $clientJpa->update(['complete_registration' => true]);
+                        
+                        // Get welcome message from settings and send it
+                        $welcomeMessage = Setting::get('whatsapp-new-lead-notification-message-client', $clientJpa->business_id);
+                        $welcomeMessage = UtilController::replaceData($welcomeMessage, $clientJpa->toArray());
+                        
+                        // Send message through Meta integration
+                        $integrationJpa = Integration::find($clientJpa->integration_id);
+                        if ($integrationJpa && $integrationJpa->meta_access_token) {
+                            $baseUrl = $integrationJpa->meta_service === 'instagram'
+                                ? env('INSTAGRAM_GRAPH_URL')
+                                : env('FACEBOOK_GRAPH_URL');
+
+                            $messageEndpoint = "{$baseUrl}/me/messages";
+                            $messageData = [
+                                'recipient' => ['id' => $clientJpa->integration_user_id],
+                                'message' => ['text' => $welcomeMessage]
+                            ];
+
+                            new Fetch($messageEndpoint, [
+                                'method' => 'POST',
+                                'headers' => [
+                                    'Content-Type' => 'application/json',
+                                    'Authorization' => "Bearer {$integrationJpa->meta_access_token}"
+                                ],
+                                'body' => $messageData
+                            ]);
+                        }
+                    } else {
+                        // Send the cleaned message from result if registration is not complete
+                        $message = trim(preg_replace('/^AI:\s*/', '', $result['message']));
+                        
+                        $integrationJpa = Integration::find($clientJpa->integration_id);
+                        if ($integrationJpa && $integrationJpa->meta_access_token) {
+                            $baseUrl = $integrationJpa->meta_service === 'instagram'
+                                ? env('INSTAGRAM_GRAPH_URL')
+                                : env('FACEBOOK_GRAPH_URL');
+
+                            $messageEndpoint = "{$baseUrl}/me/messages";
+                            $messageData = [
+                                'recipient' => ['id' => $clientJpa->integration_user_id],
+                                'message' => ['text' => $message]
+                            ];
+
+                            new Fetch($messageEndpoint, [
+                                'method' => 'POST',
+                                'headers' => [
+                                    'Content-Type' => 'application/json',
+                                    'Authorization' => "Bearer {$integrationJpa->meta_access_token}"
+                                ],
+                                'body' => $messageData
+                            ]);
+                        }
+                    }
+                }
+                break;
+            }
+        } catch (\Throwable $th) {
+            // dump($th->getMessage());
         }
     }
 
