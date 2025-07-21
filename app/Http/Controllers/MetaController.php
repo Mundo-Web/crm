@@ -286,6 +286,7 @@ class MetaController extends Controller
 
     public static function assistant(Client $clientJpa, Message $messageJpa)
     {
+        dump($clientJpa);
         try {
             while (true) {
                 // Get latest message for this client
@@ -432,11 +433,11 @@ class MetaController extends Controller
                         $clientJpa->contact_phone
                     ) {
                         $clientJpa->update(['complete_registration' => true]);
-                        
+
                         // Get welcome message from settings and send it
                         $welcomeMessage = Setting::get('whatsapp-new-lead-notification-message-client', $clientJpa->business_id);
                         $welcomeMessage = UtilController::replaceData($welcomeMessage, $clientJpa->toArray());
-                        
+
                         // Send message through Meta integration
                         $integrationJpa = Integration::find($clientJpa->integration_id);
                         if ($integrationJpa && $integrationJpa->meta_access_token) {
@@ -462,7 +463,7 @@ class MetaController extends Controller
                     } else {
                         // Send the cleaned message from result if registration is not complete
                         $message = trim(preg_replace('/^AI:\s*/', '', $result['message']));
-                        
+
                         $integrationJpa = Integration::find($clientJpa->integration_id);
                         if ($integrationJpa && $integrationJpa->meta_access_token) {
                             $baseUrl = $integrationJpa->meta_service === 'instagram'
