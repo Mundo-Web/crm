@@ -99,7 +99,7 @@ const Table = ({ title, gridRef, rest, columns, toolBar, masterDetail, filterVal
                   </button>
                 </div>
               ) : (
-                <div className='card-header'>{title}</div>
+                <div className='mb-2'>{title}</div>
               )
             }
 

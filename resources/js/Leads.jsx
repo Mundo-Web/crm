@@ -589,7 +589,7 @@ const Leads = (properties) => {
     {
       defaultView == 'table' ?
         <>
-          <LeadTable gridRef={managedGridRef} rest={leadsRest} can={can} defaultLeadStatus={defaultLeadStatus} manageStatuses={manageStatuses} statuses={statuses}
+          <LeadTable gridRef={managedGridRef} otherGridRef={gridRef} rest={leadsRest} can={can} defaultLeadStatus={defaultLeadStatus} manageStatuses={manageStatuses} statuses={statuses}
             onClientStatusClicked={onClientStatusClicked}
             onManageStatusChange={onManageStatusChange}
             onLeadClicked={onLeadClicked}
@@ -603,7 +603,7 @@ const Leads = (properties) => {
             setManageStatuses={setManageStatuses}
             users={users}
             title='Leads - En Gestion' />
-          <LeadTable gridRef={gridRef} rest={newLeadsRest} can={can} defaultLeadStatus={defaultLeadStatus} manageStatuses={manageStatuses} statuses={statuses}
+          <LeadTable gridRef={gridRef} otherGridRef={managedGridRef} rest={newLeadsRest} can={can} defaultLeadStatus={defaultLeadStatus} manageStatuses={manageStatuses} statuses={statuses}
             onClientStatusClicked={onClientStatusClicked}
             onManageStatusChange={onManageStatusChange}
             onLeadClicked={onLeadClicked}

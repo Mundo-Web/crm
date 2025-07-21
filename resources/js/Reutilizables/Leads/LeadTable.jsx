@@ -13,7 +13,7 @@ import Swal from "sweetalert2"
 
 const leadsRest = new LeadsRest()
 
-const LeadTable = ({ gridRef, rest, can, defaultLeadStatus, statuses, manageStatuses, onClientStatusClicked, onManageStatusChange, onLeadClicked, onMessagesClicked, onAttendClient, onOpenModal, onMakeLeadClient, onArchiveClicked, onDeleteClicked, title, borderColor = '#315AFE', setStatuses, setManageStatuses, users }) => {
+const LeadTable = ({ gridRef, otherGridRef, rest, can, defaultLeadStatus, statuses, manageStatuses, onClientStatusClicked, onManageStatusChange, onLeadClicked, onMessagesClicked, onAttendClient, onOpenModal, onMakeLeadClient, onArchiveClicked, onDeleteClicked, title, borderColor = '#315AFE', setStatuses, setManageStatuses, users }) => {
 
   const onMassiveAssignClicked = async (userId) => {
     const selectedUser = users.find(user => user.id === userId);
@@ -44,7 +44,7 @@ const LeadTable = ({ gridRef, rest, can, defaultLeadStatus, statuses, manageStat
     });
 
     if (!result) return
-    
+
     Swal.fire({
       icon: 'success',
       title: 'Leads Asignados',
@@ -54,7 +54,7 @@ const LeadTable = ({ gridRef, rest, can, defaultLeadStatus, statuses, manageStat
     const grid = $(gridRef.current).dxDataGrid('instance');
     grid.clearSelection();
     grid.refresh();
-
+    $(otherGridRef.current).dxDataGrid('instance').refresh()
   }
 
   return <Table gridRef={gridRef} title={title} rest={rest} reloadWith={[statuses, manageStatuses]}
