@@ -73,9 +73,9 @@ class MetaController extends Controller
     public function webhook(Request $request, string $origin, string $business_uuid)
     {
         $response = Response::simpleTryCatch(function () use ($request, $origin, $business_uuid) {
-            if (!in_array($origin, ['messenger', 'instagram'])) throw new Exception('Error, origen no permitido');
-
             $data = $request->all();
+
+            if (!in_array($origin, ['messenger', 'instagram'])) throw new Exception('Error, origen no permitido');
 
             dump($data);
 
