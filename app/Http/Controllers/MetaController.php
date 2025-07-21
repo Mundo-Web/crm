@@ -138,9 +138,8 @@ class MetaController extends Controller
                     'triggered_by' => 'Gemini AI'
                 ]);
             }
-        }, function ($res, $th) {
-            dump($th);
         });
+        dump($response);
         return response($response->toArray(), 200);
     }
 }
