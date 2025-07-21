@@ -146,7 +146,7 @@ const Menu = ({ session, theme, can, whatsAppStatus, APP_PROTOCOL, APP_DOMAIN, l
         <ul id="side-menu">
           <li className="menu-title">Panel de navegacion</li>
           <MenuItemContainer title='KPIs' icon='mdi mdi-chart-donut-variant'>
-            <MenuItem href="/home" icon='mdi mdi-account-multiple'>Leads</MenuItem>
+            <MenuItem href="/home" icon='mdi mdi-account-multiple'>Personas</MenuItem>
             {can('dashboard', 'all', 'list') && <MenuItem href="/home/projects" icon='mdi mdi-page-next'>Proyectos</MenuItem>}
           </MenuItemContainer>
 
