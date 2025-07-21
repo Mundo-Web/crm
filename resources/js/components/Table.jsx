@@ -7,13 +7,17 @@ import es from 'date-fns/locale/es'
 import 'react-date-range/dist/styles.css'
 import 'react-date-range/dist/theme/default.css'
 
-const Table = ({ title, gridRef, rest, columns, toolBar, masterDetail, filterValue = [], defaultRows, selection, className = '', allowedPageSizes, pageSize, exportable = false, customizeCell, reloadWith, height, cardStyle }) => {
+const Table = ({ title, gridRef, rest, columns, toolBar, masterDetail, filterValue = [], defaultRows, selection, className = '', allowedPageSizes, pageSize, exportable = false, customizeCell, reloadWith, height, cardStyle, keyExpr, onSelectionChanged, massiveActions }) => {
   const html = renderToString(<div>{title}</div>)
   const text = $(html).text().trim().replace('-', '')
   const [range, setRange] = useState([{ startDate: new Date(), endDate: new Date(), key: 'selection', }])
   const [filtering, setFiltering] = useState(false)
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false)
+  const [selectionActive, setSelectionActive] = useState(false)
   const datePickerRef = useRef(null)
+
+  const massiveDropdownId = `dropdown-${crypto.randomUUID()}`
+  const [isMassiveDropdownOpen, setIsMassiveDropdownOpen] = useState(false)
 
   // Handle search with debounce
   const handleSearch = useCallback(
@@ -108,6 +112,45 @@ const Table = ({ title, gridRef, rest, columns, toolBar, masterDetail, filterVal
               />
 
               <div className="d-flex gap-2">
+                {
+                  selectionActive &&
+                  <div className="dropdown position-relative">
+                    <button 
+                      className="btn btn-white btn-sm dropdown-toggle position-relative" 
+                      type="button"
+                      onClick={() => setIsMassiveDropdownOpen(!isMassiveDropdownOpen)}
+                      style={{ zIndex: isMassiveDropdownOpen ? 10000 : undefined }}
+                    >
+                      <i className='mdi mdi-format-list-checks' /> Acciones <i className="mdi mdi-chevron-down"></i>
+                    </button>
+                    {isMassiveDropdownOpen && (
+                      <>
+                        <div
+                          className='position-fixed'
+                          style={{
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                            zIndex: 9999
+                          }}
+                          onClick={() => setIsMassiveDropdownOpen(false)}
+                        ></div>
+                        <ul 
+                          className="dropdown-menu dropdown-menu-end show"
+                          style={{
+                            position: 'absolute',
+                            zIndex: 10000
+                          }}
+                          onClick={() => setIsMassiveDropdownOpen(false)}
+                        >
+                          {massiveActions}
+                        </ul>
+                      </>
+                    )}
+                  </div>
+                }
                 <div className="dropdown position-relative" ref={datePickerRef}>
                   <button
                     className="position-relative btn btn-sm btn-white dropdown-toggle bg-white"
@@ -192,6 +235,11 @@ const Table = ({ title, gridRef, rest, columns, toolBar, masterDetail, filterVal
               customizeCell={customizeCell}
               reloadWith={reloadWith}
               height={height}
+              keyExpr={keyExpr}
+              onSelectionChanged={(props) => {
+                setSelectionActive(props.selectedRowKeys.length > 0)
+                onSelectionChanged?.(props)
+              }}
             />
           </div>
         </div>

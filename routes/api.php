@@ -233,6 +233,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/leads/manage-status', [LeadController::class, 'manageStatus']);
     Route::put('/leads/attend/{lead}', [LeadController::class, 'attend']);
     Route::delete('/leads/attend/{lead}', [LeadController::class, 'attend']);
+    Route::post('/leads/massive-assign', [LeadController::class, 'massiveAssign']);
     Route::delete('/leads/{id}', [LeadController::class, 'delete']);
 
     Route::patch('/tasks/status', [TaskController::class, 'status']);

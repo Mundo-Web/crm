@@ -27,3 +27,19 @@
     transform: scale(1.05);
     box-shadow: 0px 0px 8px rgba(0, 0, 0, 0.125);
 }
+
+.dropdown-menu > li {
+    position: relative;
+}
+
+.dropdown-item:hover + .dropdown-menu.dropdown-submenu {
+    display: block;
+}
+
+.dropdown-menu.dropdown-submenu {
+    top: 0;
+    left: 100%;
+}
+.dropdown-menu.dropdown-submenu:hover {
+    display: block;
+}

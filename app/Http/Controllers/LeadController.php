@@ -16,6 +16,7 @@ use App\Models\Product;
 use App\Models\Setting;
 use App\Models\Status;
 use App\Models\Task;
+use App\Models\User;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\Request;
@@ -66,6 +67,8 @@ class LeadController extends BasicController
             ->where('user_id', Auth::id())
             ->get();
 
+        $usersJpa = User::byBusiness();
+
         return [
             'lead' => $request->lead,
             'manageStatuses' => $manageStatuses,
@@ -76,7 +79,8 @@ class LeadController extends BasicController
             'products' => $products,
             'processes' => $processes,
             'defaultMessages' => $defaultMessages,
-            'signs' => $signs
+            'signs' => $signs,
+            'users' => $usersJpa
         ];
     }
 
@@ -265,6 +269,27 @@ class LeadController extends BasicController
             }
 
             $leadJpa->save();
+        });
+        return response($response->toArray(), $response->status);
+    }
+
+    public function massiveAssign(Request $request)
+    {
+        $response = Response::simpleTryCatch(function (Response $response) use ($request) {
+            $leadsIds = $request->leadsId;
+            $userId = $request->userId;
+
+            foreach ($leadsIds as $leadId) {
+                $leadJpa = Client::find($leadId);
+                if ($leadJpa->business_id != Auth::user()->business_id) {
+                    throw new Exception('Uno o más leads no pertenecen a tu empresa');
+                }
+                // Update lead status using StatusController
+                StatusController::updateStatus4Lead($leadJpa, true, $userId);
+                $leadJpa->save();
+            }
+
+            $response->message = 'Leads asignados exitosamente';
         });
         return response($response->toArray(), $response->status);
     }

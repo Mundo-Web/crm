@@ -42,13 +42,13 @@ class StatusController extends BasicController
             ->join('tables AS table', 'table.id', 'table_id');
     }
 
-    static function updateStatus4Lead(Client $leadJpa, bool $assign)
+    static function updateStatus4Lead(Client $leadJpa, bool $assign, ?string $assignedTo = null)
     {
         try {
             $status = [];
             if ($assign) {
                 $status = JSON::parse(Setting::get('assignation-lead-status') ?? '{}');
-                $leadJpa->assigned_to = Auth::user()->service_user->id;
+                $leadJpa->assigned_to = $assignedTo ? $assignedTo: Auth::user()->service_user->id;
             } else {
                 $status = JSON::parse(Setting::get('revertion-lead-status') ?? '{}');
                 $leadJpa->assigned_to = null;

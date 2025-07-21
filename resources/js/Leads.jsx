@@ -54,7 +54,7 @@ const gmailRest = new GmailRest()
 
 
 const Leads = (properties) => {
-  const { statuses: statusesFromDB, defaultClientStatus, defaultLeadStatus, manageStatuses: manageStatusesFromDB, noteTypes, products = [], processes = [], defaultMessages = [], session: sessionDB, can, lead, signs } = properties
+  const { statuses: statusesFromDB, defaultClientStatus, defaultLeadStatus, manageStatuses: manageStatusesFromDB, noteTypes, products = [], processes = [], defaultMessages = [], session: sessionDB, can, lead, signs, users } = properties
 
   const { leads, setLeads, getLeads, refreshLeads, defaultView, setDefaultView } = useContext(LeadsContext)
 
@@ -601,6 +601,7 @@ const Leads = (properties) => {
             onDeleteClicked={onDeleteClicked}
             setStatuses={setStatuses}
             setManageStatuses={setManageStatuses}
+            users={users}
             title='Leads - En Gestion' />
           <LeadTable gridRef={gridRef} rest={newLeadsRest} can={can} defaultLeadStatus={defaultLeadStatus} manageStatuses={manageStatuses} statuses={statuses}
             onClientStatusClicked={onClientStatusClicked}
@@ -614,6 +615,7 @@ const Leads = (properties) => {
             onDeleteClicked={onDeleteClicked}
             setStatuses={setStatuses}
             setManageStatuses={setManageStatuses}
+            users={users}
             title='Leads - Recien llegados'
             borderColor='#4CAF50' />
         </>

@@ -1,4 +1,4 @@
-import React from "react"
+import React, { useState } from "react"
 import Table from "../../components/Table"
 import DxPanelButton from "../../components/dx/DxPanelButton"
 import { renderToString } from "react-dom/server"
@@ -8,8 +8,55 @@ import Tippy from "@tippyjs/react"
 import StatusDropdown from "../Statuses/StatusDropdown"
 import TippyButton from "../../components/form/TippyButton"
 import LaravelSession from "../../Utils/LaravelSession"
+import LeadsRest from "../../actions/LeadsRest"
+import Swal from "sweetalert2"
 
-const LeadTable = ({ gridRef, rest, can, defaultLeadStatus, statuses, manageStatuses, onClientStatusClicked, onManageStatusChange, onLeadClicked, onMessagesClicked, onAttendClient, onOpenModal, onMakeLeadClient, onArchiveClicked, onDeleteClicked, title, borderColor = '#315AFE', setStatuses, setManageStatuses }) => {
+const leadsRest = new LeadsRest()
+
+const LeadTable = ({ gridRef, rest, can, defaultLeadStatus, statuses, manageStatuses, onClientStatusClicked, onManageStatusChange, onLeadClicked, onMessagesClicked, onAttendClient, onOpenModal, onMakeLeadClient, onArchiveClicked, onDeleteClicked, title, borderColor = '#315AFE', setStatuses, setManageStatuses, users }) => {
+
+  const onMassiveAssignClicked = async (userId) => {
+    const selectedUser = users.find(user => user.id === userId);
+    const selectedRows = $(gridRef.current).dxDataGrid('instance').getSelectedRowKeys().map(({ id }) => id);
+
+    if (!selectedRows.length) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'No hay leads seleccionados',
+        text: 'Por favor seleccione al menos un lead para asignar'
+      });
+      return;
+    }
+
+    const { isConfirmed } = await Swal.fire({
+      icon: 'question',
+      title: 'Confirmar Asignación',
+      text: `¿Está seguro que desea asignar ${selectedRows.length} lead(s) a ${selectedUser?.name}?`,
+      showCancelButton: true,
+      confirmButtonText: 'Sí, asignar',
+      cancelButtonText: 'Cancelar'
+    });
+    if (!isConfirmed) return
+
+    const result = await leadsRest.massiveAssign({
+      leadsId: selectedRows,
+      userId: userId
+    });
+
+    if (!result) return
+    
+    Swal.fire({
+      icon: 'success',
+      title: 'Leads Asignados',
+      text: 'Los leads han sido asignados exitosamente'
+    });
+
+    const grid = $(gridRef.current).dxDataGrid('instance');
+    grid.clearSelection();
+    grid.refresh();
+
+  }
+
   return <Table gridRef={gridRef} title={title} rest={rest} reloadWith={[statuses, manageStatuses]}
     toolBar={(container) => {
       // container.unshift(DxPanelButton({
@@ -27,6 +74,42 @@ const LeadTable = ({ gridRef, rest, can, defaultLeadStatus, statuses, manageStat
       //   onClick: () => onOpenModal()
       // }))
     }}
+    keyExpr='id'
+    selection={{
+      mode: 'multiple',
+      allowSelectAll: false,
+      onSelect: (algo) => console.log(algo)
+    }}
+    // onSelectionChanged={({selectedRowKeys}) => {
+    //   console.log(selectedRowKeys)
+    // }}
+    massiveActions={<>
+      <li>
+        <button class="dropdown-item">
+          <div className="d-flex justify-content-between gap-1">
+            <span>
+              Asignar a
+            </span>
+            <i className="mdi mdi-chevron-right"></i>
+          </div>
+        </button>
+        <ul class="dropdown-menu dropdown-submenu" style={{
+          maxHeight: '360px',
+          overflowY: 'auto'
+        }}>
+          {
+            users.map((user) => {
+              return <li key={user.id}>
+                <button className="dropdown-item d-flex gap-1 align-items-center" onClick={() => onMassiveAssignClicked(user.service_user.id)}>
+                  <img className='avatar-xs rounded-circle' src={`//${Global.APP_DOMAIN}/api/profile/thumbnail/${user.relative_id}`} alt={user.name} />
+                  {user.name?.split(' ')?.[0]} {user.lastname?.split(' ')?.[0]}
+                </button>
+              </li>
+            })
+          }
+        </ul>
+      </li>
+    </>}
     exportable
     height={'calc(65vh - 90px)'}
     pageSize={25}
