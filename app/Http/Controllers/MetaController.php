@@ -47,8 +47,6 @@ class MetaController extends Controller
         $challenge = $request->query('hub_challenge');
         $verify_token = $request->query('hub_verify_token');
 
-        dump($request->all());
-
         if (!in_array($origin, ['messenger', 'instagram'])) return response('Error, origen no permitido', 403);
 
         $sbbJpa = ServicesByBusiness::query()
@@ -59,7 +57,6 @@ class MetaController extends Controller
             ->where('businesses.status', true)
             ->first();
 
-        dump($sbbJpa);
         if (!$sbbJpa) return response('Error, negocio no encontrado o inactivo', 403);
 
         if (hash('sha256', $business_uuid) != $verify_token) return response('Error, token de validación incorrecto', 403);
