@@ -9,6 +9,7 @@ use App\Models\Integration;
 use App\Models\Setting;
 use Exception;
 use Illuminate\Http\Request;
+use PHPUnit\Framework\MockObject\Generator\OriginalConstructorInvocationRequiredException;
 use SoDe\Extend\Fetch;
 use SoDe\Extend\JSON;
 use SoDe\Extend\Response;
@@ -19,24 +20,25 @@ class MetaController extends Controller
 {
     public static function getInstagramProfile(string $id, string $accessToken)
     {
-        $igMeRest = new Fetch(env('INSTAGRAM_GRAPH_URL'). "/me?fields,id,name,username&access_token={$accessToken}");
-        $igRest = new Fetch(env('INSTAGRAM_GRAPH_URL'). "/{$id}?fields=id,name,username&access_token={$accessToken}");
+        $igMeRest = new Fetch(env('INSTAGRAM_GRAPH_URL') . "/me?fields,id,name,username&access_token={$accessToken}");
+        $igRest = new Fetch(env('INSTAGRAM_GRAPH_URL') . "/{$id}?fields=id,name,username&access_token={$accessToken}");
 
         $igMeData = $igMeRest->json();
         $igData = $igRest->json();
-        
+
         if (isset($igMeData['error']) || isset($igData['error'])) throw new Exception('Error, token de acceso inválido');
         if ($igMeData['id'] != $igData['id']) throw new Exception('Error, el token de acceso no pertenece al negocio');
 
         return $igData;
     }
-    public static function getFacebookProfile(string $id, string $accessToken) {
-        $fbMeRest = new Fetch(env('FACEBOOK_GRAPH_URL'). "/me?fields,id,name,username,picture&access_token={$accessToken}");
-        $fbRest = new Fetch(env('FACEBOOK_GRAPH_URL'). "/{$id}?fields=id,name,username,picture&access_token={$accessToken}");
+    public static function getFacebookProfile(string $id, string $accessToken)
+    {
+        $fbMeRest = new Fetch(env('FACEBOOK_GRAPH_URL') . "/me?fields,id,name,username,picture&access_token={$accessToken}");
+        $fbRest = new Fetch(env('FACEBOOK_GRAPH_URL') . "/{$id}?fields=id,name,username,picture&access_token={$accessToken}");
 
         $fbMeData = $fbMeRest->json();
         $fbData = $fbRest->json();
-        
+
         if (isset($fbMeData['error']) || isset($fbData['error'])) throw new Exception('Error, token de acceso inválido');
         if ($fbMeData['id'] != $fbData['id']) throw new Exception('Error, el token de acceso no pertenece al negocio');
 
@@ -44,31 +46,33 @@ class MetaController extends Controller
     }
     public function verify(Request $request, string $origin, string $business_uuid)
     {
-        $challenge = $request->query('hub_challenge');
-        $verify_token = $request->query('hub_verify_token');
+        $response = Response::simpleTryCatch(function () use ($request, $origin, $business_uuid) {
+            $challenge = $request->query('hub_challenge');
+            $verify_token = $request->query('hub_verify_token');
 
-        if (!in_array($origin, ['messenger', 'instagram'])) return response('Error, origen no permitido', 403);
+            if (!in_array($origin, ['messenger', 'instagram'])) return response('Error, origen no permitido', 403);
 
-        $sbbJpa = ServicesByBusiness::query()
-            ->join('businesses', 'services_by_businesses.business_id', '=', 'businesses.id')
-            ->join('services', 'services_by_businesses.service_id', '=', 'services.id')
-            ->where('services.correlative', env('APP_CORRELATIVE'))
-            ->where('businesses.uuid', $business_uuid)
-            ->where('businesses.status', true)
-            ->first();
+            $sbbJpa = ServicesByBusiness::query()
+                ->join('businesses', 'services_by_businesses.business_id', '=', 'businesses.id')
+                ->join('services', 'services_by_businesses.service_id', '=', 'services.id')
+                ->where('services.correlative', env('APP_CORRELATIVE'))
+                ->where('businesses.uuid', $business_uuid)
+                ->where('businesses.status', true)
+                ->first();
 
-        if (!$sbbJpa) return response('Error, negocio no encontrado o inactivo', 403);
+            if (!$sbbJpa) return response('Error, negocio no encontrado o inactivo', 403);
 
-        if (hash('sha256', $business_uuid) != $verify_token) return response('Error, token de validación incorrecto', 403);
+            if (hash('sha256', $business_uuid) != $verify_token) return response('Error, token de validación incorrecto', 403);
 
-        Integration::updateOrCreate([
-            'meta_service' => $origin,
-            'business_id' => $sbbJpa->business_id,
-        ]);
+            Integration::updateOrCreate([
+                'meta_service' => $origin,
+                'business_id' => $sbbJpa->business_id,
+            ]);
+        });
 
-        dump($challenge);
+        dump($response->toArray());
 
-        return response($challenge, 200);
+        return response($response->data, 200);
     }
 
     public function webhook(Request $request, string $origin, string $business_uuid)
@@ -121,7 +125,7 @@ class MetaController extends Controller
                     'integration_user_id' => $profileData['id'],
                     'business_id' => $businessJpa->id,
                 ], [
-                    'message' => $messaging['message']['text']?? 'Sin mensaje',
+                    'message' => $messaging['message']['text'] ?? 'Sin mensaje',
                     'contact_name' => $profileData['name'],
                     'name' => $profileData['name'],
                     'source' => 'Externo',
@@ -130,11 +134,13 @@ class MetaController extends Controller
                     'ip' => $request->ip(),
                     'status_id' => Setting::get('default-lead-status', $businessJpa->id),
                     'manage_status_id' => Setting::get('default-manage-lead-status', $businessJpa->id),
-                    'origin' => Text::toTitleCase($origin),	
+                    'origin' => Text::toTitleCase($origin),
                     'triggered_by' => 'Gemini AI'
                 ]);
             }
-        }, function ($res, $th) {dump($th);});
+        }, function ($res, $th) {
+            dump($th);
+        });
         return response($response->toArray(), 200);
     }
 }
