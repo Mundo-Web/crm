@@ -4,6 +4,7 @@ import NavBar from './NavBar'
 import Menu from './Menu'
 import Footer from './Footer'
 import WhatsAppModal from './modals/WhatsAppModal'
+import { Toaster } from 'sonner'
 
 moment.tz.setDefault('UTC');
 
@@ -15,6 +16,7 @@ const Adminto = ({ session, children, notificationsCount, title, description, fl
 
   return (<>
     <div id="wrapper">
+      <Toaster/>
       <NavBar session={session} theme={theme} setTheme={setTheme} title={title} can={can} whatsappStatus={whatsappStatus} businesses={businesses} APP_DOMAIN={APP_DOMAIN} APP_PROTOCOL={APP_PROTOCOL} notificationsCount={notificationsCount} />
       <Menu session={session} theme={theme} can={can} presets={presets} whatsappStatus={whatsappStatus} APP_DOMAIN={APP_DOMAIN} businesses={businesses} APP_PROTOCOL={APP_PROTOCOL} leadsCount={leadsCount} tasksCount={tasksCount} />
       <div className="content-page">

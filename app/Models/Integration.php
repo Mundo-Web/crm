@@ -20,6 +20,7 @@ class Integration extends Model
         'meta_business_profile',
         'meta_access_token',
         'business_id',
+        'status'
     ];
 
     protected $hidden = [

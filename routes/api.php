@@ -248,4 +248,5 @@ Route::middleware('auth')->group(function () {
 
     Route::post('/integrations', [IntegrationController::class,'save']);
     Route::delete('/integrations/{id}', [IntegrationController::class, 'delete']);
+    Route::post('/integrations/profile', [IntegrationController::class, 'getProfile']);
 });

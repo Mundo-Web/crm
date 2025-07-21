@@ -18,7 +18,7 @@ use SoDe\Extend\Trace;
 
 class MetaController extends Controller
 {
-    public static function getInstagramProfile(string $id, string $accessToken)
+    public static function getInstagramProfile(string $id, string $accessToken, bool $external = false)
     {
         $igMeRest = new Fetch(env('INSTAGRAM_GRAPH_URL') . "/me?fields,id,name,username&access_token={$accessToken}");
         $igRest = new Fetch(env('INSTAGRAM_GRAPH_URL') . "/{$id}?fields=id,name,username&access_token={$accessToken}");
@@ -70,8 +70,6 @@ class MetaController extends Controller
             ]);
         });
 
-        dump($response->toArray());
-
         return response($response->data, 200);
     }
 
@@ -79,7 +77,8 @@ class MetaController extends Controller
     {
         $response = Response::simpleTryCatch(function () use ($request, $origin, $business_uuid) {
             $data = $request->all();
-            dump($data);
+
+            dump('JSON: ' . JSON::stringify($data));
 
             if (!in_array($origin, ['messenger', 'instagram'])) throw new Exception('Error, origen no permitido');
 
@@ -98,7 +97,7 @@ class MetaController extends Controller
             $integrationJpa = Integration::query()
                 ->where('meta_service', $origin)
                 ->where('business_id', $businessJpa->id)
-                ->whereNull('meta_business_id')
+                ->where('status', true)
                 ->first();
 
             if (!$integrationJpa) {
@@ -118,6 +117,17 @@ class MetaController extends Controller
             $fieldsStr = implode(',', $fields);
             $profileRest = new Fetch(env('FACEBOOK_GRAPH_URL') . "/{$userId}?fields={$fieldsStr}&access_token={$integrationJpa->meta_access_token}");
             $profileData = $profileRest->json();
+
+            switch ($origin) {
+                case 'messenger':
+                    $profileData = MetaController::getFacebookProfile($userId, $integrationJpa->meta_access_token);
+                    break;
+                case 'instagram':
+                    $profileData = MetaController::getInstagramProfile($userId, $integrationJpa->meta_access_token);
+                default:
+                    $profileData = MetaController::getFacebookProfile($userId, $integrationJpa->meta_access_token);
+                    break;
+            }
 
             if ($entry['id'] != $messaging['sender']['id']) {
                 Client::updateOrCreate([
