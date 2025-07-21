@@ -58,6 +58,8 @@ class MetaController extends Controller
             ->where('businesses.uuid', $business_uuid)
             ->where('businesses.status', true)
             ->first();
+
+        dump($sbbJpa);
         if (!$sbbJpa) return response('Error, negocio no encontrado o inactivo', 403);
 
         if (hash('sha256', $business_uuid) != $verify_token) return response('Error, token de validación incorrecto', 403);
