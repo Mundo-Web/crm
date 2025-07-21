@@ -47,6 +47,8 @@ class MetaController extends Controller
         $challenge = $request->query('hub_challenge');
         $verify_token = $request->query('hub_verify_token');
 
+        dump($request->all());
+
         if (!in_array($origin, ['messenger', 'instagram'])) return response('Error, origen no permitido', 403);
 
         $sbbJpa = ServicesByBusiness::query()
