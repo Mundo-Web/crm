@@ -488,7 +488,7 @@ class MetaController extends Controller
                 break;
             }
         } catch (\Throwable $th) {
-            // dump($th->getMessage());
+            dump($th->getMessage());
         }
     }
 
