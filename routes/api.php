@@ -104,6 +104,7 @@ Route::middleware('auth')->group(function () {
     Route::patch('/clients/status', [ClientController::class, 'status']);
     Route::patch('/clients/client-status', [ClientController::class, 'clientStatus']);
     Route::delete('/clients/{id}', [ClientController::class, 'delete']);
+    Route::post('/clients/massive-delete', [ClientController::class, 'massiveDelete']);
 
     Route::post('/messages/paginate', [MessageController::class, 'paginate']);
     Route::post('/messages/send', [WhatsAppController::class, 'send']);

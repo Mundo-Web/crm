@@ -627,6 +627,7 @@ const Leads = (properties) => {
             onArchiveClicked={onArchiveClicked}
             onDeleteClicked={onDeleteClicked}
             onAttendClient={onAttendClient}
+            users={users}
           />
           // <div className="d-flex gap-1 mb-3" style={{ overflowX: 'auto', minHeight: 'calc(100vh - 236px)' }}>
           //   {

@@ -1,6 +1,8 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import LeadsRest from '../../actions/LeadsRest';
 import { Local } from 'sode-extend-react';
+import LaravelSession from "../../Utils/LaravelSession"
+import ArrayJoin from '../../Utils/ArrayJoin';
 
 export const LeadsContext = createContext();
 export const LeadsProvider = ({ statuses, children }) => {
@@ -8,6 +10,7 @@ export const LeadsProvider = ({ statuses, children }) => {
     const [statusesRest, setStatusesRest] = useState({})
     const [leadsCount, setLeadsCount] = useState({})
     const [statusesLoading, setStatusesLoading] = useState({})
+    const [selectedUsersId, setSelectedUsersId] = useState([LaravelSession.service_user.id]);
     const [defaultView, setDefaultView] = useState(Local.get('default-view') ?? 'kanban')
     const [lastLoadedDate, setLastLoadedDate] = useState(new Date())
     const [leads, setLeads] = useState([]);
@@ -21,8 +24,12 @@ export const LeadsProvider = ({ statuses, children }) => {
                 setStatusesRest(old => ({ ...old, [statusId]: leadsRest }))
             }
             setStatusesLoading(old => ({ ...old, [statusId]: true }))
+            const filter = [['clients.status_id', '=', statusId]];
+            if (selectedUsersId.length > 0) {
+                filter.push(ArrayJoin(selectedUsersId.map(id => ['assigned_to', '=', id]), 'or'))
+            }
             const response = await leadsRest.paginate({
-                filter: ['clients.status_id', '=', statusId],
+                filter: ArrayJoin(filter, 'and'),
                 sort: [{ selector: "created_at", desc: true }],
                 skip: 0,
                 take: 10,
@@ -50,8 +57,14 @@ export const LeadsProvider = ({ statuses, children }) => {
         const dateWithOffset = new Date(lastLoadedDate.getTime() - (5 * 60 * 60 * 1000));
         const leadsRest = new LeadsRest()
         leadsRest.paginateSufix = null
+
+        const filter = [['updated_at', '>=', dateWithOffset.toISOString()]];
+        if (selectedUsersId.length > 0) {
+            filter.push(ArrayJoin(selectedUsersId.map(id => ['assigned_to', '=', id]), 'or'))
+        }
+
         const newLeads = await leadsRest.paginate({
-            filter: ['updated_at', '>=', dateWithOffset.toISOString()],
+            filter: ArrayJoin(filter, 'and'),
             requireTotalCount: true,
             isLoadingAll: true,
             sort: [{ selector: "created_at", desc: true }],
@@ -59,7 +72,6 @@ export const LeadsProvider = ({ statuses, children }) => {
 
         if (newLeads?.data) {
             setLeads(prevLeads => {
-                // Merge new leads with existing ones, avoiding duplicates
                 const updatedLeads = [...prevLeads];
                 newLeads.data.forEach(newLead => {
                     const existingIndex = updatedLeads.findIndex(lead => lead.id === newLead.id);
@@ -76,18 +88,15 @@ export const LeadsProvider = ({ statuses, children }) => {
     }
 
     const getMoreLeads = async (statusId) => {
-        // Filter leads by status and find the oldest one
         const statusLeads = leads.filter(lead => lead.status_id === statusId);
         if (!statusLeads.length) return [];
 
-        // Sort by creation date to find the oldest
         const oldestLead = statusLeads.reduce((oldest, current) => {
             const oldestDate = new Date(oldest.created_at);
             const currentDate = new Date(current.created_at);
             return currentDate < oldestDate ? current : oldest;
         }, statusLeads[0]);
 
-        // Get more leads from API for records created before the oldest one
         let leadsRest = statusesRest[statusId]
         if (leadsRest) {
             leadsRest = new LeadsRest()
@@ -99,19 +108,22 @@ export const LeadsProvider = ({ statuses, children }) => {
         const oldestLeadDate = new Date(oldestLead.created_at);
         oldestLeadDate.setHours(oldestLeadDate.getHours() - 5);
 
+        const filter = [
+            ['clients.status_id', '=', statusId],
+            ['created_at', '<', oldestLeadDate.toISOString()]
+        ];
+        if (selectedUsersId.length > 0) {
+            filter.push(ArrayJoin(selectedUsersId.map(id => ['assigned_to', '=', id]), 'or'))
+        }
+
         const response = await leadsRest.paginate({
-            filter: [
-                ['clients.status_id', '=', statusId],
-                'and',
-                ['created_at', '<', oldestLeadDate.toISOString()]
-            ],
+            filter: ArrayJoin(filter, 'and'),
             sort: [{ selector: "created_at", desc: true }],
             take: 10,
             requireTotalCount: true
         });
         setStatusesLoading(old => ({ ...old, [statusId]: false }))
 
-        // Update leads array with new data
         setLeads(prevLeads => {
             const newLeads = [...prevLeads];
             response.data.forEach(newLead => {
@@ -132,7 +144,7 @@ export const LeadsProvider = ({ statuses, children }) => {
         if (defaultView != 'kanban') return
         const interval = setInterval(() => { refreshLeads(); }, 10000);
         return () => clearInterval(interval);
-    }, [lastLoadedDate, defaultView])
+    }, [lastLoadedDate, defaultView, selectedUsersId])
 
     return (
         <LeadsContext.Provider
@@ -145,7 +157,9 @@ export const LeadsProvider = ({ statuses, children }) => {
                 defaultView,
                 setDefaultView,
                 leadsCount,
-                statusesLoading
+                statusesLoading,
+                selectedUsersId,
+                setSelectedUsersId
             }}
         >
             {children}

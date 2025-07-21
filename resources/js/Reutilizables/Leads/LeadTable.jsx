@@ -1,6 +1,5 @@
-import React, { useState } from "react"
+import React, { useContext, useEffect } from "react"
 import Table from "../../components/Table"
-import DxPanelButton from "../../components/dx/DxPanelButton"
 import { renderToString } from "react-dom/server"
 import ReactAppend from "../../Utils/ReactAppend"
 import Global from "../../Utils/Global"
@@ -10,10 +9,16 @@ import TippyButton from "../../components/form/TippyButton"
 import LaravelSession from "../../Utils/LaravelSession"
 import LeadsRest from "../../actions/LeadsRest"
 import Swal from "sweetalert2"
+import ClientsRest from "../../actions/ClientsRest"
+import ArrayJoin from "../../Utils/ArrayJoin"
+import { LeadsContext } from "./LeadsProvider"
 
 const leadsRest = new LeadsRest()
+const clientsRest = new ClientsRest()
 
 const LeadTable = ({ gridRef, otherGridRef, rest, can, defaultLeadStatus, statuses, manageStatuses, onClientStatusClicked, onManageStatusChange, onLeadClicked, onMessagesClicked, onAttendClient, onOpenModal, onMakeLeadClient, onArchiveClicked, onDeleteClicked, title, borderColor = '#315AFE', setStatuses, setManageStatuses, users }) => {
+
+  const { selectedUsersId, setSelectedUsersId, defaultView } = useContext(LeadsContext)
 
   const onMassiveAssignClicked = async (userId) => {
     const selectedUser = users.find(user => user.id === userId);
@@ -57,7 +62,103 @@ const LeadTable = ({ gridRef, otherGridRef, rest, can, defaultLeadStatus, status
     $(otherGridRef.current).dxDataGrid('instance').refresh()
   }
 
-  return <Table gridRef={gridRef} title={title} rest={rest} reloadWith={[statuses, manageStatuses]}
+  const onMassiveArchiveClicked = async () => {
+    const selectedRows = $(gridRef.current).dxDataGrid('instance').getSelectedRowKeys().map(({ id }) => id);
+
+    if (!selectedRows.length) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'No hay leads seleccionados',
+        text: 'Por favor seleccione al menos un lead para archivar'
+      });
+      return;
+    }
+
+    const { isConfirmed } = await Swal.fire({
+      icon: 'question',
+      title: 'Confirmar Archivo',
+      text: `¿Está seguro que desea archivar ${selectedRows.length} lead(s)?`,
+      showCancelButton: true,
+      confirmButtonText: 'Sí, archivar',
+      cancelButtonText: 'Cancelar'
+    });
+    if (!isConfirmed) return;
+
+    const result = await clientsRest.massiveDelete({
+      clientsId: selectedRows
+    });
+
+    if (!result) return;
+
+    Swal.fire({
+      icon: 'success',
+      title: 'Leads Archivados',
+      text: 'Los leads han sido archivados exitosamente'
+    });
+
+    const grid = $(gridRef.current).dxDataGrid('instance');
+    grid.clearSelection();
+    grid.refresh();
+  }
+
+  useEffect(() => {
+    if (defaultView != 'table') return
+    const grid = $(gridRef.current).dxDataGrid('instance');
+    if (selectedUsersId.length === 0) {
+      grid.clearFilter();
+    } else {
+      grid.filter(ArrayJoin(selectedUsersId.map(id => (['assigned_to', '=', id])), 'or'));
+    }
+    
+  }, [selectedUsersId, defaultView])
+
+  return <Table gridRef={gridRef} title={<>
+    <h4 className="header-title my-0">{title}</h4>
+    <div className="d-flex gap-0 mt-2 align-items-center">
+      {users.map(user => (
+        <Tippy
+          key={user.id}
+          content={`${user.name} ${user.lastname}`}
+        >
+          <div
+            onClick={() => {
+              const newSelectedUsers = [...selectedUsersId];
+              const userServiceId = user.service_user.id;
+
+              const index = newSelectedUsers.indexOf(userServiceId);
+              if (index > -1) {
+                newSelectedUsers.splice(index, 1);
+              } else {
+                newSelectedUsers.push(userServiceId);
+              }
+
+              setSelectedUsersId(newSelectedUsers);
+            }}
+            className={`rounded-pill ${selectedUsersId.includes(user.service_user.id) ? 'bg-purple' : ''}`}
+            style={{ cursor: 'pointer', padding: '2px', marginRight: '2px' }}
+          >
+            <img
+              className='avatar-xs rounded-circle'
+              src={`//${Global.APP_DOMAIN}/api/profile/thumbnail/${user.relative_id}`}
+              alt={user.name}
+              style={{ objectFit: 'cover', objectPosition: 'center' }}
+            />
+          </div>
+        </Tippy>
+      ))}
+      {
+        selectedUsersId.length > 0 &&
+        <Tippy content="Limpiar filtros">
+          <button
+            className="btn btn-xs btn-soft-danger ms-1 rounded-pill"
+            onClick={() => setSelectedUsersId([])}
+          >
+            <i className="mdi mdi-trash-can-outline"></i>
+          </button>
+        </Tippy>
+      }
+    </div>
+  </>} rest={rest} reloadWith={[statuses, manageStatuses]}
     toolBar={(container) => {
       // container.unshift(DxPanelButton({
       //   className: 'btn btn-xs btn-soft-dark text-nowrap',
@@ -88,6 +189,7 @@ const LeadTable = ({ gridRef, otherGridRef, rest, can, defaultLeadStatus, status
         <button class="dropdown-item">
           <div className="d-flex justify-content-between gap-1">
             <span>
+              <i className="mdi mdi-account me-1"></i>
               Asignar a
             </span>
             <i className="mdi mdi-chevron-right"></i>
@@ -108,6 +210,21 @@ const LeadTable = ({ gridRef, otherGridRef, rest, can, defaultLeadStatus, status
             })
           }
         </ul>
+      </li>
+      <li>
+        <button class="dropdown-item" onClick={onMassiveArchiveClicked}>
+          <i className="mdi mdi-archive me-1"></i>
+          Archivar
+        </button>
+      </li>
+      <li>
+        <button className="dropdown-item" onClick={() => {
+          const grid = $(gridRef.current).dxDataGrid('instance');
+          grid.clearSelection();
+        }}>
+          <i className="mdi mdi-selection-off me-1"></i>
+          Quitar selección
+        </button>
       </li>
     </>}
     exportable
@@ -147,7 +264,8 @@ const LeadTable = ({ gridRef, otherGridRef, rest, can, defaultLeadStatus, status
         fixedPosition: 'left'
       },
       {
-        dataField: 'assigned.fullname',
+        dataField: 'assigned_to',
+        dataType: 'string',
         caption: 'Usuario',
         width: 58,
         cellTemplate: (container, { data }) => {
@@ -163,7 +281,8 @@ const LeadTable = ({ gridRef, otherGridRef, rest, can, defaultLeadStatus, status
           </div>)
         },
         fixed: true,
-        fixedPosition: 'left'
+        fixedPosition: 'left',
+        allowFiltering: false
       },
       {
         dataField: 'contact_email',

@@ -91,16 +91,17 @@ const Table = ({ title, gridRef, rest, columns, toolBar, masterDetail, filterVal
         <div className="card" style={cardStyle}>
           <div className="card-body">
             {
-              typeof title === 'string' ? (
-                <div className='d-flex justify-content-between align-items-center mb-2'>
-                  <h4 className="header-title w-100 my-0">Lista de {title}</h4>
-                  <button className='btn btn-white btn-xs text-nowrap' onClick={() => $(gridRef.current).dxDataGrid('instance').refresh()}>
-                    <i className='mdi mdi-refresh me-1'></i>Actualizar
-                  </button>
-                </div>
-              ) : (
-                <div className='mb-2'>{title}</div>
-              )
+              <div className='d-flex justify-content-between align-items-start mb-2'>
+                {
+                  typeof title == 'string'
+                    ? <h4 className='w-100 my-0 header-title'>Lista de {title}</h4>
+                    : <div className='w-100 my-0'>{title}</div>
+                }
+
+                <button className='btn btn-white btn-xs text-nowrap' onClick={() => $(gridRef.current).dxDataGrid('instance').refresh()}>
+                  <i className='mdi mdi-refresh me-1'></i>Actualizar
+                </button>
+              </div>
             }
 
             <div className='d-flex mb-2 gap-2'>
@@ -115,8 +116,8 @@ const Table = ({ title, gridRef, rest, columns, toolBar, masterDetail, filterVal
                 {
                   selectionActive &&
                   <div className="dropdown position-relative">
-                    <button 
-                      className="btn btn-white btn-sm dropdown-toggle position-relative" 
+                    <button
+                      className="btn btn-white btn-sm dropdown-toggle position-relative bg-white"
                       type="button"
                       onClick={() => setIsMassiveDropdownOpen(!isMassiveDropdownOpen)}
                       style={{ zIndex: isMassiveDropdownOpen ? 10000 : undefined }}
@@ -137,7 +138,7 @@ const Table = ({ title, gridRef, rest, columns, toolBar, masterDetail, filterVal
                           }}
                           onClick={() => setIsMassiveDropdownOpen(false)}
                         ></div>
-                        <ul 
+                        <ul
                           className="dropdown-menu dropdown-menu-end show"
                           style={{
                             position: 'absolute',
