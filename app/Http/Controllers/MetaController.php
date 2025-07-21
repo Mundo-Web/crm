@@ -66,6 +66,8 @@ class MetaController extends Controller
             'business_id' => $sbbJpa->business_id,
         ]);
 
+        dump($challenge);
+
         return response($challenge, 200);
     }
 
