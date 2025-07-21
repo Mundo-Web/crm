@@ -10,10 +10,12 @@ import HtmlContent from "../Utils/HtmlContent"
 import '../../css/whatsapp.css'
 import wa2html from "../Utils/wa2html"
 import ArrayJoin from "../Utils/ArrayJoin"
+import MetaRest from "../actions/MetaRest"
 
 const messagesRest = new MessagesRest()
 const whatsAppRest = new WhatsAppRest()
 const usersRest = new UsersRest()
+const metaRest = new MetaRest()
 
 const OffCanvas = ({ offCanvasRef, dataLoaded, setDataLoaded, defaultMessages, signs, onOpenModal = () => { }, onLeadClicked = () => { } }) => {
 
@@ -31,23 +33,9 @@ const OffCanvas = ({ offCanvasRef, dataLoaded, setDataLoaded, defaultMessages, s
   const [defaultMessagesVisible, setDefaultMessagesVisible] = useState(false)
   const [defaultSign, setDefaultSign] = useState(LaravelSession.service_user.whatsapp_sign)
 
-  useEffect(() => {
-    if (!dataLoaded?.contact_phone) return
-    getCacheMessages().then(messages => {
-      setMessages(messages)
-      getMessages();
-    })
-  }, [dataLoaded])
+  let medio = dataLoaded?.integration ? dataLoaded?.integration?.meta_service : 'whatsapp';
 
-  useEffect(() => {
-    if (!dataLoaded?.id) return
-    const interval = setInterval(async () => {
-      if (!isLoading) {
-        await getMessages()
-      }
-    }, ttl);
-    return () => clearInterval(interval);
-  }, [dataLoaded, isLoading, ttl])
+  console.log(medio)
 
   const getMessages = async () => {
     const lastMessage = await getLastMessage()
@@ -109,12 +97,39 @@ const OffCanvas = ({ offCanvasRef, dataLoaded, setDataLoaded, defaultMessages, s
     const message = inputMessageRef.current.value
     const client_id = dataLoaded.id
     setIsSending(true)
-    const result = await whatsAppRest.send(client_id, message)
+    let result = null
+    if (medio == 'whatsapp') {
+      result = await whatsAppRest.send(client_id, message)
+    } else {
+      result = await metaRest.send(client_id, message)
+    }
     setIsSending(false)
 
     if (!result) return
     inputMessageRef.current.value = ''
     // obtener nuevos mensajes
+  }
+
+  const onDefaultSignChanged = async (e) => {
+    const signId = e.target.value
+    const result = await usersRest.setDefaultSign({
+      type: 'whatsapp',
+      sign: signId
+    })
+    if (!result) return
+    setDefaultSign(signId)
+  }
+
+  const onModalSignatureClicked = () => {
+    $(signsModalRef.current).modal('show')
+  }
+
+  const sendSignature = async () => {
+    const sign = signs.find(sign => sign.id == defaultSign)
+    const signature = `${Global.APP_PROTOCOL}://${Global.APP_DOMAIN}/repository/signs/${sign.sign}`
+    setIsSending(true)
+    await whatsAppRest.send(dataLoaded?.id, `/signature:${signature}`)
+    setIsSending(false)
   }
 
   useEffect(() => {
@@ -139,6 +154,24 @@ const OffCanvas = ({ offCanvasRef, dataLoaded, setDataLoaded, defaultMessages, s
   }, [messages])
 
   useEffect(() => {
+    if (!dataLoaded?.contact_phone) return
+    getCacheMessages().then(messages => {
+      setMessages(messages)
+      getMessages();
+    })
+  }, [dataLoaded])
+
+  useEffect(() => {
+    if (!dataLoaded?.id) return
+    const interval = setInterval(async () => {
+      if (!isLoading) {
+        await getMessages()
+      }
+    }, ttl);
+    return () => clearInterval(interval);
+  }, [dataLoaded, isLoading, ttl])
+
+  useEffect(() => {
     offCanvasRef.current.addEventListener('hidden.bs.offcanvas', () => {
       setDataLoaded(null)
       setMessages([]);
@@ -149,28 +182,6 @@ const OffCanvas = ({ offCanvasRef, dataLoaded, setDataLoaded, defaultMessages, s
       }
     })
   }, [null]);
-
-  const onDefaultSignChanged = async (e) => {
-    const signId = e.target.value
-    const result = await usersRest.setDefaultSign({
-      type: 'whatsapp',
-      sign: signId
-    })
-    if (!result) return
-    setDefaultSign(signId)
-  }
-
-  const onModalSignatureClicked = () => {
-    $(signsModalRef.current).modal('show')
-  }
-
-  const sendSignature = async () => {
-    const sign = signs.find(sign => sign.id == defaultSign)
-    const signature = `${Global.APP_PROTOCOL}://${Global.APP_DOMAIN}/repository/signs/${sign.sign}`
-    setIsSending(true)
-    await whatsAppRest.send(dataLoaded?.id, `/signature:${signature}`)
-    setIsSending(false)
-  }
 
   const finalDefaultMessages = defaultMessages.filter(({ type }) => type === 'whatsapp')
 
@@ -194,7 +205,11 @@ const OffCanvas = ({ offCanvasRef, dataLoaded, setDataLoaded, defaultMessages, s
             }} alt={dataLoaded?.contact_name} />
           <div>
             <h5 className="my-0">{dataLoaded?.contact_name}</h5>
-            <small className="text-muted">+{dataLoaded?.contact_phone}</small>
+            {
+              medio == 'whatsapp'
+                ? <small className="text-muted">+{dataLoaded?.contact_phone}</small>
+                : <small className="text-muted">{dataLoaded?.integration_user_id}</small>
+            }
           </div>
         </div>
         <div className="d-flex gap-1 align-items-center">

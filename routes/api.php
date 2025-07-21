@@ -13,6 +13,7 @@ use App\Http\Controllers\IntegrationController;
 use App\Http\Controllers\KPILeadsController;
 use App\Http\Controllers\LeadController;
 use App\Http\Controllers\MessageController;
+use App\Http\Controllers\MetaController;
 use App\Http\Controllers\NewLeadController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PageController;
@@ -54,7 +55,7 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::get('/start/{uuid}', [UtilController::class, 'start']);
 
 Route::get('/pages/media/{uuid}', [PageController::class, 'media']);
-Route::get('/integrations/media/{uuid}', [IntegrationController::class,'media']);
+Route::get('/integrations/media/{uuid}', [IntegrationController::class, 'media']);
 
 Route::middleware('auth')->group(function () {
     Route::post('/init', [AuthController::class, 'init']);
@@ -64,6 +65,8 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/whatsapp', [WhatsAppController::class, 'verify']);
     Route::post('/whatsapp/send', [WhatsAppController::class, 'send']);
+
+    Route::post('/meta/send', [MetaController::class, 'send']);
 
     Route::get('/dashboard/{range}', [DashboardController::class, 'revenue']);
     Route::get('/dashboard/leads/kpi/{month}', [KPILeadsController::class, 'kpi']);
@@ -246,7 +249,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/gmail/attachment/{messageId}/{attachmentId}/{filename}', [GmailController::class, 'getAttachment']);
     Route::post('/gmail/send', [GmailController::class, 'send']);
 
-    Route::post('/integrations', [IntegrationController::class,'save']);
+    Route::post('/integrations', [IntegrationController::class, 'save']);
     Route::delete('/integrations/{id}', [IntegrationController::class, 'delete']);
     Route::post('/integrations/profile', [IntegrationController::class, 'getProfile']);
 });

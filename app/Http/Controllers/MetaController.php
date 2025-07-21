@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\ExecuteAnyJob;
+use App\Jobs\MetaAssistantJob;
 use App\Models\Atalaya\Business;
 use App\Models\Atalaya\ServicesByBusiness;
 use App\Models\Client;
@@ -13,8 +15,10 @@ use App\Models\Task;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use PHPUnit\Framework\MockObject\Generator\OriginalConstructorInvocationRequiredException;
 use SoDe\Extend\Fetch;
+use SoDe\Extend\File;
 use SoDe\Extend\JSON;
 use SoDe\Extend\Response;
 use SoDe\Extend\Text;
@@ -108,19 +112,21 @@ class MetaController extends Controller
 
             $inOut = $entry['id'] == $messaging['sender']['id'] ? 'out' : 'in';
 
-            Message::create([
-                'wa_id' => $inOut ? $messaging['recipient']['id'] : $messaging['sender']['id'],
-                'role' => $inOut ? 'AI': 'Human',
-                'message' => $messaging['message']['text']
-            ]);
-
-            if ($entry['id'] == $messaging['sender']['id']) return;
-
             $businessJpa = Business::query()
                 ->where('uuid', $business_uuid)
                 ->where('status', true)
                 ->first();
             if (!$businessJpa) throw new Exception('Error, negocio no encontrado o inactivo');
+
+            $messageJpa = Message::create([
+                'wa_id' => $inOut == 'in' ? $messaging['sender']['id'] : $messaging['recipient']['id'],
+                'role' => $inOut == 'in' ? 'Human' : 'AI',
+                'message' => $messaging['message']['text'],
+                'microtime' => (int) (microtime(true) * 1_000_000),
+                'business_id' => $businessJpa->id
+            ]);
+
+            if ($entry['id'] == $messaging['sender']['id']) return;
 
             $integrationJpa = Integration::query()
                 ->where('meta_service', $origin)
@@ -141,10 +147,6 @@ class MetaController extends Controller
             if (!$integrationJpa->meta_access_token) return;
 
             $userId = $messaging['sender']['id'];
-            $fields = ['id', 'first_name', 'last_name', 'name', 'profile_pic', 'locale', 'timezone', 'gender'];
-            $fieldsStr = implode(',', $fields);
-            // $profileRest = new Fetch(env('FACEBOOK_GRAPH_URL') . "/{$userId}?fields={$fieldsStr}&access_token={$integrationJpa->meta_access_token}");
-            // $profileData = $profileRest->json();
 
             switch ($origin) {
                 case 'messenger':
@@ -181,6 +183,13 @@ class MetaController extends Controller
                 'triggered_by' => 'Gemini AI',
                 'status' => true
             ]);
+
+            $hasApikey = Setting::get('gemini-api-key', $businessJpa->id);
+
+            if ($hasApikey && !$clientJpa->complete_registration) {
+                MetaAssistantJob::dispatchAfterResponse($clientJpa, $messageJpa);
+            }
+
             if ($alreadyExists) return;
             $noteJpa = ClientNote::create([
                 'note_type_id' => '8e895346-3d87-4a87-897a-4192b917c211',
@@ -203,5 +212,313 @@ class MetaController extends Controller
             ]);
         });
         return response($response->toArray(), 200);
+    }
+
+    public function send(Request $request)
+    {
+        $response = Response::simpleTryCatch(function () use ($request) {
+            $clientId = $request->input('client_id');
+            $message = $request->input('message');
+
+            // Get client with their business ID
+            $clientJpa = Client::query()
+                ->where('id', $clientId)
+                ->where('status', true)
+                ->first();
+
+            if (!$clientJpa) throw new Exception('Client not found');
+
+            // Get integration details
+            $integrationJpa = Integration::query()
+                ->where('id', $clientJpa->integration_id)
+                ->where('business_id', $clientJpa->business_id)
+                ->where('status', true)
+                ->first();
+
+            if (!$integrationJpa) throw new Exception('Integration not found');
+            if (!$integrationJpa->meta_access_token) throw new Exception('Access token not found');
+
+            // Determine API URL based on meta service
+            $baseUrl = $integrationJpa->meta_service === 'instagram'
+                ? env('INSTAGRAM_GRAPH_URL')
+                : env('FACEBOOK_GRAPH_URL');
+
+            // Send message
+            $messageEndpoint = "{$baseUrl}/me/messages";
+            $messageData = [
+                'recipient' => ['id' => $clientJpa->integration_user_id],
+                'message' => ['text' => $message]
+            ];
+
+            $sendRest = new Fetch($messageEndpoint, [
+                'method' => 'POST',
+                'headers' => [
+                    'Content-Type' => 'application/json',
+                    'Authorization' => "Bearer {$integrationJpa->meta_access_token}"
+                ],
+                'body' => $messageData
+            ]);
+
+            $result = $sendRest->json();
+
+            if (isset($result['error'])) {
+                throw new Exception('Failed to send message: ' . $result['error']['message']);
+            }
+
+            // Store message in database
+            Message::create([
+                'wa_id' => $clientJpa->integration_user_id,
+                'role' => 'AI',
+                'message' => $message,
+                'microtime' => (int) (microtime(true) * 1_000_000),
+                'business_id' => $clientJpa->business_id
+            ]);
+
+            return $result;
+        });
+        return response($response->toArray(), $response->status);
+    }
+
+    public static function assistant(Client $clientJpa, Message $messageJpa)
+    {
+        while (true) {
+            // Get latest message for this client
+            $latestMessage = Message::query()
+                ->where('wa_id', $clientJpa->integration_user_id)
+                ->where('business_id', $clientJpa->business_id)
+                ->orderBy('microtime', 'desc')
+                ->first();
+
+            // If latest message is different from current message, stop processing
+            if ($latestMessage->id !== $messageJpa->id) {
+                break;
+            }
+
+            // Calculate time difference in seconds
+            $timeDiff = (microtime(true) * 1_000_000 - $latestMessage->microtime) / 1_000_000;
+
+            // If less than 10 seconds have passed, wait and continue checking
+            if ($timeDiff < 10) {
+                sleep(10);
+                continue;
+            }
+
+            // Check if registration is already complete
+            if ($clientJpa->complete_registration) {
+                break;
+            }
+
+            // Get last 40 messages
+            $messages = Message::query()
+                ->where('wa_id', $clientJpa->integration_user_id)
+                ->where('business_id', $clientJpa->business_id)
+                ->orderBy('microtime', 'desc')
+                ->limit(40)
+                ->get();
+
+            // Get Gemini API key from settings
+            $apiKey = Setting::get('gemini-api-key', $clientJpa->business_id);
+
+            $businessJpa = Business::query()
+                ->where('id', $clientJpa->business_id)
+                ->first();
+
+            $businessEmail = Setting::get('email-new-lead-notification-message-owneremail', $businessJpa->id);
+            $businessServices = Setting::get('gemini-what-business-do', $businessJpa->id);
+            $prompt = File::get('../storage/app/utils/gemini-prompt-meta.txt');
+            $prompt = Text::replaceData($prompt, [
+                'nombreEmpresa' => $businessJpa->name,
+                'correoEmpresa' => $businessEmail ?? 'hola@mundoweb.pe',
+                'servicios' => $businessServices ?? 'algunos servicios',
+            ]);
+
+            $messageString = '';
+            foreach ($messages->sortBy('microtime') as $msg) {
+                $messageString .= "{$msg->role}: {$msg->message}\n";
+            }
+
+            $geminiRest = new Fetch(env('GEMINI_API_URL'), [
+                'method' => 'POST',
+                'headers' => [
+                    'Content-Type' => 'application/json',
+                    'X-goog-api-key' => $apiKey
+                ],
+                'body' => [
+                    'contents' => [
+                        [
+                            'parts' => [
+                                [
+                                    'text' => $prompt . Text::lineBreak(2) . $messageString . 'AI:'
+                                ]
+                            ]
+                        ]
+                    ]
+                ]
+            ]);
+            $geminiResponse = $geminiRest->json();
+            if (isset($geminiResponse['error']['message'])) break;
+
+            $answer = $geminiResponse['candidates'][0]['content']['parts'][0]['text'];
+
+            Message::create([
+                'wa_id' => $clientJpa->integration_user_id,
+                'role' => 'AI',
+                'message' => $answer,
+                'microtime' => (int) (microtime(true) * 1_000_000),
+                'business_id' => $clientJpa->business_id
+            ]);
+
+            $result = self::searchCommand($answer);
+            if (!$result['found']) {
+                // Create and send message with cleaned response
+                $message = trim(preg_replace('/^AI:\s*/', '', $result['message'])) ?: 'Lo siento, parece que no he entendido bien tu solicitud. ¿Podrías intentar formularla de nuevo o indicarme si necesitas ayuda de uno de nuestros ejecutivos?';
+
+                // Send message through Meta integration
+                $integrationJpa = Integration::query()
+                    ->where('id', $clientJpa->integration_id)
+                    ->where('business_id', $clientJpa->business_id)
+                    ->where('status', true)
+                    ->first();
+
+                if ($integrationJpa && $integrationJpa->meta_access_token) {
+                    $baseUrl = $integrationJpa->meta_service === 'instagram'
+                        ? env('INSTAGRAM_GRAPH_URL')
+                        : env('FACEBOOK_GRAPH_URL');
+
+                    $messageEndpoint = "{$baseUrl}/me/messages";
+                    $messageData = [
+                        'recipient' => ['id' => $clientJpa->integration_user_id],
+                        'message' => ['text' => $message]
+                    ];
+
+                    $sendRest = new Fetch($messageEndpoint, [
+                        'method' => 'POST',
+                        'headers' => [
+                            'Content-Type' => 'application/json',
+                            'Authorization' => "Bearer {$integrationJpa->meta_access_token}"
+                        ],
+                        'body' => $messageData
+                    ]);
+                }
+
+                // Store message in database
+                Message::create([
+                    'wa_id' => $clientJpa->integration_user_id,
+                    'role' => 'AI',
+                    'message' => $message,
+                    'microtime' => (int) (microtime(true) * 1_000_000),
+                    'business_id' => $clientJpa->business_id
+                ]);
+                return;
+            }
+
+            // Get last command and parse it
+            $lastCommand = end($result['commands']);
+            $collected = self::pseudoToObject($lastCommand);
+
+            // Update client contact information if available
+            $updateData = [];
+            if (!empty($collected['email'])) {
+                $updateData['contact_email'] = $collected['email'];
+            }
+            if (!empty($collected['name'])) {
+                $updateData['contact_name'] = $collected['name'];
+            }
+            if (!empty($collected['phone'])) {
+                $updateData['contact_phone'] = $collected['phone'];
+            }
+
+            if (!empty($updateData)) {
+                $clientJpa->update($updateData);
+
+                // Check if all required fields are now complete
+                if (
+                    $clientJpa->contact_name &&
+                    $clientJpa->contact_email &&
+                    $clientJpa->contact_phone
+                ) {
+                    $clientJpa->update(['complete_registration' => true]);
+                }
+            }
+
+            break;
+        }
+    }
+
+    /**
+     * Search for commands enclosed in double curly braces and extract them
+     * @param string $input The input string to search for commands
+     * @return array Array containing found status, commands array and cleaned message
+     */
+    public static function searchCommand(string $input): array
+    {
+        try {
+            $pattern = '/{{(.*?)}}/';
+            preg_match_all($pattern, $input, $matches);
+
+            $commands = !empty($matches[1]) ? $matches[1] : [];
+
+            $cleanMessage = preg_replace($pattern, '', $input);
+
+            return [
+                'found' => count($commands) > 0,
+                'commands' => $commands,
+                'message' => trim($cleanMessage)
+            ];
+        } catch (\Exception $error) {
+            return [
+                'found' => false,
+                'commands' => [],
+                'message' => $input
+            ];
+        }
+    }
+
+    /**
+     * Converts a pseudo-formatted string into an associative array
+     * Format example: "field1: value1; field2: value2"
+     * @param string $pseudo The pseudo-formatted string to convert
+     * @param bool $clean Whether to strictly clean the values or just keep certain characters
+     * @return array The resulting associative array
+     */
+    public static function pseudoToObject(string $pseudo, bool $clean = false): array
+    {
+        try {
+            $result = [];
+
+            // Split by semicolon and trim
+            $pairs = array_map('trim', explode(';', trim($pseudo)));
+
+            foreach ($pairs as $pair) {
+                if (empty($pair)) continue;
+
+                // Split each pair by colon
+                if (preg_match('/(.+):(.+)/', $pair, $matches)) {
+                    $field = trim($matches[1]);
+                    $value = trim($matches[2]);
+
+                    // Remove quotes if present
+                    $value = trim($value, '"\'');
+
+                    if ($clean) {
+                        // Strict cleaning - only alphanumeric and spaces
+                        $value = preg_replace('/[^a-zA-Z0-9\s]/', '', $value);
+                    } else {
+                        // Keep specific characters
+                        $value = preg_replace(
+                            '/[^a-zA-Z0-9\sÃÀÁÄÂÈÉËÊÌÍÏÎÒÓÖÔÙÚÜÛÑÇãàáäâèéëêìíïîòóöôùúüûñç@\-_.,]/',
+                            '',
+                            $value
+                        );
+                    }
+
+                    $result[$field] = $value;
+                }
+            }
+
+            return $result;
+        } catch (\Exception $e) {
+            return [];
+        }
     }
 }
