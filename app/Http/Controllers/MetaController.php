@@ -75,6 +75,8 @@ class MetaController extends Controller
 
             $data = $request->all();
 
+            dump($data);
+
             $entry = $data['entry'][0] ?? [];
             $messaging = $entry['messaging'][0] ?? [];
 
@@ -129,7 +131,7 @@ class MetaController extends Controller
                     'triggered_by' => 'Gemini AI'
                 ]);
             }
-        });
+        }, function ($res, $th) {dump($th);});
         return response($response->toArray(), 200);
     }
 }
