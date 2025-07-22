@@ -54,7 +54,7 @@ Route::get(
         //     'NOCAPTCHA_SITEKEY' => env('NOCAPTCHA_SITEKEY'),
         //     'token' => csrf_token()
         // ])
-        : redirect('//' . env('APP_DOMAIN') . '/login?service=' . env('APP_CORRELATIVE'))
+        : redirect('//' . env('APP_DOMAIN') . '/join')
 )->name('login');
 
 Route::get('/', function (Request $request) {
