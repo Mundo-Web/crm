@@ -72,7 +72,6 @@ class MetaController extends Controller
     }
     public function verify(Request $request, string $origin, string $business_uuid)
     {
-        dump($request);
         $response = Response::simpleTryCatch(function () use ($request, $origin, $business_uuid) {
             $challenge = $request->query('hub_challenge');
             $verify_token = $request->query('hub_verify_token');
@@ -95,6 +94,8 @@ class MetaController extends Controller
                 'meta_service' => $origin,
                 'business_id' => $sbbJpa->business_id,
             ]);
+
+            return $challenge;
         });
 
         return response($response->data, 200);
