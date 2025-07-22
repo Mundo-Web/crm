@@ -285,7 +285,7 @@ class LeadController extends BasicController
                     throw new Exception('Uno o más leads no pertenecen a tu empresa');
                 }
                 // Update lead status using StatusController
-                StatusController::updateStatus4Lead($leadJpa, true, $userId);
+                StatusController::updateStatus4Lead($leadJpa, $userId ? true : false, $userId);
                 $leadJpa->save();
             }
 

@@ -20,47 +20,53 @@ const LeadTable = ({ gridRef, otherGridRef, rest, can, defaultLeadStatus, status
 
   const { selectedUsersId, setSelectedUsersId, defaultView } = useContext(LeadsContext)
 
-  const onMassiveAssignClicked = async (userId) => {
-    const selectedUser = users.find(user => user.id === userId);
-    const selectedRows = $(gridRef.current).dxDataGrid('instance').getSelectedRowKeys().map(({ id }) => id);
+const onMassiveAssignClicked = async (userId) => {
+  const selectedRows = $(gridRef.current).dxDataGrid('instance').getSelectedRowKeys().map(({ id }) => id);
 
-    if (!selectedRows.length) {
-      Swal.fire({
-        icon: 'warning',
-        title: 'No hay leads seleccionados',
-        text: 'Por favor seleccione al menos un lead para asignar'
-      });
-      return;
-    }
-
-    const { isConfirmed } = await Swal.fire({
-      icon: 'question',
-      title: 'Confirmar Asignación',
-      text: `¿Está seguro que desea asignar ${selectedRows.length} lead(s) a ${selectedUser?.name}?`,
-      showCancelButton: true,
-      confirmButtonText: 'Sí, asignar',
-      cancelButtonText: 'Cancelar'
-    });
-    if (!isConfirmed) return
-
-    const result = await leadsRest.massiveAssign({
-      leadsId: selectedRows,
-      userId: userId
-    });
-
-    if (!result) return
-
+  if (!selectedRows.length) {
     Swal.fire({
-      icon: 'success',
-      title: 'Leads Asignados',
-      text: 'Los leads han sido asignados exitosamente'
+      icon: 'warning',
+      title: 'No hay leads seleccionados',
+      text: 'Por favor seleccione al menos un lead para asignar'
     });
-
-    const grid = $(gridRef.current).dxDataGrid('instance');
-    grid.clearSelection();
-    grid.refresh();
-    $(otherGridRef.current).dxDataGrid('instance').refresh()
+    return;
   }
+
+  const isUnassigning = userId === null;
+  const selectedUser = !isUnassigning ? users.find(user => user.id === userId) : null;
+
+  const { isConfirmed } = await Swal.fire({
+    icon: 'question',
+    title: isUnassigning ? 'Confirmar Desasignación' : 'Confirmar Asignación',
+    text: isUnassigning 
+      ? `¿Está seguro que desea quitar la asignación de ${selectedRows.length} lead(s)?`
+      : `¿Está seguro que desea asignar ${selectedRows.length} lead(s) a ${selectedUser?.name}?`,
+    showCancelButton: true,
+    confirmButtonText: isUnassigning ? 'Sí, quitar asignación' : 'Sí, asignar',
+    cancelButtonText: 'Cancelar'
+  });
+  if (!isConfirmed) return;
+
+  const result = await leadsRest.massiveAssign({
+    leadsId: selectedRows,
+    userId: userId
+  });
+
+  if (!result) return;
+
+  Swal.fire({
+    icon: 'success',
+    title: isUnassigning ? 'Asignación Removida' : 'Leads Asignados',
+    text: isUnassigning 
+      ? 'Se ha quitado la asignación de los leads exitosamente'
+      : 'Los leads han sido asignados exitosamente'
+  });
+
+  const grid = $(gridRef.current).dxDataGrid('instance');
+  grid.clearSelection();
+  grid.refresh();
+  $(otherGridRef.current).dxDataGrid('instance').refresh();
+}
 
   const onMassiveArchiveClicked = async () => {
     const selectedRows = $(gridRef.current).dxDataGrid('instance').getSelectedRowKeys().map(({ id }) => id);
@@ -212,6 +218,12 @@ const LeadTable = ({ gridRef, otherGridRef, rest, can, defaultLeadStatus, status
             })
           }
         </ul>
+      </li>
+      <li>
+        <button class="dropdown-item" onClick={() => onMassiveAssignClicked(null)}>
+          <i className="mdi mdi-account-off me-1"></i>
+          Quitar Asignación
+        </button>
       </li>
       <li>
         <button class="dropdown-item" onClick={onMassiveArchiveClicked}>
