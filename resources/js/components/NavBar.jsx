@@ -7,9 +7,10 @@ import NotificationItem from "./notification/NotificationItem"
 
 const notificationsRest = new NotificationsRest();
 
-const NavBar = ({ can, session = {}, theme, setTheme, title = '', whatsappStatus, businesses, APP_PROTOCOL, APP_DOMAIN, notificationsCount }) => {
+const NavBar = ({ can, session = {}, theme, setTheme, title = '', whatsappStatus, businesses, APP_PROTOCOL, APP_DOMAIN, notificationsCount: notificationsCountDB }) => {
   const { color } = WhatsAppStatuses[whatsappStatus]
 
+  const [notificationsCount, setNotificationsCount] = useState(notificationsCountDB)
   const [notifications, setNotifications] = useState([]);
 
   useEffect(() => {
@@ -27,12 +28,28 @@ const NavBar = ({ can, session = {}, theme, setTheme, title = '', whatsappStatus
   const onNotificationsClicked = async () => {
     const isVisible = $('#notifications').is(':visible')
     if (!isVisible) return
-    const { data } = await notificationsRest.paginate()
+    const { data, totalCount } = await notificationsRest.paginate({ requireTotalCount: true })
+    setNotificationsCount(totalCount)
     setNotifications(data ?? [])
   }
 
+  useEffect(() => {
+    const notiRest = new NotificationsRest()
+    const getRandomInterval = () => (Math.random() * 5000) + 5000
+    const fetchNotificationsCount = async () => {
+      const { totalCount, status } = await notiRest.paginate({
+        requireTotalCount: true,
+        requireData: false
+      })
+      if (status == 200) setNotificationsCount(totalCount)
+    }
+    fetchNotificationsCount()
+    const interval = setInterval(fetchNotificationsCount, getRandomInterval())
+    return () => clearInterval(interval)
+  }, [notificationsCount])
+
   return (
-    <div className={`navbar-custom border-bottom ${theme == 'light' ? 'bg-white' : ''}`} style={{ backgroundColor: (theme == 'light' ? undefined: '#313844') }}>
+    <div className={`navbar-custom border-bottom ${theme == 'light' ? 'bg-white' : ''}`} style={{ backgroundColor: (theme == 'light' ? undefined : '#313844') }}>
       <ul className="list-unstyled topnav-menu float-end mb-0">
 
         {/* <li className="d-none d-lg-block">
@@ -153,7 +170,7 @@ const NavBar = ({ can, session = {}, theme, setTheme, title = '', whatsappStatus
         <li className="dropdown notification-list topbar-dropdown">
           <a className="nav-link dropdown-toggle waves-effect waves-light" data-bs-toggle="dropdown" href="#"
             role="button" aria-haspopup="false" aria-expanded="false" onClick={onNotificationsClicked}>
-            <i className="fe-bell noti-icon"></i>
+            <i className={`fe-bell noti-icon pulse rounded-pill ${notificationsCount > 0 && 'pulse'}`}></i>
             {
               notificationsCount > 0 ?
                 <span className="badge bg-danger rounded-circle noti-icon-badge">{notificationsCount}</span>

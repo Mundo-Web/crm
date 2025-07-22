@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Client;
 use App\Models\ClientNote;
+use App\Models\Notification;
 use App\Models\Setting;
 use App\Models\Status;
 use App\Models\Table;
@@ -26,7 +27,7 @@ class StatusController extends BasicController
             ->where('business_id', Auth::user()->business_id)
             ->whereNotNull('status')
             ->get();
-            $tables = Table::where('configurable', true)->get();
+        $tables = Table::where('configurable', true)->get();
         return [
             'statuses' => $statuses,
             'tables' => $tables,
@@ -48,7 +49,7 @@ class StatusController extends BasicController
             $status = [];
             if ($assign) {
                 $status = JSON::parse(Setting::get('assignation-lead-status') ?? '{}');
-                $leadJpa->assigned_to = $assignedTo ? $assignedTo: Auth::user()->service_user->id;
+                $leadJpa->assigned_to = $assignedTo ? $assignedTo : Auth::user()->service_user->id;
             } else {
                 $status = JSON::parse(Setting::get('revertion-lead-status') ?? '{}');
                 $leadJpa->assigned_to = null;
@@ -64,6 +65,20 @@ class StatusController extends BasicController
                 ->update([
                     'tasks.status' => $status['task']
                 ]);
+
+            if ($assignedTo) {
+                Notification::create([
+                    'name' => 'Te asignaron un lead',
+                    'message' => Auth::user()->name . ' te ha asignado un lead.',
+                    'description' => 'Clic aquí para ver los datos de ' . $leadJpa->contact_name,
+                    'icon' => 'mdi mdi-account',
+                    'module' => 'Assigned',
+                    'link_to' => '/leads/' . $leadJpa->id,
+                    'created_by' => Auth::user()->service_user->id,
+                    'notify_to' => $assignedTo,
+                    'business_id' => Auth::user()->business_id
+                ]);
+            }
         } catch (\Throwable $th) {
         }
     }
