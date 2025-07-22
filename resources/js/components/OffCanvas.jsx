@@ -41,20 +41,19 @@ const OffCanvas = ({ offCanvasRef, dataLoaded, setDataLoaded, defaultMessages, s
     const lastMessage = await getLastMessage()
 
     const filter = [['microtime', '>', lastMessage.microtime]]
-    if (dataLoaded?.integration) {
-      switch (dataLoaded?.integration?.meta_service) {
-        case 'messenger':
-          filter.push(['wa_id', '=', dataLoaded?.integration_user_id])
-          break;
 
-        case 'instagram':
-          filter.push(['wa_id', '=', dataLoaded?.integration_user_id])
-          break;
-        default:
-          if (dataLoaded?.contact_phone)
-            filter.push(['wa_id', 'contains', dataLoaded?.contact_phone])
-          break;
-      }
+    switch (dataLoaded?.integration?.meta_service) {
+      case 'messenger':
+        filter.push(['wa_id', '=', dataLoaded?.integration_user_id])
+        break;
+
+      case 'instagram':
+        filter.push(['wa_id', '=', dataLoaded?.integration_user_id])
+        break;
+      default:
+        if (dataLoaded?.contact_phone)
+          filter.push(['wa_id', 'contains', dataLoaded?.contact_phone])
+        break;
     }
 
     setIsLoading(true)
