@@ -170,7 +170,7 @@ const NavBar = ({ can, session = {}, theme, setTheme, title = '', whatsappStatus
         <li className="dropdown notification-list topbar-dropdown">
           <a className="nav-link dropdown-toggle waves-effect waves-light" data-bs-toggle="dropdown" href="#"
             role="button" aria-haspopup="false" aria-expanded="false" onClick={onNotificationsClicked}>
-            <i className={`fe-bell noti-icon pulse rounded-pill ${notificationsCount > 0 && 'pulse'}`}></i>
+            <i className={`fe-bell noti-icon rounded-pill ${notificationsCount > 0 && 'pulse'}`}></i>
             {
               notificationsCount > 0 ?
                 <span className="badge bg-danger rounded-circle noti-icon-badge">{notificationsCount}</span>
