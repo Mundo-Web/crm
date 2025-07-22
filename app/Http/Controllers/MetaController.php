@@ -90,10 +90,10 @@ class MetaController extends Controller
 
             if (hash('sha256', $business_uuid) != $verify_token) return response('Error, token de validación incorrecto', 403);
 
-            Integration::updateOrCreate([
-                'meta_service' => $origin,
-                'business_id' => $sbbJpa->business_id,
-            ]);
+            // Integration::updateOrCreate([
+            //     'meta_service' => $origin,
+            //     'business_id' => $sbbJpa->business_id,
+            // ]);
 
             return $challenge;
         });
@@ -107,8 +107,6 @@ class MetaController extends Controller
             $data = $request->all();
 
             if (!in_array($origin, ['messenger', 'instagram'])) throw new Exception('Error, origen no permitido');
-
-            dump(JSON::stringify($data, true));
 
             $entry = $data['entry'][0] ?? [];
             $messaging = $entry['messaging'][0] ?? [];
@@ -288,7 +286,6 @@ class MetaController extends Controller
 
     public static function assistant(Client $clientJpa, Message $messageJpa)
     {
-        dump($clientJpa);
         try {
             while (true) {
                 // Get latest message for this client
