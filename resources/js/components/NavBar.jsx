@@ -4,6 +4,7 @@ import WhatsAppStatuses from "../Reutilizables/WhatsApp/WhatsAppStatuses"
 import BusinessCard from "../Reutilizables/Business/BusinessCard"
 import NotificationsRest from "../actions/NotificationsRest"
 import NotificationItem from "./notification/NotificationItem"
+import { toast } from "sonner"
 
 const notificationsRest = new NotificationsRest();
 
@@ -41,7 +42,15 @@ const NavBar = ({ can, session = {}, theme, setTheme, title = '', whatsappStatus
         requireTotalCount: true,
         requireData: false
       })
-      if (status == 200) setNotificationsCount(totalCount)
+      if (status == 200) setNotificationsCount(old => {
+        if (old != totalCount && old < totalCount) {
+          const diff = totalCount - old;
+          toast(`Tienes ${diff} notificaci${diff > 1 ? 'ones' : 'ón'} nueva${diff > 1 ? 's' : ''}`, {
+            icon: <i className="mdi mdi-bell"></i>
+          });
+        }
+        return totalCount
+      })
     }
     fetchNotificationsCount()
     const interval = setInterval(fetchNotificationsCount, getRandomInterval())
@@ -191,12 +200,15 @@ const NavBar = ({ can, session = {}, theme, setTheme, title = '', whatsappStatus
             </div>
 
             <div className="noti-scroll" style={{ maxHeight: '230px', overflowY: 'auto' }}>
-
-              {
+              {notifications.length > 0 ? (
                 notifications.map((notification, i) => {
                   return <NotificationItem key={`notification-${i}`} {...notification} APP_DOMAIN={APP_DOMAIN} />
                 })
-              }
+              ) : (
+                <div className="text-center" style={{overflow: 'hidden', padding: '0px 20px'}}>
+                  <span className="text-muted">No tienes notificaciones nuevas</span>
+                </div>
+              )}
             </div>
             {/* <a href="#"
               className="dropdown-item text-center text-primary notify-item notify-all">
