@@ -13,7 +13,7 @@ const Table = ({ title, gridRef, rest, columns, toolBar, masterDetail, filterVal
   const [range, setRange] = useState([{ startDate: new Date(), endDate: new Date(), key: 'selection', }])
   const [filtering, setFiltering] = useState(false)
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false)
-  const [selectionActive, setSelectionActive] = useState(false)
+  const [selectionCount, setSelectionCount] = useState(0)
   const datePickerRef = useRef(null)
 
   const massiveDropdownId = `dropdown-${crypto.randomUUID()}`
@@ -114,7 +114,7 @@ const Table = ({ title, gridRef, rest, columns, toolBar, masterDetail, filterVal
 
               <div className="d-flex gap-2">
                 {
-                  selectionActive &&
+                  selectionCount > 0 &&
                   <div className="dropdown position-relative">
                     <button
                       className="btn btn-white btn-sm dropdown-toggle position-relative bg-white"
@@ -122,7 +122,10 @@ const Table = ({ title, gridRef, rest, columns, toolBar, masterDetail, filterVal
                       onClick={() => setIsMassiveDropdownOpen(!isMassiveDropdownOpen)}
                       style={{ zIndex: isMassiveDropdownOpen ? 10000 : undefined }}
                     >
-                      <i className='mdi mdi-format-list-checks' /> Acciones <i className="mdi mdi-chevron-down"></i>
+                      <i className='mdi mdi-format-list-checks me-1' />
+                      Acciones
+                      <span className="badge bg-primary ms-1">{selectionCount}</span>
+                      <i className="mdi mdi-chevron-down ms-1"></i>
                     </button>
                     {isMassiveDropdownOpen && (
                       <>
@@ -238,7 +241,7 @@ const Table = ({ title, gridRef, rest, columns, toolBar, masterDetail, filterVal
               height={height}
               keyExpr={keyExpr}
               onSelectionChanged={(props) => {
-                setSelectionActive(props.selectedRowKeys.length > 0)
+                setSelectionCount(props.selectedRowKeys.length)
                 onSelectionChanged?.(props)
               }}
             />

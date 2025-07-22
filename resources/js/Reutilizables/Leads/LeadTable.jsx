@@ -16,7 +16,7 @@ import { LeadsContext } from "./LeadsProvider"
 const leadsRest = new LeadsRest()
 const clientsRest = new ClientsRest()
 
-const LeadTable = ({ gridRef, otherGridRef, rest, can, defaultLeadStatus, statuses, manageStatuses, onClientStatusClicked, onManageStatusChange, onLeadClicked, onMessagesClicked, onAttendClient, onOpenModal, onMakeLeadClient, onArchiveClicked, onDeleteClicked, title, borderColor = '#315AFE', setStatuses, setManageStatuses, users }) => {
+const LeadTable = ({ gridRef, otherGridRef, rest, can, defaultLeadStatus, statuses, manageStatuses, onClientStatusClicked, onManageStatusChange, onLeadClicked, onMessagesClicked, onAttendClient, onOpenModal, onMakeLeadClient, onArchiveClicked, onDeleteClicked, title, borderColor = '#315AFE', setStatuses, setManageStatuses, users, filterAssignation }) => {
 
   const { selectedUsersId, setSelectedUsersId, defaultView } = useContext(LeadsContext)
 
@@ -102,62 +102,64 @@ const LeadTable = ({ gridRef, otherGridRef, rest, can, defaultLeadStatus, status
   }
 
   useEffect(() => {
-    if (defaultView != 'table') return
+    if (defaultView != 'table' || !filterAssignation) return
     const grid = $(gridRef.current).dxDataGrid('instance');
     if (selectedUsersId.length === 0) {
       grid.clearFilter();
     } else {
       grid.filter(ArrayJoin(selectedUsersId.map(id => (['assigned_to', '=', id])), 'or'));
     }
-
   }, [selectedUsersId, defaultView])
 
   return <Table gridRef={gridRef} title={<>
     <h4 className="header-title my-0">{title}</h4>
-    <div className="d-flex gap-0 mt-2 align-items-center">
-      {users.map(user => (
-        <Tippy
-          key={user.id}
-          content={`${user.name} ${user.lastname}`}
-        >
-          <div
-            onClick={() => {
-              const newSelectedUsers = [...selectedUsersId];
-              const userServiceId = user.service_user.id;
-
-              const index = newSelectedUsers.indexOf(userServiceId);
-              if (index > -1) {
-                newSelectedUsers.splice(index, 1);
-              } else {
-                newSelectedUsers.push(userServiceId);
-              }
-
-              setSelectedUsersId(newSelectedUsers);
-            }}
-            className={`rounded-pill ${selectedUsersId.includes(user.service_user.id) ? 'bg-purple' : ''}`}
-            style={{ cursor: 'pointer', padding: '2px', marginRight: '2px' }}
+    {
+      filterAssignation &&
+      <div className="d-flex gap-0 mt-2 align-items-center">
+        {users.map(user => (
+          <Tippy
+            key={user.id}
+            content={`${user.name} ${user.lastname}`}
           >
-            <img
-              className='avatar-xs rounded-circle'
-              src={`//${Global.APP_DOMAIN}/api/profile/thumbnail/${user.relative_id}`}
-              alt={user.name}
-              style={{ objectFit: 'cover', objectPosition: 'center' }}
-            />
-          </div>
-        </Tippy>
-      ))}
-      {
-        selectedUsersId.length > 0 &&
-        <Tippy content="Limpiar filtros">
-          <button
-            className="btn btn-xs btn-soft-danger ms-1 rounded-pill"
-            onClick={() => setSelectedUsersId([])}
-          >
-            <i className="mdi mdi-trash-can-outline"></i>
-          </button>
-        </Tippy>
-      }
-    </div>
+            <div
+              onClick={() => {
+                const newSelectedUsers = [...selectedUsersId];
+                const userServiceId = user.service_user.id;
+
+                const index = newSelectedUsers.indexOf(userServiceId);
+                if (index > -1) {
+                  newSelectedUsers.splice(index, 1);
+                } else {
+                  newSelectedUsers.push(userServiceId);
+                }
+
+                setSelectedUsersId(newSelectedUsers);
+              }}
+              className={`rounded-pill ${selectedUsersId.includes(user.service_user.id) ? 'bg-purple' : ''}`}
+              style={{ cursor: 'pointer', padding: '2px', marginRight: '2px' }}
+            >
+              <img
+                className='avatar-xs rounded-circle'
+                src={`//${Global.APP_DOMAIN}/api/profile/thumbnail/${user.relative_id}`}
+                alt={user.name}
+                style={{ objectFit: 'cover', objectPosition: 'center' }}
+              />
+            </div>
+          </Tippy>
+        ))}
+        {
+          selectedUsersId.length > 0 &&
+          <Tippy content="Limpiar filtros">
+            <button
+              className="btn btn-xs btn-soft-danger ms-1 rounded-pill"
+              onClick={() => setSelectedUsersId([])}
+            >
+              <i className="mdi mdi-trash-can-outline"></i>
+            </button>
+          </Tippy>
+        }
+      </div>
+    }
   </>} rest={rest} reloadWith={[statuses, manageStatuses]}
     toolBar={(container) => {
       // container.unshift(DxPanelButton({
@@ -178,8 +180,8 @@ const LeadTable = ({ gridRef, otherGridRef, rest, can, defaultLeadStatus, status
     keyExpr='id'
     selection={{
       mode: 'multiple',
-      allowSelectAll: false,
-      onSelect: (algo) => console.log(algo)
+      allowSelectAll: true,
+      selectAllMode: 'page'
     }}
     // onSelectionChanged={({selectedRowKeys}) => {
     //   console.log(selectedRowKeys)

@@ -601,6 +601,7 @@ const Leads = (properties) => {
             onDeleteClicked={onDeleteClicked}
             setStatuses={setStatuses}
             setManageStatuses={setManageStatuses}
+            filterAssignation
             users={users}
             title='Leads - En Gestion' />
           <LeadTable gridRef={gridRef} otherGridRef={managedGridRef} rest={newLeadsRest} can={can} defaultLeadStatus={defaultLeadStatus} manageStatuses={manageStatuses} statuses={statuses}

@@ -35,8 +35,6 @@ const OffCanvas = ({ offCanvasRef, dataLoaded, setDataLoaded, defaultMessages, s
 
   let medio = dataLoaded?.integration ? dataLoaded?.integration?.meta_service : 'whatsapp';
 
-  console.log(medio)
-
   const getMessages = async () => {
     const lastMessage = await getLastMessage()
 
