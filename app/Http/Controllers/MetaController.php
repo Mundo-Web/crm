@@ -105,6 +105,7 @@ class MetaController extends Controller
     {
         $response = Response::simpleTryCatch(function () use ($request, $origin, $business_uuid) {
             $data = $request->all();
+            dump($data);
 
             if (!in_array($origin, ['messenger', 'instagram'])) throw new Exception('Error, origen no permitido');
 
