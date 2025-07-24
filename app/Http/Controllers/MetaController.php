@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Jobs\ExecuteAnyJob;
 use App\Jobs\MetaAssistantJob;
 use App\Models\Atalaya\Business;
 use App\Models\Atalaya\ServicesByBusiness;
@@ -15,11 +14,8 @@ use App\Models\Task;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use PHPUnit\Framework\MockObject\Generator\OriginalConstructorInvocationRequiredException;
 use SoDe\Extend\Fetch;
 use SoDe\Extend\File;
-use SoDe\Extend\JSON;
 use SoDe\Extend\Response;
 use SoDe\Extend\Text;
 use SoDe\Extend\Trace;
@@ -308,8 +304,8 @@ class MetaController extends Controller
                 $timeDiff = (microtime(true) * 1_000_000 - $latestMessage->microtime) / 1_000_000;
 
                 // If less than 10 seconds have passed, wait and continue checking
-                if ($timeDiff < 10) {
-                    sleep(10);
+                if ($timeDiff < 15) {
+                    sleep(5);
                     continue;
                 }
 
@@ -456,7 +452,7 @@ class MetaController extends Controller
                             $messageEndpoint = "{$baseUrl}/me/messages";
                             $messageData = [
                                 'recipient' => ['id' => $clientJpa->integration_user_id],
-                                'message' => ['text' => $welcomeMessage]
+                                'message' => ['text' => UtilController::html2wa($welcomeMessage)]
                             ];
 
                             new Fetch($messageEndpoint, [
@@ -466,6 +462,15 @@ class MetaController extends Controller
                                     'Authorization' => "Bearer {$integrationJpa->meta_access_token}"
                                 ],
                                 'body' => $messageData
+                            ]);
+
+                            // Store welcome message in database
+                            Message::create([
+                                'wa_id' => $clientJpa->integration_user_id,
+                                'role' => 'AI',
+                                'message' => $welcomeMessage,
+                                'microtime' => (int) (microtime(true) * 1_000_000),
+                                'business_id' => $clientJpa->business_id
                             ]);
                         }
                     } else {
@@ -491,6 +496,15 @@ class MetaController extends Controller
                                     'Authorization' => "Bearer {$integrationJpa->meta_access_token}"
                                 ],
                                 'body' => $messageData
+                            ]);
+
+                            // Store response message in database
+                            Message::create([
+                                'wa_id' => $clientJpa->integration_user_id,
+                                'role' => 'AI',
+                                'message' => $message,
+                                'microtime' => (int) (microtime(true) * 1_000_000),
+                                'business_id' => $clientJpa->business_id
                             ]);
                         }
                     }
