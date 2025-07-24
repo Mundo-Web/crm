@@ -101,7 +101,6 @@ class MetaController extends Controller
     {
         $response = Response::simpleTryCatch(function () use ($request, $origin, $business_uuid) {
             $data = $request->all();
-            dump($data);
 
             if (!in_array($origin, ['messenger', 'instagram'])) throw new Exception('Error, origen no permitido');
 
@@ -189,7 +188,6 @@ class MetaController extends Controller
             $hasApikey = Setting::get('gemini-api-key', $businessJpa->id);
 
             if ($hasApikey && !$clientJpa->complete_registration) {
-                dump('Entró a la validación');
                 MetaAssistantJob::dispatchAfterResponse($clientJpa, $messageJpa);
             }
 
@@ -285,7 +283,6 @@ class MetaController extends Controller
     public static function assistant(Client $clientJpa, Message $messageJpa)
     {
         try {
-            $whereEnds = null;
             while (true) {
                 // Get latest message for this client
                 $latestMessage = Message::query()
@@ -296,7 +293,6 @@ class MetaController extends Controller
 
                 // If latest message is different from current message, stop processing
                 if ($latestMessage->id !== $messageJpa->id) {
-                    $whereEnds = 'Mensajes diferentes';
                     break;
                 }
 
@@ -311,7 +307,6 @@ class MetaController extends Controller
 
                 // Check if registration is already complete
                 if ($clientJpa->complete_registration) {
-                    $whereEnds = 'Registro completo';
                     break;
                 }
 
@@ -364,7 +359,6 @@ class MetaController extends Controller
                 ]);
                 $geminiResponse = $geminiRest->json();
                 if (isset($geminiResponse['error']['message'])) {
-                    $whereEnds = 'Respuesta error "' . $geminiResponse['error']['message'] . '"';
                     break;
                 }
 
@@ -407,7 +401,6 @@ class MetaController extends Controller
                         'microtime' => (int) (microtime(true) * 1_000_000),
                         'business_id' => $clientJpa->business_id
                     ]);
-                    $whereEnds = 'Encontró comando y respondió';
                     break;
                 }
 
@@ -509,10 +502,8 @@ class MetaController extends Controller
                         }
                     }
                 }
-                $whereEnds = 'Al final';
                 break;
             }
-            dump('Terminó: ' . $whereEnds);
         } catch (\Throwable $th) {
             dump($th->getMessage());
         }
