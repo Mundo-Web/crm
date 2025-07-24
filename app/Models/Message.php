@@ -14,6 +14,7 @@ class Message extends Model
     protected $keyType = 'string';
 
     protected $fillable = [
+        'id',
         'wa_id',
         'role',
         'message',

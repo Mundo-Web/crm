@@ -289,6 +289,7 @@ class MetaController extends Controller
     public static function assistant(Client $clientJpa, Message $messageJpa)
     {
         try {
+            $whereEnds = null;
             while (true) {
                 // Get latest message for this client
                 $latestMessage = Message::query()
@@ -299,6 +300,7 @@ class MetaController extends Controller
 
                 // If latest message is different from current message, stop processing
                 if ($latestMessage->id !== $messageJpa->id) {
+                    $whereEnds = 'Mensajes diferentes';
                     break;
                 }
 
@@ -313,6 +315,7 @@ class MetaController extends Controller
 
                 // Check if registration is already complete
                 if ($clientJpa->complete_registration) {
+                    $whereEnds = 'Registro completo';
                     break;
                 }
 
@@ -364,7 +367,10 @@ class MetaController extends Controller
                     ]
                 ]);
                 $geminiResponse = $geminiRest->json();
-                if (isset($geminiResponse['error']['message'])) break;
+                if (isset($geminiResponse['error']['message'])) {
+                    $whereEnds = 'Respuesta error "' . $geminiResponse['error']['message'] . '"';
+                    break;
+                }
 
                 $answer = $geminiResponse['candidates'][0]['content']['parts'][0]['text'];
 
@@ -405,7 +411,8 @@ class MetaController extends Controller
                         'microtime' => (int) (microtime(true) * 1_000_000),
                         'business_id' => $clientJpa->business_id
                     ]);
-                    return;
+                    $whereEnds = 'Encontró comando y respondió';
+                    break;
                 }
 
                 // Get last command and parse it
@@ -488,8 +495,10 @@ class MetaController extends Controller
                         }
                     }
                 }
+                $whereEnds = 'Al final';
                 break;
             }
+            dump('Terminó: ' . $whereEnds);
         } catch (\Throwable $th) {
             dump($th->getMessage());
         }
