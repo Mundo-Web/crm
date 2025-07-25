@@ -365,6 +365,8 @@ class MetaController extends Controller
 
                 $answer = $geminiResponse['candidates'][0]['content']['parts'][0]['text'];
 
+                $prompt2save = $prompt2send . $answer;
+
                 $result = self::searchCommand($answer);
                 if (!$result['found']) {
                     // Create and send message with cleaned response
@@ -399,7 +401,7 @@ class MetaController extends Controller
                         'wa_id' => $clientJpa->integration_user_id,
                         'role' => 'AI',
                         'message' => $message,
-                        'prompt' => $prompt2send,
+                        'prompt' => $prompt2save,
                         'microtime' => (int) (microtime(true) * 1_000_000),
                         'business_id' => $clientJpa->business_id
                     ]);
@@ -464,6 +466,7 @@ class MetaController extends Controller
                                 'wa_id' => $clientJpa->integration_user_id,
                                 'role' => 'AI',
                                 'message' => $welcomeMessage,
+                                'prompt' => $prompt2save,
                                 'microtime' => (int) (microtime(true) * 1_000_000),
                                 'business_id' => $clientJpa->business_id
                             ]);
@@ -498,6 +501,7 @@ class MetaController extends Controller
                                 'wa_id' => $clientJpa->integration_user_id,
                                 'role' => 'AI',
                                 'message' => $message,
+                                'prompt' => $prompt2save,
                                 'microtime' => (int) (microtime(true) * 1_000_000),
                                 'business_id' => $clientJpa->business_id
                             ]);
