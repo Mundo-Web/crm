@@ -339,6 +339,7 @@ class MetaController extends Controller
                     $messageString .= "{$msg->role}: {$msg->message}\n";
                 }
 
+                $prompt2send = $prompt . Text::lineBreak(2) . $messageString . 'AI:';
                 $geminiRest = new Fetch(env('GEMINI_API_URL'), [
                     'method' => 'POST',
                     'headers' => [
@@ -350,7 +351,7 @@ class MetaController extends Controller
                             [
                                 'parts' => [
                                     [
-                                        'text' => $prompt . Text::lineBreak(2) . $messageString . 'AI:'
+                                        'text' => $prompt2send
                                     ]
                                 ]
                             ]
@@ -398,6 +399,7 @@ class MetaController extends Controller
                         'wa_id' => $clientJpa->integration_user_id,
                         'role' => 'AI',
                         'message' => $message,
+                        'prompt' => $prompt2send,
                         'microtime' => (int) (microtime(true) * 1_000_000),
                         'business_id' => $clientJpa->business_id
                     ]);
