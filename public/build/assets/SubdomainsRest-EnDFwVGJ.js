@@ -1,0 +1,1 @@
+var o=Object.defineProperty;var i=(a,s,t)=>s in a?o(a,s,{enumerable:!0,configurable:!0,writable:!0,value:t}):a[s]=t;var e=(a,s,t)=>i(a,typeof s!="symbol"?s+"":s,t);import{B as m}from"./Adminto-rLoyKrGa.js";class p extends m{constructor(){super(...arguments);e(this,"path","subdomains")}}export{p as S};

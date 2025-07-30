@@ -66,13 +66,15 @@ const NavBar = ({ can, session = {}, theme, setTheme, title = '', wsActive, setW
     })
 
     // Escuchar confirmación de registro de filtros
-    socket.on("filters_registered", (data) => {
+    socket.on("filters_registered", ({ service }) => {
       setWsActive(true)
+      console.log(`Conectado a eventos de ${service}`)
     })
 
     // Escuchar diferentes tipos de eventos
-    socket.on("notification", (data) => {
-      console.log("📢 Notificación recibida:", data)
+    socket.on("notification", (message) => {
+      toast(message, { icon: <i className="mdi mdi-bell" /> })
+      fetchNotificationsCount()
     })
 
     // Escuchar errores
