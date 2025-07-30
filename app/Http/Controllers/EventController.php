@@ -10,17 +10,19 @@ use SoDe\Extend\JSON;
 
 class EventController extends Controller
 {
-    static function notify($message, $filters = []): bool
+    static function notify($event, $data, $filters = []): bool
     {
         try {
-            $res = new Fetch(env('EVENTS_URL') . '/notify', [
+            $res = new Fetch(env('EVENTS_URL') . '/emit', [
                 'method' => 'POST',
                 'headers' => [
                     'Content-Type' => 'application/json'
                 ],
                 'body' => [
+                    'service' => env('APP_CORRELATIVE'),
                     'filters' => $filters,
-                    'message' => $message
+                    'eventType' => $event,
+                    'data' => $data
                 ]
             ]);
             if (!$res->ok) throw new Exception('Ocurrió un error al notificar al cliente: ' . JSON::stringify($res));

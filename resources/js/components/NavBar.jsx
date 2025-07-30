@@ -59,8 +59,6 @@ const NavBar = ({ can, session = {}, theme, setTheme, title = '', wsActive, setW
     const socket = io(`wss://events.atalaya.pe/${service}`)
 
     socket.on("connect", () => {
-      setWsActive(true)
-      console.log(`Conectado al servicio '${service}':`, socket.id)
       socket.emit("register_filters", {
         business_id: session.business_id,
         user_id: session.service_user.id
@@ -69,24 +67,12 @@ const NavBar = ({ can, session = {}, theme, setTheme, title = '', wsActive, setW
 
     // Escuchar confirmación de registro de filtros
     socket.on("filters_registered", (data) => {
-      console.log("Filtros registrados:", data)
+      setWsActive(true)
     })
 
     // Escuchar diferentes tipos de eventos
     socket.on("notification", (data) => {
       console.log("📢 Notificación recibida:", data)
-    })
-
-    socket.on("message", (data) => {
-      console.log("💬 Mensaje recibido:", data)
-    })
-
-    socket.on("alert", (data) => {
-      console.log("🚨 Alerta recibida:", data)
-    })
-
-    socket.on("update", (data) => {
-      console.log("🔄 Actualización recibida:", data)
     })
 
     // Escuchar errores

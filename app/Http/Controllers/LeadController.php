@@ -293,9 +293,8 @@ class LeadController extends BasicController
 
             $userName = Auth::user()->name;
             $leadsCount = count($leadsIds);
-            EventController::notify("{$userName} te ha asignado {$leadsCount} leads nuevos", [
+            EventController::notify('notification', "{$userName} te ha asignado {$leadsCount} leads nuevos", [
                 'business_id' => Auth::user()->business_id,
-                'service_id' => env('APP_CORRELATIVE'),
                 'user_id' => $userId
             ]);
 
