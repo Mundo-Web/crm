@@ -9,6 +9,7 @@ import { io } from "socket.io-client"
 import Global from "../Utils/Global"
 
 const notificationsRest = new NotificationsRest();
+const audio = new Audio('/assets/sounds/notification.wav');
 
 const NavBar = ({ can, session = {}, theme, setTheme, title = '', wsActive, setWsActive, whatsappStatus, businesses, APP_PROTOCOL, APP_DOMAIN, notificationsCount: notificationsCountDB }) => {
   const { color } = WhatsAppStatuses[whatsappStatus]
@@ -52,7 +53,6 @@ const NavBar = ({ can, session = {}, theme, setTheme, title = '', wsActive, setW
   }, [notificationsCount])
 
   useEffect(() => {
-    fetchNotificationsCount()
     let ws = null;
     let reconnectTimeout = null;
     let shouldWaitBeforeReconnect = false;
@@ -78,9 +78,19 @@ const NavBar = ({ can, session = {}, theme, setTheme, title = '', wsActive, setW
         try {
           const message = JSON.parse(event.data);
           if (message.type !== 'notification') return
+
+          // Check if document is hidden in any window
+          const isDocumentHidden = document.hidden;
+
           toast(message.data.message, {
-            icon: <i className="mdi mdi-bell"/>
+            icon: <i className="mdi mdi-bell" />
           })
+
+          // Play notification sound if document is hidden
+          if (isDocumentHidden) {
+            audio.play();
+          }
+
           fetchNotificationsCount()
         } catch (error) {
           console.log(`❌ Error parseando mensaje: ${error.message}`);
