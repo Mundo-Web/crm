@@ -13,12 +13,13 @@ const Adminto = ({ session, children, notificationsCount, title, description, fl
   const settings = Local.get('adminto_settings') ?? {}
   const [theme, setTheme] = useState(settings.theme ?? 'ligth');
   const [whatsappStatus, setWhatsAppStatus] = useState(null)
+  const [wsActive, setWsActive] = useState(false);
 
   return (<>
     <div id="wrapper">
       <Toaster/>
-      <NavBar session={session} theme={theme} setTheme={setTheme} title={title} can={can} whatsappStatus={whatsappStatus} businesses={businesses} APP_DOMAIN={APP_DOMAIN} APP_PROTOCOL={APP_PROTOCOL} notificationsCount={notificationsCount} />
-      <Menu session={session} theme={theme} can={can} presets={presets} whatsappStatus={whatsappStatus} APP_DOMAIN={APP_DOMAIN} businesses={businesses} APP_PROTOCOL={APP_PROTOCOL} leadsCount={leadsCount} tasksCount={tasksCount} />
+      <NavBar session={session} theme={theme} setTheme={setTheme} title={title} can={can} whatsappStatus={whatsappStatus} businesses={businesses} APP_DOMAIN={APP_DOMAIN} APP_PROTOCOL={APP_PROTOCOL} notificationsCount={notificationsCount} wsActive={wsActive} setWsActive={setWsActive}/>
+      <Menu session={session} theme={theme} can={can} presets={presets} whatsappStatus={whatsappStatus} APP_DOMAIN={APP_DOMAIN} businesses={businesses} APP_PROTOCOL={APP_PROTOCOL} leadsCount={leadsCount} tasksCount={tasksCount} wsActive={wsActive} />
       <div className="content-page">
         <div className="content">
           <div className="container-fluid mt-3">

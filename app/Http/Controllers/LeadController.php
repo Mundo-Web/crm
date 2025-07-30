@@ -26,6 +26,8 @@ use SoDe\Extend\Response;
 use SoDe\Extend\Text;
 use SoDe\Extend\Trace;
 
+use function PHPSTORM_META\map;
+
 class LeadController extends BasicController
 {
     public $model = Client::class;
@@ -288,6 +290,14 @@ class LeadController extends BasicController
                 StatusController::updateStatus4Lead($leadJpa, $userId ? true : false, $userId);
                 $leadJpa->save();
             }
+
+            $userName = Auth::user()->name;
+            $leadsCount = count($leadsIds);
+            EventController::notify("{$userName} te ha asignado {$leadsCount} leads nuevos", [
+                'business_id' => Auth::user()->business_id,
+                'service_id' => env('APP_CORRELATIVE'),
+                'user_id' => $userId
+            ]);
 
             $response->message = 'Leads asignados exitosamente';
         });

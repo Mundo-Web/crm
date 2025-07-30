@@ -5,24 +5,16 @@ import BusinessCard from "../Reutilizables/Business/BusinessCard"
 import NotificationsRest from "../actions/NotificationsRest"
 import NotificationItem from "./notification/NotificationItem"
 import { toast } from "sonner"
+import { io } from "socket.io-client"
+import Global from "../Utils/Global"
 
 const notificationsRest = new NotificationsRest();
 
-const NavBar = ({ can, session = {}, theme, setTheme, title = '', whatsappStatus, businesses, APP_PROTOCOL, APP_DOMAIN, notificationsCount: notificationsCountDB }) => {
+const NavBar = ({ can, session = {}, theme, setTheme, title = '', wsActive, setWsActive, whatsappStatus, businesses, APP_PROTOCOL, APP_DOMAIN, notificationsCount: notificationsCountDB }) => {
   const { color } = WhatsAppStatuses[whatsappStatus]
 
   const [notificationsCount, setNotificationsCount] = useState(notificationsCountDB)
   const [notifications, setNotifications] = useState([]);
-
-  useEffect(() => {
-    document.title = `${title} | Atalaya`
-    $(document).on('change', '#light-mode-check', (e) => {
-      setTheme(e.target.checked ? 'dark' : 'light')
-    })
-    return () => {
-      $(document).off('change', '#light-mode-check')
-    }
-  }, [theme])
 
   const otherBusinesses = businesses.filter(({ id }) => session.business_id != id)
 
@@ -34,28 +26,92 @@ const NavBar = ({ can, session = {}, theme, setTheme, title = '', whatsappStatus
     setNotifications(data ?? [])
   }
 
-  useEffect(() => {
+  const fetchNotificationsCount = async () => {
     const notiRest = new NotificationsRest()
-    const getRandomInterval = () => (Math.random() * 5000) + 5000
-    const fetchNotificationsCount = async () => {
-      const { totalCount, status } = await notiRest.paginate({
-        requireTotalCount: true,
-        requireData: false
-      })
-      if (status == 200) setNotificationsCount(old => {
-        if (old != totalCount && old < totalCount) {
-          const diff = totalCount - old;
-          toast(`Tienes ${diff} notificaci${diff > 1 ? 'ones' : 'ón'} nueva${diff > 1 ? 's' : ''}`, {
-            icon: <i className="mdi mdi-bell"></i>
-          });
-        }
-        return totalCount
-      })
+    const { totalCount, status } = await notiRest.paginate({
+      requireTotalCount: true,
+      requireData: false
+    })
+    if (status == 200) setNotificationsCount(totalCount)
+  }
+  useEffect(() => {
+    $(document).on('change', '#light-mode-check', (e) => {
+      setTheme(e.target.checked ? 'dark' : 'light')
+    })
+    return () => {
+      $(document).off('change', '#light-mode-check')
     }
-    fetchNotificationsCount()
-    const interval = setInterval(fetchNotificationsCount, getRandomInterval())
-    return () => clearInterval(interval)
+  }, [theme])
+
+  useEffect(() => {
+    if (notificationsCount > 0) {
+      document.title = `(${notificationsCount}) ${title} | Atalaya`
+    } else {
+      document.title = `${title} | Atalaya`
+    }
   }, [notificationsCount])
+
+  useEffect(() => {
+    fetchNotificationsCount()
+    let ws = null;
+    let reconnectTimeout = null;
+    let shouldWaitBeforeReconnect = false;
+
+    const connect = () => {
+      ws = new WebSocket('wss://events.atalaya.pe');
+
+      ws.onopen = (event) => {
+        // Send registration message when connection is established
+        ws.send(JSON.stringify({
+          type: "register_filters",
+          data: {
+            business_id: session.business_id,
+            service_id: Global.APP_CORRELATIVE,
+            user_id: session.service_user.id
+          }
+        }));
+        setWsActive(true);
+        shouldWaitBeforeReconnect = false; // Reset wait flag on successful connection
+      }
+
+      ws.onmessage = (event) => {
+        try {
+          const message = JSON.parse(event.data);
+          if (message.type !== 'notification') return
+          toast(message.data.message, {
+            icon: <i className="mdi mdi-bell"/>
+          })
+          fetchNotificationsCount()
+        } catch (error) {
+          console.log(`❌ Error parseando mensaje: ${error.message}`);
+        }
+      }
+
+      ws.onclose = (event) => {
+        console.log(`🔌 Conexión cerrada (código: ${event.code})`, "info");
+        setWsActive(false);
+
+        // Attempt to reconnect
+        if (shouldWaitBeforeReconnect) {
+          reconnectTimeout = setTimeout(connect, 5000);
+        } else {
+          shouldWaitBeforeReconnect = true;
+          connect();
+        }
+      }
+
+      ws.onerror = (error) => {
+        console.log(`❌ Error de conexión: ${error.message || "Error desconocido"}`, error);
+      }
+    }
+
+    connect();
+
+    return () => {
+      if (ws) ws.close();
+      if (reconnectTimeout) clearTimeout(reconnectTimeout);
+    }
+  }, []);
 
   return (
     <div className={`navbar-custom border-bottom ${theme == 'light' ? 'bg-white' : ''}`} style={{ backgroundColor: (theme == 'light' ? undefined : '#313844') }}>
@@ -205,7 +261,7 @@ const NavBar = ({ can, session = {}, theme, setTheme, title = '', whatsappStatus
                   return <NotificationItem key={`notification-${i}`} {...notification} APP_DOMAIN={APP_DOMAIN} />
                 })
               ) : (
-                <div className="text-center" style={{overflow: 'hidden', padding: '0px 20px'}}>
+                <div className="text-center" style={{ overflow: 'hidden', padding: '0px 20px' }}>
                   <span className="text-muted">No tienes notificaciones nuevas</span>
                 </div>
               )}
@@ -222,7 +278,10 @@ const NavBar = ({ can, session = {}, theme, setTheme, title = '', whatsappStatus
         <li className="dropdown notification-list topbar-dropdown">
           <a className="nav-link dropdown-toggle nav-user me-0 waves-effect waves-light" data-bs-toggle="dropdown"
             href="#" role="button" aria-haspopup="false" aria-expanded="false">
-            <img src={`//${APP_DOMAIN}/api/profile/thumbnail/${session.relative_id}?v=${crypto.randomUUID()}`} alt="user-image" className="rounded-circle" style={{ objectFit: 'cover', objectPosition: 'center' }} />
+            <div className="d-inline-block position-relative" style={{ height: 'max-content' }}>
+              <img src={`//${APP_DOMAIN}/api/profile/thumbnail/${session.relative_id}?v=${crypto.randomUUID()}`} alt="user-image" className="rounded-circle" style={{ objectFit: 'cover', objectPosition: 'center' }} />
+              <span className={`d-block ${wsActive ? 'bg-success' : 'bg-danger'} position-absolute rounded-circle`} style={{ width: '8px', height: '8px', bottom: '16px', right: '0px' }}></span>
+            </div>
             <span className="pro-user-name ms-1">
               {session.name.split(' ')[0]} {session.lastname.split(' ')[0]}
               <i className="mdi mdi-chevron-down"></i>
