@@ -53,75 +53,56 @@ const NavBar = ({ can, session = {}, theme, setTheme, title = '', wsActive, setW
   }, [notificationsCount])
 
   useEffect(() => {
-    let ws = null;
-    let reconnectTimeout = null;
-    let shouldWaitBeforeReconnect = false;
 
-    const connect = () => {
-      ws = new WebSocket('wss://events.atalaya.pe');
+    // Conectar al servicio específico (el service se toma del path)
+    const service = Global.APP_CORRELATIVE // Este sería el {service} en la URL
+    const socket = io(`wss://events.atalaya.pe/${service}`)
 
-      ws.onopen = (event) => {
-        // Send registration message when connection is established
-        ws.send(JSON.stringify({
-          type: "register_filters",
-          data: {
-            business_id: session.business_id,
-            service_id: Global.APP_CORRELATIVE,
-            user_id: session.service_user.id
-          }
-        }));
-        setWsActive(true);
-        shouldWaitBeforeReconnect = false; // Reset wait flag on successful connection
-      }
+    socket.on("connect", () => {
+      setWsActive(true)
+      console.log(`Conectado al servicio '${service}':`, socket.id)
+      socket.emit("register_filters", {
+        business_id: session.business_id,
+        user_id: session.service_user.id
+      })
+    })
 
-      ws.onmessage = (event) => {
-        try {
-          const message = JSON.parse(event.data);
-          if (message.type !== 'notification') return
+    // Escuchar confirmación de registro de filtros
+    socket.on("filters_registered", (data) => {
+      console.log("Filtros registrados:", data)
+    })
 
-          // Check if document is hidden in any window
-          const isDocumentHidden = document.hidden;
+    // Escuchar diferentes tipos de eventos
+    socket.on("notification", (data) => {
+      console.log("📢 Notificación recibida:", data)
+    })
 
-          toast(message.data.message, {
-            icon: <i className="mdi mdi-bell" />
-          })
+    socket.on("message", (data) => {
+      console.log("💬 Mensaje recibido:", data)
+    })
 
-          // Play notification sound if document is hidden
-          if (isDocumentHidden) {
-            audio.play();
-          }
+    socket.on("alert", (data) => {
+      console.log("🚨 Alerta recibida:", data)
+    })
 
-          fetchNotificationsCount()
-        } catch (error) {
-          console.log(`❌ Error parseando mensaje: ${error.message}`);
-        }
-      }
+    socket.on("update", (data) => {
+      console.log("🔄 Actualización recibida:", data)
+    })
 
-      ws.onclose = (event) => {
-        console.log(`🔌 Conexión cerrada (código: ${event.code})`, "info");
-        setWsActive(false);
+    // Escuchar errores
+    socket.on("error", (error) => {
+      console.error("❌ Error:", error)
+    })
 
-        // Attempt to reconnect
-        if (shouldWaitBeforeReconnect) {
-          reconnectTimeout = setTimeout(connect, 5000);
-        } else {
-          shouldWaitBeforeReconnect = true;
-          connect();
-        }
-      }
-
-      ws.onerror = (error) => {
-        console.log(`❌ Error de conexión: ${error.message || "Error desconocido"}`, error);
-      }
-    }
-
-    connect();
+    socket.on("disconnect", () => {
+      setWsActive(false)
+      console.log("Desconectado del servidor")
+    })
 
     return () => {
-      if (ws) ws.close();
-      if (reconnectTimeout) clearTimeout(reconnectTimeout);
+      socket.disconnect()
     }
-  }, []);
+  }, [null]);
 
   return (
     <div className={`navbar-custom border-bottom ${theme == 'light' ? 'bg-white' : ''}`} style={{ backgroundColor: (theme == 'light' ? undefined : '#313844') }}>
