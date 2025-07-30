@@ -75,6 +75,29 @@ const NavBar = ({ can, session = {}, theme, setTheme, title = '', wsActive, setW
     socket.on("notification", (message) => {
       toast(message, { icon: <i className="mdi mdi-bell" /> })
       fetchNotificationsCount()
+      
+      // Only play sound if document is not focused and no other tab in same domain is focused
+      if (!document.hasFocus()) {
+        // Check if any other tab in same domain has focus
+        const broadcast = new BroadcastChannel('focus-check');
+        let otherTabHasFocus = false;
+        
+        broadcast.postMessage('check-focus');
+        
+        broadcast.onmessage = (event) => {
+          if (event.data === 'has-focus') {
+            otherTabHasFocus = true;
+          }
+        };
+
+        // Wait briefly to collect responses from other tabs
+        setTimeout(() => {
+          if (!otherTabHasFocus) {
+            audio.play();
+          }
+          broadcast.close();
+        }, 100);
+      }
     })
 
     // Escuchar errores
