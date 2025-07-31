@@ -7,7 +7,7 @@ import Adminto from './components/Adminto'
 import Tippy from '@tippyjs/react'
 import Modal from './components/Modal.jsx'
 import { toast } from 'sonner'
-import { Fetch } from 'sode-extend-react'
+import { Cookies, Fetch } from 'sode-extend-react'
 import Global from './Utils/Global.js'
 
 const atalayaUsersRest = new AtalayaUsersRest()
