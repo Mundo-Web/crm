@@ -18,7 +18,8 @@
         "maatwebsite/excel": "^3.1",
         "phpmailer/phpmailer": "^6.9",
         "sode/extend": "dev-master",
-        "spatie/laravel-permission": "^6.7"
+        "spatie/laravel-permission": "^6.7",
+        "zytzagoo/smtp-validate-email": "^1.1"
     },
     "require-dev": {
         "beyondcode/laravel-dump-server": "^2.0",

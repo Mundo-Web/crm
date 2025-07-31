@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\ArchivedController;
+use App\Http\Controllers\Atalaya\UserController as AtalayaUserController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\ClientHasProductsController;
@@ -252,4 +253,9 @@ Route::middleware('auth')->group(function () {
     Route::post('/integrations', [IntegrationController::class, 'save']);
     Route::delete('/integrations/{id}', [IntegrationController::class, 'delete']);
     Route::post('/integrations/profile', [IntegrationController::class, 'getProfile']);
+
+    Route::prefix('/atalaya')->group(function () {
+        Route::post('/users/paginate', [AtalayaUserController::class, 'paginate']);
+        Route::post('/users/invite', [AtalayaUserController::class, 'invite']);
+    });
 });

@@ -1,6 +1,4 @@
-import React from "react"
 import NotificationsRest from "../../actions/NotificationsRest"
-import { Notify } from "sode-extend-react"
 
 const notificationsRest = new NotificationsRest()
 

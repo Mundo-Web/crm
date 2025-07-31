@@ -7,6 +7,7 @@ import NotificationItem from "./notification/NotificationItem"
 import { toast } from "sonner"
 import { io } from "socket.io-client"
 import Global from "../Utils/Global"
+import Tippy from "@tippyjs/react"
 
 const notificationsRest = new NotificationsRest();
 const audio = new Audio('/assets/sounds/notification.wav');
@@ -35,6 +36,16 @@ const NavBar = ({ can, session = {}, theme, setTheme, title = '', wsActive, setW
     })
     if (status == 200) setNotificationsCount(totalCount)
   }
+
+  const onMarkAsReadClicked = async () => {
+    await notificationsRest.boolean({
+      field: 'seen',
+      value: true
+    }, false)
+    fetchNotificationsCount()
+    setNotifications([])
+  }
+
   useEffect(() => {
     $(document).on('change', '#light-mode-check', (e) => {
       setTheme(e.target.checked ? 'dark' : 'light')
@@ -245,11 +256,17 @@ const NavBar = ({ can, session = {}, theme, setTheme, title = '', wsActive, setW
 
             <div className="dropdown-item noti-title">
               <h5 className="m-0">
-                {/* <span className="float-end">
-                  <a href="" className="text-dark">
-                    <small>Clear All</small>
-                  </a>
-                </span> */}
+                {
+                  notificationsCount > 0 &&
+                  <span className="float-end">
+                    <Tippy content='Marcar todo como leido'>
+                      <span className="link text-dark" style={{ cursor: 'pointer' }} onClick={onMarkAsReadClicked}>
+                        <i className="mdi mdi-check-all me-1"></i>
+                        <small>Leído</small>
+                      </span>
+                    </Tippy>
+                  </span>
+                }
                 Notificaciones
               </h5>
             </div>
@@ -278,7 +295,7 @@ const NavBar = ({ can, session = {}, theme, setTheme, title = '', wsActive, setW
           <a className="nav-link dropdown-toggle nav-user me-0 waves-effect waves-light" data-bs-toggle="dropdown"
             href="#" role="button" aria-haspopup="false" aria-expanded="false">
             <div className="d-inline-block position-relative" style={{ height: 'max-content' }}>
-              <img src={`//${APP_DOMAIN}/api/profile/thumbnail/${session.relative_id}?v=${crypto.randomUUID()}`} alt="user-image" className="rounded-circle" style={{ objectFit: 'cover', objectPosition: 'center' }} />
+              <img src={`//${APP_DOMAIN}/api/profile/thumbnail/${session.relative_id}`} alt="user-image" className="rounded-circle" style={{ objectFit: 'cover', objectPosition: 'center' }} />
               <span className={`d-block ${wsActive ? 'bg-success' : 'bg-danger'} position-absolute rounded-circle`} style={{ width: '8px', height: '8px', bottom: '16px', right: '0px' }}></span>
             </div>
             <span className="pro-user-name ms-1">
