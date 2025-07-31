@@ -72,7 +72,12 @@ const Users = (properties) => {
   const onInviteClicked = async (email) => {
     const { status, result } = await Fetch(`//${Global.APP_DOMAIN}/api/users-by-services-by-business`, {
       method: 'POST',
-      body: JSON.stringify({email})
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+        'X-Xsrf-Token': decodeURIComponent(Cookies.get('XSRF-TOKEN'))
+      },
+      body: JSON.stringify({ email })
     })
     if (!status) return toast(result?.message ?? 'Ocurrió un error inesperado', { icon: <i className='mdi mdi-alert text-danger' /> })
   }
