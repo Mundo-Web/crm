@@ -7,12 +7,16 @@ import Adminto from './components/Adminto'
 import Tippy from '@tippyjs/react'
 import Modal from './components/Modal.jsx'
 import { toast } from 'sonner'
+import { Fetch } from 'sode-extend-react'
+import Global from './Utils/Global.js'
 
 const atalayaUsersRest = new AtalayaUsersRest()
 const usersRest = new UsersRest()
 
 const Users = (properties) => {
-  const { users, roles, APP_DOMAIN } = properties
+  const { users, roles, APP_DOMAIN, match } = properties
+
+  console.log(match)
 
   // Referencias de elementos
   const modalRef = useRef()
@@ -66,8 +70,11 @@ const Users = (properties) => {
   }
 
   const onInviteClicked = async (email) => {
-    const { status, message } = await atalayaUsersRest.invite(email)
-    if (!status) return toast(message, { icon: <i className='mdi mdi-alert text-danger' /> })
+    const { status, result } = await Fetch(`//${Global.APP_DOMAIN}/api/users-by-services-by-business`, {
+      method: 'POST',
+      body: JSON.stringify({email})
+    })
+    if (!status) return toast(result?.message ?? 'Ocurrió un error inesperado', { icon: <i className='mdi mdi-alert text-danger' /> })
   }
 
   // Cleanup timeout on unmount

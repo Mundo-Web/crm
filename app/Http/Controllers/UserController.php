@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Atalaya\BusinessSign;
+use App\Models\Atalaya\ServicesByBusiness;
 use App\Models\ModelHasRoles;
 use App\Models\User;
 use Exception;
@@ -32,12 +33,18 @@ class UserController extends BasicController
     public function setReactViewProperties(Request $request)
     {
         $usersJpa = User::byBusiness();
-
         $rolesJpa = Role::where('business_id', Auth::user()->business_id)->get();
+
+        $match = ServicesByBusiness::select('services.id')
+            ->join('services', 'services.id', 'services_by_businesses.service_id')
+            ->where('services.correlative', env('APP_CORRELATIVE'))
+            ->where('business_id', Auth::user()->business_id)
+            ->first()->id;
 
         return [
             'users' => $usersJpa,
-            'roles' => $rolesJpa
+            'roles' => $rolesJpa,
+            'match' => $match
         ];
     }
 
