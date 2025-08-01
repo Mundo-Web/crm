@@ -3,14 +3,20 @@
 namespace App\Http\Controllers\Atalaya;
 
 use App\Http\Classes\dxResponse;
+use App\Http\Classes\EmailConfig;
 use App\Http\Controllers\BasicController;
 use App\Http\Controllers\MailingController;
+use App\Models\Atalaya\Constant as AtalayaConstant;
+use App\Models\Atalaya\ServicesByBusiness;
 use App\Models\Atalaya\User as AtalayaUser;
+use App\Models\Atalaya\UsersByServicesByBusiness;
 use App\Models\User;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response as HttpResponse;
 use Illuminate\Routing\ResponseFactory;
-use SoDe\Extend\Fetch;
+use Illuminate\Support\Facades\Auth;
+use SoDe\Extend\Crypto;
 use SoDe\Extend\Response;
 
 class UserController extends BasicController
@@ -53,22 +59,46 @@ class UserController extends BasicController
     public function invite(Request $request)
     {
         $response = Response::simpleTryCatch(function () use ($request) {
-            $email = $request->email;
-            $url = env('APP_PROTOCOL') . '://' . env('APP_DOMAIN') . '/api/users-by-services-by-business';
-            $res = new Fetch($url, [
-                'method' => 'POST',
-                'headers' => [
-                    'Content-Type' => 'application/json',
-                    'X-Xsrf-Token' => $request->header('X-Xsrf-Token')
-                ],
-                'body' => [
-                    'email' => $email
-                ]
+            $userJpa = AtalayaUser::where('email', $request->email)
+                ->where('status', true)
+                ->first();
+            if (!$userJpa) throw new Exception('El usuario no existe o se encuentra inactivo');
+            $serviceByBusinessJpa = ServicesByBusiness::with('service', 'business')
+                ->where('id', $request->match)
+                ->first();
+            if (!$serviceByBusinessJpa) throw new Exception('El servicio no existe o no tienes permisos para vincular');
+
+            $ubsbb = UsersByServicesByBusiness::updateOrCreate([
+                'user_id' => $userJpa->id,
+                'service_by_business_id' => $serviceByBusinessJpa->id
+            ], [
+                'user_id' => $userJpa->id,
+                'service_by_business_id' => $serviceByBusinessJpa->id,
+                'created_by' => Auth::user()->id,
+                'invitation_token' => Crypto::randomUUID(),
+                'invitation_accepted' => Auth::user()->id == $userJpa->id
             ]);
-            dump($res->text());
-            dump($url);
+
+            if ($ubsbb->invitation_accepted) return;
+
+            $urlConfirm = env('APP_PROTOCOL') . '://' . env('APP_DOMAIN') . '/invitation/' . $ubsbb->invitation_token;
+            $content = AtalayaConstant::value('accept-invitation');
+            $content = str_replace('{SENDER}', Auth::user()->name, $content);
+            $content = str_replace('{SERVICE}', $serviceByBusinessJpa->service->name, $content);
+            $content = str_replace('{BUSINESS}', $serviceByBusinessJpa->business->name, $content);
+            $content = str_replace('{URL_CONFIRM}', $urlConfirm, $content);
+
+            $mailer = EmailConfig::config();
+            $mailer->Subject = 'Confirmacion - Atalaya';
+            $mailer->Body = $content;
+            $mailer->addAddress($userJpa->email);
+            $mailer->isHTML(true);
+            // $mailer->send();
+
+            return User::byBusiness();
         });
 
         return response($response->toArray(), $response->status);
     }
+    static function inviteExternal(Request $request) {}
 }

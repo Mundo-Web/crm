@@ -35,7 +35,7 @@ class UserController extends BasicController
         $usersJpa = User::byBusiness();
         $rolesJpa = Role::where('business_id', Auth::user()->business_id)->get();
 
-        $match = ServicesByBusiness::select('services.id')
+        $match = ServicesByBusiness::select('services_by_businesses.id')
             ->join('services', 'services.id', 'services_by_businesses.service_id')
             ->where('services.correlative', env('APP_CORRELATIVE'))
             ->where('business_id', Auth::user()->business_id)

@@ -8,6 +8,9 @@ export default defineConfig({
     server: {
         watch: {
             ignored: ['!**/node_modules/your-package-name/**'],
+        },
+        hmr: {
+            overlay: false
         }
     },
     plugins: [
@@ -16,7 +19,8 @@ export default defineConfig({
                 ...glob.sync('resources/js/*.jsx'),
                 'resources/css/app.css',
             ],
-            refresh: true,
+            refresh: false, // Disabled auto refresh
+            hmr: true // Enable Hot Module Replacement
         }),
         react(),
     ],

@@ -88,10 +88,13 @@ class User extends Authenticable
     static function byBusiness()
     {
         $usersJpa = AtalayaUser::select([
-            DB::raw('DISTINCT users.*')
+            DB::raw('DISTINCT users.*'),
+            'users_by_services_by_businesses.invitation_accepted',
+            DB::raw('IF(businesses.created_by = users.id, true, false) AS is_owner')
         ])
             ->join('users_by_services_by_businesses', 'users_by_services_by_businesses.user_id', 'users.id')
             ->join('services_by_businesses', 'services_by_businesses.id', 'users_by_services_by_businesses.service_by_business_id')
+            ->join('businesses', 'businesses.id', 'services_by_businesses.business_id')
             ->where('services_by_businesses.business_id', Auth::user()->business_id)
             ->get();
 

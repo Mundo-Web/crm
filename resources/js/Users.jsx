@@ -9,14 +9,15 @@ import Modal from './components/Modal.jsx'
 import { toast } from 'sonner'
 import { Cookies, Fetch } from 'sode-extend-react'
 import Global from './Utils/Global.js'
+import Swal from 'sweetalert2'
+import InviteUserCard from './Reutilizables/Users/InviteUserCard.jsx'
+import UserCard from './Reutilizables/Users/UserCard.jsx'
 
 const atalayaUsersRest = new AtalayaUsersRest()
 const usersRest = new UsersRest()
 
 const Users = (properties) => {
   const { users, roles, APP_DOMAIN, match } = properties
-
-  console.log(match)
 
   // Referencias de elementos
   const modalRef = useRef()
@@ -27,13 +28,31 @@ const Users = (properties) => {
   const [search, setSearch] = useState('')
   const [emailValid, setEmailValid] = useState(null);
   const [searching, setSearching] = useState(false)
+  const onDeleteClicked = async (user) => {
+    const { isConfirmed } = await Swal.fire({
+      title: '¿Estás seguro?',
+      text: `${user.name} será eliminado de la gestión de ${Global.APP_NAME}. Esta acción no se puede deshacer.`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: '¡Sí, eliminar!',
+      cancelButtonText: 'Cancelar'
+    })
 
-  const onDeleteClicked = async (id) => {
-    const result = await UsersRest.delete(id)
+    if (!isConfirmed) return
+
+    const result = await usersRest.delete(user.id)
     if (!result) return
+
+    Swal.fire(
+      '¡Eliminado!',
+      'El usuario ha sido eliminado exitosamente.',
+      'success'
+    )
+
     $(gridRef.current).dxDataGrid('instance').refresh()
   }
-
   const onAssignRoleClicked = async (role, user) => {
     const result = await usersRest.assignRole({
       role: role.id,
@@ -69,19 +88,6 @@ const Users = (properties) => {
     }, 300)
   }
 
-  const onInviteClicked = async (email) => {
-    const { status, result } = await Fetch(`//${Global.APP_DOMAIN}/api/users-by-services-by-business`, {
-      method: 'POST',
-      headers: {
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
-        'X-Xsrf-Token': decodeURIComponent(Cookies.get('XSRF-TOKEN'))
-      },
-      body: JSON.stringify({ email })
-    })
-    if (!status) return toast(result?.message ?? 'Ocurrió un error inesperado', { icon: <i className='mdi mdi-alert text-danger' /> })
-  }
-
   // Cleanup timeout on unmount
   useEffect(() => {
     return () => {
@@ -96,54 +102,10 @@ const Users = (properties) => {
       <i className='mdi mdi-account-plus me-1'></i>
       Invitar
     </button>}>
-      <div className='d-flex flex-wrap align-items-center justify-content-center' style={{ minHeight: 'calc(100vh - 135px)', maxHeight: 'max-content' }}>
+      <div className='d-flex flex-wrap align-items-center justify-content-center' style={{ minHeight: 'calc(100vh - 235px)', maxHeight: 'max-content' }}>
         <div className='d-flex flex-wrap align-items-center justify-content-center gap-2'>
           {
-            users.map((user, i) => {
-              const role = user.service_user?.roles?.[0] ?? {
-                name: user.is_owner ? 'Owner' : 'Sin rol',
-                description: 'El usuario no tiene un rol asignado'
-              }
-              return <div key={`user-${i}`} className="card mb-0" style={{ width: '360px' }}>
-                <div className="card-body widget-user">
-                  <div className="d-flex align-items-center">
-                    <div className="flex-shrink-0 avatar-lg me-2">
-                      <img src={`//${APP_DOMAIN}/api/profile/thumbnail/${user.relative_id}`} className="img-fluid rounded-circle" alt="user" />
-                    </div>
-                    <div>
-                      <div className="flex-grow-1 overflow-hidden" style={{ width: '215px' }}>
-                        <h5 className="mt-0 mb-1 text-truncate">{user.name} {user.lastname}</h5>
-                        <p className="text-muted mb-2 font-13 text-truncate">{user.email}</p>
-                      </div>
-                      <div>
-                        <div className="btn-group">
-                          <button className="btn btn-light btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                            {role.name} <i className="mdi mdi-chevron-down"></i>
-                          </button>
-                          <div className="dropdown-menu" >
-                            {
-                              roles.map((role, i) => {
-                                return <Tippy content={`Asignar rol ${role.name}`}>
-                                  <a className="dropdown-item" href="#" onClick={() => onAssignRoleClicked(role, user)}>
-                                    <i className='mdi mdi-account-convert me-2'></i>
-                                    {role.name}
-                                  </a>
-                                </Tippy>
-                              })
-                            }
-                            <div className="dropdown-divider"></div>
-                            <a className="dropdown-item" href="#">
-                              <i className='mdi mdi-plus me-2'></i>
-                              Nuevo rol
-                            </a>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            })
+            users.map((user, i) => <UserCard key={`user-${i}`} {...user} roles={roles} match={match} />)
           }
         </div>
       </div>
@@ -169,28 +131,11 @@ const Users = (properties) => {
                 </div>
               ) : found.length > 0 || emailValid ? (
                 <div className='d-flex flex-column gap-2 mt-2'>
-                  {found.map((user, i) => (
-                    <div key={`found-${i}`} className="card border mb-0">
-                      <div className="card-body p-2 d-flex align-items-center gap-2">
-                        <img
-                          src={`//${APP_DOMAIN}/api/profile/thumbnail/${user.relative_id}`}
-                          className="rounded-circle"
-                          alt={user.name}
-                          width="40"
-                          height="40"
-                        />
-                        <div className="flex-grow-1">
-                          <h5 className="mt-0 mb-1">{user.fullname}</h5>
-                          <div className="text-muted">{user.email}</div>
-                        </div>
-                        <button className="btn btn-white btn-sm rounded-pill" onClick={() => onInviteClicked(user.email)}>
-                          <i className="mdi mdi-account-plus"></i>
-                        </button>
-                      </div>
-                    </div>
-                  ))}
+                  {found.map((user, i) => <InviteUserCard key={`found-${i}`} {...user} match={match} />)}
                   {
-                    emailValid === true && <div key={`found-${search}`} className="card border mb-0">
+                    emailValid === true && <>
+                    <InviteUserCard key={`found-${search}`} fullname={search.split('@')[0]} email={search} match={match} />
+                    {/* <div key={`found-${search}`} className="card border mb-0">
                       <div className="card-body p-2 d-flex align-items-center gap-2">
                         <img
                           src={`//${APP_DOMAIN}/api/profile/thumbnail/undefined`}
@@ -208,7 +153,8 @@ const Users = (properties) => {
                           </button>
                         </Tippy>
                       </div>
-                    </div>
+                    </div> */}
+                    </>
                   }
                 </div>
               ) : (
