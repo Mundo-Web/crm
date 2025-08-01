@@ -11,7 +11,7 @@ class UsersRest extends BasicRest {
                 body: JSON.stringify(request)
             })
             if (!status) throw new Error(result?.message || 'Ocurrio un error inesperado')
-            return { status: true }
+            return { status: true, data: result.data }
         } catch (error) {
             return { status: false, message: error.message }
         }

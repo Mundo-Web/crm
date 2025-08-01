@@ -6,19 +6,20 @@ import { toast } from "sonner"
 
 const atalayaUsersRest = new AtalayaUsersRest()
 
-const InviteUserCard = ({ relative_id, fullname, email, match }) => {
+const InviteUserCard = ({ relative_id, fullname, email, match, setUsers }) => {
     const [inviting, setInviting] = useState(false)
     const [invited, setInvited] = useState(false)
 
     const onInviteClicked = async () => {
         setInviting(true)
-        const { status, message } = await atalayaUsersRest.invite({ match, email })
+        const { status, message, data } = await atalayaUsersRest.invite({ match, email })
         setInviting(false)
         if (!status) return toast(message ?? 'Ocurrió un error inesperado', { icon: <i className='mdi mdi-alert text-danger' /> })
         setInvited(true)
+        if (data) setUsers(users => [...users, data])
     }
 
-    const OptionalTippy = (children) => relative_id  ? <>{children}</> : <Tippy content='Invitar usuario a Atalaya'>{children}</Tippy>
+    const OptionalTippy = (children) => relative_id ? <>{children}</> : <Tippy content='Invitar usuario a Atalaya'>{children}</Tippy>
 
     return <div className="card border mb-0">
         <div className="card-body p-2 d-flex align-items-center gap-2">

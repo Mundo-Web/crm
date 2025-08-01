@@ -93,9 +93,9 @@ const Users = (properties) => {
                 </div>
               ) : found.length > 0 || emailValid ? (
                 <div className='d-flex flex-column gap-2 mt-2'>
-                  {found.map((user, i) => <InviteUserCard key={`found-${i}`} {...user} match={match} />)}
+                  {found.map((user, i) => <InviteUserCard key={`found-${i}`} {...user} match={match} setUsers={setUsers} />)}
                   {
-                    emailValid === true && <InviteUserCard key={`found-${search}`} fullname={search.split('@')[0]} email={search} match={match} />
+                    emailValid === true && <InviteUserCard key={`found-${search}`} fullname={search.split('@')[0]} email={search} match={match} setUsers={setUsers} />
                   }
                 </div>
               ) : (
