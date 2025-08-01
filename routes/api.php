@@ -257,5 +257,6 @@ Route::middleware('auth')->group(function () {
     Route::prefix('/atalaya')->group(function () {
         Route::post('/users/paginate', [AtalayaUserController::class, 'paginate']);
         Route::post('/users/invite', [AtalayaUserController::class, 'invite']);
+        Route::delete('/users/{id}', [AtalayaUserController::class, 'delete']);
     });
 });

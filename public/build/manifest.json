@@ -892,16 +892,16 @@
     ]
   },
   "resources/js/Users.jsx": {
-    "file": "assets/Users-Be9tnucy.js",
+    "file": "assets/Users-85lcPrHD.js",
     "name": "Users",
     "src": "resources/js/Users.jsx",
     "isEntry": true,
     "imports": [
       "_CreateReactScript-9UX3kXBD.js",
-      "_UsersRest-DE27vXo1.js",
       "_Adminto-C-Pv7Jhd.js",
       "_Modal-D0pWPGeP.js",
-      "_sweetalert2.esm.all-CVcmmqxW.js"
+      "_sweetalert2.esm.all-CVcmmqxW.js",
+      "_UsersRest-DE27vXo1.js"
     ]
   },
   "resources/js/Views.jsx": {

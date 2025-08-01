@@ -2,16 +2,50 @@
 import { useState } from "react"
 import Global from "../../Utils/Global"
 import Tippy from "@tippyjs/react"
+import { toast } from "sonner"
+import UsersRest from "../../actions/UsersRest"
+import AtalayaUsersRest from "../../actions/Atalaya/UsersRest"
+import Swal from "sweetalert2"
 
-const UserCard = ({ roles, match, ...user }) => {
+const usersRest = new UsersRest()
+const atalayaUsersRest = new AtalayaUsersRest()
+
+const UserCard = ({ roles, match, setUsers, ...user }) => {
     const [sending, setSending] = useState(false)
+
+    const onAssignRoleClicked = async (role, user) => {
+        const result = await usersRest.assignRole({
+            role: role.id,
+            user: user.id
+        })
+        if (!result) return
+
+        location.reload()
+    }
 
     const onResendInvitation = async () => {
         setSending(true)
-        const result = await atalayaUsersRest.invite({ match, email: user.email })
+        const { status, message } = await atalayaUsersRest.invite({ match, email: user.email })
         setSending(false)
-        console.log(result)
-        // if (!status) return toast(result?.message ?? 'Ocurrió un error inesperado', { icon: <i className='mdi mdi-alert text-danger' /> })
+        if (!status) return toast(message ?? 'Ocurrió un error inesperado', { icon: <i className='mdi mdi-alert text-danger' /> })
+    }
+
+    const onDeleteClicked = async () => {
+        const { isConfirmed } = await Swal.fire({
+            title: '¿Estás seguro?',
+            text: `${user.name} será eliminado de la gestión de ${Global.APP_NAME}. Esta acción no se puede deshacer.`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: '¡Sí, eliminar!',
+            cancelButtonText: 'Cancelar'
+        })
+
+        if (!isConfirmed) return
+        const result = await atalayaUsersRest.delete(user.id)
+        if (!result) return toast(result.message ?? 'Ocurrió un error inesperado', { icon: <i className='mdi mdi-alert text-danger' /> })
+        setUsers(users => users.filter(u => u.id !== user.id))
     }
 
     const role = user.service_user?.roles?.[0] ?? {

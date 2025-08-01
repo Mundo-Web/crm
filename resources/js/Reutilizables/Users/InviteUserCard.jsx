@@ -2,21 +2,23 @@ import React, { useState } from "react"
 import Global from "../../Utils/Global"
 import AtalayaUsersRest from "../../actions/Atalaya/UsersRest"
 import Tippy from "@tippyjs/react"
+import { toast } from "sonner"
 
 const atalayaUsersRest = new AtalayaUsersRest()
 
 const InviteUserCard = ({ relative_id, fullname, email, match }) => {
     const [inviting, setInviting] = useState(false)
+    const [invited, setInvited] = useState(false)
 
     const onInviteClicked = async () => {
         setInviting(true)
-        const result = await atalayaUsersRest.invite({ match, email })
+        const { status, message } = await atalayaUsersRest.invite({ match, email })
         setInviting(false)
-        console.log(result)
-        // if (!status) return toast(result?.message ?? 'Ocurrió un error inesperado', { icon: <i className='mdi mdi-alert text-danger' /> })
+        if (!status) return toast(message ?? 'Ocurrió un error inesperado', { icon: <i className='mdi mdi-alert text-danger' /> })
+        setInvited(true)
     }
 
-    const OptionalTippy = (children) => relative_id ? <>{children}</> : <Tippy content='Invitar usuario a Atalaya'>{children}</Tippy>
+    const OptionalTippy = (children) => relative_id  ? <>{children}</> : <Tippy content='Invitar usuario a Atalaya'>{children}</Tippy>
 
     return <div className="card border mb-0">
         <div className="card-body p-2 d-flex align-items-center gap-2">
@@ -32,12 +34,16 @@ const InviteUserCard = ({ relative_id, fullname, email, match }) => {
                 <div className="text-muted">{email}</div>
             </div>
             {
-                OptionalTippy(<button className="btn btn-white btn-sm rounded-pill" onClick={() => onInviteClicked()} disabled={inviting}>
-                    {inviting
-                        ? <i className="mdi mdi-loading mdi-spin" />
-                        : <i className={`mdi  ${relative_id ? 'mdi-account-plus' : 'mdi mdi-email-send'}`} />
+                OptionalTippy(<button className="btn btn-white btn-sm rounded-pill" onClick={() => onInviteClicked()} disabled={inviting || invited}>
+                    {
+                        inviting ? (
+                            <i className="mdi mdi-loading mdi-spin" />
+                        ) : invited ? (
+                            <i className="mdi mdi-email-check" />
+                        ) : (
+                            <i className={`mdi ${relative_id ? 'mdi-account-plus' : 'mdi mdi-email-send'}`} />
+                        )
                     }
-
                 </button>)
             }
         </div>

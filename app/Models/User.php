@@ -85,9 +85,9 @@ class User extends Authenticable
         $this->roles = $rolesJpa;
     }
 
-    static function byBusiness()
+    static function byBusiness(int $id = null)
     {
-        $usersJpa = AtalayaUser::select([
+        $query = AtalayaUser::select([
             DB::raw('DISTINCT users.*'),
             'users_by_services_by_businesses.invitation_accepted',
             DB::raw('IF(businesses.created_by = users.id, true, false) AS is_owner')
@@ -95,8 +95,13 @@ class User extends Authenticable
             ->join('users_by_services_by_businesses', 'users_by_services_by_businesses.user_id', 'users.id')
             ->join('services_by_businesses', 'services_by_businesses.id', 'users_by_services_by_businesses.service_by_business_id')
             ->join('businesses', 'businesses.id', 'services_by_businesses.business_id')
-            ->where('services_by_businesses.business_id', Auth::user()->business_id)
-            ->get();
+            ->where('services_by_businesses.business_id', Auth::user()->business_id);
+
+        if ($id !== null) {
+            $query->where('users.id', $id);
+        }
+
+        $usersJpa = $query->get();
 
         foreach ($usersJpa as $userJpa) {
             $serviceUser = User::updateOrCreate([
@@ -113,6 +118,6 @@ class User extends Authenticable
             $serviceUser->getAllPermissions();
             $userJpa->service_user = $serviceUser;
         }
-        return $usersJpa;
+        return $id !== null ? $usersJpa->first() : $usersJpa;
     }
 }

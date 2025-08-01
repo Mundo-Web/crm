@@ -10,7 +10,7 @@ export default defineConfig({
             ignored: ['!**/node_modules/your-package-name/**'],
         },
         hmr: {
-            overlay: false
+            overlay: true
         }
     },
     plugins: [

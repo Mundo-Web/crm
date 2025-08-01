@@ -62,7 +62,10 @@ class UserController extends BasicController
             $userJpa = AtalayaUser::where('email', $request->email)
                 ->where('status', true)
                 ->first();
-            if (!$userJpa) throw new Exception('El usuario no existe o se encuentra inactivo');
+
+            if (!$userJpa) {
+                return $this->inviteExternal($request->email);
+            }
             $serviceByBusinessJpa = ServicesByBusiness::with('service', 'business')
                 ->where('id', $request->match)
                 ->first();
@@ -93,12 +96,30 @@ class UserController extends BasicController
             $mailer->Body = $content;
             $mailer->addAddress($userJpa->email);
             $mailer->isHTML(true);
-            // $mailer->send();
+            $mailer->send();
 
-            return User::byBusiness();
+            return User::byBusiness($userJpa->id);
         });
 
         return response($response->toArray(), $response->status);
     }
-    static function inviteExternal(Request $request) {}
+    public function inviteExternal(string $email) {}
+
+    public function delete(Request $request, string $id)
+    {
+        $response = Response::simpleTryCatch(function () use ($request, $id) {
+            $match = ServicesByBusiness::select('services_by_businesses.id')
+                ->join('services', 'services.id', 'services_by_businesses.service_id')
+                ->where('services.correlative', env('APP_CORRELATIVE'))
+                ->where('business_id', Auth::user()->business_id)
+                ->first()->id;
+            $ubsbb = UsersByServicesByBusiness::query()
+                ->where('user_id', $id)
+                ->where('service_by_business_id', $match)
+                ->first();
+            if (!$ubsbb) throw new Exception('El usuario no existe o no tienes permisos para eliminar');
+            $ubsbb->delete();
+        });
+        return response($response->toArray(), $response->status);
+    }
 }
