@@ -17,6 +17,7 @@ class MailingController extends Controller
         $dominio = substr(strrchr($email, "@"), 1);
         if (!checkdnsrr($dominio, "MX")) return false;
 
+        return true;
         $validator = new Validator();
         $result = $validator->validate([$email], env('MAIL_FROM_ADDRESS'));
 
