@@ -7,6 +7,7 @@ use App\Http\Classes\EmailConfig;
 use App\Http\Controllers\BasicController;
 use App\Http\Controllers\MailingController;
 use App\Models\Atalaya\Constant as AtalayaConstant;
+use App\Models\Atalaya\InvitationEmail;
 use App\Models\Atalaya\ServicesByBusiness;
 use App\Models\Atalaya\User as AtalayaUser;
 use App\Models\Atalaya\UsersByServicesByBusiness;
@@ -64,7 +65,7 @@ class UserController extends BasicController
                 ->first();
 
             if (!$userJpa) {
-                return $this->inviteExternal($request->email);
+                return $this->inviteExternal($request);
             }
             $serviceByBusinessJpa = ServicesByBusiness::with('service', 'business')
                 ->where('id', $request->match)
@@ -75,14 +76,12 @@ class UserController extends BasicController
                 'user_id' => $userJpa->id,
                 'service_by_business_id' => $serviceByBusinessJpa->id
             ], [
-                'user_id' => $userJpa->id,
-                'service_by_business_id' => $serviceByBusinessJpa->id,
                 'created_by' => Auth::user()->id,
                 'invitation_token' => Crypto::randomUUID(),
                 'invitation_accepted' => Auth::user()->id == $userJpa->id
             ]);
 
-            if ($ubsbb->invitation_accepted) return;
+            if ($ubsbb->invitation_accepted) return User::byBusiness($userJpa->id);
 
             $urlConfirm = env('APP_PROTOCOL') . '://' . env('APP_DOMAIN') . '/invitation/' . $ubsbb->invitation_token;
             $content = AtalayaConstant::value('accept-invitation');
@@ -103,7 +102,35 @@ class UserController extends BasicController
 
         return response($response->toArray(), $response->status);
     }
-    public function inviteExternal(string $email) {}
+    public function inviteExternal(Request $request)
+    {
+        $serviceByBusinessJpa = ServicesByBusiness::with('service', 'business')
+            ->where('id', $request->match)
+            ->first();
+        if (!$serviceByBusinessJpa) throw new Exception('El servicio no existe o no tienes permisos para vincular');
+        $invitationEmail = InvitationEmail::updateOrCreate([
+            'email' => $request->email,
+            'service_by_business_id' => $serviceByBusinessJpa->id,
+        ], [
+            'invitation_token' => Crypto::randomUUID(),
+            'created_by' => Auth::user()->id
+        ]);
+
+        // Envío de email
+        $urlConfirm = env('APP_PROTOCOL') . '://' . env('APP_DOMAIN') . '/register/' . $invitationEmail->invitation_token;
+        $content = AtalayaConstant::value('accept-invitation');
+        $content = str_replace('{SENDER}', Auth::user()->name, $content);
+        $content = str_replace('{SERVICE}', $serviceByBusinessJpa->service->name, $content);
+        $content = str_replace('{BUSINESS}', $serviceByBusinessJpa->business->name, $content);
+        $content = str_replace('{URL_CONFIRM}', $urlConfirm, $content);
+
+        $mailer = EmailConfig::config();
+        $mailer->Subject = 'Invitación - Atalaya';
+        $mailer->Body = $content;
+        $mailer->addAddress($invitationEmail->email);
+        $mailer->isHTML(true);
+        $mailer->send();
+    }
 
     public function delete(Request $request, string $id)
     {
