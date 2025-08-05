@@ -29,7 +29,7 @@ const WhatsAppModal = ({ status: whatsAppStatus, setStatus: setWhatsAppStatus, W
     if (status == 200) {
       setWhatsAppStatus('ready')
       setSessionInfo(data)
-      setWAPhone(data.phone)
+      setWAPhone(data?.me?.user || null)
     } else if (status == 404) {
       setWhatsAppStatus('close')
     } else {
@@ -92,7 +92,7 @@ const WhatsAppModal = ({ status: whatsAppStatus, setStatus: setWhatsAppStatus, W
           case 'ready':
             setWhatsAppStatus('ready')
             setSessionInfo(info)
-            setWAPhone(info.phone)
+            setWAPhone(info?.me?.user || null)
             eventSource.close()
             break
           case 'close':
