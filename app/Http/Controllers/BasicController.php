@@ -89,6 +89,7 @@ class BasicController extends Controller
       ->join('services', 'services.id', 'services_by_businesses.service_id')
       ->where('services.correlative', env('APP_CORRELATIVE', 'crm'))
       ->where('users_by_services_by_businesses.user_id', Auth::user()->id)
+      ->where('users_by_services_by_businesses.invitation_accepted', true)
       ->where('businesses.status', true)
       ->get();
     $notificationsCount = Notification::where(function ($query) {
