@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Atalaya\ServicesByBusiness;
 use App\Models\Atalaya\UsersByServicesByBusiness;
 use App\Providers\RouteServiceProvider;
 use Exception;
@@ -10,6 +11,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response as HttpResponse;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use SoDe\Extend\Fetch;
 use SoDe\Extend\Response;
@@ -17,10 +19,23 @@ use SoDe\Extend\Response;
 class AuthController extends Controller
 {
 
-  public function init(Request $request) {
+  public function init(Request $request)
+  {
+    DB::beginTransaction();
     $response = Response::simpleTryCatch(function () use ($request) {
-      
-    });
+
+      $service = ServicesByBusiness::query()
+        ->join('services', 'services.id', '=', 'services_by_businesses.service_id')
+        ->join('businesses', 'businesses.id', '=', 'services_by_businesses.business_id')
+        ->where('services.correlative', env('APP_CORRELATIVE'))
+        ->where('services_by_businesses.business_id', Auth::user()->business_id)
+        ->where('businesses.created_by', Auth::user()->id)
+        ->first();
+      if (!$service) throw new Exception('No tienes acceso a este servicio');
+      $service->first_time = false;
+      $service->save();
+      DB::commit();
+    }, fn() => DB::rollBack());
     return response($response->toArray(), $response->status);
   }
 

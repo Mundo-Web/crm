@@ -61,9 +61,8 @@ Route::get('/', function (Request $request) {
     return redirect('/login');
 });
 
-Route::get('join', [AuthController::class, 'joinView'])->name('Join.jsx');
-
-Route::middleware('auth')->group(function () {
+Route::middleware('auth')->get('/join', [AuthController::class, 'joinView'])->name('Join.jsx');
+Route::middleware(['auth', 'firstTime'])->group(function () {
     Route::get('/home', [KPILeadsController::class, 'reactView'])->name('KPILeads.jsx');
     Route::get('/home/projects', [KPIProjectsController::class, 'reactView'])->name('KPIProjects.jsx');
     Route::get('/clients', [ClientController::class, 'reactView'])->name('Clients.jsx');
