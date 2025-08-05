@@ -9,6 +9,8 @@ import Number2Currency from './Utils/Number2Currency';
 import Global from './Utils/Global';
 import '../css/kpileads.css'
 import Tippy from '@tippyjs/react';
+import { GET } from 'sode-extend-react';
+import Swal from 'sweetalert2';
 
 const KPILeads = ({ months = [], currentMonth, currentYear }) => {
   const [selectedMonth, setSelectedMonth] = useState(`${currentYear}-${currentMonth}`)
@@ -127,6 +129,17 @@ const KPILeads = ({ months = [], currentMonth, currentYear }) => {
       $('[data-plugin="knob"]').trigger('change');
     }
   }, [leadSources, originCounts])
+
+  useEffect(() => {
+    if (GET.message) {
+      Swal.fire({
+        icon: 'success',
+        title: 'Operación exitosa',
+        text: GET.message
+      })
+      history.pushState(null, null, '/home')
+    }
+  }, [null])
 
   const totalLeadSources = leadSources.crm_count + leadSources.whatsapp_count + leadSources.integration_count
 
