@@ -26,10 +26,8 @@ class AuthController extends Controller
 
       $service = ServicesByBusiness::query()
         ->join('services', 'services.id', '=', 'services_by_businesses.service_id')
-        ->join('businesses', 'businesses.id', '=', 'services_by_businesses.business_id')
         ->where('services.correlative', env('APP_CORRELATIVE'))
         ->where('services_by_businesses.business_id', Auth::user()->business_id)
-        ->where('businesses.created_by', Auth::user()->id)
         ->first();
       if (!$service) throw new Exception('No tienes acceso a este servicio');
       $service->first_time = false;

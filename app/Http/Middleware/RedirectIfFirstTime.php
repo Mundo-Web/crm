@@ -19,10 +19,8 @@ class RedirectIfFirstTime
     {
         $service = ServicesByBusiness::query()
             ->join('services', 'services.id', '=', 'services_by_businesses.service_id')
-            ->join('businesses', 'businesses.id', '=', 'services_by_businesses.business_id')
             ->where('services.correlative', env('APP_CORRELATIVE'))
             ->where('services_by_businesses.business_id', Auth::user()->business_id)
-            ->where('businesses.created_by', Auth::user()->id)
             ->first();
 
         if (!$service) return redirect(env('APP_PROTOCOL') . '://' . env('APP_DOMAIN'));
