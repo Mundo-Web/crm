@@ -79,10 +79,10 @@ const Menu = ({ session, theme, can, whatsAppStatus, APP_PROTOCOL, APP_DOMAIN, l
             objectPosition: 'center'
           }}
         />
-        <div className="d-flex justify-content-between align-items-center">
-          <div className="pe-2" style={{ maxWidth: '70%' }}>
+        <div className="d-flex justify-content-between align-items-center gap-1">
+          <div className="w-100" style={{ maxWidth: '70%' }}>
             <span
-              className="user-name h4 mt-0 mb-0 d-block"
+              className="user-name h4 mt-0 mb-0 d-block text-truncate"
               style={{
                 fontFamily: "'Nunito Sans', sans-serif",
                 color: theme == 'dark' ? '#fff' : undefined
