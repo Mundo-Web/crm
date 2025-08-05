@@ -6,7 +6,7 @@ import Tippy from '@tippyjs/react'
 import 'tippy.js/dist/tippy.css';
 import BusinessCard from '../Reutilizables/Business/BusinessCard'
 
-const Menu = ({ session, theme, can, whatsAppStatus, APP_PROTOCOL, APP_DOMAIN, leadsCount, tasksCount, businesses }) => {
+const Menu = ({ session, theme, can, whatsAppStatus, APP_PROTOCOL, APP_DOMAIN, leadsCount, tasksCount, businesses, wsActive }) => {
 
   let mainRole = {}
   if (session.is_owner) {
@@ -66,19 +66,26 @@ const Menu = ({ session, theme, can, whatsAppStatus, APP_PROTOCOL, APP_DOMAIN, l
           <p className="text-muted left-user-info" >{mainRole.name}</p>
         </Tippy>
       </div> */}
-      <div className="user-box w-100 mb-2" style={{padding: '0px 20px'}}>
+      <div className="user-box w-100 mb-2" style={{ padding: '0px 20px' }}>
+        <div className='position-relative' style={{width: 'max-content', height: 'max-content'}}>
         <img
           src={`//${APP_DOMAIN}/api/profile/thumbnail/${session.relative_id}?v=${new Date(session.updated_at).getTime()}`}
           alt={session.name}
           title={session.name}
           className="rounded-circle img-thumbnail avatar-md mb-2"
           style={{
+            padding: 0,
             backgroundColor: 'unset',
-            borderColor: '#98a6ad',
+            // borderColor: '#98a6ad',
             objectFit: 'cover',
             objectPosition: 'center'
           }}
         />
+         <span 
+         className={`d-block ${wsActive ? 'bg-success' : 'bg-danger'} position-absolute rounded-circle`} 
+         style={{ width: '12px', height: '12px', bottom: '16px', right: '0px' }}
+         />
+        </div>
         <div className="d-flex justify-content-between align-items-center gap-1">
           <div className="w-100" style={{ maxWidth: '70%' }}>
             <span

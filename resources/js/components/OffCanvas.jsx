@@ -17,7 +17,7 @@ const whatsAppRest = new WhatsAppRest()
 const usersRest = new UsersRest()
 const metaRest = new MetaRest()
 
-const OffCanvas = ({ offCanvasRef, dataLoaded, setDataLoaded, defaultMessages, signs, onOpenModal = () => { }, onLeadClicked = () => { } }) => {
+const OffCanvas = ({ offCanvasRef, dataLoaded, setDataLoaded, defaultMessages, signs, onOpenModal = () => { }, onLeadClicked = () => { }, waPhone }) => {
 
   if (!offCanvasRef) offCanvasRef = useRef()
   const inputMessageRef = useRef()
@@ -249,7 +249,7 @@ const OffCanvas = ({ offCanvasRef, dataLoaded, setDataLoaded, defaultMessages, s
                       className="border"
                       style={{ aspectRatio: 1 }}
                       src={fromMe
-                        ? `//${Global.APP_DOMAIN}/api/profile/thumbnail/${LaravelSession.relative_id}`
+                        ? `${Global.WA_URL}/api/profile/${LaravelSession.business_uuid}/${waPhone}`
                         : `${Global.WA_URL}/api/profile/${LaravelSession.business_uuid}/${message.wa_id}`}
                       onError={(e) => {
                         e.target.onerror = null

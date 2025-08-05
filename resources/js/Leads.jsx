@@ -90,6 +90,8 @@ const Leads = (properties) => {
   const [statuses, setStatuses] = useState(statusesFromDB);
   const [manageStatuses, setManageStatuses] = useState(manageStatusesFromDB)
 
+  const [waPhone, setWAPhone] = useState(null)
+
   const [leadLoaded, setLeadLoaded] = useState(null)
   const [leadLoadedForMessages, setLeadLoadedForMessages] = useState(null)
   const [notes, setNotes] = useState([]);
@@ -559,7 +561,7 @@ const Leads = (properties) => {
     $(messagesOffCanvasRef.current).offcanvas('show')
   }
 
-  return (<Adminto {...properties} title='Leads' description='Gerencie sus leads y oportunidades' floatEnd={<div className='d-flex gap-2 justify-content-between'>
+  return (<Adminto {...properties} setWAPhone={setWAPhone} title='Leads' description='Gerencie sus leads y oportunidades' floatEnd={<div className='d-flex gap-2 justify-content-between'>
     {
       defaultView == 'kanban' &&
       <Tippy content='Refrescar'>
@@ -1079,6 +1081,7 @@ const Leads = (properties) => {
       onOpenModal={onOpenModal}
       onLeadClicked={onLeadClicked}
       signs={signs}
+      waPhone={waPhone}
     />
   </Adminto>)
 };

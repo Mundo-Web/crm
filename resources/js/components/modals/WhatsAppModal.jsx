@@ -11,7 +11,7 @@ import LaravelSession from "../../Utils/LaravelSession";
 const whatsAppRest = new WhatsAppRest()
 let eventSource = {}
 
-const WhatsAppModal = ({ status: whatsAppStatus, setStatus: setWhatsAppStatus, WA_URL, APP_URL, session }) => {
+const WhatsAppModal = ({ status: whatsAppStatus, setStatus: setWhatsAppStatus, WA_URL, APP_URL, session, setWAPhone }) => {
 
   const modalRef = useRef()
   const qrRef = useRef()
@@ -29,6 +29,7 @@ const WhatsAppModal = ({ status: whatsAppStatus, setStatus: setWhatsAppStatus, W
     if (status == 200) {
       setWhatsAppStatus('ready')
       setSessionInfo(data)
+      setWAPhone(data.phone)
     } else if (status == 404) {
       setWhatsAppStatus('close')
     } else {
@@ -91,6 +92,7 @@ const WhatsAppModal = ({ status: whatsAppStatus, setStatus: setWhatsAppStatus, W
           case 'ready':
             setWhatsAppStatus('ready')
             setSessionInfo(info)
+            setWAPhone(info.phone)
             eventSource.close()
             break
           case 'close':
@@ -138,6 +140,7 @@ const WhatsAppModal = ({ status: whatsAppStatus, setStatus: setWhatsAppStatus, W
       body: `Se cerró la sesión de ${sessionInfo?.pushname || 'WhatsApp'}`
     })
     setSessionInfo({})
+    setWAPhone(null)
     setWhatsAppStatus(null)
   }
 
