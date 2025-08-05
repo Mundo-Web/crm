@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Atalaya\ServicesByBusiness;
 use App\Models\Atalaya\UsersByServicesByBusiness;
+use App\Models\Setting;
+use App\Models\Status;
 use App\Providers\RouteServiceProvider;
 use Exception;
 use Illuminate\Contracts\Routing\ResponseFactory;
@@ -24,14 +26,66 @@ class AuthController extends Controller
     DB::beginTransaction();
     $response = Response::simpleTryCatch(function () use ($request) {
 
-      $service = ServicesByBusiness::query()
+      $manageStatuses = $request->manageStatuses;
+      foreach ($manageStatuses as $key => $status) {
+        $statusJpa =  Status::create([
+          'name' => $status,
+          'table_id' => '9c27e649-574a-47eb-82af-851c5d425434',
+          'order' => $key + 1,
+          'business_id' => Auth::user()->business_id
+        ]);
+
+        if ($status == 'Pendiente') {
+          Setting::create([
+            'name' => 'default-manage-lead-status',
+            'value' => $statusJpa->id,
+            'business_id' => Auth::user()->business_id
+          ]);
+        }
+      }
+
+      $statuses = $request->statuses;
+      foreach ($statuses as $key => $status) {
+        $statusJpa =  Status::create([
+          'name' => $status,
+          'table_id' => 'e05a43e5-b3a6-46ce-8d1f-381a73498f33',
+          'order' => $key + 1,
+          'business_id' => Auth::user()->business_id
+        ]);
+
+        if ($status == 'Nuevo') {
+          Setting::create([
+            'name' => 'default-lead-status',
+            'value' => $statusJpa->id,
+            'business_id' => Auth::user()->business_id
+          ]);
+        }
+      }
+
+      $clientStatusJpa =  Status::create([
+        'name' => 'Cliente',
+        'table_id' => 'a8367789-666e-4929-aacb-7cbc2fbf74de',
+        'order' => count($statuses) + 1,
+        'business_id' => Auth::user()->business_id
+      ]);
+
+      Setting::create([
+        'name' => 'default-client-status',
+        'value' => $clientStatusJpa->id,
+        'business_id' => Auth::user()->business_id
+      ]);
+
+      $serviceJpa = ServicesByBusiness::select('services_by_businesses.*')
         ->join('services', 'services.id', '=', 'services_by_businesses.service_id')
+        ->join('businesses', 'businesses.id', '=', 'services_by_businesses.business_id')
         ->where('services.correlative', env('APP_CORRELATIVE'))
         ->where('services_by_businesses.business_id', Auth::user()->business_id)
+        ->where('businesses.created_by', Auth::user()->id)
         ->first();
-      if (!$service) throw new Exception('No tienes acceso a este servicio');
-      $service->first_time = false;
-      $service->save();
+      if (!$serviceJpa) throw new Exception('No tienes acceso a este servicio');
+      $serviceJpa->first_time = false;
+      $serviceJpa->save();
+
       DB::commit();
     }, fn() => DB::rollBack());
     return response($response->toArray(), $response->status);
@@ -130,6 +184,16 @@ class AuthController extends Controller
 
   public function joinView(Request $request)
   {
+
+    $service = ServicesByBusiness::query()
+      ->join('services', 'services.id', '=', 'services_by_businesses.service_id')
+      ->where('services.correlative', env('APP_CORRELATIVE'))
+      ->where('services_by_businesses.business_id', Auth::user()->business_id)
+      ->first();
+
+    if (!$service) return redirect(env('APP_PROTOCOL') . '://' . env('APP_DOMAIN'));
+    if (!$service->first_time) return redirect('/home');
+
     return Inertia::render('Join', [
       'global' => [
         'WA_URL' => env('WA_URL'),
