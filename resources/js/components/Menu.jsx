@@ -67,24 +67,24 @@ const Menu = ({ session, theme, can, whatsAppStatus, APP_PROTOCOL, APP_DOMAIN, l
         </Tippy>
       </div> */}
       <div className="user-box w-100 mb-2" style={{ padding: '0px 20px' }}>
-        <div className='position-relative' style={{width: 'max-content', height: 'max-content'}}>
-        <img
-          src={`//${APP_DOMAIN}/api/profile/thumbnail/${session.relative_id}?v=${new Date(session.updated_at).getTime()}`}
-          alt={session.name}
-          title={session.name}
-          className="rounded-circle img-thumbnail avatar-md mb-2"
-          style={{
-            padding: 0,
-            backgroundColor: 'unset',
-            // borderColor: '#98a6ad',
-            objectFit: 'cover',
-            objectPosition: 'center'
-          }}
-        />
-         <span 
-         className={`d-block ${wsActive ? 'bg-success' : 'bg-danger'} position-absolute rounded-circle`} 
-         style={{ width: '12px', height: '12px', bottom: '16px', right: '0px' }}
-         />
+        <div className='position-relative' style={{ width: 'max-content', height: 'max-content' }}>
+          <img
+            src={`//${APP_DOMAIN}/api/profile/thumbnail/${session.relative_id}?v=${new Date(session.updated_at).getTime()}`}
+            alt={session.name}
+            title={session.name}
+            className="rounded-circle img-thumbnail avatar-md mb-2"
+            style={{
+              padding: 0,
+              backgroundColor: 'unset',
+              // borderColor: '#98a6ad',
+              objectFit: 'cover',
+              objectPosition: 'center'
+            }}
+          />
+          <span
+            className={`d-block ${wsActive ? 'bg-success' : 'bg-danger'} position-absolute rounded-circle`}
+            style={{ width: '12px', height: '12px', bottom: '16px', right: '0px' }}
+          />
         </div>
         <div className="d-flex justify-content-between align-items-center gap-1">
           <div className="w-100" style={{ maxWidth: '70%' }}>
@@ -109,6 +109,29 @@ const Menu = ({ session, theme, can, whatsAppStatus, APP_PROTOCOL, APP_DOMAIN, l
           </Tippy>
         </div>
       </div>
+
+      {
+        otherBusinesses.length == 0 &&
+        <div className='w-100 px-3'>
+          <div className="card border mb-1">
+            <div className="card-body p-2">
+              <div className="d-flex align-items-center gap-2 w-100">
+                <img
+                  src={`//${APP_DOMAIN}/api/logo/thumbnail/null`}
+                  className="rounded-circle"
+                  alt={currentBusiness.name}
+                  width="32"
+                  height="32"
+                />
+                <div className='w-100' style={{ maxWidth: '120px' }}>
+                  <h5 className="my-0 text-primary text-truncate w-100">{currentBusiness.name}</h5>
+                  <small className="text-muted">RUC: {currentBusiness.person.document_number}</small>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      }
 
       <div className={`px-2 py-1 text-center ${otherBusinesses.length > 0 ? 'd-block' : 'd-none'}`} style={{ position: 'relative' }}>
         <a className="btn dropdown-toggle waves-effect waves-light d-flex align-items-center justify-content-between gap-1 mx-auto" data-bs-toggle="dropdown"
