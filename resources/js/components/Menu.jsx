@@ -110,46 +110,26 @@ const Menu = ({ session, theme, can, whatsAppStatus, APP_PROTOCOL, APP_DOMAIN, l
         </div>
       </div>
 
-      {
-        otherBusinesses.length == 0 &&
-        <div className='w-100 px-3'>
-          <div className="card border mb-1">
-            <div className="card-body p-2">
-              <div className="d-flex align-items-center gap-2 w-100">
-                <img
-                  src={`//${APP_DOMAIN}/api/logo/thumbnail/null`}
-                  className="rounded-circle"
-                  alt={currentBusiness.name}
-                  width="32"
-                  height="32"
-                />
-                <div className='w-100' style={{ maxWidth: '120px' }}>
-                  <h5 className="my-0 text-primary text-truncate w-100">{currentBusiness.name}</h5>
-                  <small className="text-muted">RUC: {currentBusiness.person.document_number}</small>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      }
-
-      <div className={`px-2 py-1 text-center ${otherBusinesses.length > 0 ? 'd-block' : 'd-none'}`} style={{ position: 'relative' }}>
-        <a className="btn dropdown-toggle waves-effect waves-light d-flex align-items-center justify-content-between gap-1 mx-auto" data-bs-toggle="dropdown"
-          href="#" role="button" aria-haspopup="false" aria-expanded="false" style={{ borderColor: 'rgba(187, 187, 187, .25)', width: '200px', boxShadow: '0 0 8px rgba(187, 187, 187, .125)', borderRadius: '8px' }}>
+      <div className={`px-2 py-1 text-center ${otherBusinesses.length > 0 ? 'd-block' : ''}`} style={{ position: 'relative' }}>
+        <span className="btn dropdown-toggle waves-effect waves-light d-flex align-items-center justify-content-between gap-1 mx-auto" data-bs-toggle="dropdown"
+          role="button" aria-haspopup="false" aria-expanded="false" style={{ borderColor: 'rgba(187, 187, 187, .25)', width: '200px', boxShadow: '0 0 8px rgba(187, 187, 187, .125)', borderRadius: '8px', cursor: otherBusinesses.length > 0 ? 'pointer' : 'default' }}>
           <div className="d-flex align-items-start">
             <img className="d-flex me-2 rounded-circle" src={`//${APP_DOMAIN}/api/logo/thumbnail/null`}
               alt={currentBusiness.name} height="32" />
-            <div className="w-100">
+            <div className="w-100 text-start">
               <h5 className={`m-0 font-14 text-primary text-truncate`} style={{ width: '115px' }}>{currentBusiness.name}</h5>
               <span className="font-12 mb-0">RUC: {currentBusiness.person.document_number}</span>
             </div>
           </div>
-          <i className="mdi mdi-chevron-down"></i>
-        </a>
-        <div className="dropdown-menu dropdown-menu-center profile-dropdown w-full">
           {
             otherBusinesses.length > 0 &&
-            <>
+            <i className="mdi mdi-chevron-down"></i>
+          }
+        </span>
+        {
+          otherBusinesses.length > 0 &&
+          <>
+            <div className="dropdown-menu dropdown-menu-center profile-dropdown w-full">
               <div className="notification-list">
                 {
                   otherBusinesses.sort((a, b) => {
@@ -160,16 +140,14 @@ const Menu = ({ session, theme, can, whatsAppStatus, APP_PROTOCOL, APP_DOMAIN, l
                 }
               </div>
               <div className="dropdown-divider"></div>
-            </>
-          }
-          <a href={`//${APP_DOMAIN}/businesses`} className="dropdown-item notify-item">
-            <i className="fe-arrow-up-right"></i>
-            <span>Otras empresas</span>
-          </a>
-        </div>
-
+              <a href={`//${APP_DOMAIN}/businesses`} className="dropdown-item notify-item">
+                <i className="fe-arrow-up-right"></i>
+                <span>Otras empresas</span>
+              </a>
+            </div>
+          </>
+        }
       </div>
-
 
       <div id="sidebar-menu" className='show'>
 
