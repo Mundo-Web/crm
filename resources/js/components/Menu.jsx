@@ -111,7 +111,8 @@ const Menu = ({ session, theme, can, whatsAppStatus, APP_PROTOCOL, APP_DOMAIN, l
       </div>
 
       <div className={`px-2 py-1 text-center ${otherBusinesses.length > 0 ? 'd-block' : ''}`} style={{ position: 'relative' }}>
-        <span className="btn dropdown-toggle waves-effect waves-light d-flex align-items-center justify-content-between gap-1 mx-auto" data-bs-toggle="dropdown"
+        <span className="btn dropdown-toggle waves-effect waves-light d-flex align-items-center justify-content-between gap-1 mx-auto"
+          data-bs-toggle={otherBusinesses.length > 0 ? "dropdown" : undefined}
           role="button" aria-haspopup="false" aria-expanded="false" style={{ borderColor: 'rgba(187, 187, 187, .25)', width: '200px', boxShadow: '0 0 8px rgba(187, 187, 187, .125)', borderRadius: '8px', cursor: otherBusinesses.length > 0 ? 'pointer' : 'default' }}>
           <div className="d-flex align-items-start">
             <img className="d-flex me-2 rounded-circle" src={`//${APP_DOMAIN}/api/logo/thumbnail/null`}
