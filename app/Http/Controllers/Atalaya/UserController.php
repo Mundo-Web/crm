@@ -64,52 +64,58 @@ class UserController extends BasicController
                 ->where('status', true)
                 ->first();
 
-            if (!$userJpa) {
-                return $this->inviteExternal($request);
+            if ($userJpa) {
+                return $this::inviteInternal($request->match, $userJpa);
+            } else {
+                return $this::inviteExternal($request->match, $request->email);
             }
-            $serviceByBusinessJpa = ServicesByBusiness::with('service', 'business')
-                ->where('id', $request->match)
-                ->first();
-            if (!$serviceByBusinessJpa) throw new Exception('El servicio no existe o no tienes permisos para vincular');
-
-            $ubsbb = UsersByServicesByBusiness::updateOrCreate([
-                'user_id' => $userJpa->id,
-                'service_by_business_id' => $serviceByBusinessJpa->id
-            ], [
-                'created_by' => Auth::user()->id,
-                'invitation_token' => Crypto::randomUUID(),
-                'invitation_accepted' => Auth::user()->id == $userJpa->id
-            ]);
-
-            if ($ubsbb->invitation_accepted) return User::byBusiness($userJpa->id);
-
-            $urlConfirm = env('APP_PROTOCOL') . '://' . env('APP_DOMAIN') . '/invitation/' . $ubsbb->invitation_token;
-            $content = AtalayaConstant::value('accept-invitation');
-            $content = str_replace('{SENDER}', Auth::user()->name, $content);
-            $content = str_replace('{SERVICE}', $serviceByBusinessJpa->service->name, $content);
-            $content = str_replace('{BUSINESS}', $serviceByBusinessJpa->business->name, $content);
-            $content = str_replace('{URL_CONFIRM}', $urlConfirm, $content);
-
-            $mailer = EmailConfig::config();
-            $mailer->Subject = 'Confirmacion - Atalaya';
-            $mailer->Body = $content;
-            $mailer->addAddress($userJpa->email);
-            $mailer->isHTML(true);
-            $mailer->send();
-
-            return User::byBusiness($userJpa->id);
         });
 
         return response($response->toArray(), $response->status);
     }
-    public function inviteExternal(Request $request)
+
+    static function inviteInternal(int $match, AtalayaUser $userJpa)
     {
         $serviceByBusinessJpa = ServicesByBusiness::with('service', 'business')
-            ->where('id', $request->match)
+            ->where('id', $match)
+            ->first();
+        if (!$serviceByBusinessJpa) throw new Exception('El servicio no existe o no tienes permisos para vincular');
+
+        $ubsbb = UsersByServicesByBusiness::updateOrCreate([
+            'user_id' => $userJpa->id,
+            'service_by_business_id' => $serviceByBusinessJpa->id
+        ], [
+            'created_by' => Auth::user()->id,
+            'invitation_token' => Crypto::randomUUID(),
+            'invitation_accepted' => Auth::user()->id == $userJpa->id
+        ]);
+
+        if ($ubsbb->invitation_accepted) return User::byBusiness($userJpa->id);
+
+        $urlConfirm = env('APP_PROTOCOL') . '://' . env('APP_DOMAIN') . '/invitation/' . $ubsbb->invitation_token;
+        $content = AtalayaConstant::value('accept-invitation');
+        $content = str_replace('{SENDER}', Auth::user()->name, $content);
+        $content = str_replace('{SERVICE}', $serviceByBusinessJpa->service->name, $content);
+        $content = str_replace('{BUSINESS}', $serviceByBusinessJpa->business->name, $content);
+        $content = str_replace('{URL_CONFIRM}', $urlConfirm, $content);
+
+        $mailer = EmailConfig::config();
+        $mailer->Subject = 'Confirmacion - Atalaya';
+        $mailer->Body = $content;
+        $mailer->addAddress($userJpa->email);
+        $mailer->isHTML(true);
+        $mailer->send();
+
+        return User::byBusiness($userJpa->id);
+    }
+    static function inviteExternal(int $match, string $email)
+    {
+        $serviceByBusinessJpa = ServicesByBusiness::with('service', 'business')
+            ->where('id', $match)
             ->first();
         if (!$serviceByBusinessJpa) throw new Exception('El servicio no existe o no tienes permisos para vincular');
         $invitationEmail = InvitationEmail::updateOrCreate([
-            'email' => $request->email,
+            'email' => $email,
             'service_by_business_id' => $serviceByBusinessJpa->id,
         ], [
             'invitation_token' => Crypto::randomUUID(),

@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Atalaya\UserController;
 use App\Models\Atalaya\ServicesByBusiness;
+use App\Models\Atalaya\User;
 use App\Models\Atalaya\UsersByServicesByBusiness;
 use App\Models\Setting;
 use App\Models\Status;
@@ -85,6 +87,16 @@ class AuthController extends Controller
       if (!$serviceJpa) throw new Exception('No tienes acceso a este servicio');
       $serviceJpa->first_time = false;
       $serviceJpa->save();
+
+      try {
+        $emails = $request->emails;
+        foreach ($emails as $email) {
+          $userJpa = User::where('email', $email)->first();
+          if ($userJpa) UserController::inviteInternal($serviceJpa->id, $userJpa);
+          else UserController::inviteExternal($serviceJpa->id, $email);
+        }
+      } catch (\Throwable $th) {
+      }
 
       DB::commit();
     }, fn() => DB::rollBack());
