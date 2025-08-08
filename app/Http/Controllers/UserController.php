@@ -42,6 +42,12 @@ class UserController extends BasicController
             ->where('business_id', Auth::user()->business_id)
             ->first()->id;
 
+        // Delete invitations older than 48 hours first
+        InvitationEmail::where('service_by_business_id', $match)
+            ->where('updated_at', '<', now()->subHours(48))
+            ->delete();
+
+        // Then get remaining invitations
         $invitations = InvitationEmail::where('service_by_business_id', $match)->get();
 
         return [
