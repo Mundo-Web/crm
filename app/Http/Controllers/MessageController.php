@@ -171,9 +171,6 @@ class MessageController extends BasicController
             $businessJpa = Business::where('uuid', $businessUUID)->first();
             if (!$businessJpa) throw new Exception('No existe una empresa vinculada a esta sesion');
 
-            $businessApiKey = Setting::get('gemini-api-key', $businessJpa->id);
-            if (!$businessApiKey) throw new Exception('Esta empresa no tiene integracion con AI');
-
             $clientExists = Client::select([
                 'clients.*',
                 'clients.status AS client_status',
@@ -216,6 +213,10 @@ class MessageController extends BasicController
             if (!$request->from_me && $leadJpa->wasRecentlyCreated) {
                 $this->createFirstNote($leadJpa);
             }
+
+            $businessApiKey = Setting::get('gemini-api-key', $businessJpa->id);
+            if (!$businessApiKey) throw new Exception('Esta empresa no tiene integracion con AI');
+
 
             if ($request->from_me) {
                 $response->summary = [
