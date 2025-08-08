@@ -11,9 +11,22 @@ class UsersRest extends BasicRest {
                 body: JSON.stringify(request)
             })
             if (!status) throw new Error(result?.message || 'Ocurrio un error inesperado')
-            return { status: true, data: result.data }
+            return { status: true, data: result.data, summary: result.summary }
+
         } catch (error) {
             return { status: false, message: error.message }
+        }
+    }
+
+    deleteInvitation = async (id) => {
+        try {
+            const { status: fetchStatus, result } = await Fetch(`/api/${this.path}/external/${id}`, {
+                method: 'DELETE'
+            })
+            if (!fetchStatus) throw new Error(result?.message ?? 'Ocurrio un error inesperado')
+            return {status: true}
+        } catch (error) {
+            return {status:false, message: error.message}
         }
     }
 }

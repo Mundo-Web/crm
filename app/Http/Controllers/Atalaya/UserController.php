@@ -59,7 +59,7 @@ class UserController extends BasicController
 
     public function invite(Request $request)
     {
-        $response = Response::simpleTryCatch(function () use ($request) {
+        $response = Response::simpleTryCatch(function ($response) use ($request) {
             $userJpa = AtalayaUser::where('email', $request->email)
                 ->where('status', true)
                 ->first();
@@ -67,6 +67,7 @@ class UserController extends BasicController
             if ($userJpa) {
                 return $this::inviteInternal($request->match, $userJpa);
             } else {
+                $response->summary = ['external' => true];
                 return $this::inviteExternal($request->match, $request->email);
             }
         });
@@ -136,6 +137,8 @@ class UserController extends BasicController
         $mailer->addAddress($invitationEmail->email);
         $mailer->isHTML(true);
         $mailer->send();
+
+        return $invitationEmail;
     }
 
     public function delete(Request $request, string $id)
@@ -152,6 +155,18 @@ class UserController extends BasicController
                 ->first();
             if (!$ubsbb) throw new Exception('El usuario no existe o no tienes permisos para eliminar');
             $ubsbb->delete();
+        });
+        return response($response->toArray(), $response->status);
+    }
+
+    public function deleteInvitation(Request $request, string $id)
+    {
+        $response = Response::simpleTryCatch(function () use ($request, $id) {
+            $invitationEmail = InvitationEmail::query()
+                ->where('id', $id)
+                ->first();
+            if (!$invitationEmail) throw new Exception('La invitación no existe o no tienes permisos para eliminar');
+            $invitationEmail->delete();
         });
         return response($response->toArray(), $response->status);
     }

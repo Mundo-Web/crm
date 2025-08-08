@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Atalaya\BusinessSign;
+use App\Models\Atalaya\InvitationEmail;
 use App\Models\Atalaya\ServicesByBusiness;
 use App\Models\ModelHasRoles;
 use App\Models\User;
@@ -41,10 +42,13 @@ class UserController extends BasicController
             ->where('business_id', Auth::user()->business_id)
             ->first()->id;
 
+        $invitations = InvitationEmail::where('service_by_business_id', $match)->get();
+
         return [
             'users' => $usersJpa,
             'roles' => $rolesJpa,
-            'match' => $match
+            'match' => $match,
+            'invitations' => $invitations
         ];
     }
 

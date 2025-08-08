@@ -7,17 +7,21 @@ import Adminto from './components/Adminto'
 import Modal from './components/Modal.jsx'
 import InviteUserCard from './Reutilizables/Users/InviteUserCard.jsx'
 import UserCard from './Reutilizables/Users/UserCard.jsx'
+import Tippy from '@tippyjs/react'
+import InvitationsModal from './Reutilizables/Users/InvitationsModal.jsx'
 
 const atalayaUsersRest = new AtalayaUsersRest()
 
 const Users = (properties) => {
-  const { users: usersInertia, roles, match } = properties
+  const { users: usersInertia, invitations: invitationsInertia, roles, match } = properties
 
   const [users, setUsers] = useState(usersInertia)
+  const [invitations, setInvitations] = useState(invitationsInertia)
 
   // Referencias de elementos
   const modalRef = useRef()
   const searchTimeoutRef = useRef(null)
+  const invitationModalRef = useRef()
 
   // Variables de estados
   const [found, setFound] = useState([])
@@ -60,10 +64,17 @@ const Users = (properties) => {
   }, [])
 
   return (<>
-    <Adminto {...properties} title='Usuarios' floatEnd={<button className='btn btn-sm btn-primary' onClick={() => $(modalRef.current).modal('show')}>
-      <i className='mdi mdi-account-plus me-1'></i>
-      Invitar
-    </button>}>
+    <Adminto {...properties} title='Usuarios' floatEnd={<div className='d-flex gap-1'>
+      <Tippy content='Invitaciones externas'>
+        <button className='btn btn-sm btn-light' onClick={() => $(invitationModalRef.current).modal('show')}>
+          <i className='mdi mdi-history'></i>
+        </button>
+      </Tippy>
+      <button className='btn btn-sm btn-primary' onClick={() => $(modalRef.current).modal('show')}>
+        <i className='mdi mdi-account-plus me-1'></i>
+        Invitar
+      </button>
+    </div>}>
       <div className='d-flex flex-wrap align-items-center justify-content-center' style={{ minHeight: 'calc(100vh - 235px)', maxHeight: 'max-content' }}>
         <div className='d-flex flex-wrap align-items-center justify-content-center gap-2'>
           {
@@ -95,7 +106,7 @@ const Users = (properties) => {
                 <div className='d-flex flex-column gap-2 mt-2'>
                   {found.map((user, i) => <InviteUserCard key={`found-${i}`} {...user} match={match} setUsers={setUsers} />)}
                   {
-                    emailValid === true && <InviteUserCard key={`found-${search}`} fullname={search.split('@')[0]} email={search} match={match} setUsers={setUsers} />
+                    emailValid === true && <InviteUserCard key={`found-${search}`} fullname={search.split('@')[0]} email={search} match={match} setUsers={setUsers} setInvitations={setInvitations} />
                   }
                 </div>
               ) : (
@@ -108,6 +119,8 @@ const Users = (properties) => {
             </>
         }
       </Modal>
+
+      <InvitationsModal modalRef={invitationModalRef} invitations={invitations} setInvitations={setInvitations} match={match} />
     </Adminto>
   </>
   )
