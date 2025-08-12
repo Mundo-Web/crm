@@ -61,6 +61,7 @@ class Client extends Model
         'complete_registration',
         'integration_id',
         'integration_user_id',
+        'source_channel',
     ];
 
     static function getFields()

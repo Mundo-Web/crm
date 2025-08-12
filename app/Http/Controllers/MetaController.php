@@ -426,6 +426,9 @@ class MetaController extends Controller
                 if (!empty($collected['telefonoCliente']) && $collected['telefonoCliente'] != '-') {
                     $updateData['contact_phone'] = $collected['telefonoCliente'];
                 }
+                if (!empty($collected['fuenteCliente']) && $collected['fuenteCliente'] != '-') {
+                    $updateData['source_channel'] = $collected['fuenteCliente'];
+                }
 
                 if (!empty($updateData)) {
                     $clientJpa->update($updateData);
