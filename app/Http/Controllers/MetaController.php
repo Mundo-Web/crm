@@ -367,8 +367,9 @@ class MetaController extends Controller
                 }
 
                 $answer = $geminiResponse['candidates'][0]['content']['parts'][0]['text'];
-
                 $prompt2save = $prompt2send . $answer;
+                
+                dump($prompt2save);
 
                 $result = self::searchCommand($answer);
                 if (!$result['found']) {
