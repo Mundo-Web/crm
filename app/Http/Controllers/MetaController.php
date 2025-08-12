@@ -283,6 +283,7 @@ class MetaController extends Controller
     public static function assistant(Client $clientJpa, Message $messageJpa)
     {
         try {
+            $endsIn = 'Inicio';
             while (true) {
                 // Get latest message for this client
                 $latestMessage = Message::query()
@@ -293,6 +294,7 @@ class MetaController extends Controller
 
                 // If latest message is different from current message, stop processing
                 if ($latestMessage->id !== $messageJpa->id) {
+                    $endsIn = 'Nuevo mensaje';
                     break;
                 }
 
@@ -307,6 +309,7 @@ class MetaController extends Controller
 
                 // Check if registration is already complete
                 if ($clientJpa->complete_registration) {
+                    $endsIn = 'Datos completos';
                     break;
                 }
 
@@ -363,6 +366,7 @@ class MetaController extends Controller
                 ]);
                 $geminiResponse = $geminiRest->json();
                 if (isset($geminiResponse['error']['message'])) {
+                    $endsIn = 'Gemini falló: ' . $geminiResponse['error']['message'];
                     break;
                 }
 
@@ -409,6 +413,8 @@ class MetaController extends Controller
                         'microtime' => (int) (microtime(true) * 1_000_000),
                         'business_id' => $clientJpa->business_id
                     ]);
+
+                    $endsIn = 'Bot respondió sin comando';
                     break;
                 }
 
@@ -515,8 +521,10 @@ class MetaController extends Controller
                         }
                     }
                 }
+                $endsIn = 'Al final';
                 break;
             }
+            dump('Terminó: ' . $endsIn);
         } catch (\Throwable $th) {
             dump($th->getMessage());
         }
