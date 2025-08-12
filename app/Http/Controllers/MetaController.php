@@ -355,7 +355,8 @@ class MetaController extends Controller
                                     ]
                                 ]
                             ]
-                        ]
+                        ],
+                        'stop_sequences' => ['Human:', 'AI:']
                     ]
                 ]);
                 $geminiResponse = $geminiRest->json();
