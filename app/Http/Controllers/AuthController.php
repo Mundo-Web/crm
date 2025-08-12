@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use SoDe\Extend\Fetch;
+use SoDe\Extend\File;
 use SoDe\Extend\Response;
 
 class AuthController extends Controller
@@ -97,6 +98,16 @@ class AuthController extends Controller
         }
       } catch (\Throwable $th) {
       }
+
+      Setting::set('assignation-lead-status[task]', 'En curso');
+      Setting::set('revertion-lead-status[task]', 'Pendiente');
+
+      Setting::set('whatsapp-new-lead-notification-message', File::get('../storage/app/utils/whatsapp-new-lead-notification-message.html'));
+      Setting::set('whatsapp-new-lead-notification-message-client', File::get('../storage/app/utils/whatsapp-new-lead-notification-message-client.html'));
+
+      Setting::set('email-new-lead-notification-message', File::get('../storage/app/utils/email-new-lead-notification-message.html'));
+      Setting::set('email-new-lead-notification-message-client', File::get('../storage/app/utils/email-new-lead-notification-message-client.html'));
+      Setting::set('email-new-lead-notification-owneremail', Auth::user()->email);
 
       DB::commit();
     }, fn() => DB::rollBack());
