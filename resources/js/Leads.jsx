@@ -85,6 +85,7 @@ const Leads = (properties) => {
   const nameRef = useRef()
   const webUrlRef = useRef()
   const messageRef = useRef()
+  const sourceChannelRef = useRef()
 
   const [session, setSession] = useState(sessionDB)
   const [statuses, setStatuses] = useState(statusesFromDB);
@@ -450,7 +451,8 @@ const Leads = (properties) => {
       message: messageRef.current.value || 'Sin mensaje',
       client_width: window.screen.width,
       client_height: window.screen.height,
-      client_system: navigator.platform ?? 'Linux'
+      client_system: navigator.platform ?? 'Linux',
+      source_channel: sourceChannelRef.current.value,
     }
 
     if (!request.id) {
@@ -481,6 +483,7 @@ const Leads = (properties) => {
     nameRef.current.value = data?.name ?? ''
     webUrlRef.current.value = data?.web_url ?? ''
     messageRef.current.value = data?.message ?? ''
+    sourceChannelRef.current.value = data?.source_channel ?? ''
 
     $(newLeadModalRef.current).modal('show')
   }
@@ -979,6 +982,7 @@ const Leads = (properties) => {
         <InputFormGroup eRef={nameRef} label='Empresa / Marca' col='col-md-6' />
         <InputFormGroup eRef={webUrlRef} label='Link de WEB' col='col-md-6' />
         <TextareaFormGroup eRef={messageRef} label='Mensaje' placeholder='Ingresa tu mensaje' rows={4} />
+        <InputFormGroup eRef={sourceChannelRef} label='Canal de origen' placeholder='Ej. Facebook, Google, Tiktok, Otros' />
       </div>
     </Modal>
 

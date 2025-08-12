@@ -396,6 +396,11 @@ const onMassiveAssignClicked = async (userId) => {
         dataType: 'string'
       },
       {
+        dataField: 'source_channel',
+        caption: 'Canal de origen',
+        dataType: 'string'
+      },
+      {
         dataField: 'created_at',
         caption: 'Fecha creacion',
         dataType: 'date',
