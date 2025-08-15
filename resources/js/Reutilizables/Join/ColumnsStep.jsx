@@ -46,25 +46,38 @@ const ColumnsStep = ({ data, setData, setStep }) => {
                     })
                 }
             </div>
-            <div className="w-full mt-2 overflow-x-auto">
+            <div className="w-full mt-4 overflow-x-auto">
+                <h4 className="font-semibold">{data.projectName || 'Leads'}</h4>
                 <table className="w-full border-collapse">
                     <thead>
                         <tr className="border-b">
-                            {data.columns?.map((column, index) => (
-                                <th key={index} className="p-3 text-left text-sm font-medium text-gray-600 text-nowrap">
-                                    {column}
+                            {data.columns?.length ? (
+                                data.columns.map((column, index) => (
+                                    <th key={index} className="p-3 text-left text-sm font-medium text-gray-600 text-nowrap">
+                                        {column}
+                                    </th>
+                                ))
+                            ) : (
+                                <th className="p-3 text-left text-sm font-medium text-gray-600 text-nowrap">
+                                    <div className="h-4 w-32 bg-gray-200 rounded animate-pulse"></div>
                                 </th>
-                            ))}
+                            )}
                         </tr>
                     </thead>
                     <tbody>
                         {[1, 2].map((row) => (
                             <tr key={row} className="border-b">
-                                {data.columns?.map((_, index) => (
-                                    <td key={index} className="p-3">
+                                {data.columns?.length ? (
+                                    data.columns.map((_, index) => (
+                                        <td key={index} className="p-3">
+                                            <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+                                        </td>
+                                    ))
+                                ) : (
+                                    <td className="p-3">
                                         <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
                                     </td>
-                                ))}
+                                )}
                             </tr>
                         ))}
                     </tbody>
