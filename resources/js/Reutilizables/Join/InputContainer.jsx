@@ -32,14 +32,14 @@ const InputContainer = ({ label, children, className, required, icon, type = 'te
                         disabled={disabled} />
                     {
                         type == 'password' &&
-                        <button type="button" className="absolute right-0" onClick={onShowPassword}>
+                        <span type="button" className="absolute right-0 select-none cursor-pointer" onClick={onShowPassword}>
                             {
                                 showPassword ?
                                     <i className="mdi mdi-eye"></i>
                                     :
                                     <i className="mdi mdi-eye-off"></i>
                             }
-                        </button>
+                        </span>
                     }
                 </div>
                 {invalid && <span className="text-[#FE4611] block text-xs mt-1">{invalidText}</span>}
