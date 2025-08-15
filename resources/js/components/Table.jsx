@@ -64,10 +64,40 @@ const Table = ({ title, gridRef, rest, columns, toolBar, masterDetail, filterVal
 
   // Handle export
   const handleExport = () => {
+    if (!exportable) return
+
     const dataGrid = $(gridRef.current).dxDataGrid('instance')
-    dataGrid.exportToExcel && dataGrid.exportToExcel(false)
-    dataGrid._options.onExporting && dataGrid._options.onExporting({
-      component: dataGrid.current
+
+    // Create workbook and worksheet
+    const workbook = new ExcelJS.Workbook()
+    const worksheet = workbook.addWorksheet('Data')
+
+    // Export with ExcelJS to handle outline properties
+    DevExpress.excelExporter.exportDataGrid({
+      component: dataGrid,
+      worksheet: worksheet,
+      autoFilterEnabled: true,
+      topLeftCell: { row: 1, column: 1 },
+      customizeCell: function (options) {
+        const { gridCell, excelCell } = options;
+
+        // Handle column headers
+        if (gridCell.rowType === 'header') {
+          excelCell.value = gridCell.column.caption || gridCell.column.dataField;
+          // Optional: Add header styling
+          excelCell.font = { bold: true };
+          excelCell.alignment = { horizontal: 'center' };
+        } else {
+          excelCell.value = gridCell.value;
+        }
+      }
+    }).then(function () {
+      workbook.xlsx.writeBuffer().then(function (buffer) {
+        saveAs(
+          new Blob([buffer], { type: 'application/octet-stream' }),
+          `${text.toLowerCase()}.xlsx`
+        )
+      })
     })
   }
 
