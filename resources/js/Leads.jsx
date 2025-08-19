@@ -7,7 +7,6 @@ import Swal from 'sweetalert2'
 import '../css/leads.css'
 import ClientNotesCard from './Reutilizables/ClientNotes/ClientNotesCard.jsx'
 import TaskCard from './Reutilizables/Tasks/TaskCard.jsx'
-import Correlative from './Utils/Correlative.js'
 import CreateReactScript from './Utils/CreateReactScript.jsx'
 import ClientNotesRest from './actions/ClientNotesRest.js'
 import LeadsRest from './actions/LeadsRest.js'
@@ -18,8 +17,6 @@ import Modal from './components/Modal.jsx'
 import InputFormGroup from './components/form/InputFormGroup.jsx'
 import TextareaFormGroup from './components/form/TextareaFormGroup.jsx'
 import SelectFormGroup from './components/form/SelectFormGroup.jsx'
-import TippyButton from './components/form/TippyButton.jsx'
-
 import "quill-mention/autoregister"
 import SelectAPIFormGroup from './components/form/SelectAPIFormGroup.jsx'
 import SetSelectValue from './Utils/SetSelectValue.jsx'
@@ -42,6 +39,8 @@ import NewLeadsRest from './actions/NewLeadsRest.js'
 import OffCanvas from './components/OffCanvas.jsx'
 import LeadKanban from './Reutilizables/Leads/LeadKanban.jsx'
 import { LeadsContext, LeadsProvider } from './Reutilizables/Leads/LeadsProvider.jsx'
+import { driver } from 'driver.js'
+import "driver.js/dist/driver.css";
 
 const leadsRest = new LeadsRest()
 const newLeadsRest = new NewLeadsRest()
@@ -52,6 +51,12 @@ const usersRest = new UsersRest()
 const productsByClients = new ProductsByClients()
 const gmailRest = new GmailRest()
 
+import driver_fn from '../json/driver.js'
+
+const driverObj = driver({
+  showProgress: true,
+  steps: driver_fn.leads
+})
 
 const Leads = (properties) => {
   const { statuses: statusesFromDB, defaultClientStatus, defaultLeadStatus, manageStatuses: manageStatusesFromDB, noteTypes, products = [], processes = [], defaultMessages = [], session: sessionDB, can, lead, signs, users } = properties
@@ -143,6 +148,14 @@ const Leads = (properties) => {
       }, 200);
     });
 
+  }, [null])
+
+  useEffect(() => {
+    console.log(GET)
+    if (GET.first_time) {
+      console.log('Something')
+      driverObj.drive();
+    }
   }, [null])
 
   useEffect(() => {
@@ -585,7 +598,7 @@ const Leads = (properties) => {
         Pipeline
       </label>
     </div>
-    <button className='btn btn-sm btn-purple' onClick={() => onOpenModal()}>
+    <button className='btn btn-sm btn-purple' onClick={() => onOpenModal()} driver-js={1}>
       <i className='mdi mdi-plus me-1'></i>
       Nuevo Lead
     </button>
@@ -623,6 +636,7 @@ const Leads = (properties) => {
             setManageStatuses={setManageStatuses}
             users={users}
             title='Leads - Recien llegados'
+            cardClass='driver-js-4'
             borderColor='#4CAF50' />
         </>
         : (
@@ -973,12 +987,12 @@ const Leads = (properties) => {
       </div>
     </Modal>
 
-    <Modal modalRef={newLeadModalRef} title='Nuevo lead' btnSubmitText='Guardar' onSubmit={onModalSubmit} zIndex={1060}>
-      <div className="row mb-0">
+    <Modal modalRef={newLeadModalRef} title='Nuevo lead' btnSubmitText='Guardar' onSubmit={onModalSubmit} zIndex={1060} btnAcceptClass='driver-js-3'>
+      <div className="row mb-0" driver-js={2}>
         <input ref={idRef} type="hidden" />
         <InputFormGroup eRef={contactNameRef} label='Nombre completo' />
         <InputFormGroup eRef={contactEmailRef} label='Correo electronico' type="email" col='col-md-6' />
-        <InputFormGroup eRef={contactPhoneRef} label='Telefono' type="tel" col='col-md-6' required onBlur={() => onPhoneChange()} />
+        <InputFormGroup id='lead-phone' eRef={contactPhoneRef} label='Telefono' type="tel" col='col-md-6' required onBlur={() => onPhoneChange()} />
         <InputFormGroup eRef={nameRef} label='Empresa / Marca' col='col-md-6' />
         <InputFormGroup eRef={webUrlRef} label='Link de WEB' col='col-md-6' />
         <TextareaFormGroup eRef={messageRef} label='Mensaje' placeholder='Ingresa tu mensaje' rows={4} />

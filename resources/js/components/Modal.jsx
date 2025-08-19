@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 
-const Modal = ({ modalRef, title = 'Modal', isStatic = false, size = 'md', position = 'dialog-centered', children, bodyClass = '', btnCancelText, btnSubmitText, hideHeader, hideFooter, hideButtonSubmit, zIndex, width, onSubmit = (e) => { e.preventDefault(); $(modalRef.current).modal('hide') }, onClose = () => { } }) => {
+const Modal = ({ modalRef, title = 'Modal', btnAcceptClass = '', isStatic = false, size = 'md', position = 'dialog-centered', children, bodyClass = '', btnCancelText, btnSubmitText, hideHeader, hideFooter, hideButtonSubmit, zIndex, width, onSubmit = (e) => { e.preventDefault(); $(modalRef.current).modal('hide') }, onClose = () => { } }) => {
   const staticProp = isStatic ? { 'data-bs-backdrop': 'static' } : {}
   const modalId = crypto.randomUUID();
 
@@ -32,7 +32,7 @@ const Modal = ({ modalRef, title = 'Modal', isStatic = false, size = 'md', posit
           !hideFooter && <div className='modal-footer'>
             <button className='btn btn-sm btn-danger pull-left' type='button'
               data-bs-dismiss='modal'>{btnCancelText ?? 'Cerrar'}</button>
-            {!hideButtonSubmit && <button className='btn btn-sm btn-success pull-right' type='submit'>{btnSubmitText ?? 'Aceptar'}</button>}
+            {!hideButtonSubmit && <button className={`btn btn-sm btn-success pull-right ${btnAcceptClass}`} type='submit'>{btnSubmitText ?? 'Aceptar'}</button>}
           </div>
         }
       </div>

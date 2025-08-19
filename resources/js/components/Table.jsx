@@ -7,7 +7,7 @@ import es from 'date-fns/locale/es'
 import 'react-date-range/dist/styles.css'
 import 'react-date-range/dist/theme/default.css'
 
-const Table = ({ title, gridRef, rest, columns, toolBar, masterDetail, filterValue = [], defaultRows, selection, className = '', allowedPageSizes, pageSize, exportable = false, customizeCell, reloadWith, height, cardStyle, keyExpr, onSelectionChanged, massiveActions }) => {
+const Table = ({ title, gridRef, rest, columns, toolBar, masterDetail, filterValue = [], defaultRows, selection, cardClass = '', className = '', allowedPageSizes, pageSize, exportable = false, customizeCell, reloadWith, height, cardStyle, keyExpr, onSelectionChanged, massiveActions }) => {
   const html = renderToString(<div>{title}</div>)
   const text = $(html).text().trim().replace('-', '')
   const [range, setRange] = useState([{ startDate: new Date(), endDate: new Date(), key: 'selection', }])
@@ -118,7 +118,7 @@ const Table = ({ title, gridRef, rest, columns, toolBar, masterDetail, filterVal
   return (
     <div className={`row ${className}`}>
       <div className="col-12">
-        <div className="card" style={cardStyle}>
+        <div className={`card ${cardClass}`} style={cardStyle}>
           <div className="card-body">
             {
               <div className='d-flex justify-content-between align-items-start mb-2'>

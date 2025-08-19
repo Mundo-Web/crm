@@ -16,57 +16,57 @@ import { LeadsContext } from "./LeadsProvider"
 const leadsRest = new LeadsRest()
 const clientsRest = new ClientsRest()
 
-const LeadTable = ({ gridRef, otherGridRef, rest, can, defaultLeadStatus, statuses, manageStatuses, onClientStatusClicked, onManageStatusChange, onLeadClicked, onMessagesClicked, onAttendClient, onOpenModal, onMakeLeadClient, onArchiveClicked, onDeleteClicked, title, borderColor = '#315AFE', setStatuses, setManageStatuses, users, filterAssignation }) => {
+const LeadTable = ({ gridRef, cardClass, otherGridRef, rest, can, defaultLeadStatus, statuses, manageStatuses, onClientStatusClicked, onManageStatusChange, onLeadClicked, onMessagesClicked, onAttendClient, onOpenModal, onMakeLeadClient, onArchiveClicked, onDeleteClicked, title, borderColor = '#315AFE', setStatuses, setManageStatuses, users, filterAssignation }) => {
 
   const { selectedUsersId, setSelectedUsersId, defaultView } = useContext(LeadsContext)
 
-const onMassiveAssignClicked = async (userId) => {
-  const selectedRows = $(gridRef.current).dxDataGrid('instance').getSelectedRowKeys().map(({ id }) => id);
+  const onMassiveAssignClicked = async (userId) => {
+    const selectedRows = $(gridRef.current).dxDataGrid('instance').getSelectedRowKeys().map(({ id }) => id);
 
-  if (!selectedRows.length) {
-    Swal.fire({
-      icon: 'warning',
-      title: 'No hay leads seleccionados',
-      text: 'Por favor seleccione al menos un lead para asignar'
+    if (!selectedRows.length) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'No hay leads seleccionados',
+        text: 'Por favor seleccione al menos un lead para asignar'
+      });
+      return;
+    }
+
+    const isUnassigning = userId === null;
+    const selectedUser = !isUnassigning ? users.find(user => user.id === userId) : null;
+
+    const { isConfirmed } = await Swal.fire({
+      icon: 'question',
+      title: isUnassigning ? 'Confirmar Desasignación' : 'Confirmar Asignación',
+      text: isUnassigning
+        ? `¿Está seguro que desea quitar la asignación de ${selectedRows.length} lead(s)?`
+        : `¿Está seguro que desea asignar ${selectedRows.length} lead(s) a ${selectedUser?.name}?`,
+      showCancelButton: true,
+      confirmButtonText: isUnassigning ? 'Sí, quitar asignación' : 'Sí, asignar',
+      cancelButtonText: 'Cancelar'
     });
-    return;
+    if (!isConfirmed) return;
+
+    const result = await leadsRest.massiveAssign({
+      leadsId: selectedRows,
+      userId: userId
+    });
+
+    if (!result) return;
+
+    Swal.fire({
+      icon: 'success',
+      title: isUnassigning ? 'Asignación Removida' : 'Leads Asignados',
+      text: isUnassigning
+        ? 'Se ha quitado la asignación de los leads exitosamente'
+        : 'Los leads han sido asignados exitosamente'
+    });
+
+    const grid = $(gridRef.current).dxDataGrid('instance');
+    grid.clearSelection();
+    grid.refresh();
+    $(otherGridRef.current).dxDataGrid('instance').refresh();
   }
-
-  const isUnassigning = userId === null;
-  const selectedUser = !isUnassigning ? users.find(user => user.id === userId) : null;
-
-  const { isConfirmed } = await Swal.fire({
-    icon: 'question',
-    title: isUnassigning ? 'Confirmar Desasignación' : 'Confirmar Asignación',
-    text: isUnassigning 
-      ? `¿Está seguro que desea quitar la asignación de ${selectedRows.length} lead(s)?`
-      : `¿Está seguro que desea asignar ${selectedRows.length} lead(s) a ${selectedUser?.name}?`,
-    showCancelButton: true,
-    confirmButtonText: isUnassigning ? 'Sí, quitar asignación' : 'Sí, asignar',
-    cancelButtonText: 'Cancelar'
-  });
-  if (!isConfirmed) return;
-
-  const result = await leadsRest.massiveAssign({
-    leadsId: selectedRows,
-    userId: userId
-  });
-
-  if (!result) return;
-
-  Swal.fire({
-    icon: 'success',
-    title: isUnassigning ? 'Asignación Removida' : 'Leads Asignados',
-    text: isUnassigning 
-      ? 'Se ha quitado la asignación de los leads exitosamente'
-      : 'Los leads han sido asignados exitosamente'
-  });
-
-  const grid = $(gridRef.current).dxDataGrid('instance');
-  grid.clearSelection();
-  grid.refresh();
-  $(otherGridRef.current).dxDataGrid('instance').refresh();
-}
 
   const onMassiveArchiveClicked = async () => {
     const selectedRows = $(gridRef.current).dxDataGrid('instance').getSelectedRowKeys().map(({ id }) => id);
@@ -117,7 +117,7 @@ const onMassiveAssignClicked = async (userId) => {
     }
   }, [selectedUsersId, defaultView])
 
-  return <Table gridRef={gridRef} title={<>
+  return <Table cardClass={cardClass} gridRef={gridRef} title={<>
     <h4 className="header-title my-0">{title}</h4>
     {
       filterAssignation &&
@@ -194,7 +194,7 @@ const onMassiveAssignClicked = async (userId) => {
     // }}
     massiveActions={<>
       <li>
-        <button class="dropdown-item">
+        <button className="dropdown-item">
           <div className="d-flex justify-content-between gap-1">
             <span>
               <i className="mdi mdi-account me-1"></i>
@@ -203,7 +203,7 @@ const onMassiveAssignClicked = async (userId) => {
             <i className="mdi mdi-chevron-right"></i>
           </div>
         </button>
-        <ul class="dropdown-menu dropdown-submenu" style={{
+        <ul className="dropdown-menu dropdown-submenu" style={{
           maxHeight: '360px',
           overflowY: 'auto'
         }}>
@@ -220,13 +220,13 @@ const onMassiveAssignClicked = async (userId) => {
         </ul>
       </li>
       <li>
-        <button class="dropdown-item" onClick={() => onMassiveAssignClicked(null)}>
+        <button className="dropdown-item" onClick={() => onMassiveAssignClicked(null)}>
           <i className="mdi mdi-account-off me-1"></i>
           Quitar Asignación
         </button>
       </li>
       <li>
-        <button class="dropdown-item" onClick={onMassiveArchiveClicked}>
+        <button className="dropdown-item" onClick={onMassiveArchiveClicked}>
           <i className="mdi mdi-archive me-1"></i>
           Archivar
         </button>

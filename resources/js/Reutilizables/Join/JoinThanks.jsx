@@ -43,7 +43,7 @@ const JoinThanks = ({ data, step, setStep }) => {
                 setCountdown(prev => {
                     if (prev <= 1) {
                         clearInterval(timer)
-                        window.location.href = '/home'
+                        window.location.href = '/leads?first_time=1'
                         return 0
                     }
                     return prev - 1
@@ -84,8 +84,8 @@ const JoinThanks = ({ data, step, setStep }) => {
                             }
                         </>
                         : <>
-                            <a href="/home" className="w-full block border-2 border-[#4621E1] bg-[#4621E1] hover:bg-opacity-90 transition-colors font-semibold text-white rounded-xl py-3 px-6">
-                                Ir al Dashboard
+                            <a href="/leads?first_time=1" className="w-full block border-2 border-[#4621E1] bg-[#4621E1] hover:bg-opacity-90 transition-colors font-semibold text-white rounded-xl py-3 px-6">
+                                Ir al CRM
                             </a>
                             <p className="text-sm text-gray-600 mt-2">
                                 Serás redirigido automáticamente en {countdown} segundos
