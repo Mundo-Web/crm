@@ -121,7 +121,7 @@ const LeadTable = ({ gridRef, cardClass, otherGridRef, rest, can, defaultLeadSta
     <h4 className="header-title my-0">{title}</h4>
     {
       filterAssignation &&
-      <div className="d-flex gap-0 mt-2 align-items-center">
+      <div className="d-flex gap-0 mt-2 align-items-center driver-js-users-filter">
         {users.map(user => (
           <Tippy
             key={user.id}

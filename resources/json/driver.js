@@ -37,6 +37,17 @@ const leads = [
         }
     },
     {
+        element: '.driver-js-users-filter',
+        popover: {
+            title: "Filtro de Usuarios",
+            description: "En esta sección puedes personalizar la vista de leads según el usuario asignado. Por defecto, solo verás tus leads al cargar la página, pero puedes ajustar los filtros para ver los leads de otros usuarios si lo necesitas.",
+            side: "bottom",
+            align: "start",
+            nextBtnText: 'Continuar',
+            prevBtnText: 'Atrás',
+        }
+    },
+    {
         element: '.driver-js-account',
         popover: {
             title: "Tu Cuenta",
@@ -97,8 +108,8 @@ const leads = [
         element: '.driver-js-btn-save',
         popover: {
             title: "Guardar Información",
-            description: 'Excelente. Ahora solo presiona "Guardar" y tu lead quedará registrado en el sistema.',
-            side: "right",
+            description: 'Excelente. Ahora solo presiona "Guardar" y tu lead aparecerá automáticamente en la tabla de leads nuevos que vimos anteriormente. ¡Desde allí podrás comenzar a gestionarlo!',
+            side: "right", 
             align: "start",
             nextBtnText: 'Continuar',
             prevBtnText: 'Atrás',
