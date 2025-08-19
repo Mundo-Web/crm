@@ -243,7 +243,7 @@ const NavBar = ({ can, session = {}, theme, setTheme, title = '', wsActive, setW
         </li>}
 
         <li className="dropdown notification-list topbar-dropdown">
-          <a className="nav-link dropdown-toggle waves-effect waves-light" data-bs-toggle="dropdown" href="#"
+          <a className="nav-link dropdown-toggle waves-effect waves-light driver-js-notifications" data-bs-toggle="dropdown" href="#"
             role="button" aria-haspopup="false" aria-expanded="false" onClick={onNotificationsClicked}>
             <i className={`fe-bell noti-icon rounded-pill ${notificationsCount > 0 && 'pulse'}`}></i>
             {
@@ -292,7 +292,7 @@ const NavBar = ({ can, session = {}, theme, setTheme, title = '', wsActive, setW
         </li>
 
         <li className="dropdown notification-list topbar-dropdown">
-          <a className="nav-link dropdown-toggle nav-user me-0 waves-effect waves-light" data-bs-toggle="dropdown"
+          <a className="nav-link dropdown-toggle nav-user me-0 waves-effect waves-light driver-js-account" data-bs-toggle="dropdown"
             href="#" role="button" aria-haspopup="false" aria-expanded="false">
             <div className="d-inline-block position-relative" style={{ height: 'max-content' }}>
               <img src={`//${APP_DOMAIN}/api/profile/thumbnail/${session.relative_id}`} alt="user-image" className="rounded-circle" style={{ objectFit: 'cover', objectPosition: 'center' }} />
@@ -303,7 +303,7 @@ const NavBar = ({ can, session = {}, theme, setTheme, title = '', wsActive, setW
               <i className="mdi mdi-chevron-down"></i>
             </span>
           </a>
-          <div className="dropdown-menu dropdown-menu-end profile-dropdown ">
+          <div className="dropdown-menu dropdown-menu-end profile-dropdown driver-js-account-dropdown ">
 
             <div className="dropdown-header noti-title">
               <h6 className="text-overflow m-0">Bienvenido !</h6>

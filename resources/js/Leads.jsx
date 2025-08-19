@@ -151,10 +151,20 @@ const Leads = (properties) => {
   }, [null])
 
   useEffect(() => {
-    console.log(GET)
     if (GET.first_time) {
-      console.log('Something')
-      driverObj.drive();
+      Swal.fire({
+        title: '¡Bienvenido al CRM de Atalaya!',
+        text: '¿Te gustaría hacer un tour rápido para conocer las principales funciones?',
+        icon: 'info',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, hacer tour',
+        cancelButtonText: 'No, gracias'
+      }).then(async ({ isConfirmed }) => {
+        history.pushState(null, null, '/leads');
+        delete GET.first_time
+        if (isConfirmed) driverObj.drive();
+        else driverObj.destroy()
+      });
     }
   }, [null])
 
@@ -598,7 +608,7 @@ const Leads = (properties) => {
         Pipeline
       </label>
     </div>
-    <button className='btn btn-sm btn-purple' onClick={() => onOpenModal()} driver-js={1}>
+    <button className='btn btn-sm btn-purple driver-js-btn-new-lead' onClick={() => onOpenModal()}>
       <i className='mdi mdi-plus me-1'></i>
       Nuevo Lead
     </button>
@@ -621,7 +631,8 @@ const Leads = (properties) => {
             setManageStatuses={setManageStatuses}
             filterAssignation
             users={users}
-            title='Leads - En Gestion' />
+            title='Leads - En Gestion'
+            cardClass='driver-js-in-progress-table' />
           <LeadTable gridRef={gridRef} otherGridRef={managedGridRef} rest={newLeadsRest} can={can} defaultLeadStatus={defaultLeadStatus} manageStatuses={manageStatuses} statuses={statuses}
             onClientStatusClicked={onClientStatusClicked}
             onManageStatusChange={onManageStatusChange}
@@ -636,7 +647,7 @@ const Leads = (properties) => {
             setManageStatuses={setManageStatuses}
             users={users}
             title='Leads - Recien llegados'
-            cardClass='driver-js-4'
+            cardClass='driver-js-new-leads-table'
             borderColor='#4CAF50' />
         </>
         : (
@@ -987,8 +998,8 @@ const Leads = (properties) => {
       </div>
     </Modal>
 
-    <Modal modalRef={newLeadModalRef} title='Nuevo lead' btnSubmitText='Guardar' onSubmit={onModalSubmit} zIndex={1060} btnAcceptClass='driver-js-3'>
-      <div className="row mb-0" driver-js={2}>
+    <Modal modalRef={newLeadModalRef} title='Nuevo lead' btnSubmitText='Guardar' onSubmit={onModalSubmit} zIndex={1060} btnAcceptClass='driver-js-btn-save'>
+      <div className="row mb-0 driver-js-lead-form">
         <input ref={idRef} type="hidden" />
         <InputFormGroup eRef={contactNameRef} label='Nombre completo' />
         <InputFormGroup eRef={contactEmailRef} label='Correo electronico' type="email" col='col-md-6' />

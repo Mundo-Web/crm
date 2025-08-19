@@ -27,7 +27,7 @@ const Menu = ({ session, theme, can, whatsAppStatus, APP_PROTOCOL, APP_DOMAIN, l
   const idBirthday = moment(session.birthdate).format('MM-DD') == moment().format('MM-DD')
 
   return (<div className="left-side-menu py-0">
-    <div className="h-100 pt-3" data-simplebar>
+    <div className="h-100 pt-3 driver-js-menu" data-simplebar >
       {/* <div className="user-box text-center">
         <img src={`//${APP_DOMAIN}/api/profile/thumbnail/${session.relative_id}?v=${new Date(session.updated_at).getTime()}`} alt={session.name} title={session.name}
           className="rounded-circle img-thumbnail avatar-md" style={{ backgroundColor: 'unset', borderColor: '#98a6ad', objectFit: 'cover', objectPosition: 'center' }} />
@@ -245,8 +245,6 @@ const Menu = ({ session, theme, can, whatsAppStatus, APP_PROTOCOL, APP_DOMAIN, l
       <div className="clearfix"></div>
 
     </div>
-
-
   </div>)
 }
 
