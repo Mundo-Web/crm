@@ -369,10 +369,19 @@ const OffCanvas = ({ offCanvasRef, dataLoaded, setDataLoaded, defaultMessages, s
           <textarea ref={inputMessageRef}
             className='form-control w-100'
             placeholder='Ingrese su mensaje aqui'
-            rows={1}
+            rows={1} 
             style={{ minHeight: 27, fieldSizing: 'content' }}
             disabled={isSending}
-            required />
+            required
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                if (inputMessageRef.current.value.trim()) {
+                  onMessageSubmit(e);
+                }
+              }
+            }}
+          />
           <div className="d-flex gap-1">
 
             <div className="dropdown">
@@ -405,7 +414,7 @@ const OffCanvas = ({ offCanvasRef, dataLoaded, setDataLoaded, defaultMessages, s
             <button className="btn btn-dark waves-effect waves-light" type="submit" disabled={isSending}>
               {
                 isSending
-                  ? <i className="mdi mdi-spinner mdi-loading"></i>
+                  ? <i className="mdi mdi-spin mdi-loading"></i>
                   : <i className="mdi mdi-arrow-top-right"></i>
               }
             </button>

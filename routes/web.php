@@ -3,16 +3,13 @@
 use App\Http\Controllers\ApikeyController;
 use App\Http\Controllers\ArchivedController;
 use App\Http\Controllers\AuthController;
-use App\Http\Controllers\BasicController;
-use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\ClientController;
-use App\Http\Controllers\Controller;
 use App\Http\Controllers\DefaultMessageController;
 use App\Http\Controllers\KPILeadsController;
 use App\Http\Controllers\KPIProjectsController;
 use App\Http\Controllers\LeadController;
 use App\Http\Controllers\MessageController;
-use App\Http\Controllers\PageController;
+use App\Http\Controllers\PlanController;
 use App\Http\Controllers\ProcessController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProjectArchivedController;
@@ -61,8 +58,11 @@ Route::get('/', function (Request $request) {
     return redirect('/login');
 });
 
-Route::middleware('auth')->get('/join', [AuthController::class, 'joinView'])->name('Join.jsx');
-Route::middleware(['auth', 'firstTime'])->group(function () {
+Route::middleware('auth')->group(function () {
+    Route::get('/join', [AuthController::class, 'joinView'])->name('Join.jsx');
+    Route::get('/plans', [PlanController::class, 'reactView'])->name('Plans.jsx');
+});
+Route::middleware(['auth', 'firstTime', 'hasPlan'])->group(function () {
     Route::get('/home', [KPILeadsController::class, 'reactView'])->name('KPILeads.jsx');
     Route::get('/home/projects', [KPIProjectsController::class, 'reactView'])->name('KPIProjects.jsx');
     Route::get('/clients', [ClientController::class, 'reactView'])->name('Clients.jsx');

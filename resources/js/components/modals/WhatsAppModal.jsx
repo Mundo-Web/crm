@@ -1,6 +1,6 @@
 import Tippy from "@tippyjs/react";
 import React, { useEffect, useRef, useState } from "react";
-import { Notify } from "sode-extend-react";
+import { Fetch, Notify } from "sode-extend-react";
 import Swal from "sweetalert2";
 import '../../../css/qr-code.css';
 import WhatsAppStatuses from "../../Reutilizables/WhatsApp/WhatsAppStatuses";
@@ -22,7 +22,7 @@ const WhatsAppModal = ({ status: whatsAppStatus, setStatus: setWhatsAppStatus, W
   const [sessionInfo, setSessionInfo] = useState({})
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const businessSession = `atalaya-${session.business_uuid}`
+  const businessSession = session.business_uuid
 
   const verifyStatus = async () => {
     const { status, data } = await whatsAppRest.verify()
@@ -64,14 +64,17 @@ const WhatsAppModal = ({ status: whatsAppStatus, setStatus: setWhatsAppStatus, W
     if (whatsAppStatus == 'verifying') {
       const searchParams = new URLSearchParams({
         session: businessSession,
-        redirect_to: `${APP_URL}/free/leads`
+        // redirect_to: `${APP_URL}/free/leads`
       })
 
-      eventSource = new EventSource(`${WA_URL}/api/session/verify?${searchParams}`)
+      eventSource = new EventSource(`/api/whatsapp/verify?${searchParams}`)
       eventSource.onmessage = ({ data }) => {
         if (data == 'ping') return console.log('Realtime active')
         const { status, qr, percent, info } = JSON.parse(data)
         switch (status) {
+          case 'ping':
+            console.log('Evento del servidor')
+            break;
           case 'qr':
             setWhatsAppStatus('qr')
             $(qrRef.current).empty()
@@ -131,7 +134,7 @@ const WhatsAppModal = ({ status: whatsAppStatus, setStatus: setWhatsAppStatus, W
       cancelButtonText: `Cancelar`
     })
     if (!isConfirmed) return
-    await fetch(`${WA_URL}/api/session/${businessSession}`, {
+    await Fetch(`/api/whatsapp`, {
       method: 'DELETE'
     })
     Notify.add({
@@ -182,7 +185,7 @@ const WhatsAppModal = ({ status: whatsAppStatus, setStatus: setWhatsAppStatus, W
           <div className="text-center">
             <button type='button' className='btn-close position-absolute top-0 end-0 me-2 mt-2' data-bs-dismiss='modal' aria-label='Close'></button>
             <i className={`${icon} h1 text-${color} my-2 d-block`}></i>
-            <h4 className="mt-2">{text} {whatsAppStatus == 'loading_screen' && `[${percent}%]`}</h4>
+            <h4 className="mt-2">{text} {whatsAppStatus == 'loading_screen' && percent && `[${percent}%]`}</h4>
             <div className="position-relative" hidden={whatsAppStatus !== 'qr'}>
               <img className="position-absolute" src={`//${Global.APP_DOMAIN}/assets/img/icon.svg`} alt='Atalaya' style={{
                 width: '30px',
@@ -208,7 +211,7 @@ const WhatsAppModal = ({ status: whatsAppStatus, setStatus: setWhatsAppStatus, W
             {
               whatsAppStatus == 'ready' && <div className="d-block py-2">
                 <img className="d-block mb-2 avatar-md rounded-circle mx-auto"
-                  src={`${Global.WA_URL}/api/profile/${LaravelSession.business_uuid}/${sessionInfo?.me?.user}`}
+                  src={sessionInfo?.profile || `//${Global.APP_DOMAIN}/api/profile/thumbnail/undefined`}
                   onError={(e) => {
                     e.target.onerror = null
                     e.target.src = `//${Global.APP_DOMAIN}/api/profile/thumbnail/undefined`;

@@ -65,7 +65,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/authorize/{business}', [AuthController::class, 'activeService']);
 
     Route::get('/whatsapp', [WhatsAppController::class, 'verify']);
+    Route::get('/whatsapp/verify', [WhatsAppController::class, 'stream']);
     Route::post('/whatsapp/send', [WhatsAppController::class, 'send']);
+    Route::delete('/whatsapp', [WhatsAppController::class, 'close']);
 
     Route::post('/meta/send', [MetaController::class, 'send']);
 

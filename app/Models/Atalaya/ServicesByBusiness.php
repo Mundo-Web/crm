@@ -16,6 +16,8 @@ class ServicesByBusiness extends Model
         'business_id',
         'created_by',
         'first_time',
+        'plan_id',
+        'exempt'
     ];
 
     public function service()
