@@ -14,10 +14,10 @@ class MailingController extends Controller
     {
         if (!MailingController::isEmail($email)) return false;
 
+        return true;
         $dominio = substr(strrchr($email, "@"), 1);
         if (!checkdnsrr($dominio, "MX")) return false;
 
-        return true;
         $validator = new Validator();
         $result = $validator->validate([$email], env('MAIL_FROM_ADDRESS'));
 
