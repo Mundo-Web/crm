@@ -36,7 +36,7 @@ class WhatsAppController extends Controller
         // "MESSAGES_DELETE",
         "MESSAGES_SET",
         // "MESSAGES_UPDATE",
-        // "MESSAGES_UPSERT",
+        "MESSAGES_UPSERT",
         // "PRESENCE_UPDATE",
         // "QRCODE_UPDATED",
         // "REMOVE_INSTANCE",
