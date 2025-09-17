@@ -190,9 +190,13 @@ class WhatsAppController extends Controller
     public function send(Request $request)
     {
         $response = Response::simpleTryCatch(function (Response $response) use ($request) {
-            $business_id = Auth::user()->business_uuid;
-            $businessJpa = Business::with(['person'])->find($business_id);
+            $businessJpa = Business::with(['person'])->find(Auth::user()->business_id);
             $clientJpa = Client::find($request->client_id);
+
+            $number = $clientJpa->contact_phone ?? null;
+            if ($request->phone) $number = $request->phone;
+            if (!$number) throw new Exception('Número no encontrado');
+
             $message = $request->message;
 
             if (Text::startsWith($message, '/signature:')) {
@@ -203,7 +207,7 @@ class WhatsAppController extends Controller
                         'apikey' => $businessJpa->uuid
                     ],
                     'body' => [
-                        'number' => $clientJpa->contact_phone,
+                        'number' => $number,
                         'mediatype' => 'image',
                         'media' => str_replace('/signature:', '', $message),
                         'fileName' => 'signature.png',
@@ -211,7 +215,7 @@ class WhatsAppController extends Controller
                     ]
                 ]);
                 Message::create([
-                    'wa_id' => $clientJpa->contact_phone,
+                    'wa_id' => $number,
                     'role' => 'User',
                     'message' => $message,
                     'microtime' => (int) (microtime(true) * 1_000_000),
@@ -227,7 +231,7 @@ class WhatsAppController extends Controller
 
                 // First check the file type by making a HEAD request
                 $fileTypeCheck = new Fetch($attachment);
-                
+
                 $mimeType = $fileTypeCheck->contentType ?? 'application/octet-stream';
                 $mediaType = 'document';
 
@@ -247,7 +251,7 @@ class WhatsAppController extends Controller
                         'apikey' => $businessJpa->uuid
                     ],
                     'body' => [
-                        'number' => $clientJpa->contact_phone,
+                        'number' => $number,
                         'mediatype' => $mediaType,
                         'caption' => $message2send,
                         'media' => $attachment,
@@ -257,7 +261,7 @@ class WhatsAppController extends Controller
                 ]);
 
                 Message::create([
-                    'wa_id' => $clientJpa->contact_phone,
+                    'wa_id' => $number,
                     'role' => 'User',
                     'message' => Text::html2wa($message),
                     'microtime' => (int) (microtime(true) * 1_000_000),
@@ -271,18 +275,19 @@ class WhatsAppController extends Controller
                         'apikey' => $businessJpa->uuid
                     ],
                     'body' => [
-                        'number' => $clientJpa->contact_phone,
+                        'number' => $number,
                         'text' => Text::html2wa($request->message)
                     ]
                 ]);
                 Message::create([
-                    'wa_id' => $clientJpa->contact_phone,
+                    'wa_id' => $number,
                     'role' => 'User',
                     'message' => Text::html2wa($request->message),
                     'microtime' => (int) (microtime(true) * 1_000_000),
                     'business_id' => Auth::user()->business_id,
                 ]);
             }
+            dump($res->json());
             if (!$res?->ok) throw new Exception('Ocurrio un error al enviar el mensaje');
         });
         return response($response->toArray(), $response->status);

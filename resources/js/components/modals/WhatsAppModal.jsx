@@ -149,19 +149,17 @@ const WhatsAppModal = ({ status: whatsAppStatus, setStatus: setWhatsAppStatus, W
 
   const onPingClicked = async () => {
     try {
-      const res = await fetch(`${WA_URL}/api/send`, {
+      const { status, result } = await Fetch(`/api/whatsapp/send`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
         body: JSON.stringify({
-          from: businessSession,
-          to: [phoneRef.current.value],
-          content: 'Ping!\n> Mensaje automatico',
+          phone: phoneRef.current.value,
+          message: 'Ping!\n> Mensaje automatico',
         })
       })
 
-      if (!res.ok) throw new Error('No se pudo enviar el ping');
+      if (!status) throw new Error(result?.message || 'No se pudo enviar el ping');
+
+      phoneRef.current.value = ''
 
       Notify.add({
         icon: '/assets/img/logo-login.svg',
@@ -187,16 +185,12 @@ const WhatsAppModal = ({ status: whatsAppStatus, setStatus: setWhatsAppStatus, W
             <i className={`${icon} h1 text-${color} my-2 d-block`}></i>
             <h4 className="mt-2">{text} {whatsAppStatus == 'loading_screen' && percent && `[${percent}%]`}</h4>
             <div className="position-relative" hidden={whatsAppStatus !== 'qr'}>
-              <img className="position-absolute" src={`//${Global.APP_DOMAIN}/assets/img/icon.svg`} alt='Atalaya' style={{
+              <img className="position-absolute" src={`//${Global.APP_DOMAIN}/assets/img/icon-border.svg`} alt='Atalaya' style={{
                 width: '30px',
                 aspectRatio: '30px',
                 top: '50%',
                 left: '50%',
                 transform: 'translate(-50%, -50%)',
-                filter: 'grayscale(100%)',
-                padding: '4px',
-                borderRadius: '8px',
-                backgroundColor: '#fff'
               }} />
               <div ref={qrRef} id="qr-code" className={`mt-3 text-center ${whatsAppStatus == 'qr' ? 'd-block' : 'd-none'}`}>
               </div>
