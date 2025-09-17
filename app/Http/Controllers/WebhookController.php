@@ -63,6 +63,8 @@ class WebhookController extends BasicController
                 'business_id' => $businessJpa->id
             ]);
 
+            dump('Llegó algo de ' . $waId . ': ' . $message);
+
             if ($fromMe) return;
 
             $alreadyExists = Client::query()
