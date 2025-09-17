@@ -280,21 +280,19 @@ class MetaController extends Controller
         return response($response->toArray(), $response->status);
     }
 
-    public static function assistant(Client $clientJpa, Message $messageJpa)
+    public static function assistant(Client $clientJpa, Message $messageJpa, ?string $origin = null)
     {
         try {
-            $endsIn = 'Inicio';
             while (true) {
                 // Get latest message for this client
                 $latestMessage = Message::query()
-                    ->where('wa_id', $clientJpa->integration_user_id)
+                    ->where('wa_id', $origin == 'evoapi' ? $clientJpa->contact_phone : $clientJpa->integration_user_id)
                     ->where('business_id', $clientJpa->business_id)
                     ->orderBy('microtime', 'desc')
                     ->first();
 
                 // If latest message is different from current message, stop processing
                 if ($latestMessage->id !== $messageJpa->id) {
-                    $endsIn = 'Nuevo mensaje';
                     break;
                 }
 
@@ -309,13 +307,12 @@ class MetaController extends Controller
 
                 // Check if registration is already complete
                 if ($clientJpa->complete_registration) {
-                    $endsIn = 'Datos completos';
                     break;
                 }
 
                 // Get last 40 messages
                 $messages = Message::query()
-                    ->where('wa_id', $clientJpa->integration_user_id)
+                    ->where('wa_id', $origin == 'evoapi' ? $clientJpa->contact_phone : $clientJpa->integration_user_id)
                     ->where('business_id', $clientJpa->business_id)
                     ->orderBy('microtime', 'desc')
                     ->limit(40)
@@ -324,13 +321,17 @@ class MetaController extends Controller
                 // Get Gemini API key from settings
                 $apiKey = Setting::get('gemini-api-key', $clientJpa->business_id);
 
-                $businessJpa = Business::query()
+                $businessJpa = Business::with(['person'])
                     ->where('id', $clientJpa->business_id)
                     ->first();
 
                 $businessEmail = Setting::get('email-new-lead-notification-message-owneremail', $businessJpa->id);
                 $businessServices = Setting::get('gemini-what-business-do', $businessJpa->id);
-                $prompt = File::get('../storage/app/utils/gemini-prompt-meta.txt');
+                $prompt = File::get(
+                    $origin == 'evoapi'
+                        ? '../storage/app/utils/gemini-prompt-evoapi.txt'
+                        : '../storage/app/utils/gemini-prompt-meta.txt'
+                );
                 $prompt = Text::replaceData($prompt, [
                     'nombreEmpresa' => $businessJpa->name,
                     'correoEmpresa' => $businessEmail ?? 'hola@mundoweb.pe',
@@ -350,23 +351,12 @@ class MetaController extends Controller
                         'X-goog-api-key' => $apiKey
                     ],
                     'body' => [
-                        'contents' => [
-                            [
-                                'parts' => [
-                                    [
-                                        'text' => $prompt2send
-                                    ]
-                                ]
-                            ]
-                        ],
-                        'generationConfig' => [
-                            'stopSequences' => ['Human:', 'AI:']
-                        ]
+                        'contents' => [['parts' => [['text' => $prompt2send]]]],
+                        'generationConfig' => ['stopSequences' => ['Human:', 'AI:']]
                     ]
                 ]);
                 $geminiResponse = $geminiRest->json();
                 if (isset($geminiResponse['error']['message'])) {
-                    $endsIn = 'Gemini falló: ' . $geminiResponse['error']['message'];
                     break;
                 }
 
@@ -378,33 +368,47 @@ class MetaController extends Controller
                     // Create and send message with cleaned response
                     $message = trim(preg_replace('/^AI:\s*/', '', $result['message'])) ?: 'Lo siento, parece que no he entendido bien tu solicitud. ¿Podrías intentar formularla de nuevo o indicarme si necesitas ayuda de uno de nuestros ejecutivos?';
 
-                    // Send message through Meta integration
-                    $integrationJpa = Integration::find($clientJpa->integration_id);
-
-                    if ($integrationJpa && $integrationJpa->meta_access_token) {
-                        $baseUrl = $integrationJpa->meta_service === 'instagram'
-                            ? env('INSTAGRAM_GRAPH_URL')
-                            : env('FACEBOOK_GRAPH_URL');
-
-                        $messageEndpoint = "{$baseUrl}/me/messages";
-                        $messageData = [
-                            'recipient' => ['id' => $clientJpa->integration_user_id],
-                            'message' => ['text' => $message]
-                        ];
-
-                        new Fetch($messageEndpoint, [
+                    if ($origin == 'evoapi') {
+                        new Fetch(env('EVOAPI_URL') . '/message/sendText/' . $businessJpa->person->document_number, [
                             'method' => 'POST',
                             'headers' => [
                                 'Content-Type' => 'application/json',
-                                'Authorization' => "Bearer {$integrationJpa->meta_access_token}"
+                                'apikey' => $businessJpa->uuid
                             ],
-                            'body' => $messageData
+                            'body' => [
+                                'number' => $clientJpa->contact_phone,
+                                'text' => $message
+                            ]
                         ]);
+                    } else {
+                        // Send message through Meta integration
+                        $integrationJpa = Integration::find($clientJpa->integration_id);
+
+                        if ($integrationJpa && $integrationJpa->meta_access_token) {
+                            $baseUrl = $integrationJpa->meta_service === 'instagram'
+                                ? env('INSTAGRAM_GRAPH_URL')
+                                : env('FACEBOOK_GRAPH_URL');
+
+                            $messageEndpoint = "{$baseUrl}/me/messages";
+                            $messageData = [
+                                'recipient' => ['id' => $clientJpa->integration_user_id],
+                                'message' => ['text' => $message]
+                            ];
+
+                            new Fetch($messageEndpoint, [
+                                'method' => 'POST',
+                                'headers' => [
+                                    'Content-Type' => 'application/json',
+                                    'Authorization' => "Bearer {$integrationJpa->meta_access_token}"
+                                ],
+                                'body' => $messageData
+                            ]);
+                        }
                     }
 
                     // Store message in database
                     Message::create([
-                        'wa_id' => $clientJpa->integration_user_id,
+                        'wa_id' => $origin == 'evoapi' ? $clientJpa->contact_phone : $clientJpa->integration_user_id,
                         'role' => 'AI',
                         'message' => $message,
                         'prompt' => $prompt2save,
@@ -412,7 +416,6 @@ class MetaController extends Controller
                         'business_id' => $clientJpa->business_id
                     ]);
 
-                    $endsIn = 'Bot respondió sin comando';
                     break;
                 }
 
@@ -450,76 +453,105 @@ class MetaController extends Controller
                         $welcomeMessage = Setting::get('whatsapp-new-lead-notification-message-client', $clientJpa->business_id);
                         $welcomeMessage = UtilController::replaceData($welcomeMessage, $clientJpa->toArray());
 
-                        // Send message through Meta integration
-                        $integrationJpa = Integration::find($clientJpa->integration_id);
-                        if ($integrationJpa && $integrationJpa->meta_access_token) {
-                            $baseUrl = $integrationJpa->meta_service === 'instagram'
-                                ? env('INSTAGRAM_GRAPH_URL')
-                                : env('FACEBOOK_GRAPH_URL');
-
-                            $messageEndpoint = "{$baseUrl}/me/messages";
-                            $messageData = [
-                                'recipient' => ['id' => $clientJpa->integration_user_id],
-                                'message' => ['text' => UtilController::html2wa($welcomeMessage)]
-                            ];
-
-                            new Fetch($messageEndpoint, [
+                        if ($origin == 'evoapi') {
+                            // Send message through EvoAPI
+                            $message = 'Lo siento, no puedo ayudarte con eso en este momento. Por favor, contacta con uno de nuestros ejecutivos.';
+                            new Fetch(env('EVOAPI_URL') . '/message/sendText/' . $businessJpa->person->document_number, [
                                 'method' => 'POST',
                                 'headers' => [
                                     'Content-Type' => 'application/json',
-                                    'Authorization' => "Bearer {$integrationJpa->meta_access_token}"
+                                    'apikey' => $businessJpa->uuid
                                 ],
-                                'body' => $messageData
+                                'body' => [
+                                    'number' => $clientJpa->contact_phone,
+                                    'text' => $message
+                                ]
                             ]);
+                        } else {
+                            // Send message through Meta integration
+                            $integrationJpa = Integration::find($clientJpa->integration_id);
+                            if ($integrationJpa && $integrationJpa->meta_access_token) {
+                                $baseUrl = $integrationJpa->meta_service === 'instagram'
+                                    ? env('INSTAGRAM_GRAPH_URL')
+                                    : env('FACEBOOK_GRAPH_URL');
 
-                            // Store welcome message in database
-                            Message::create([
-                                'wa_id' => $clientJpa->integration_user_id,
-                                'role' => 'AI',
-                                'message' => $welcomeMessage,
-                                'prompt' => $prompt2save,
-                                'microtime' => (int) (microtime(true) * 1_000_000),
-                                'business_id' => $clientJpa->business_id
-                            ]);
+                                $messageEndpoint = "{$baseUrl}/me/messages";
+                                $messageData = [
+                                    'recipient' => ['id' => $clientJpa->integration_user_id],
+                                    'message' => ['text' => UtilController::html2wa($welcomeMessage)]
+                                ];
+
+                                new Fetch($messageEndpoint, [
+                                    'method' => 'POST',
+                                    'headers' => [
+                                        'Content-Type' => 'application/json',
+                                        'Authorization' => "Bearer {$integrationJpa->meta_access_token}"
+                                    ],
+                                    'body' => $messageData
+                                ]);
+                            }
                         }
+                        // Store welcome message in database
+                        Message::create([
+                            'wa_id' => $origin == 'evoapi' ? $clientJpa->contact_phone : $clientJpa->integration_user_id,
+                            'role' => 'AI',
+                            'message' => $welcomeMessage,
+                            'prompt' => $prompt2save,
+                            'microtime' => (int) (microtime(true) * 1_000_000),
+                            'business_id' => $clientJpa->business_id
+                        ]);
                     } else {
                         // Send the cleaned message from result if registration is not complete
                         $message = trim(preg_replace('/^AI:\s*/', '', $result['message']));
 
-                        $integrationJpa = Integration::find($clientJpa->integration_id);
-                        if ($integrationJpa && $integrationJpa->meta_access_token) {
-                            $baseUrl = $integrationJpa->meta_service === 'instagram'
-                                ? env('INSTAGRAM_GRAPH_URL')
-                                : env('FACEBOOK_GRAPH_URL');
-
-                            $messageEndpoint = "{$baseUrl}/me/messages";
-                            $messageData = [
-                                'recipient' => ['id' => $clientJpa->integration_user_id],
-                                'message' => ['text' => $message]
-                            ];
-
-                            new Fetch($messageEndpoint, [
+                        if ($origin == 'evoapi') {
+                            // Send message through EvoAPI
+                            new Fetch(env('EVOAPI_URL') . '/message/sendText/' . $businessJpa->person->document_number, [
                                 'method' => 'POST',
                                 'headers' => [
                                     'Content-Type' => 'application/json',
-                                    'Authorization' => "Bearer {$integrationJpa->meta_access_token}"
+                                    'apikey' => $businessJpa->uuid
                                 ],
-                                'body' => $messageData
+                                'body' => [
+                                    'number' => $clientJpa->contact_phone,
+                                    'text' => $message
+                                ]
                             ]);
+                        } else {
 
-                            // Store response message in database
-                            Message::create([
-                                'wa_id' => $clientJpa->integration_user_id,
-                                'role' => 'AI',
-                                'message' => $message,
-                                'prompt' => $prompt2save,
-                                'microtime' => (int) (microtime(true) * 1_000_000),
-                                'business_id' => $clientJpa->business_id
-                            ]);
+                            $integrationJpa = Integration::find($clientJpa->integration_id);
+                            if ($integrationJpa && $integrationJpa->meta_access_token) {
+                                $baseUrl = $integrationJpa->meta_service === 'instagram'
+                                    ? env('INSTAGRAM_GRAPH_URL')
+                                    : env('FACEBOOK_GRAPH_URL');
+
+                                $messageEndpoint = "{$baseUrl}/me/messages";
+                                $messageData = [
+                                    'recipient' => ['id' => $clientJpa->integration_user_id],
+                                    'message' => ['text' => $message]
+                                ];
+
+                                new Fetch($messageEndpoint, [
+                                    'method' => 'POST',
+                                    'headers' => [
+                                        'Content-Type' => 'application/json',
+                                        'Authorization' => "Bearer {$integrationJpa->meta_access_token}"
+                                    ],
+                                    'body' => $messageData
+                                ]);
+                            }
                         }
+                        // Store response message in database
+                        Message::create([
+                            'wa_id' => $clientJpa->integration_user_id,
+                            'role' => 'AI',
+                            'message' => $message,
+                            'prompt' => $prompt2save,
+                            'microtime' => (int) (microtime(true) * 1_000_000),
+                            'business_id' => $clientJpa->business_id
+                        ]);
                     }
                 }
-                $endsIn = 'Al final';
                 break;
             }
         } catch (\Throwable $th) {

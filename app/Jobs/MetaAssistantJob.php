@@ -17,17 +17,19 @@ class MetaAssistantJob implements ShouldQueue
 
   private Client $clientJpa;
   private Message $messageJpa;
+  private ?string $origin;
 
-  public function __construct(Client $clientJpa, Message $messageJpa)
+  public function __construct(Client $clientJpa, Message $messageJpa, ?string $origin = null)
   {
     $this->clientJpa = $clientJpa;
     $this->messageJpa = $messageJpa;
+    $this->origin = $origin;
   }
 
   public function handle()
   {
     try {
-      MetaController::assistant($this->clientJpa, $this->messageJpa);
+      MetaController::assistant($this->clientJpa, $this->messageJpa, $this->origin);
     } catch (\Throwable $th) {
     }
   }

@@ -63,8 +63,6 @@ class WebhookController extends BasicController
                 'business_id' => $businessJpa->id
             ]);
 
-            dump('Llegó algo de ' . $waId . ': ' . $message);
-
             if ($fromMe) return;
 
             $alreadyExists = Client::query()
@@ -97,10 +95,7 @@ class WebhookController extends BasicController
             $hasApikey = Setting::get('gemini-api-key', $businessJpa->id);
 
             if ($hasApikey && !$clientJpa->complete_registration) {
-                dump('Entró aquí');
-                dump($clientJpa->toArray());
-                dump($messageJpa->toArray());
-                // MetaAssistantJob::dispatchAfterResponse($clientJpa, $messageJpa);
+                MetaAssistantJob::dispatchAfterResponse($clientJpa, $messageJpa, 'evoapi');
             }
 
             if ($alreadyExists) return;
