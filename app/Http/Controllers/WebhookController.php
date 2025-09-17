@@ -121,7 +121,7 @@ class WebhookController extends BasicController
                 'status' => 'Pendiente',
                 'asignable' => true
             ]);
-        });
+        }, fn($res, $th) => dump($th->getMessage()));
         return response($response->toArray(), 200);
     }
 }
