@@ -231,7 +231,7 @@ const WhatsAppModal = ({ prefixes, status: whatsAppStatus, setStatus: setWhatsAp
                     <div>{sessionInfo?.count?.messages || 0}</div>
                   </div>
                 </div>
-                <div className="mt-2 text-start">
+                <div className="mt-3 text-start">
                   <label htmlFor="ping-phone-number" className="form-label mb-1">Envía un ping a:</label>
                   <div className="input-group">
                     <div className="dropdown">
