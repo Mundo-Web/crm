@@ -70,7 +70,7 @@ class WhatsAppController extends Controller
                 ],
                 'body' => ['webhook' => [
                     'enabled' => true,
-                    'url' => env('APP_URL')  . '/api/whatsapp/webhook',
+                    'url' => env('APP_URL')  . '/meta/evoapi/' . $businessJpa->uuid,
                     'webhookByEvents' => false,
                     'events' => $this->events
                 ]]
