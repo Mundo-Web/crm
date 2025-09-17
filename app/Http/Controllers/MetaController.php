@@ -102,9 +102,7 @@ class MetaController extends Controller
         $response = Response::simpleTryCatch(function () use ($request, $origin, $business_uuid) {
             $data = $request->all();
 
-            dump($data);
-
-            if (!in_array($origin, ['messenger', 'instagram'])) throw new Exception('Error, origen no permitido');
+            if (!in_array($origin, ['messenger', 'instagram', 'evoapi'])) throw new Exception('Error, origen no permitido');
 
             $entry = $data['entry'][0] ?? [];
             $messaging = $entry['messaging'][0] ?? [];
@@ -125,7 +123,7 @@ class MetaController extends Controller
                 'business_id' => $businessJpa->id
             ]);
 
-            if ($entry['id'] == $messaging['sender']['id']) return;
+            if ($inOut == 'out') return;
 
             $integrationJpa = Integration::query()
                 ->where('meta_service', $origin)
@@ -374,8 +372,6 @@ class MetaController extends Controller
 
                 $answer = $geminiResponse['candidates'][0]['content']['parts'][0]['text'];
                 $prompt2save = $prompt2send . $answer;
-                
-                dump($prompt2save);
 
                 $result = self::searchCommand($answer);
                 if (!$result['found']) {
@@ -526,7 +522,6 @@ class MetaController extends Controller
                 $endsIn = 'Al final';
                 break;
             }
-            dump('Terminó: ' . $endsIn);
         } catch (\Throwable $th) {
             dump($th->getMessage());
         }

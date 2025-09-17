@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\MetaController;
+use App\Http\Controllers\WebhookController;
 
 /*
 |--------------------------------------------------------------------------
@@ -17,3 +18,5 @@ use App\Http\Controllers\MetaController;
 
 Route::get('/{origin}/{business_uuid}', [MetaController::class, 'verify']);
 Route::post('/{origin}/{business_uuid}', [MetaController::class, 'webhook']);
+
+Route::post('/evoapi/{business_uuid}', [WebhookController::class, 'webhook']);

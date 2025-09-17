@@ -34,13 +34,13 @@ class WhatsAppController extends Controller
         // "LABELS_EDIT",
         // "LOGOUT_INSTANCE",
         // "MESSAGES_DELETE",
-        "MESSAGES_SET",
+        // "MESSAGES_SET",
         // "MESSAGES_UPDATE",
         "MESSAGES_UPSERT",
         // "PRESENCE_UPDATE",
         // "QRCODE_UPDATED",
         // "REMOVE_INSTANCE",
-        "SEND_MESSAGE",
+        // "SEND_MESSAGE",
         // "TYPEBOT_CHANGE_STATUS",
         // "TYPEBOT_START"
     ];
