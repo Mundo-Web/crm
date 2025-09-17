@@ -25,6 +25,7 @@ use SoDe\Extend\Text;
 use SoDe\Extend\Crypto;
 use Illuminate\Support\Facades\Schema;
 use SoDe\Extend\File;
+use SoDe\Extend\JSON;
 
 class BasicController extends Controller
 {
@@ -118,6 +119,8 @@ class BasicController extends Controller
       ->where('status', true)
       ->count();
 
+    $prefixes = JSON::parse(File::get('./phone_prefixes.json'));
+
     $properties = [
       'businesses' => $businessesIWork,
       // 'presets' => $views,
@@ -125,6 +128,7 @@ class BasicController extends Controller
       'notificationsCount' => $notificationsCount,
       'tasksCount' => $tasksCount,
       'leadsCount' => $leadsCount,
+      'prefixes' => $prefixes,
       'global' => [
         'WA_URL' => env('WA_URL'),
         'PUBLIC_RSA_KEY' => Controller::$PUBLIC_RSA_KEY,

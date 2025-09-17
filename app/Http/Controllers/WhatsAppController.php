@@ -16,6 +16,35 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class WhatsAppController extends Controller
 {
+    private array $events = [
+        "APPLICATION_STARTUP",
+        "CALL",
+        "CHATS_DELETE",
+        "CHATS_SET",
+        "CHATS_UPDATE",
+        "CHATS_UPSERT",
+        "CONNECTION_UPDATE",
+        "CONTACTS_SET",
+        "CONTACTS_UPDATE",
+        "CONTACTS_UPSERT",
+        "GROUP_PARTICIPANTS_UPDATE",
+        "GROUP_UPDATE",
+        "GROUPS_UPSERT",
+        "LABELS_ASSOCIATION",
+        "LABELS_EDIT",
+        "LOGOUT_INSTANCE",
+        "MESSAGES_DELETE",
+        "MESSAGES_SET",
+        "MESSAGES_UPDATE",
+        "MESSAGES_UPSERT",
+        "PRESENCE_UPDATE",
+        "QRCODE_UPDATED",
+        "REMOVE_INSTANCE",
+        "SEND_MESSAGE",
+        "TYPEBOT_CHANGE_STATUS",
+        "TYPEBOT_START"
+    ];
+
     public function verify()
     {
         $response = Response::simpleTryCatch(function (Response $response) {
@@ -32,15 +61,24 @@ class WhatsAppController extends Controller
 
             if ($data[0]['connectionStatus'] !== 'open') throw new Exception('WhatsApp desconectado. Escanee el QR');
 
-            $session = $data[0];
-            return [
-                'pushname' => $session['profileName'],
-                'profile' => $session['profilePicUrl'],
-                'me' => [
-                    'user' => explode('@', $session['ownerJid'])[0],
-                    'server' => explode('@', $session['ownerJid'])[1]
+            // Update webhook configuration
+            $webhookRes = new Fetch(env('EVOAPI_URL') . '/webhook/set/' . $businessJpa->person->document_number, [
+                'method' => 'POST',
+                'headers' => [
+                    'Content-Type' => 'application/json',
+                    'apikey' => $businessJpa->uuid
                 ],
-            ];
+                'body' => ['webhook' => [
+                    'enabled' => true,
+                    'url' => env('APP_URL')  . '/api/whatsapp/webhook',
+                    'webhookByEvents' => false,
+                    'events' => $this->events
+                ]]
+            ]);
+            if (!$webhookRes->ok)  throw new Exception('Error al configurar webhook de WhatsApp');
+
+            $session = $data[0];
+            return $this->getProfile($session);
         });
 
         return response($response->toArray(), $response->status);
@@ -74,6 +112,11 @@ class WhatsAppController extends Controller
                 'user'   => explode('@', $session['ownerJid'])[0] ?? null,
                 'server' => explode('@', $session['ownerJid'])[1] ?? null,
             ],
+            'count' => [
+                'messages' => $session['_count']['Message'] ?? 0,
+                'contacts' => $session['_count']['Contact'] ?? 0,
+                'chats' => $session['_count']['Chat'] ?? 0
+            ]
         ];
     }
 
@@ -198,6 +241,23 @@ class WhatsAppController extends Controller
             if (!$number) throw new Exception('Número no encontrado');
 
             $message = $request->message;
+
+            // Validate if number exists in WhatsApp
+            $validateNumberRes = new Fetch(env('EVOAPI_URL') . '/chat/whatsappNumbers/' . $businessJpa->person->document_number, [
+                'method' => 'POST',
+                'headers' => [
+                    'Content-Type' => 'application/json',
+                    'apikey' => $businessJpa->uuid
+                ],
+                'body' => [
+                    'numbers' => [$number]
+                ]
+            ]);
+
+            $validationData = $validateNumberRes->json();
+            if (!$validateNumberRes->ok || empty($validationData) || !isset($validationData[0]['exists']) || !$validationData[0]['exists']) {
+                throw new Exception('El número de WhatsApp no existe o no está registrado');
+            }
 
             if (Text::startsWith($message, '/signature:')) {
                 $res = new Fetch(env('EVOAPI_URL') . '/message/sendMedia/' . $businessJpa->person->document_number, [

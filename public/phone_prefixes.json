@@ -1,0 +1,2252 @@
+[
+  {
+    "country": "Afganistán",
+    "beautyCode": "+93",
+    "realCode": "93",
+    "isoCode": {
+      "ISO1": "AF",
+      "ISO2": "AFG"
+    },
+    "flag": "🇦🇫"
+  },
+  {
+    "country": "Albania",
+    "beautyCode": "+355",
+    "realCode": "355",
+    "isoCode": {
+      "ISO1": "AL",
+      "ISO2": "ALB"
+    },
+    "flag": "🇦🇱"
+  },
+  {
+    "country": "Alemania",
+    "beautyCode": "+49",
+    "realCode": "49",
+    "isoCode": {
+      "ISO1": "DE",
+      "ISO2": "DEU"
+    },
+    "flag": "🇩🇪"
+  },
+  {
+    "country": "Andorra",
+    "beautyCode": "+376",
+    "realCode": "376",
+    "isoCode": {
+      "ISO1": "AD",
+      "ISO2": "AND"
+    },
+    "flag": "🇦🇩"
+  },
+  {
+    "country": "Angola",
+    "beautyCode": "+244",
+    "realCode": "244",
+    "isoCode": {
+      "ISO1": "AO",
+      "ISO2": "AGO"
+    },
+    "flag": "🇦🇴"
+  },
+  {
+    "country": "Anguila",
+    "beautyCode": "+1 264",
+    "realCode": "1264",
+    "isoCode": {
+      "ISO1": "AI",
+      "ISO2": "AIA"
+    },
+    "flag": "🇦🇮"
+  },
+  {
+    "country": "Antártida",
+    "beautyCode": "+672",
+    "realCode": "672",
+    "isoCode": {
+      "ISO1": "AQ",
+      "ISO2": "ATA"
+    },
+    "flag": "🇦🇶"
+  },
+  {
+    "country": "Arabia Saudita",
+    "beautyCode": "+966",
+    "realCode": "966",
+    "isoCode": {
+      "ISO1": "SA",
+      "ISO2": "SAU"
+    },
+    "flag": "🇸🇦"
+  },
+  {
+    "country": "Argelia",
+    "beautyCode": "+213",
+    "realCode": "213",
+    "isoCode": {
+      "ISO1": "DZ",
+      "ISO2": "DZA"
+    },
+    "flag": "🇩🇿"
+  },
+  {
+    "country": "Argentina",
+    "beautyCode": "+54",
+    "realCode": "54",
+    "isoCode": {
+      "ISO1": "AR",
+      "ISO2": "ARG"
+    },
+    "flag": "🇦🇷"
+  },
+  {
+    "country": "Armenia",
+    "beautyCode": "+374",
+    "realCode": "374",
+    "isoCode": {
+      "ISO1": "AM",
+      "ISO2": "ARM"
+    },
+    "flag": "🇦🇲"
+  },
+  {
+    "country": "Aruba",
+    "beautyCode": "+297",
+    "realCode": "297",
+    "isoCode": {
+      "ISO1": "AW",
+      "ISO2": "ABW"
+    },
+    "flag": "🇦🇼"
+  },
+  {
+    "country": "Australia",
+    "beautyCode": "+61",
+    "realCode": "61",
+    "isoCode": {
+      "ISO1": "AU",
+      "ISO2": "AUS"
+    },
+    "flag": "🇦🇺"
+  },
+  {
+    "country": "Austria",
+    "beautyCode": "+43",
+    "realCode": "43",
+    "isoCode": {
+      "ISO1": "AT",
+      "ISO2": "AUT"
+    },
+    "flag": "🇦🇹"
+  },
+  {
+    "country": "Azerbaiyán",
+    "beautyCode": "+994",
+    "realCode": "994",
+    "isoCode": {
+      "ISO1": "AZ",
+      "ISO2": "AZE"
+    },
+    "flag": "🇦🇿"
+  },
+  {
+    "country": "Bahamas",
+    "beautyCode": "+1",
+    "realCode": "1",
+    "isoCode": {
+      "ISO1": "BS",
+      "ISO2": "BHS"
+    },
+    "flag": "🇧🇸"
+  },
+  {
+    "country": "Bahréin",
+    "beautyCode": "+973",
+    "realCode": "973",
+    "isoCode": {
+      "ISO1": "BH",
+      "ISO2": "BHR"
+    },
+    "flag": "🇧🇭"
+  },
+  {
+    "country": "Bangladesh",
+    "beautyCode": "+880",
+    "realCode": "880",
+    "isoCode": {
+      "ISO1": "BD",
+      "ISO2": "BGD"
+    },
+    "flag": "🇧🇩"
+  },
+  {
+    "country": "Barbados",
+    "beautyCode": "+1",
+    "realCode": "1",
+    "isoCode": {
+      "ISO1": "BB",
+      "ISO2": "BRB"
+    },
+    "flag": "🇧🇧"
+  },
+  {
+    "country": "Bélgica",
+    "beautyCode": "+32",
+    "realCode": "32",
+    "isoCode": {
+      "ISO1": "BE",
+      "ISO2": "BEL"
+    },
+    "flag": "🇧🇪"
+  },
+  {
+    "country": "Belice",
+    "beautyCode": "+501",
+    "realCode": "501",
+    "isoCode": {
+      "ISO1": "BZ",
+      "ISO2": "BLZ"
+    },
+    "flag": "🇧🇿"
+  },
+  {
+    "country": "Benín",
+    "beautyCode": "+229",
+    "realCode": "229",
+    "isoCode": {
+      "ISO1": "BJ",
+      "ISO2": "BEN"
+    },
+    "flag": "🇧🇯"
+  },
+  {
+    "country": "Bermudas",
+    "beautyCode": "+1",
+    "realCode": "1",
+    "isoCode": {
+      "ISO1": "BM",
+      "ISO2": "BMU"
+    },
+    "flag": "🇧🇲"
+  },
+  {
+    "country": "Bielorrusia",
+    "beautyCode": "+375",
+    "realCode": "375",
+    "isoCode": {
+      "ISO1": "BY",
+      "ISO2": "BLR"
+    },
+    "flag": "🇧🇾"
+  },
+  {
+    "country": "Birmania (Myanmar)",
+    "beautyCode": "+95",
+    "realCode": "95",
+    "isoCode": {
+      "ISO1": "MM",
+      "ISO2": "MMR"
+    },
+    "flag": "🇲🇲"
+  },
+  {
+    "country": "Bolivia",
+    "beautyCode": "+591",
+    "realCode": "591",
+    "isoCode": {
+      "ISO1": "BO",
+      "ISO2": "BOL"
+    },
+    "flag": "🇧🇴"
+  },
+  {
+    "country": "Bosnia-Herzegovina",
+    "beautyCode": "+387",
+    "realCode": "387",
+    "isoCode": {
+      "ISO1": "BA",
+      "ISO2": "BIH"
+    },
+    "flag": "🇧🇦"
+  },
+  {
+    "country": "Botsuana",
+    "beautyCode": "+267",
+    "realCode": "267",
+    "isoCode": {
+      "ISO1": "BW",
+      "ISO2": "BWA"
+    },
+    "flag": "🇧🇼"
+  },
+  {
+    "country": "Brasil",
+    "beautyCode": "+55",
+    "realCode": "55",
+    "isoCode": {
+      "ISO1": "BR",
+      "ISO2": "BRA"
+    },
+    "flag": "🇧🇷"
+  },
+  {
+    "country": "Brunéi",
+    "beautyCode": "+673",
+    "realCode": "673",
+    "isoCode": {
+      "ISO1": "BN",
+      "ISO2": "BRN"
+    },
+    "flag": "🇧🇳"
+  },
+  {
+    "country": "Bulgaria",
+    "beautyCode": "+359",
+    "realCode": "359",
+    "isoCode": {
+      "ISO1": "BG",
+      "ISO2": "BGR"
+    },
+    "flag": "🇧🇬"
+  },
+  {
+    "country": "Burkina Faso",
+    "beautyCode": "+226",
+    "realCode": "226",
+    "isoCode": {
+      "ISO1": "BF",
+      "ISO2": "BFA"
+    },
+    "flag": "🇧🇫"
+  },
+  {
+    "country": "Burundi",
+    "beautyCode": "+257",
+    "realCode": "257",
+    "isoCode": {
+      "ISO1": "BI",
+      "ISO2": "BDI"
+    },
+    "flag": "🇧🇮"
+  },
+  {
+    "country": "Bután",
+    "beautyCode": "+975",
+    "realCode": "975",
+    "isoCode": {
+      "ISO1": "BT",
+      "ISO2": "BTN"
+    },
+    "flag": "🇧🇹"
+  },
+  {
+    "country": "Cabo Verde",
+    "beautyCode": "+238",
+    "realCode": "238",
+    "isoCode": {
+      "ISO1": "CV",
+      "ISO2": "CPV"
+    },
+    "flag": "🇨🇻"
+  },
+  {
+    "country": "Camboya",
+    "beautyCode": "+855",
+    "realCode": "855",
+    "isoCode": {
+      "ISO1": "KH",
+      "ISO2": "KHM"
+    },
+    "flag": "🇰🇭"
+  },
+  {
+    "country": "Camerún",
+    "beautyCode": "+237",
+    "realCode": "237",
+    "isoCode": {
+      "ISO1": "CM",
+      "ISO2": "CMR"
+    },
+    "flag": "🇨🇲"
+  },
+  {
+    "country": "Canadá",
+    "beautyCode": "+1",
+    "realCode": "1",
+    "isoCode": {
+      "ISO1": "CA",
+      "ISO2": "CAN"
+    },
+    "flag": "🇨🇦"
+  },
+  {
+    "country": "Chile",
+    "beautyCode": "+56",
+    "realCode": "56",
+    "isoCode": {
+      "ISO1": "CL",
+      "ISO2": "CHL"
+    },
+    "flag": "🇨🇱"
+  },
+  {
+    "country": "China",
+    "beautyCode": "+86",
+    "realCode": "86",
+    "isoCode": {
+      "ISO1": "CN",
+      "ISO2": "CHN"
+    },
+    "flag": "🇨🇳"
+  },
+  {
+    "country": "Chipre",
+    "beautyCode": "+357",
+    "realCode": "357",
+    "isoCode": {
+      "ISO1": "CY",
+      "ISO2": "CYP"
+    },
+    "flag": "🇨🇾"
+  },
+  {
+    "country": "Colombia",
+    "beautyCode": "+57",
+    "realCode": "57",
+    "isoCode": {
+      "ISO1": "CO",
+      "ISO2": "COL"
+    },
+    "flag": "🇨🇴"
+  },
+  {
+    "country": "Comoras",
+    "beautyCode": "+269",
+    "realCode": "269",
+    "isoCode": {
+      "ISO1": "KM",
+      "ISO2": "COM"
+    },
+    "flag": "🇰🇲"
+  },
+  {
+    "country": "Corea del Norte",
+    "beautyCode": "+850",
+    "realCode": "850",
+    "isoCode": {
+      "ISO1": "KP",
+      "ISO2": "PRK"
+    },
+    "flag": "🇰🇵"
+  },
+  {
+    "country": "Corea del Sur",
+    "beautyCode": "+82",
+    "realCode": "82",
+    "isoCode": {
+      "ISO1": "KR",
+      "ISO2": "KOR"
+    },
+    "flag": "🇰🇷"
+  },
+  {
+    "country": "Costa de Marfil",
+    "beautyCode": "+225",
+    "realCode": "225",
+    "isoCode": {
+      "ISO1": "CI",
+      "ISO2": "CIV"
+    },
+    "flag": "🇨🇮"
+  },
+  {
+    "country": "Costa Rica",
+    "beautyCode": "+506",
+    "realCode": "506",
+    "isoCode": {
+      "ISO1": "CR",
+      "ISO2": "CRI"
+    },
+    "flag": "🇨🇷"
+  },
+  {
+    "country": "Croacia",
+    "beautyCode": "+385",
+    "realCode": "385",
+    "isoCode": {
+      "ISO1": "HR",
+      "ISO2": "HRV"
+    },
+    "flag": "🇭🇷"
+  },
+  {
+    "country": "Cuba",
+    "beautyCode": "+53",
+    "realCode": "53",
+    "isoCode": {
+      "ISO1": "CU",
+      "ISO2": "CUB"
+    },
+    "flag": "🇨🇺"
+  },
+  {
+    "country": "Curazao",
+    "beautyCode": "+599",
+    "realCode": "599",
+    "isoCode": {
+      "ISO1": "CW",
+      "ISO2": "CUW"
+    },
+    "flag": "🇨🇼"
+  },
+  {
+    "country": "Dinamarca",
+    "beautyCode": "+45",
+    "realCode": "45",
+    "isoCode": {
+      "ISO1": "DK",
+      "ISO2": "DNK"
+    },
+    "flag": "🇩🇰"
+  },
+  {
+    "country": "Djibuti",
+    "beautyCode": "+253",
+    "realCode": "253",
+    "isoCode": {
+      "ISO1": "DJ",
+      "ISO2": "DJI"
+    },
+    "flag": "🇩🇯"
+  },
+  {
+    "country": "Dominica",
+    "beautyCode": "+1",
+    "realCode": "1",
+    "isoCode": {
+      "ISO1": "DM",
+      "ISO2": "DMA"
+    },
+    "flag": "🇩🇲"
+  },
+  {
+    "country": "Ecuador",
+    "beautyCode": "+593",
+    "realCode": "593",
+    "isoCode": {
+      "ISO1": "EC",
+      "ISO2": "ECU"
+    },
+    "flag": "🇪🇨"
+  },
+  {
+    "country": "Egipto",
+    "beautyCode": "+20",
+    "realCode": "20",
+    "isoCode": {
+      "ISO1": "EG",
+      "ISO2": "EGY"
+    },
+    "flag": "🇪🇬"
+  },
+  {
+    "country": "El Sáhara Español",
+    "beautyCode": "+212",
+    "realCode": "212",
+    "isoCode": {
+      "ISO1": "EH",
+      "ISO2": "ESH"
+    },
+    "flag": "🇪🇭"
+  },
+  {
+    "country": "El Salvador",
+    "beautyCode": "+503",
+    "realCode": "503",
+    "isoCode": {
+      "ISO1": "SV",
+      "ISO2": "SLV"
+    },
+    "flag": "🇸🇻"
+  },
+  {
+    "country": "El Vaticano",
+    "beautyCode": "+39",
+    "realCode": "39",
+    "isoCode": {
+      "ISO1": "VA",
+      "ISO2": "VAT"
+    },
+    "flag": "🇻🇦"
+  },
+  {
+    "country": "Emiratos Árabes Unidos",
+    "beautyCode": "+971",
+    "realCode": "971",
+    "isoCode": {
+      "ISO1": "AE",
+      "ISO2": "ARE"
+    },
+    "flag": "🇦🇪"
+  },
+  {
+    "country": "Eritrea",
+    "beautyCode": "+291",
+    "realCode": "291",
+    "isoCode": {
+      "ISO1": "ER",
+      "ISO2": "ERI"
+    },
+    "flag": "🇪🇷"
+  },
+  {
+    "country": "Eslovaquia",
+    "beautyCode": "+421",
+    "realCode": "421",
+    "isoCode": {
+      "ISO1": "SK",
+      "ISO2": "SVK"
+    },
+    "flag": "🇸🇰"
+  },
+  {
+    "country": "Eslovenia",
+    "beautyCode": "+386",
+    "realCode": "386",
+    "isoCode": {
+      "ISO1": "SI",
+      "ISO2": "SVN"
+    },
+    "flag": "🇸🇮"
+  },
+  {
+    "country": "España",
+    "beautyCode": "+34",
+    "realCode": "34",
+    "isoCode": {
+      "ISO1": "ES",
+      "ISO2": "ESP"
+    },
+    "flag": "🇪🇸"
+  },
+  {
+    "country": "Estados Unidos",
+    "beautyCode": "+1",
+    "realCode": "1",
+    "isoCode": {
+      "ISO1": "US",
+      "ISO2": "USA"
+    },
+    "flag": "🇺🇸"
+  },
+  {
+    "country": "Estonia",
+    "beautyCode": "+372",
+    "realCode": "372",
+    "isoCode": {
+      "ISO1": "EE",
+      "ISO2": "EST"
+    },
+    "flag": "🇪🇪"
+  },
+  {
+    "country": "Etiopía",
+    "beautyCode": "+251",
+    "realCode": "251",
+    "isoCode": {
+      "ISO1": "ET",
+      "ISO2": "ETH"
+    },
+    "flag": "🇪🇹"
+  },
+  {
+    "country": "Filipinas",
+    "beautyCode": "+63",
+    "realCode": "63",
+    "isoCode": {
+      "ISO1": "PH",
+      "ISO2": "PHL"
+    },
+    "flag": "🇵🇭"
+  },
+  {
+    "country": "Finlandia",
+    "beautyCode": "+358",
+    "realCode": "358",
+    "isoCode": {
+      "ISO1": "FI",
+      "ISO2": "FIN"
+    },
+    "flag": "🇫🇮"
+  },
+  {
+    "country": "Fiyi",
+    "beautyCode": "+679",
+    "realCode": "679",
+    "isoCode": {
+      "ISO1": "FJ",
+      "ISO2": "FJI"
+    },
+    "flag": "🇫🇯"
+  },
+  {
+    "country": "Francia",
+    "beautyCode": "+33",
+    "realCode": "33",
+    "isoCode": {
+      "ISO1": "FR",
+      "ISO2": "FRA"
+    },
+    "flag": "🇫🇷"
+  },
+  {
+    "country": "Gabón",
+    "beautyCode": "+241",
+    "realCode": "241",
+    "isoCode": {
+      "ISO1": "GA",
+      "ISO2": "GAB"
+    },
+    "flag": "🇬🇦"
+  },
+  {
+    "country": "Gambia",
+    "beautyCode": "+220",
+    "realCode": "220",
+    "isoCode": {
+      "ISO1": "GM",
+      "ISO2": "GMB"
+    },
+    "flag": "🇬🇲"
+  },
+  {
+    "country": "Georgia",
+    "beautyCode": "+995",
+    "realCode": "995",
+    "isoCode": {
+      "ISO1": "GE",
+      "ISO2": "GEO"
+    },
+    "flag": "🇬🇪"
+  },
+  {
+    "country": "Ghana",
+    "beautyCode": "+233",
+    "realCode": "233",
+    "isoCode": {
+      "ISO1": "GH",
+      "ISO2": "GHA"
+    },
+    "flag": "🇬🇭"
+  },
+  {
+    "country": "Gibraltar",
+    "beautyCode": "+350",
+    "realCode": "350",
+    "isoCode": {
+      "ISO1": "GI",
+      "ISO2": "GIB"
+    },
+    "flag": "🇬🇮"
+  },
+  {
+    "country": "Grecia",
+    "beautyCode": "+30",
+    "realCode": "30",
+    "isoCode": {
+      "ISO1": "GR",
+      "ISO2": "GRC"
+    },
+    "flag": "🇬🇷"
+  },
+  {
+    "country": "Groenlandia",
+    "beautyCode": "+299",
+    "realCode": "299",
+    "isoCode": {
+      "ISO1": "GL",
+      "ISO2": "GRL"
+    },
+    "flag": "🇬🇱"
+  },
+  {
+    "country": "Guadalupe",
+    "beautyCode": "+590",
+    "realCode": "590",
+    "isoCode": {
+      "ISO1": "GP",
+      "ISO2": "GLP"
+    },
+    "flag": "🇬🇵"
+  },
+  {
+    "country": "Guam",
+    "beautyCode": "+1 671",
+    "realCode": "1671",
+    "isoCode": {
+      "ISO1": "GU",
+      "ISO2": "GUM"
+    },
+    "flag": "🇬🇺"
+  },
+  {
+    "country": "Guatemala",
+    "beautyCode": "+502",
+    "realCode": "502",
+    "isoCode": {
+      "ISO1": "GT",
+      "ISO2": "GTM"
+    },
+    "flag": "🇬🇹"
+  },
+  {
+    "country": "Guinea",
+    "beautyCode": "+224",
+    "realCode": "224",
+    "isoCode": {
+      "ISO1": "GN",
+      "ISO2": "GIN"
+    },
+    "flag": "🇬🇳"
+  },
+  {
+    "country": "Guinea Ecuatorial",
+    "beautyCode": "+240",
+    "realCode": "240",
+    "isoCode": {
+      "ISO1": "GQ",
+      "ISO2": "GNQ"
+    },
+    "flag": "🇬🇶"
+  },
+  {
+    "country": "Guinea-Bissáu",
+    "beautyCode": "+245",
+    "realCode": "245",
+    "isoCode": {
+      "ISO1": "GW",
+      "ISO2": "GNB"
+    },
+    "flag": "🇬🇼"
+  },
+  {
+    "country": "Guyana",
+    "beautyCode": "+592",
+    "realCode": "592",
+    "isoCode": {
+      "ISO1": "GY",
+      "ISO2": "GUY"
+    },
+    "flag": "🇬🇾"
+  },
+  {
+    "country": "Haití",
+    "beautyCode": "+509",
+    "realCode": "509",
+    "isoCode": {
+      "ISO1": "HT",
+      "ISO2": "HTI"
+    },
+    "flag": "🇭🇹"
+  },
+  {
+    "country": "Holanda",
+    "beautyCode": "+31",
+    "realCode": "31",
+    "isoCode": {
+      "ISO1": "NL",
+      "ISO2": "NLD"
+    },
+    "flag": "🇳🇱"
+  },
+  {
+    "country": "Honduras",
+    "beautyCode": "+504",
+    "realCode": "504",
+    "isoCode": {
+      "ISO1": "HN",
+      "ISO2": "HND"
+    },
+    "flag": "🇭🇳"
+  },
+  {
+    "country": "Hong Kong",
+    "beautyCode": "+852",
+    "realCode": "852",
+    "isoCode": {
+      "ISO1": "HK",
+      "ISO2": "HKG"
+    },
+    "flag": "🇭🇰"
+  },
+  {
+    "country": "Hungría",
+    "beautyCode": "+36",
+    "realCode": "36",
+    "isoCode": {
+      "ISO1": "HU",
+      "ISO2": "HUN"
+    },
+    "flag": "🇭🇺"
+  },
+  {
+    "country": "India",
+    "beautyCode": "+91",
+    "realCode": "91",
+    "isoCode": {
+      "ISO1": "IN",
+      "ISO2": "IND"
+    },
+    "flag": "🇮🇳"
+  },
+  {
+    "country": "Indonesia",
+    "beautyCode": "+62",
+    "realCode": "62",
+    "isoCode": {
+      "ISO1": "ID",
+      "ISO2": "IDN"
+    },
+    "flag": "🇮🇩"
+  },
+  {
+    "country": "Irak",
+    "beautyCode": "+964",
+    "realCode": "964",
+    "isoCode": {
+      "ISO1": "IQ",
+      "ISO2": "IRQ"
+    },
+    "flag": "🇮🇶"
+  },
+  {
+    "country": "Irán",
+    "beautyCode": "+98",
+    "realCode": "98",
+    "isoCode": {
+      "ISO1": "IR",
+      "ISO2": "IRN"
+    },
+    "flag": "🇮🇷"
+  },
+  {
+    "country": "Irlanda",
+    "beautyCode": "+353",
+    "realCode": "353",
+    "isoCode": {
+      "ISO1": "IE",
+      "ISO2": "IRL"
+    },
+    "flag": "🇮🇪"
+  },
+  {
+    "country": "Isla de Man",
+    "beautyCode": "+44",
+    "realCode": "44",
+    "isoCode": {
+      "ISO1": "IM",
+      "ISO2": "IMN"
+    },
+    "flag": "🇮🇲"
+  },
+  {
+    "country": "Isla Norfolk",
+    "beautyCode": "+672",
+    "realCode": "672",
+    "isoCode": {
+      "ISO1": "NF",
+      "ISO2": "NFK"
+    },
+    "flag": "🇳🇫"
+  },
+  {
+    "country": "Islandia",
+    "beautyCode": "+354",
+    "realCode": "354",
+    "isoCode": {
+      "ISO1": "IS",
+      "ISO2": "ISL"
+    },
+    "flag": "🇮🇸"
+  },
+  {
+    "country": "Islas Caimán",
+    "beautyCode": "+1-345",
+    "realCode": "1345",
+    "isoCode": {
+      "ISO1": "KY",
+      "ISO2": "CYM"
+    },
+    "flag": "🇰🇾"
+  },
+  {
+    "country": "Islas Cook",
+    "beautyCode": "+682",
+    "realCode": "682",
+    "isoCode": {
+      "ISO1": "CK",
+      "ISO2": "COK"
+    },
+    "flag": "🇨🇰"
+  },
+  {
+    "country": "Islas Feroe",
+    "beautyCode": "+298",
+    "realCode": "298",
+    "isoCode": {
+      "ISO1": "FO",
+      "ISO2": "FRO"
+    },
+    "flag": "🇫🇴"
+  },
+  {
+    "country": "Islas Malvinas",
+    "beautyCode": "+500",
+    "realCode": "500",
+    "isoCode": {
+      "ISO1": "FK",
+      "ISO2": "FLK"
+    },
+    "flag": "🇫🇰"
+  },
+  {
+    "country": "Islas Marianas del Norte",
+    "beautyCode": "+1 670",
+    "realCode": "1670",
+    "isoCode": {
+      "ISO1": "MP",
+      "ISO2": "MNP"
+    },
+    "flag": "🇲🇵"
+  },
+  {
+    "country": "Islas Marshall",
+    "beautyCode": "+692",
+    "realCode": "692",
+    "isoCode": {
+      "ISO1": "MH",
+      "ISO2": "MHL"
+    },
+    "flag": "🇲🇭"
+  },
+  {
+    "country": "Islas Pitcairn",
+    "beautyCode": "+870",
+    "realCode": "870",
+    "isoCode": {
+      "ISO1": "PN",
+      "ISO2": "PCN"
+    },
+    "flag": "🇵🇳"
+  },
+  {
+    "country": "Islas Salomón",
+    "beautyCode": "+677",
+    "realCode": "677",
+    "isoCode": {
+      "ISO1": "SB",
+      "ISO2": "SLB"
+    },
+    "flag": "🇸🇧"
+  },
+  {
+    "country": "Islas Vírgenes Británicas",
+    "beautyCode": "+1 284",
+    "realCode": "1284",
+    "isoCode": {
+      "ISO1": "VG",
+      "ISO2": "VGB"
+    },
+    "flag": "🇻🇬"
+  },
+  {
+    "country": "Israel",
+    "beautyCode": "+972",
+    "realCode": "972",
+    "isoCode": {
+      "ISO1": "IL",
+      "ISO2": "ISR"
+    },
+    "flag": "🇮🇱"
+  },
+  {
+    "country": "Italia",
+    "beautyCode": "+39",
+    "realCode": "39",
+    "isoCode": {
+      "ISO1": "IT",
+      "ISO2": "ITA"
+    },
+    "flag": "🇮🇹"
+  },
+  {
+    "country": "Jamaica",
+    "beautyCode": "+1",
+    "realCode": "1",
+    "isoCode": {
+      "ISO1": "JM",
+      "ISO2": "JAM"
+    },
+    "flag": "🇯🇲"
+  },
+  {
+    "country": "Japón",
+    "beautyCode": "+81",
+    "realCode": "81",
+    "isoCode": {
+      "ISO1": "JP",
+      "ISO2": "JPN"
+    },
+    "flag": "🇯🇵"
+  },
+  {
+    "country": "Jordania",
+    "beautyCode": "+962",
+    "realCode": "962",
+    "isoCode": {
+      "ISO1": "JO",
+      "ISO2": "JOR"
+    },
+    "flag": "🇯🇴"
+  },
+  {
+    "country": "Kazajistán",
+    "beautyCode": "+7",
+    "realCode": "7",
+    "isoCode": {
+      "ISO1": "KZ",
+      "ISO2": "KAZ"
+    },
+    "flag": "🇰🇿"
+  },
+  {
+    "country": "Kenia",
+    "beautyCode": "+254",
+    "realCode": "254",
+    "isoCode": {
+      "ISO1": "KE",
+      "ISO2": "KEN"
+    },
+    "flag": "🇰🇪"
+  },
+  {
+    "country": "Kirgizistán",
+    "beautyCode": "+996",
+    "realCode": "996",
+    "isoCode": {
+      "ISO1": "KG",
+      "ISO2": "KGZ"
+    },
+    "flag": "🇰🇬"
+  },
+  {
+    "country": "Kiribati",
+    "beautyCode": "+686",
+    "realCode": "686",
+    "isoCode": {
+      "ISO1": "KI",
+      "ISO2": "KIR"
+    },
+    "flag": "🇰🇮"
+  },
+  {
+    "country": "Kosovo",
+    "beautyCode": "+381",
+    "realCode": "381",
+    "isoCode": {
+      "ISO1": "XK",
+      "ISO2": "XKX"
+    },
+    "flag": "🇽🇰"
+  },
+  {
+    "country": "Kuwait",
+    "beautyCode": "+965",
+    "realCode": "965",
+    "isoCode": {
+      "ISO1": "KW",
+      "ISO2": "KWT"
+    },
+    "flag": "🇰🇼"
+  },
+  {
+    "country": "Laos",
+    "beautyCode": "+856",
+    "realCode": "856",
+    "isoCode": {
+      "ISO1": "LA",
+      "ISO2": "LAO"
+    },
+    "flag": "🇱🇦"
+  },
+  {
+    "country": "Lesoto",
+    "beautyCode": "+266",
+    "realCode": "266",
+    "isoCode": {
+      "ISO1": "LS",
+      "ISO2": "LSO"
+    },
+    "flag": "🇱🇸"
+  },
+  {
+    "country": "Letonia",
+    "beautyCode": "+371",
+    "realCode": "371",
+    "isoCode": {
+      "ISO1": "LV",
+      "ISO2": "LVA"
+    },
+    "flag": "🇱🇻"
+  },
+  {
+    "country": "Líbano",
+    "beautyCode": "+961",
+    "realCode": "961",
+    "isoCode": {
+      "ISO1": "LB",
+      "ISO2": "LBN"
+    },
+    "flag": "🇱🇧"
+  },
+  {
+    "country": "Liberia",
+    "beautyCode": "+231",
+    "realCode": "231",
+    "isoCode": {
+      "ISO1": "LR",
+      "ISO2": "LBR"
+    },
+    "flag": "🇱🇷"
+  },
+  {
+    "country": "Libia",
+    "beautyCode": "+218",
+    "realCode": "218",
+    "isoCode": {
+      "ISO1": "LY",
+      "ISO2": "LBY"
+    },
+    "flag": "🇱🇾"
+  },
+  {
+    "country": "Liechtenstein",
+    "beautyCode": "+423",
+    "realCode": "423",
+    "isoCode": {
+      "ISO1": "LI",
+      "ISO2": "LIE"
+    },
+    "flag": "🇱🇮"
+  },
+  {
+    "country": "Lituania",
+    "beautyCode": "+370",
+    "realCode": "370",
+    "isoCode": {
+      "ISO1": "LT",
+      "ISO2": "LTU"
+    },
+    "flag": "🇱🇹"
+  },
+  {
+    "country": "Luxemburgo",
+    "beautyCode": "+352",
+    "realCode": "352",
+    "isoCode": {
+      "ISO1": "LU",
+      "ISO2": "LUX"
+    },
+    "flag": "🇱🇺"
+  },
+  {
+    "country": "Macao",
+    "beautyCode": "+853",
+    "realCode": "853",
+    "isoCode": {
+      "ISO1": "MO",
+      "ISO2": "MAC"
+    },
+    "flag": "🇲🇴"
+  },
+  {
+    "country": "Macedonia",
+    "beautyCode": "+389",
+    "realCode": "389",
+    "isoCode": {
+      "ISO1": "MK",
+      "ISO2": "MKD"
+    },
+    "flag": "🇲🇰"
+  },
+  {
+    "country": "Madagascar",
+    "beautyCode": "+261",
+    "realCode": "261",
+    "isoCode": {
+      "ISO1": "MG",
+      "ISO2": "MDG"
+    },
+    "flag": "🇲🇬"
+  },
+  {
+    "country": "Malasia",
+    "beautyCode": "+60",
+    "realCode": "60",
+    "isoCode": {
+      "ISO1": "MY",
+      "ISO2": "MYS"
+    },
+    "flag": "🇲🇾"
+  },
+  {
+    "country": "Malaui",
+    "beautyCode": "+265",
+    "realCode": "265",
+    "isoCode": {
+      "ISO1": "MW",
+      "ISO2": "MWI"
+    },
+    "flag": "🇲🇼"
+  },
+  {
+    "country": "Maldivas",
+    "beautyCode": "+960",
+    "realCode": "960",
+    "isoCode": {
+      "ISO1": "MV",
+      "ISO2": "MDV"
+    },
+    "flag": "🇲🇻"
+  },
+  {
+    "country": "Mali",
+    "beautyCode": "+223",
+    "realCode": "223",
+    "isoCode": {
+      "ISO1": "ML",
+      "ISO2": "MLI"
+    },
+    "flag": "🇲🇱"
+  },
+  {
+    "country": "Malta",
+    "beautyCode": "+356",
+    "realCode": "356",
+    "isoCode": {
+      "ISO1": "MT",
+      "ISO2": "MLT"
+    },
+    "flag": "🇲🇹"
+  },
+  {
+    "country": "Marruecos",
+    "beautyCode": "+212",
+    "realCode": "212",
+    "isoCode": {
+      "ISO1": "MA",
+      "ISO2": "MAR"
+    },
+    "flag": "🇲🇦"
+  },
+  {
+    "country": "Mauricio",
+    "beautyCode": "+230",
+    "realCode": "230",
+    "isoCode": {
+      "ISO1": "MU",
+      "ISO2": "MUS"
+    },
+    "flag": "🇲🇺"
+  },
+  {
+    "country": "Mauritania",
+    "beautyCode": "+222",
+    "realCode": "222",
+    "isoCode": {
+      "ISO1": "MR",
+      "ISO2": "MRT"
+    },
+    "flag": "🇲🇷"
+  },
+  {
+    "country": "México",
+    "beautyCode": "+52",
+    "realCode": "52",
+    "isoCode": {
+      "ISO1": "MX",
+      "ISO2": "MEX"
+    },
+    "flag": "🇲🇽"
+  },
+  {
+    "country": "Micronesia",
+    "beautyCode": "+691",
+    "realCode": "691",
+    "isoCode": {
+      "ISO1": "FM",
+      "ISO2": "FSM"
+    },
+    "flag": "🇫🇲"
+  },
+  {
+    "country": "Moldavia",
+    "beautyCode": "+373",
+    "realCode": "373",
+    "isoCode": {
+      "ISO1": "MD",
+      "ISO2": "MDA"
+    },
+    "flag": "🇲🇩"
+  },
+  {
+    "country": "Mónaco",
+    "beautyCode": "+377",
+    "realCode": "377",
+    "isoCode": {
+      "ISO1": "MC",
+      "ISO2": "MCO"
+    },
+    "flag": "🇲🇨"
+  },
+  {
+    "country": "Mongolia",
+    "beautyCode": "+976",
+    "realCode": "976",
+    "isoCode": {
+      "ISO1": "MN",
+      "ISO2": "MNG"
+    },
+    "flag": "🇲🇳"
+  },
+  {
+    "country": "Montenegro",
+    "beautyCode": "+382",
+    "realCode": "382",
+    "isoCode": {
+      "ISO1": "ME",
+      "ISO2": "MNE"
+    },
+    "flag": "🇲🇪"
+  },
+  {
+    "country": "Montserrat",
+    "beautyCode": "+1 664",
+    "realCode": "1664",
+    "isoCode": {
+      "ISO1": "MS",
+      "ISO2": "MSR"
+    },
+    "flag": "🇲🇸"
+  },
+  {
+    "country": "Mozambique",
+    "beautyCode": "+258",
+    "realCode": "258",
+    "isoCode": {
+      "ISO1": "MZ",
+      "ISO2": "MOZ"
+    },
+    "flag": "🇲🇿"
+  },
+  {
+    "country": "Namibia",
+    "beautyCode": "+264",
+    "realCode": "264",
+    "isoCode": {
+      "ISO1": "NA",
+      "ISO2": "NAM"
+    },
+    "flag": "🇳🇦"
+  },
+  {
+    "country": "Nauru",
+    "beautyCode": "+674",
+    "realCode": "674",
+    "isoCode": {
+      "ISO1": "NR",
+      "ISO2": "NRU"
+    },
+    "flag": "🇳🇷"
+  },
+  {
+    "country": "Nepal",
+    "beautyCode": "+977",
+    "realCode": "977",
+    "isoCode": {
+      "ISO1": "NP",
+      "ISO2": "NPL"
+    },
+    "flag": "🇳🇵"
+  },
+  {
+    "country": "Nicaragua",
+    "beautyCode": "+505",
+    "realCode": "505",
+    "isoCode": {
+      "ISO1": "NI",
+      "ISO2": "NIC"
+    },
+    "flag": "🇳🇮"
+  },
+  {
+    "country": "Níger",
+    "beautyCode": "+227",
+    "realCode": "227",
+    "isoCode": {
+      "ISO1": "NE",
+      "ISO2": "NER"
+    },
+    "flag": "🇳🇪"
+  },
+  {
+    "country": "Nigeria",
+    "beautyCode": "+234",
+    "realCode": "234",
+    "isoCode": {
+      "ISO1": "NG",
+      "ISO2": "NGA"
+    },
+    "flag": "🇳🇬"
+  },
+  {
+    "country": "Niue",
+    "beautyCode": "+683",
+    "realCode": "683",
+    "isoCode": {
+      "ISO1": "NU",
+      "ISO2": "NIU"
+    },
+    "flag": "🇳🇺"
+  },
+  {
+    "country": "Noruega",
+    "beautyCode": "+47",
+    "realCode": "47",
+    "isoCode": {
+      "ISO1": "NO",
+      "ISO2": "NOR"
+    },
+    "flag": "🇳🇴"
+  },
+  {
+    "country": "Nueva Caledonia",
+    "beautyCode": "+687",
+    "realCode": "687",
+    "isoCode": {
+      "ISO1": "NC",
+      "ISO2": "NCL"
+    },
+    "flag": "🇳🇨"
+  },
+  {
+    "country": "Nueva Zelanda",
+    "beautyCode": "+64",
+    "realCode": "64",
+    "isoCode": {
+      "ISO1": "NZ",
+      "ISO2": "NZL"
+    },
+    "flag": "🇳🇿"
+  },
+  {
+    "country": "Omán",
+    "beautyCode": "+968",
+    "realCode": "968",
+    "isoCode": {
+      "ISO1": "OM",
+      "ISO2": "OMN"
+    },
+    "flag": "🇴🇲"
+  },
+  {
+    "country": "Pakistán",
+    "beautyCode": "+92",
+    "realCode": "92",
+    "isoCode": {
+      "ISO1": "PK",
+      "ISO2": "PAK"
+    },
+    "flag": "🇵🇰"
+  },
+  {
+    "country": "Palau",
+    "beautyCode": "+680",
+    "realCode": "680",
+    "isoCode": {
+      "ISO1": "PW",
+      "ISO2": "PLW"
+    },
+    "flag": "🇵🇼"
+  },
+  {
+    "country": "Panamá",
+    "beautyCode": "+507",
+    "realCode": "507",
+    "isoCode": {
+      "ISO1": "PA",
+      "ISO2": "PAN"
+    },
+    "flag": "🇵🇦"
+  },
+  {
+    "country": "Papúa Nueva Guinea",
+    "beautyCode": "+675",
+    "realCode": "675",
+    "isoCode": {
+      "ISO1": "PG",
+      "ISO2": "PNG"
+    },
+    "flag": "🇵🇬"
+  },
+  {
+    "country": "Paraguay",
+    "beautyCode": "+595",
+    "realCode": "595",
+    "isoCode": {
+      "ISO1": "PY",
+      "ISO2": "PRY"
+    },
+    "flag": "🇵🇾"
+  },
+  {
+    "country": "Perú",
+    "beautyCode": "+51",
+    "realCode": "51",
+    "isoCode": {
+      "ISO1": "PE",
+      "ISO2": "PER"
+    },
+    "flag": "🇵🇪"
+  },
+  {
+    "country": "Polinesia Francesa",
+    "beautyCode": "+689",
+    "realCode": "689",
+    "isoCode": {
+      "ISO1": "PF",
+      "ISO2": "PYF"
+    },
+    "flag": "🇵🇫"
+  },
+  {
+    "country": "Polonia",
+    "beautyCode": "+48",
+    "realCode": "48",
+    "isoCode": {
+      "ISO1": "PL",
+      "ISO2": "POL"
+    },
+    "flag": "🇵🇱"
+  },
+  {
+    "country": "Portugal",
+    "beautyCode": "+351",
+    "realCode": "351",
+    "isoCode": {
+      "ISO1": "PT",
+      "ISO2": "PRT"
+    },
+    "flag": "🇵🇹"
+  },
+  {
+    "country": "Puerto Rico",
+    "beautyCode": "+1",
+    "realCode": "1",
+    "isoCode": {
+      "ISO1": "PR",
+      "ISO2": "PRI"
+    },
+    "flag": "🇵🇷"
+  },
+  {
+    "country": "Qatar",
+    "beautyCode": "+974",
+    "realCode": "974",
+    "isoCode": {
+      "ISO1": "QA",
+      "ISO2": "QAT"
+    },
+    "flag": "🇶🇦"
+  },
+  {
+    "country": "Reino Unido",
+    "beautyCode": "+44",
+    "realCode": "44",
+    "isoCode": {
+      "ISO1": "GB",
+      "ISO2": "GBR"
+    },
+    "flag": "🇬🇧"
+  },
+  {
+    "country": "República Centroafricana",
+    "beautyCode": "+236",
+    "realCode": "236",
+    "isoCode": {
+      "ISO1": "CF",
+      "ISO2": "CAF"
+    },
+    "flag": "🇨🇫"
+  },
+  {
+    "country": "República Checa",
+    "beautyCode": "+420",
+    "realCode": "420",
+    "isoCode": {
+      "ISO1": "CZ",
+      "ISO2": "CZE"
+    },
+    "flag": "🇨🇿"
+  },
+  {
+    "country": "República de Sudán del Sur",
+    "beautyCode": "+211",
+    "realCode": "211",
+    "isoCode": {
+      "ISO1": "SS",
+      "ISO2": "SSD"
+    },
+    "flag": "🇸🇸"
+  },
+  {
+    "country": "República del Congo",
+    "beautyCode": "+242",
+    "realCode": "242",
+    "isoCode": {
+      "ISO1": "CG",
+      "ISO2": "COG"
+    },
+    "flag": "🇨🇬"
+  },
+  {
+    "country": "República Democrática del Congo",
+    "beautyCode": "+243",
+    "realCode": "243",
+    "isoCode": {
+      "ISO1": "CD",
+      "ISO2": "COD"
+    },
+    "flag": "🇨🇩"
+  },
+  {
+    "country": "República Dominicana",
+    "beautyCode": "+1",
+    "realCode": "1",
+    "isoCode": {
+      "ISO1": "DO",
+      "ISO2": "DOM"
+    },
+    "flag": "🇩🇴"
+  },
+  {
+    "country": "Reunión",
+    "beautyCode": "+262",
+    "realCode": "262",
+    "isoCode": {
+      "ISO1": "RE",
+      "ISO2": "REU"
+    },
+    "flag": "🇷🇪"
+  },
+  {
+    "country": "Ruanda",
+    "beautyCode": "+250",
+    "realCode": "250",
+    "isoCode": {
+      "ISO1": "RW",
+      "ISO2": "RWA"
+    },
+    "flag": "🇷🇼"
+  },
+  {
+    "country": "Rumanía",
+    "beautyCode": "+40",
+    "realCode": "40",
+    "isoCode": {
+      "ISO1": "RO",
+      "ISO2": "ROU"
+    },
+    "flag": "🇷🇴"
+  },
+  {
+    "country": "Rusia",
+    "beautyCode": "+7",
+    "realCode": "7",
+    "isoCode": {
+      "ISO1": "RU",
+      "ISO2": "RUS"
+    },
+    "flag": "🇷🇺"
+  },
+  {
+    "country": "Samoa",
+    "beautyCode": "+685",
+    "realCode": "685",
+    "isoCode": {
+      "ISO1": "WS",
+      "ISO2": "WSM"
+    },
+    "flag": "🇼🇸"
+  },
+  {
+    "country": "Samoa Americana",
+    "beautyCode": "+1 684",
+    "realCode": "1684",
+    "isoCode": {
+      "ISO1": "AS",
+      "ISO2": "ASM"
+    },
+    "flag": "🇦🇸"
+  },
+  {
+    "country": "San Bartolomé",
+    "beautyCode": "+590",
+    "realCode": "590",
+    "isoCode": {
+      "ISO1": "BL",
+      "ISO2": "BLM"
+    },
+    "flag": "🇧🇱"
+  },
+  {
+    "country": "San Cristóbal y Nevis",
+    "beautyCode": "+1",
+    "realCode": "1",
+    "isoCode": {
+      "ISO1": "KN",
+      "ISO2": "KNA"
+    },
+    "flag": "🇰🇳"
+  },
+  {
+    "country": "San Marino",
+    "beautyCode": "+378",
+    "realCode": "378",
+    "isoCode": {
+      "ISO1": "SM",
+      "ISO2": "SMR"
+    },
+    "flag": "🇸🇲"
+  },
+  {
+    "country": "San Martín",
+    "beautyCode": "+1 599",
+    "realCode": "1599",
+    "isoCode": {
+      "ISO1": "MF",
+      "ISO2": "MAF"
+    },
+    "flag": "🇲🇫"
+  },
+  {
+    "country": "San Pedro y Miquelón",
+    "beautyCode": "+508",
+    "realCode": "508",
+    "isoCode": {
+      "ISO1": "PM",
+      "ISO2": "SPM"
+    },
+    "flag": "🇵🇲"
+  },
+  {
+    "country": "San Vicente y las Granadinas",
+    "beautyCode": "+1",
+    "realCode": "1",
+    "isoCode": {
+      "ISO1": "VC",
+      "ISO2": "VCT"
+    },
+    "flag": "🇻🇨"
+  },
+  {
+    "country": "Santa Elena",
+    "beautyCode": "+290",
+    "realCode": "290",
+    "isoCode": {
+      "ISO1": "SH",
+      "ISO2": "SHN"
+    },
+    "flag": "🇸🇭"
+  },
+  {
+    "country": "Santa Lucía",
+    "beautyCode": "+1",
+    "realCode": "1",
+    "isoCode": {
+      "ISO1": "LC",
+      "ISO2": "LCA"
+    },
+    "flag": "🇱🇨"
+  },
+  {
+    "country": "Santo Tomé y Príncipe",
+    "beautyCode": "+239",
+    "realCode": "239",
+    "isoCode": {
+      "ISO1": "ST",
+      "ISO2": "STP"
+    },
+    "flag": "🇸🇹"
+  },
+  {
+    "country": "Senegal",
+    "beautyCode": "+221",
+    "realCode": "221",
+    "isoCode": {
+      "ISO1": "SN",
+      "ISO2": "SEN"
+    },
+    "flag": "🇸🇳"
+  },
+  {
+    "country": "Serbia",
+    "beautyCode": "+381",
+    "realCode": "381",
+    "isoCode": {
+      "ISO1": "RS",
+      "ISO2": "SRB"
+    },
+    "flag": "🇷🇸"
+  },
+  {
+    "country": "Seychelles",
+    "beautyCode": "+248",
+    "realCode": "248",
+    "isoCode": {
+      "ISO1": "SC",
+      "ISO2": "SYC"
+    },
+    "flag": "🇸🇨"
+  },
+  {
+    "country": "Sierra Leona",
+    "beautyCode": "+232",
+    "realCode": "232",
+    "isoCode": {
+      "ISO1": "SL",
+      "ISO2": "SLE"
+    },
+    "flag": "🇸🇱"
+  },
+  {
+    "country": "Singapur",
+    "beautyCode": "+65",
+    "realCode": "65",
+    "isoCode": {
+      "ISO1": "SG",
+      "ISO2": "SGP"
+    },
+    "flag": "🇸🇬"
+  },
+  {
+    "country": "Siria",
+    "beautyCode": "+963",
+    "realCode": "963",
+    "isoCode": {
+      "ISO1": "SY",
+      "ISO2": "SYR"
+    },
+    "flag": "🇸🇾"
+  },
+  {
+    "country": "Somalia",
+    "beautyCode": "+252",
+    "realCode": "252",
+    "isoCode": {
+      "ISO1": "SO",
+      "ISO2": "SOM"
+    },
+    "flag": "🇸🇴"
+  },
+  {
+    "country": "Sri Lanka",
+    "beautyCode": "+94",
+    "realCode": "94",
+    "isoCode": {
+      "ISO1": "LK",
+      "ISO2": "LKA"
+    },
+    "flag": "🇱🇰"
+  },
+  {
+    "country": "Sudáfrica",
+    "beautyCode": "+27",
+    "realCode": "27",
+    "isoCode": {
+      "ISO1": "ZA",
+      "ISO2": "ZAF"
+    },
+    "flag": "🇿🇦"
+  },
+  {
+    "country": "Sudán",
+    "beautyCode": "+249",
+    "realCode": "249",
+    "isoCode": {
+      "ISO1": "SD",
+      "ISO2": "SDN"
+    },
+    "flag": "🇸🇩"
+  },
+  {
+    "country": "Suecia",
+    "beautyCode": "+46",
+    "realCode": "46",
+    "isoCode": {
+      "ISO1": "SE",
+      "ISO2": "SWE"
+    },
+    "flag": "🇸🇪"
+  },
+  {
+    "country": "Suiza",
+    "beautyCode": "+41",
+    "realCode": "41",
+    "isoCode": {
+      "ISO1": "CH",
+      "ISO2": "CHE"
+    },
+    "flag": "🇨🇭"
+  },
+  {
+    "country": "Surinam",
+    "beautyCode": "+597",
+    "realCode": "597",
+    "isoCode": {
+      "ISO1": "SR",
+      "ISO2": "SUR"
+    },
+    "flag": "🇸🇷"
+  },
+  {
+    "country": "Swazilandia",
+    "beautyCode": "+268",
+    "realCode": "268",
+    "isoCode": {
+      "ISO1": "SZ",
+      "ISO2": "SWZ"
+    },
+    "flag": "🇸🇿"
+  },
+  {
+    "country": "Tailandia",
+    "beautyCode": "+66",
+    "realCode": "66",
+    "isoCode": {
+      "ISO1": "TH",
+      "ISO2": "THA"
+    },
+    "flag": "🇹🇭"
+  },
+  {
+    "country": "Taiwán",
+    "beautyCode": "+886",
+    "realCode": "886",
+    "isoCode": {
+      "ISO1": "TW",
+      "ISO2": "TWN"
+    },
+    "flag": "🇹🇼"
+  },
+  {
+    "country": "Tanzania",
+    "beautyCode": "+255",
+    "realCode": "255",
+    "isoCode": {
+      "ISO1": "TZ",
+      "ISO2": "TZA"
+    },
+    "flag": "🇹🇿"
+  },
+  {
+    "country": "Tayikistán",
+    "beautyCode": "+992",
+    "realCode": "992",
+    "isoCode": {
+      "ISO1": "TJ",
+      "ISO2": "TJK"
+    },
+    "flag": "🇹🇯"
+  },
+  {
+    "country": "Timor Oriental",
+    "beautyCode": "+670",
+    "realCode": "670",
+    "isoCode": {
+      "ISO1": "TL",
+      "ISO2": "TLS"
+    },
+    "flag": "🇹🇱"
+  },
+  {
+    "country": "Togo",
+    "beautyCode": "+228",
+    "realCode": "228",
+    "isoCode": {
+      "ISO1": "TG",
+      "ISO2": "TGO"
+    },
+    "flag": "🇹🇬"
+  },
+  {
+    "country": "Tokelau",
+    "beautyCode": "+690",
+    "realCode": "690",
+    "isoCode": {
+      "ISO1": "TK",
+      "ISO2": "TKL"
+    },
+    "flag": "🇹🇰"
+  },
+  {
+    "country": "Trinidad y Tobago",
+    "beautyCode": "+1",
+    "realCode": "1",
+    "isoCode": {
+      "ISO1": "TT",
+      "ISO2": "TTO"
+    },
+    "flag": "🇹🇹"
+  },
+  {
+    "country": "Túnez",
+    "beautyCode": "+216",
+    "realCode": "216",
+    "isoCode": {
+      "ISO1": "TN",
+      "ISO2": "TUN"
+    },
+    "flag": "🇹🇳"
+  },
+  {
+    "country": "Turkmenistán",
+    "beautyCode": "+993",
+    "realCode": "993",
+    "isoCode": {
+      "ISO1": "TM",
+      "ISO2": "TKM"
+    },
+    "flag": "🇹🇲"
+  },
+  {
+    "country": "Turquía",
+    "beautyCode": "+90",
+    "realCode": "90",
+    "isoCode": {
+      "ISO1": "TR",
+      "ISO2": "TUR"
+    },
+    "flag": "🇹🇷"
+  },
+  {
+    "country": "Tuvalu",
+    "beautyCode": "+688",
+    "realCode": "688",
+    "isoCode": {
+      "ISO1": "TV",
+      "ISO2": "TUV"
+    },
+    "flag": "🇹🇻"
+  },
+  {
+    "country": "Ucrania",
+    "beautyCode": "+380",
+    "realCode": "380",
+    "isoCode": {
+      "ISO1": "UA",
+      "ISO2": "UKR"
+    },
+    "flag": "🇺🇦"
+  },
+  {
+    "country": "Uganda",
+    "beautyCode": "+256",
+    "realCode": "256",
+    "isoCode": {
+      "ISO1": "UG",
+      "ISO2": "UGA"
+    },
+    "flag": "🇺🇬"
+  },
+  {
+    "country": "Uruguay",
+    "beautyCode": "+598",
+    "realCode": "598",
+    "isoCode": {
+      "ISO1": "UY",
+      "ISO2": "URY"
+    },
+    "flag": "🇺🇾"
+  },
+  {
+    "country": "Uzbekistán",
+    "beautyCode": "+998",
+    "realCode": "998",
+    "isoCode": {
+      "ISO1": "UZ",
+      "ISO2": "UZB"
+    },
+    "flag": "🇺🇿"
+  },
+  {
+    "country": "Vanuatu",
+    "beautyCode": "+678",
+    "realCode": "678",
+    "isoCode": {
+      "ISO1": "VU",
+      "ISO2": "VUT"
+    },
+    "flag": "🇻🇺"
+  },
+  {
+    "country": "Venezuela",
+    "beautyCode": "+58",
+    "realCode": "58",
+    "isoCode": {
+      "ISO1": "VE",
+      "ISO2": "VEN"
+    },
+    "flag": "🇻🇪"
+  },
+  {
+    "country": "Vietnam",
+    "beautyCode": "+84",
+    "realCode": "84",
+    "isoCode": {
+      "ISO1": "VN",
+      "ISO2": "VNM"
+    },
+    "flag": "🇻🇳"
+  },
+  {
+    "country": "Yemen",
+    "beautyCode": "+967",
+    "realCode": "967",
+    "isoCode": {
+      "ISO1": "YE",
+      "ISO2": "YEM"
+    },
+    "flag": "🇾🇪"
+  },
+  {
+    "country": "Zambia",
+    "beautyCode": "+260",
+    "realCode": "260",
+    "isoCode": {
+      "ISO1": "ZM",
+      "ISO2": "ZMB"
+    },
+    "flag": "🇿🇲"
+  },
+  {
+    "country": "Zimbabue",
+    "beautyCode": "+263",
+    "realCode": "263",
+    "isoCode": {
+      "ISO1": "ZW",
+      "ISO2": "ZWE"
+    },
+    "flag": "🇿🇼"
+  }
+]

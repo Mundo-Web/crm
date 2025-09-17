@@ -8,7 +8,7 @@ import { Toaster } from 'sonner'
 
 moment.tz.setDefault('UTC');
 
-const Adminto = ({ session, children, notificationsCount, title, description, floatEnd, can, WA_URL, APP_URL, presets, businesses, APP_PROTOCOL, APP_DOMAIN, leadsCount, tasksCount, setWAPhone = () => {} }) => {
+const Adminto = ({ session, children, notificationsCount, prefixes, title, description, floatEnd, can, WA_URL, APP_URL, presets, businesses, APP_PROTOCOL, APP_DOMAIN, leadsCount, tasksCount, setWAPhone = () => {} }) => {
 
   const settings = Local.get('adminto_settings') ?? {}
   const [theme, setTheme] = useState(settings.theme ?? 'ligth');
@@ -38,7 +38,7 @@ const Adminto = ({ session, children, notificationsCount, title, description, fl
         <Footer />
       </div>
     </div>
-    {can('whatsapp', 'all') && <WhatsAppModal session={session} status={whatsappStatus} setStatus={setWhatsAppStatus} WA_URL={WA_URL} APP_URL={APP_URL} setWAPhone={setWAPhone} />}
+    {can('whatsapp', 'all') && <WhatsAppModal session={session} prefixes={prefixes} status={whatsappStatus} setStatus={setWhatsAppStatus} WA_URL={WA_URL} APP_URL={APP_URL} setWAPhone={setWAPhone} />}
     <RigthBar />
     <div className="rightbar-overlay"></div>
   </>)

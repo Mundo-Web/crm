@@ -1,18 +1,16 @@
 import Tippy from "@tippyjs/react";
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Fetch, Notify } from "sode-extend-react";
 import Swal from "sweetalert2";
 import '../../../css/qr-code.css';
 import WhatsAppStatuses from "../../Reutilizables/WhatsApp/WhatsAppStatuses";
 import WhatsAppRest from "../../actions/WhatsAppRest";
 import Global from "../../Utils/Global";
-import LaravelSession from "../../Utils/LaravelSession";
 
 const whatsAppRest = new WhatsAppRest()
 let eventSource = {}
 
-const WhatsAppModal = ({ status: whatsAppStatus, setStatus: setWhatsAppStatus, WA_URL, APP_URL, session, setWAPhone }) => {
-
+const WhatsAppModal = ({ prefixes, status: whatsAppStatus, setStatus: setWhatsAppStatus, WA_URL, APP_URL, session, setWAPhone }) => {
   const modalRef = useRef()
   const qrRef = useRef()
   const phoneRef = useRef()
@@ -21,6 +19,7 @@ const WhatsAppModal = ({ status: whatsAppStatus, setStatus: setWhatsAppStatus, W
   const [percent, setPercent] = useState(0)
   const [sessionInfo, setSessionInfo] = useState({})
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [phonePrefix, setPhonePrefix] = useState('51')
 
   const businessSession = session.business_uuid
 
@@ -152,13 +151,14 @@ const WhatsAppModal = ({ status: whatsAppStatus, setStatus: setWhatsAppStatus, W
       const { status, result } = await Fetch(`/api/whatsapp/send`, {
         method: 'POST',
         body: JSON.stringify({
-          phone: phoneRef.current.value,
-          message: 'Ping!\n> Mensaje automatico',
+          phone: `${phonePrefix}${phoneRef.current.value}`,
+          message: '¡Hola! 👋\nEste es un mensaje de prueba para confirmar que el servicio de WhatsApp está funcionando correctamente.\n> Mensaje automático de verificación',
         })
       })
 
       if (!status) throw new Error(result?.message || 'No se pudo enviar el ping');
 
+      setPhonePrefix('51')
       phoneRef.current.value = ''
 
       Notify.add({
@@ -214,11 +214,51 @@ const WhatsAppModal = ({ status: whatsAppStatus, setStatus: setWhatsAppStatus, W
                 <b>{sessionInfo?.pushname}</b>
                 <br />
                 <span className="text-muted">{sessionInfo?.me?.user}@{sessionInfo?.me?.server}</span>
-                <div className="input-group mt-2">
-                  <input ref={phoneRef} type="text" className="form-control form-control-sm" placeholder="Numero receptor" />
-                  <Tippy content="Enviar mensaje ping">
-                    <button className="btn btn-sm input-group-text btn-dark waves-effect waves-light" type="button" onClick={onPingClicked}>Ping</button>
-                  </Tippy>
+                <div className="row mt-2">
+                  <div className="col-4 text-center">
+                    <i className="mdi mdi-account-multiple h4 my-0 d-block"></i>
+                    <small className="text-muted">Contacts</small>
+                    <div>{sessionInfo?.count?.contacts || 0}</div>
+                  </div>
+                  <div className="col-4 text-center">
+                    <i className="mdi mdi-chat-processing h4 my-0 d-block"></i>
+                    <small className="text-muted">Chats</small>
+                    <div>{sessionInfo?.count?.chats || 0}</div>
+                  </div>
+                  <div className="col-4 text-center">
+                    <i className="mdi mdi-message-text h4 my-0 d-block"></i>
+                    <small className="text-muted">Messages</small>
+                    <div>{sessionInfo?.count?.messages || 0}</div>
+                  </div>
+                </div>
+                <div className="mt-2 text-start">
+                  <label htmlFor="ping-phone-number" className="form-label mb-1">Envía un ping a:</label>
+                  <div className="input-group">
+                    <div className="dropdown">
+                      <button className="btn btn-white btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" style={{ minWidth: '10px' }}>
+                        <span className="d-flex align-items-center">
+                          {/* <span className="font-emoji">{prefixes.find(p => p.realCode == phonePrefix)?.flag}</span> */}
+                          {prefixes.find(p => p.realCode == phonePrefix)?.beautyCode}
+                        </span>
+                      </button>
+                      <div className="dropdown-menu" style={{ maxHeight: '200px', overflowY: 'auto' }}>
+                        {prefixes.map((prefix, index) => (
+                          <button key={index} className="dropdown-item" onClick={() => setPhonePrefix(prefix.realCode)}>
+                            <div>
+                              <span className="font-emoji">{prefix.flag}</span> {prefix.beautyCode}
+                              <small className="d-block text-muted">{prefix.country}</small>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <input ref={phoneRef} id="ping-phone-number" type="text" className="form-control form-control-sm" placeholder="000000000" />
+                    <Tippy content="Enviar mensaje ping">
+                      <button className="btn btn-sm input-group-text btn-dark waves-effect waves-light" type="button" onClick={onPingClicked}>
+                        <i className="mdi mdi-arrow-top-right"></i>
+                      </button>
+                    </Tippy>
+                  </div>
                 </div>
               </div>
             }
