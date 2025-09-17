@@ -16,7 +16,7 @@ use App\Http\Controllers\WebhookController;
 |
 */
 
+Route::post('/evoapi/{business_uuid}', [WebhookController::class, 'webhook']);
+
 Route::get('/{origin}/{business_uuid}', [MetaController::class, 'verify']);
 Route::post('/{origin}/{business_uuid}', [MetaController::class, 'webhook']);
-
-Route::post('/evoapi/{business_uuid}', [WebhookController::class, 'webhook']);
