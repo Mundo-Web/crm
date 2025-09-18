@@ -249,9 +249,7 @@ class WhatsAppController extends Controller
                     'Content-Type' => 'application/json',
                     'apikey' => $businessJpa->uuid
                 ],
-                'body' => [
-                    'numbers' => [$number]
-                ]
+                'body' => ['numbers' => [$number]]
             ]);
 
             $validationData = $validateNumberRes->json();
