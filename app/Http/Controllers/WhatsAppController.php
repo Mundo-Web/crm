@@ -347,7 +347,6 @@ class WhatsAppController extends Controller
                     'business_id' => Auth::user()->business_id,
                 ]);
             }
-            dump($res->json());
             if (!$res?->ok) throw new Exception('Ocurrio un error al enviar el mensaje');
         });
         return response($response->toArray(), $response->status);
