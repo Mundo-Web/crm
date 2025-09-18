@@ -457,7 +457,6 @@ class MetaController extends Controller
 
                         if ($origin == 'evoapi') {
                             // Send message through EvoAPI
-                            $message = 'Lo siento, no puedo ayudarte con eso en este momento. Por favor, contacta con uno de nuestros ejecutivos.';
                             new Fetch(env('EVOAPI_URL') . '/message/sendText/' . $businessJpa->person->document_number, [
                                 'method' => 'POST',
                                 'headers' => [
@@ -466,7 +465,7 @@ class MetaController extends Controller
                                 ],
                                 'body' => [
                                     'number' => $clientJpa->contact_phone,
-                                    'text' => $message
+                                    'text' => $welcomeMessage
                                 ]
                             ]);
                         } else {
