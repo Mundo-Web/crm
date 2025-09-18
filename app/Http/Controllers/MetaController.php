@@ -291,6 +291,7 @@ class MetaController extends Controller
                     ->orderBy('microtime', 'desc')
                     ->first();
 
+                /*
                 // If latest message is different from current message, stop processing
                 if ($latestMessage->id !== $messageJpa->id) {
                     break;
@@ -309,6 +310,7 @@ class MetaController extends Controller
                 if ($clientJpa->complete_registration) {
                     break;
                 }
+                */
 
                 // Get last 40 messages
                 $messages = Message::query()
