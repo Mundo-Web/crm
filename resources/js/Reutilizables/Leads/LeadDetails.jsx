@@ -55,7 +55,7 @@ const LeadDetails = () => {
 
         <div className="col-lg-6 col-md-4 col-sm-6 col-xs-12">
           <div className="card card-body">
-            <ul className="nav nav-tabs" style={{ flexWrap: 'nowrap', overflowX: 'auto' }}>
+            <ul className="nav nav-tabs" style={{ flexWrap: 'nowrap', overflowX: 'auto', overflowY: 'hidden' }}>
               <li key={`note-type-activity`} className="nav-item">
                 <a href="#note-type-activity" data-bs-toggle="tab" aria-expanded="false" className="nav-link active">
                   <i className="mdi mdi-clock"></i> Actividad
