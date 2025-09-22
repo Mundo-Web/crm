@@ -16,7 +16,15 @@ const InviteUserCard = ({ relative_id, fullname, email, match, setUsers, setInvi
         setInviting(false)
         if (!status) return toast(message ?? 'Ocurrió un error inesperado', { icon: <i className='mdi mdi-alert text-danger' /> })
         setInvited(true)
-        if (summary?.external) setInvitations(old => old.map(inv => inv.email === data.email ? data : inv))
+        console.log(summary)
+        if (summary?.external) setInvitations(old => {
+            const exists = old.some(inv => inv.email === data.email);
+            if (exists) {
+                return old.map(inv => inv.email === data.email ? data : inv);
+            } else {
+                return [...old, data];
+            }
+        })
         else setUsers(users => [...users, data])
     }
 

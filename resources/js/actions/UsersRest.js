@@ -106,6 +106,25 @@ class UsersRest extends BasicRest {
       return false
     }
   }
+
+  allInvitations = async () => {
+    try {
+      const { status, result } = await Fetch(`/api/users/all-invitations`, {
+        method: 'GET'
+      })
+      if (!status) throw new Error(result?.message ?? 'Ocurrio un error inesperado')
+      return result?.data ?? []
+    } catch (error) {
+      Notify.add({
+        icon: '/assets/img/logo-login.svg',
+        title: 'Error',
+        body: error.message,
+        type: 'danger'
+      })
+      return []
+    }
+  }
+
 }
 
 export default UsersRest

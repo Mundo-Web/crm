@@ -58,6 +58,22 @@ class UserController extends BasicController
         ];
     }
 
+    public function allInvitations()
+    {
+        $response = Response::simpleTryCatch(function () {
+            $match = ServicesByBusiness::select('services_by_businesses.id')
+                ->join('services', 'services.id', 'services_by_businesses.service_id')
+                ->where('services.correlative', env('APP_CORRELATIVE'))
+                ->where('business_id', Auth::user()->business_id)
+                ->first()->id;
+            $invitations = InvitationEmail::where('service_by_business_id', $match)
+                ->where('updated_at', '>=', now()->subHours(48))
+                ->get();
+            return $invitations;
+        });
+        return response($response->toArray(), $response->status);
+    }
+
     public function assignRole(Request $request)
     {
         $response = Response::simpleTryCatch(function (Response $res) use ($request) {

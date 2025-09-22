@@ -18,6 +18,9 @@ const Users = (properties) => {
   const [users, setUsers] = useState(usersInertia)
   const [invitations, setInvitations] = useState(invitationsInertia)
 
+
+  console.log(invitations)
+
   // Referencias de elementos
   const modalRef = useRef()
   const searchTimeoutRef = useRef(null)
@@ -54,6 +57,10 @@ const Users = (properties) => {
     }, 300)
   }
 
+  useEffect(() => {
+    if (invitations.length == 0) $(invitationModalRef.current).modal('hide')
+  }, [invitations])
+
   // Cleanup timeout on unmount
   useEffect(() => {
     return () => {
@@ -64,12 +71,19 @@ const Users = (properties) => {
   }, [])
 
   return (<>
-    <Adminto {...properties} title='Usuarios' floatEnd={<div className='d-flex gap-1'>
-      <Tippy content='Invitaciones externas'>
-        <button className='btn btn-sm btn-light' onClick={() => $(invitationModalRef.current).modal('show')}>
-          <i className='mdi mdi-history'></i>
-        </button>
-      </Tippy>
+    <Adminto {...properties} title='Usuarios' floatEnd={<div className='d-flex gap-2'>
+      {
+        invitations.length > 0 &&
+        <Tippy content='Invitaciones externas'>
+          <button className='btn btn-sm btn-light position-relative' onClick={() => $(invitationModalRef.current).modal('show')}>
+            <i className='mdi mdi-history'></i>
+            <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+              {invitations.length}
+              <span className="visually-hidden">external invitations</span>
+            </span>
+          </button>
+        </Tippy>
+      }
       <button className='btn btn-sm btn-primary' onClick={() => $(modalRef.current).modal('show')}>
         <i className='mdi mdi-account-plus me-1'></i>
         Invitar
@@ -119,8 +133,7 @@ const Users = (properties) => {
             </>
         }
       </Modal>
-
-      <InvitationsModal modalRef={invitationModalRef} invitations={invitations} setInvitations={setInvitations} match={match} />
+        <InvitationsModal modalRef={invitationModalRef} invitations={invitations} setInvitations={setInvitations} match={match} />
     </Adminto>
   </>
   )

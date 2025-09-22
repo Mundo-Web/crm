@@ -80,6 +80,7 @@ Route::middleware('auth')->group(function () {
     Route::put('/users/sign/default', [UserController::class, 'setDefaultSign']);
 
     // Users routes
+    Route::get('/users/all-invitations', [UserController::class, 'allInvitations']);
     Route::post('/users', [UserController::class, 'save']);
     Route::post('/users/paginate', [UserController::class, 'paginate']);
     Route::patch('/users/status', [UserController::class, 'status']);
