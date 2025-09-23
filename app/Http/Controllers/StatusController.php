@@ -69,7 +69,7 @@ class StatusController extends BasicController
                     $message = Text::replaceData($message2lead, $data);
 
                     // Make API call to send WhatsApp message
-                    $res = new Fetch(env('EVOAPI_URL') . "/message/sendText/" . $businessJpa->person->document_number, [
+                    new Fetch(env('EVOAPI_URL') . "/message/sendText/" . $businessJpa->person->document_number, [
                         'method' => 'POST',
                         'headers' => [
                             'Content-Type' => 'application/json',
@@ -77,7 +77,7 @@ class StatusController extends BasicController
                         ],
                         'body' => [
                             'number' => $leadJpa->contact_phone,
-                            'text' => $message
+                            'text' => Text::html2wa($message)
                         ]
                     ]);
                 } catch (\Throwable $th) {}

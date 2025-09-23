@@ -465,7 +465,7 @@ class MetaController extends Controller
                                 ],
                                 'body' => [
                                     'number' => $clientJpa->contact_phone,
-                                    'text' => $welcomeMessage
+                                    'text' => Text::html2wa($welcomeMessage)
                                 ]
                             ]);
                         } else {
