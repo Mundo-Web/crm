@@ -67,7 +67,10 @@ class StatusController extends BasicController
                         'lead' => $leadJpa->contact_name,
                         'user' => $userJpa->name,
                     ];
-                    $message = Text::replaceData($message2lead, $data);
+                    $message = Text::html2wa(Text::replaceData($message2lead, $data));
+
+                    $message = trim($message);
+                    if (empty($message)) throw new \Exception('Mensaje de asignación vacío');
 
                     // Make API call to send WhatsApp message
                     $res = new Fetch(env('EVOAPI_URL') . "/message/sendText/" . $businessJpa->person->document_number, [
@@ -78,7 +81,7 @@ class StatusController extends BasicController
                         ],
                         'body' => [
                             'number' => $leadJpa->contact_phone,
-                            'text' => Text::html2wa($message)
+                            'text' => $message
                         ]
                     ]);
                     if (!$res->ok) throw new \Exception('Error al enviar mensaje de WhatsApp');
@@ -89,7 +92,8 @@ class StatusController extends BasicController
                         'microtime' => (int) (microtime(true) * 1_000_000),
                         'business_id' => Auth::user()->business_id
                     ]);
-                } catch (\Throwable $th) {}
+                } catch (\Throwable $th) {
+                }
             } else {
                 $status = JSON::parse(Setting::get('revertion-lead-status') ?? '{}');
                 $leadJpa->assigned_to = null;
