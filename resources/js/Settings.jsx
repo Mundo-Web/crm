@@ -27,10 +27,12 @@ const Settings = ({ can, constants, statuses }) => {
   const convertedLeadStatusRef = useRef()
 
   const [constantType, setConstantType] = useState()
+  const [specification, setSpecification] = useState()
 
-  const onModalOpen = (e, name, title, type) => {
+  const onModalOpen = (e, name, title, type, sp = '') => {
     const constant = getConstant(name)
     setConstantType(type)
+    setSpecification(sp)
 
     nameRef.current.value = name
     typeRef.current.value = type
@@ -350,6 +352,17 @@ const Settings = ({ can, constants, statuses }) => {
                         </div>
                       </div>
                     </div>
+                    <div className="row">
+                      <div className="col-md-4 col-sm-6 col-xs-12">
+                        <div className="card card-body border p-2" onClick={(e) => onModalOpen(e, 'whatsapp-assigned-message-client', 'Mensaje de asignación', 'simpleHTML', 'Variables disponibles: {{user}} = nombre del ejecutivo, {{lead}} = nombre del cliente')}>
+                          <h5 className="card-title mb-1">Mensaje de asignación</h5>
+                          <p className="card-text mb-1">Mensaje que se enviará al lead cuando sea asignado a un usuario/ejecutivo</p>
+                          <p className="card-text">
+                            <small className="text-muted">Click para modificar</small>
+                          </p>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                   <div className="tab-pane fade" id="v-generativeai" role="tabpanel" aria-labelledby="v-generativeai-tab">
                     <h4>IA <i className='mdi mdi-star-four-points'></i></h4>
@@ -463,10 +476,10 @@ const Settings = ({ can, constants, statuses }) => {
         <input ref={nameRef} type='hidden' />
         <input ref={typeRef} type='hidden' />
         <div style={{ display: (constantType == 'text' || constantType == '' || constantType == null) ? 'block' : 'none' }}>
-          <TextareaFormGroup eRef={valueRef} label='Valor' col='col-12' />
+          <TextareaFormGroup eRef={valueRef} label={<>Valor {specification && <small>({specification})</small>}</>} col='col-12' />
         </div>
         <div style={{ display: constantType == 'simpleHTML' ? 'block' : 'none' }}>
-          <QuillFormGroup eRef={quillRef} label='Valor' col='col-12' theme='bubble' />
+          <QuillFormGroup eRef={quillRef} label={<>Valor {specification && <small>({specification})</small>}</>} col='col-12' theme='bubble' />
         </div>
         <div className='col-12' style={{ display: constantType == 'HTML' ? 'block' : 'none' }}>
           <label htmlFor="">Valor de la variable</label>

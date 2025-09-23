@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Atalaya\Business;
 use App\Models\Client;
 use App\Models\ClientNote;
 use App\Models\Notification;
@@ -9,8 +10,10 @@ use App\Models\Setting;
 use App\Models\Status;
 use App\Models\Table;
 use App\Models\Task;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use SoDe\Extend\Fetch;
 use SoDe\Extend\JSON;
 use SoDe\Extend\Text;
 
@@ -48,8 +51,36 @@ class StatusController extends BasicController
         try {
             $status = [];
             if ($assign) {
+                $userJpa = User::find($assignedTo ? $assignedTo : Auth::user()->service_user->id);
                 $status = JSON::parse(Setting::get('assignation-lead-status') ?? '{}');
-                $leadJpa->assigned_to = $assignedTo ? $assignedTo : Auth::user()->service_user->id;
+
+                $leadJpa->assigned_to = $userJpa->id;
+
+                try {
+                    $message2lead = Setting::get('whatsapp-assigned-message-client');
+                    if (Text::nullOrEmpty($message2lead)) throw new \Exception('Mensaje de asignación no configurado');
+                    $businessJpa = Business::with(['person'])->find(Auth::user()->business_id);
+                    if (!$businessJpa) throw new \Exception('Empresa no configurada');
+
+                    $data = [
+                        'lead' => $leadJpa->contact_name,
+                        'user' => $userJpa->name,
+                    ];
+                    $message = Text::replaceData($message2lead, $data);
+
+                    // Make API call to send WhatsApp message
+                    $res = new Fetch(env('EVOAPI_URL') . "/message/sendText/" . $businessJpa->person->document_number, [
+                        'method' => 'POST',
+                        'headers' => [
+                            'Content-Type' => 'application/json',
+                            'apikey' => $businessJpa->uuid
+                        ],
+                        'body' => [
+                            'number' => $leadJpa->contact_phone,
+                            'text' => $message
+                        ]
+                    ]);
+                } catch (\Throwable $th) {}
             } else {
                 $status = JSON::parse(Setting::get('revertion-lead-status') ?? '{}');
                 $leadJpa->assigned_to = null;
