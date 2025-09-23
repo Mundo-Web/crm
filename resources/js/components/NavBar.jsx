@@ -100,9 +100,9 @@ const NavBar = ({ can, session = {}, theme, setTheme, title = '', wsActive, setW
         };
 
         setTimeout(() => {
-          if (!otherTabHasFocus) {
+          // if (!otherTabHasFocus) {
             audio.play();
-          }
+          // }
           broadcast.close();
         }, 100);
       }
