@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Atalaya\Business;
 use App\Models\Client;
 use App\Models\ClientNote;
+use App\Models\Message;
 use App\Models\Notification;
 use App\Models\Setting;
 use App\Models\Status;
@@ -69,7 +70,7 @@ class StatusController extends BasicController
                     $message = Text::replaceData($message2lead, $data);
 
                     // Make API call to send WhatsApp message
-                    new Fetch(env('EVOAPI_URL') . "/message/sendText/" . $businessJpa->person->document_number, [
+                    $res = new Fetch(env('EVOAPI_URL') . "/message/sendText/" . $businessJpa->person->document_number, [
                         'method' => 'POST',
                         'headers' => [
                             'Content-Type' => 'application/json',
@@ -79,6 +80,14 @@ class StatusController extends BasicController
                             'number' => $leadJpa->contact_phone,
                             'text' => Text::html2wa($message)
                         ]
+                    ]);
+                    if (!$res->ok) throw new \Exception('Error al enviar mensaje de WhatsApp');
+                    Message::create([
+                        'wa_id' => $leadJpa->contact_phone,
+                        'role' => 'AI',
+                        'message' => $message,
+                        'microtime' => (int) (microtime(true) * 1_000_000),
+                        'business_id' => Auth::user()->business_id
                     ]);
                 } catch (\Throwable $th) {}
             } else {
