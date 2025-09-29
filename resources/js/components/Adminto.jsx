@@ -8,7 +8,7 @@ import { Toaster } from 'sonner'
 
 moment.tz.setDefault('UTC');
 
-const Adminto = ({ session, children, notificationsCount, prefixes, title, description, floatEnd, can, WA_URL, APP_URL, presets, businesses, APP_PROTOCOL, APP_DOMAIN, leadsCount, tasksCount, setWAPhone = () => {} }) => {
+const Adminto = ({ session, children, notificationsCount, prefixes, title, showTitle = true, description, floatEnd, can, WA_URL, APP_URL, presets, businesses, services, APP_PROTOCOL, APP_DOMAIN, leadsCount, tasksCount, setWAPhone = () => { } }) => {
 
   const settings = Local.get('adminto_settings') ?? {}
   const [theme, setTheme] = useState(settings.theme ?? 'ligth');
@@ -17,17 +17,20 @@ const Adminto = ({ session, children, notificationsCount, prefixes, title, descr
 
   return (<>
     <div id="wrapper">
-      <Toaster/>
-      <NavBar session={session} theme={theme} setTheme={setTheme} title={title} can={can} whatsappStatus={whatsappStatus} businesses={businesses} APP_DOMAIN={APP_DOMAIN} APP_PROTOCOL={APP_PROTOCOL} notificationsCount={notificationsCount} wsActive={wsActive} setWsActive={setWsActive}/>
+      <Toaster />
+      <NavBar session={session} services={services} theme={theme} setTheme={setTheme} title={title} can={can} whatsappStatus={whatsappStatus} businesses={businesses} APP_DOMAIN={APP_DOMAIN} APP_PROTOCOL={APP_PROTOCOL} notificationsCount={notificationsCount} wsActive={wsActive} setWsActive={setWsActive} />
       <Menu session={session} theme={theme} can={can} presets={presets} whatsappStatus={whatsappStatus} APP_DOMAIN={APP_DOMAIN} businesses={businesses} APP_PROTOCOL={APP_PROTOCOL} leadsCount={leadsCount} tasksCount={tasksCount} wsActive={wsActive} />
       <div className="content-page">
         <div className="content">
-          <div className="container-fluid mt-3">
+          <div className="container-fluid mt-2">
             <div className='mb-2 d-flex flex-wrap gap-2 justify-content-between align-items-center'>
-              <div>
-                <h4 className='my-0'>{title}</h4>
-                {description && <small className=''>{description}</small>}
-              </div>
+              {
+                showTitle &&
+                <div>
+                  <h4 className='my-0'>{title}</h4>
+                  {description && <small className=''>{description}</small>}
+                </div>
+              }
               <div>
                 {floatEnd}
               </div>

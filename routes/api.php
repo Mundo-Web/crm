@@ -3,6 +3,7 @@
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\ArchivedController;
 use App\Http\Controllers\Atalaya\UserController as AtalayaUserController;
+use App\Http\Controllers\Atalaya\UsersByServicesByBusinessController as AtalayaUsersByServicesByBusinessController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\ClientHasProductsController;
@@ -15,7 +16,6 @@ use App\Http\Controllers\KPILeadsController;
 use App\Http\Controllers\LeadController;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\MetaController;
-use App\Http\Controllers\NewLeadController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\PaymentController;
@@ -262,5 +262,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/users/invite', [AtalayaUserController::class, 'invite']);
         Route::delete('/users/{id}', [AtalayaUserController::class, 'delete']);
         Route::delete('/users/external/{id}', [AtalayaUserController::class, 'deleteInvitation']);
+
+        Route::post('/users-by-services-by-business/authorize', [AtalayaUsersByServicesByBusinessController::class, 'activeService']);
     });
 });

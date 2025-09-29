@@ -11,6 +11,7 @@ import '../css/coming-soon.css'
 import SelectFormGroup from './components/form/SelectFormGroup.jsx'
 import { Editor } from '@tinymce/tinymce-react'
 import TextareaFormGroup from './components/form/TextareaFormGroup.jsx'
+import FlowContainer from './Reutilizables/Settings/FlowContainer.jsx'
 
 const settingsRest = new SettingsRest()
 
@@ -28,6 +29,8 @@ const Settings = ({ can, constants, statuses }) => {
 
   const [constantType, setConstantType] = useState()
   const [specification, setSpecification] = useState()
+  const [activeTab, setActiveTab] = useState(window.location.hash.slice(1) || 'general')
+  const [canvasOpen, setCanvasOpen] = useState(false)
 
   const onModalOpen = (e, name, title, type, sp = '') => {
     const constant = getConstant(name)
@@ -161,6 +164,10 @@ const Settings = ({ can, constants, statuses }) => {
   const convertedLeadStatus = getConstant('converted-lead-status');
 
   useEffect(() => {
+    window.location.hash = activeTab
+  }, [activeTab])
+
+  useEffect(() => {
     $(finishedProjectStatusRef.current).val(finishedProjectStatus.value).select2()
     $(convertedLeadStatusRef.current).val(convertedLeadStatus.value).select2()
   }, [null])
@@ -168,7 +175,7 @@ const Settings = ({ can, constants, statuses }) => {
   return (<>
     <div className="row" >
       <div className="col-12">
-        <div className="card" style={{ minHeight: 'calc(100vh - 160px)' }}>
+        <div className="card" style={{ minHeight: 'calc(100vh - 160px)' }} hidden={canvasOpen}>
           <div className="card-header">
             <h4 className="header-title mb-0">Configura aqui las constantes del sistema</h4>
           </div>
@@ -176,32 +183,32 @@ const Settings = ({ can, constants, statuses }) => {
             <div className="row">
               <div className="col-sm-3 mb-2">
                 <div className="nav flex-column nav-pills nav-pills-tab" id="v-pills-tab" role="tablist" aria-orientation="vertical">
-                  <a className="nav-link active show mb-1" id="v-general-tab" data-bs-toggle="pill" href="#v-general" role="tab" aria-controls="v-general" aria-selected="true">
+                  <button className={`nav-link mb-1 text-start ${activeTab === 'general' ? 'active show' : ''}`} id="v-general-tab" data-bs-toggle="pill" href="#v-general" role="tab" aria-controls="v-general" aria-selected="true" onClick={() => setActiveTab('general')}>
                     General
-                  </a>
-                  <a className="nav-link mb-1" id="v-dashboard-tab" data-bs-toggle="pill" href="#v-dashboard" role="tab" aria-controls="v-dashboard" aria-selected="true">
+                  </button>
+                  <button className={`nav-link mb-1 text-start ${activeTab === 'dashboard' ? 'active show' : ''}`} id="v-dashboard-tab" data-bs-toggle="pill" href="#v-dashboard" role="tab" aria-controls="v-dashboard" aria-selected="true" onClick={() => setActiveTab('dashboard')}>
                     Dashboard
-                  </a>
-                  <a className="nav-link mb-1" id="v-clients-leads-tab" data-bs-toggle="pill" href="#v-clients-leads" role="tab" aria-controls="v-clients-leads" aria-selected="false">
+                  </button>
+                  <button className={`nav-link mb-1 text-start ${activeTab === 'clients-leads' ? 'active show' : ''}`} id="v-clients-leads-tab" data-bs-toggle="pill" href="#v-clients-leads" role="tab" aria-controls="v-clients-leads" aria-selected="false" onClick={() => setActiveTab('clients-leads')}>
                     Clientes y leads
-                  </a>
-                  <a className="nav-link mb-1" id="v-projects-tab" data-bs-toggle="pill" href="#v-projects" role="tab" aria-controls="v-projects" aria-selected="false">
+                  </button>
+                  <button className={`nav-link mb-1 text-start ${activeTab === 'projects' ? 'active show' : ''}`} id="v-projects-tab" data-bs-toggle="pill" href="#v-projects" role="tab" aria-controls="v-projects" aria-selected="false" onClick={() => setActiveTab('projects')}>
                     Proyectos
-                  </a>
-                  <a className="nav-link mb-1" id="v-email-tab" data-bs-toggle="pill" href="#v-email" role="tab" aria-controls="v-email" aria-selected="false">
+                  </button>
+                  <button className={`nav-link mb-1 text-start ${activeTab === 'email' ? 'active show' : ''}`} id="v-email-tab" data-bs-toggle="pill" href="#v-email" role="tab" aria-controls="v-email" aria-selected="false" onClick={() => setActiveTab('email')}>
                     Correo
-                  </a>
-                  <a className="nav-link mb-1" id="v-whatsapp-tab" data-bs-toggle="pill" href="#v-whatsapp" role="tab" aria-controls="v-whatsapp" aria-selected="false">
+                  </button>
+                  <button className={`nav-link mb-1 text-start ${activeTab === 'whatsapp' ? 'active show' : ''}`} id="v-whatsapp-tab" data-bs-toggle="pill" href="#v-whatsapp" role="tab" aria-controls="v-whatsapp" aria-selected="false" onClick={() => setActiveTab('whatsapp')}>
                     WhatsApp
-                  </a>
-                  <a className="nav-link mb-1" id="v-generativeai-tab" data-bs-toggle="pill" href="#v-generativeai" role="tab" aria-controls="v-generativeai" aria-selected="false">
+                  </button>
+                  <button className={`nav-link mb-1 text-start ${activeTab === 'generativeai' ? 'active show' : ''}`} id="v-generativeai-tab" data-bs-toggle="pill" href="#v-generativeai" role="tab" aria-controls="v-generativeai" aria-selected="false" onClick={() => setActiveTab('generativeai')}>
                     Chat IA <i className='mdi mdi-star-four-points'></i>
-                  </a>
+                  </button>
                 </div>
               </div>
               <div className="col-sm-9">
                 <div className="tab-content pt-0">
-                  <div className="tab-pane fade active show coming-soon" id="v-general" role="tabpanel" aria-labelledby="v-general-tab">
+                  <div className={`tab-pane fade ${activeTab === 'general' ? 'show active' : ''} coming-soon`} id="v-general" role="tabpanel" aria-labelledby="v-general-tab">
                     <h4>Configuracion general</h4>
                     <div className="row">
                       <div className="col-md-4 col-sm-6 col-xs-12">
@@ -233,7 +240,7 @@ const Settings = ({ can, constants, statuses }) => {
                       </div>
                     </div>
                   </div>
-                  <div className="tab-pane fade" id="v-dashboard" role="tabpanel" aria-labelledby="v-dashboard-tab">
+                  <div className={`tab-pane fade ${activeTab === 'dashboard' ? 'show active' : ''}`} id="v-dashboard" role="tabpanel" aria-labelledby="v-dashboard-tab">
                     <h4>Configuracion de dashboard</h4>
                     <div className="row">
                       <div className="col-md-4 col-sm-6 col-xs-12">
@@ -259,7 +266,7 @@ const Settings = ({ can, constants, statuses }) => {
                       </div>
                     </div>
                   </div>
-                  <div className="tab-pane fade" id="v-clients-leads" role="tabpanel" aria-labelledby="v-clients-leads-tab">
+                  <div className={`tab-pane fade ${activeTab === 'clientsleads' ? 'show active' : ''}`} id="v-clients-leads" role="tabpanel" aria-labelledby="v-clients-leads-tab">
                     <h4>Configuracion de clientes y leads</h4>
                     <div className="row">
                       <div className="col-md-4 col-sm-6 col-xs-12">
@@ -276,7 +283,7 @@ const Settings = ({ can, constants, statuses }) => {
                       </div>
                     </div>
                   </div>
-                  <div className="tab-pane fade" id="v-projects" role="tabpanel" aria-labelledby="v-projects-tab">
+                  <div className={`tab-pane fade ${activeTab === 'projects' ? 'show active' : ''}`} id="v-projects" role="tabpanel" aria-labelledby="v-projects-tab">
                     <h4>Configuracion de Proyectos</h4>
                     <div className="row">
                       <div className="col-md-4 col-sm-6 col-xs-12">
@@ -292,7 +299,7 @@ const Settings = ({ can, constants, statuses }) => {
                       </div>
                     </div>
                   </div>
-                  <div className="tab-pane fade coming-soon" id="v-email" role="tabpanel" aria-labelledby="v-email-tab">
+                  <div className={`tab-pane fade ${activeTab === 'email' ? 'show active' : ''} coming-soon`} id="v-email" role="tabpanel" aria-labelledby="v-email-tab">
                     <h4>Configuracion de correo</h4>
                     <div className="row">
                       <div className="col-md-4 col-sm-6 col-xs-12">
@@ -321,7 +328,7 @@ const Settings = ({ can, constants, statuses }) => {
                       </div>
                     </div>
                   </div>
-                  <div className="tab-pane fade" id="v-whatsapp" role="tabpanel" aria-labelledby="v-whatsapp-tab">
+                  <div className={`tab-pane fade ${activeTab === 'whatsapp' ? 'show active' : ''}`} id="v-whatsapp" role="tabpanel" aria-labelledby="v-whatsapp-tab">
                     <h4>Configuracion de WhatsApp</h4>
                     <div className="row">
                       <div className="col-md-4 col-sm-6 col-xs-12">
@@ -364,7 +371,7 @@ const Settings = ({ can, constants, statuses }) => {
                       </div>
                     </div>
                   </div>
-                  <div className="tab-pane fade" id="v-generativeai" role="tabpanel" aria-labelledby="v-generativeai-tab">
+                  <div className={`tab-pane fade ${activeTab === 'generativeai' ? 'show active' : ''}`} id="v-generativeai" role="tabpanel" aria-labelledby="v-generativeai-tab">
                     <h4>IA <i className='mdi mdi-star-four-points'></i></h4>
                     <div className="row">
                       <div className="col-md-4 col-sm-6 col-xs-12">
@@ -379,7 +386,16 @@ const Settings = ({ can, constants, statuses }) => {
                       <div className="col-md-4 col-sm-6 col-xs-12">
                         <div className="card card-body border p-2" onClick={(e) => onModalOpen(e, 'gemini-what-business-do', 'Que hace tu empresa [Separado por comas]', 'text')}>
                           <h5 className="card-title mb-1">Que hace tu empresa</h5>
-                          <p className="card-text mb-1">Ayuda a Gemini a saber que productos/servicios buscan los clientes en tu empresa</p>
+                          <p className="card-text mb-1">Ayuda a Gemini a saber que productos y/o servicios buscan los clientes en tu empresa</p>
+                          <p className="card-text">
+                            <small className="text-muted">Click para modificar</small>
+                          </p>
+                        </div>
+                      </div>
+                      <div className="col-md-4 col-sm-6 col-xs-12">
+                        <div className="card card-body border p-2" onClick={() => setCanvasOpen(true)}>
+                          <h5 className="card-title mb-1">Flujo de asistente (Beta)</h5>
+                          <p className="card-text mb-1">Configura el flujo de Gemini con leads para automatizar preguntas y respuestas.</p>
                           <p className="card-text">
                             <small className="text-muted">Click para modificar</small>
                           </p>
@@ -392,56 +408,9 @@ const Settings = ({ can, constants, statuses }) => {
             </div>
           </div>
         </div>
+        <FlowContainer isOpen={canvasOpen} setIsOpen={setCanvasOpen} />
       </div>
     </div>
-    {/* <Table gridRef={gridRef} title='Configuracion' defaultRows={defaultRows} rest={SettingsRest}
-      toolBar={(container) => {
-        container.unshift({
-          widget: 'dxButton', location: 'after',
-          options: {
-            icon: 'refresh',
-            hint: 'Refrescar tabla',
-            onClick: () => $(gridRef.current).dxDataGrid('instance').refresh()
-          }
-        });
-        // container.unshift({
-        //   widget: 'dxButton', location: 'after',
-        //   options: {
-        //     icon: 'plus',
-        //     hint: 'Nuevo registro',
-        //     onClick: () => onModalOpen()
-        //   }
-        // });
-      }}
-      columns={[
-        {
-          dataField: 'id',
-          caption: 'ID',
-          visible: false
-        },
-        {
-          dataField: 'name',
-          caption: 'Nombre de configuracion'
-        },
-        {
-          dataField: 'description',
-          caption: 'Descripcion',
-          cellTemplate: (container, { value }) => {
-            if (!value) ReactAppend(container, <i className='text-muted'>- Sin descripcion -</i>)
-            else ReactAppend(container, value)
-          }
-        },
-        {
-          caption: 'Acciones',
-          cellTemplate: (container, { data }) => {
-            can('settings', 'root', 'all', 'update') && ReactAppend(container, <TippyButton className='btn btn-xs btn-soft-primary' title='Editar' onClick={() => onModalOpen(data)}>
-              <i className='fa fa-pen'></i>
-            </TippyButton>)
-          },
-          allowFiltering: false,
-          allowExporting: false
-        }
-      ]} /> */}
     <Modal modalRef={leadStatusModal} title='' onSubmit={onLeadStatusSubmit} size='sm'>
       <input ref={constantStatusRef} type="hidden" />
       <div className='row' id='assignation-status-container'>
@@ -509,7 +478,7 @@ const Settings = ({ can, constants, statuses }) => {
 CreateReactScript((el, properties) => {
   if (!properties.can('settings', 'root', 'all', 'list')) return location.href = '/';
   createRoot(el).render(
-    <Adminto {...properties} title='Constantes de configuracion'>
+    <Adminto {...properties} title='Configuraciones' showTitle={false}>
       <Settings {...properties} />
     </Adminto>
   );

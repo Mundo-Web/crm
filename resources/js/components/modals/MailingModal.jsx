@@ -253,42 +253,42 @@ const MailingModal = ({ data, inReplyTo, modalRef, onSend = () => { }, defaultMe
                     <i className="mdi mdi-paperclip"></i>
                   </button>
                 </Tippy>
-                <div class="dropdown">
+                <div className="dropdown">
                   <Tippy content='Usar plantilla'>
-                    <button class="btn btn-sm  btn-white dropdown-toggle" type="button" id="dropdown-templates-button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                      <i class="mdi mdi-message-bulleted"></i>
+                    <button className="btn btn-sm  btn-white dropdown-toggle" type="button" id="dropdown-templates-button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                      <i className="mdi mdi-message-bulleted"></i>
                     </button>
                   </Tippy>
-                  <div class="dropdown-menu" aria-labelledby="dropdown-templates-button">
-                    <span class="dropdown-item" style={{ cursor: 'pointer' }} onClick={() => onUseTemplateClicked()}>
+                  <div className="dropdown-menu" aria-labelledby="dropdown-templates-button">
+                    <span className="dropdown-item" style={{ cursor: 'pointer' }} onClick={() => onUseTemplateClicked()}>
                       <i className="mdi mdi-broom me-1"></i>
                       Limpiar contenido
                     </span>
                     {
                       defaultMessages.filter(tmp => tmp.type == 'email').map((tmp, index) => {
-                        return <span key={index} class="dropdown-item" style={{ cursor: 'pointer' }} onClick={() => onUseTemplateClicked(tmp)}>
+                        return <span key={index} className="dropdown-item" style={{ cursor: 'pointer' }} onClick={() => onUseTemplateClicked(tmp)}>
                           {tmp.name}
                         </span>
                       })
                     }
                     <div className="dropdown-divider"></div>
-                    <a class="dropdown-item" href={`${Global.APP_PROTOCOL}://${Global.APP_DOMAIN}/signs`} target="_blank">
+                    <a className="dropdown-item" href={`${Global.APP_PROTOCOL}://${Global.APP_DOMAIN}/signs`} target="_blank">
                       Gestionar plantillas
                       <i className="mdi mdi-arrow-top-right ms-1"></i>
                     </a>
                   </div>
                 </div>
-                <div class="dropdown">
+                <div className="dropdown">
                   <Tippy content='Insertar firma'>
-                    <button class="btn btn-sm  btn-white dropdown-toggle" type="button" id="dropdown-signs-button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                      <i class="mdi mdi-pen"></i>
+                    <button className="btn btn-sm  btn-white dropdown-toggle" type="button" id="dropdown-signs-button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                      <i className="mdi mdi-pen"></i>
                     </button>
                   </Tippy>
-                  <div class="dropdown-menu" aria-labelledby="dropdown-signs-button">
-                    <span class="dropdown-item" style={{ cursor: 'pointer' }} onClick={() => onAddSignClicked()}>Sin firma</span>
+                  <div className="dropdown-menu" aria-labelledby="dropdown-signs-button">
+                    <span className="dropdown-item" style={{ cursor: 'pointer' }} onClick={() => onAddSignClicked()}>Sin firma</span>
                     {
                       signs.map((sign, index) => {
-                        return <span key={index} class="dropdown-item d-flex gap-1 align-items-center" style={{ cursor: 'pointer' }} onClick={() => onAddSignClicked(sign)}>
+                        return <span key={index} className="dropdown-item d-flex gap-1 align-items-center" style={{ cursor: 'pointer' }} onClick={() => onAddSignClicked(sign)}>
                           <img src={`${Global.APP_PROTOCOL}://${Global.APP_DOMAIN}/repository/signs/${sign.sign}`} alt={sign.name}
                             style={{ width: '20px', aspectRatio: 1, objectFit: 'cover', objectPosition: 'center' }} />
                           {sign.name || <i className="text-muted">Sin nombre</i>}
@@ -296,7 +296,7 @@ const MailingModal = ({ data, inReplyTo, modalRef, onSend = () => { }, defaultMe
                       })
                     }
                     <div className="dropdown-divider"></div>
-                    <a class="dropdown-item" href={`${Global.APP_PROTOCOL}://${Global.APP_DOMAIN}/signs`} target="_blank">
+                    <a className="dropdown-item" href={`${Global.APP_PROTOCOL}://${Global.APP_DOMAIN}/signs`} target="_blank">
                       Gestionar firmas
                       <i className="mdi mdi-arrow-top-right ms-1"></i>
                     </a>

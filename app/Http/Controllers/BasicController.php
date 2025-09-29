@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Classes\dxResponse;
 use App\Models\Atalaya\Business;
+use App\Models\Atalaya\Service;
 use App\Models\Client;
 use App\Models\dxDataGrid;
 use App\Models\Notification;
@@ -80,7 +81,6 @@ class BasicController extends Controller
 
   public function reactView(Request $request)
   {
-    // $views = View::with(['table'])->where('business_id', Auth::user()->business_id)->get();
     $businessesIWork = Business::select([
       DB::raw('DISTINCT businesses.*')
     ])
@@ -93,6 +93,25 @@ class BasicController extends Controller
       ->where('users_by_services_by_businesses.invitation_accepted', true)
       ->where('businesses.status', true)
       ->get();
+
+    $services = Service::select([
+      'services.correlative',
+      'services.name',
+      'services.description',
+      'services.status',
+      DB::raw('MAX(CASE WHEN users_by_services_by_businesses.user_id IS NOT NULL AND users_by_services_by_businesses.invitation_accepted = 1 THEN 1 ELSE 0 END) AS i_work')
+    ])
+      ->leftJoin('services_by_businesses', function ($join) {
+        $join->on('services_by_businesses.service_id', 'services.id')
+             ->where('services_by_businesses.business_id', Auth::user()->business_id);
+      })
+      ->leftJoin('users_by_services_by_businesses', function ($join) {
+        $join->on('users_by_services_by_businesses.service_by_business_id', 'services_by_businesses.id')
+          ->where('users_by_services_by_businesses.user_id', Auth::user()->id);
+      })
+      ->groupBy('services.correlative', 'services.name', 'services.description', 'services.status')
+      ->get();
+
     $notificationsCount = Notification::where(function ($query) {
       $query->where('notify_to', Auth::user()->service_user->id);
       $query->orWhereNull('notify_to');
@@ -123,7 +142,7 @@ class BasicController extends Controller
 
     $properties = [
       'businesses' => $businessesIWork,
-      // 'presets' => $views,
+      'services' => $services,
       'session' => Auth::user(),
       'notificationsCount' => $notificationsCount,
       'tasksCount' => $tasksCount,
