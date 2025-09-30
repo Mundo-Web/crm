@@ -1,12 +1,12 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import SettingsRest from '../../actions/SettingsRest';
+import areArraySame from '../../Utils/areArraySame';
 
-const FlowContainer = ({ isOpen, setIsOpen }) => {
-    const [questions, setQuestions] = useState([
-        { id: 1, text: '¿Cuál es tu nombre?' },
-        { id: 2, text: 'Correo electrónico' },
-        { id: 3, text: 'Teléfono' },
-        { id: 4, text: '¿Cómo supiste de nosotros?' }
-    ]);
+const settingsRest = new SettingsRest()
+
+const FlowContainer = ({ questions: questionsDB, isOpen, setIsOpen }) => {
+    const [questions, setQuestions] = useState(questionsDB);
+    const [savedQuestions, setSavedQuestions] = useState(questionsDB)
     const [newQuestion, setNewQuestion] = useState('');
     const [draggedIndex, setDraggedIndex] = useState(null);
     const [editingId, setEditingId] = useState(null);
@@ -59,10 +59,21 @@ const FlowContainer = ({ isOpen, setIsOpen }) => {
         setDraggedIndex(null);
     };
 
+    const saveQuestions = useCallback(async () => {
+        const result = await settingsRest.save({
+            type: 'json',
+            name: 'gemini-extra-questions',
+            value: JSON.stringify(questions)
+        })
+        if (!result) return
+        setSavedQuestions(questions)
+    }, [questions, savedQuestions])
+
     useEffect(() => {
         if (!isOpen) return;
-        console.log(questions)
-    }, [isOpen, questions])
+        if (areArraySame(questions, savedQuestions)) return
+        saveQuestions()
+    }, [isOpen, questions, savedQuestions])
 
     return (
         <div className="card" style={{ minHeight: 'calc(100vh - 160px)' }} hidden={!isOpen}>
@@ -153,7 +164,7 @@ const FlowContainer = ({ isOpen, setIsOpen }) => {
                             </div>
                         </fieldset>
 
-                         <i className="d-block mdi mdi-pan-down text-secondary opacity-50" style={{ fontSize: '24px' }}></i>
+                        <i className="d-block mdi mdi-pan-down text-secondary opacity-50" style={{ fontSize: '24px' }}></i>
 
                         {/* Final Greeting (assistant) */}
                         <div className="rounded bg-primary bg-opacity-10 text-primary px-4 py-1 fw-semibold">

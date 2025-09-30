@@ -172,6 +172,8 @@ const Settings = ({ can, constants, statuses }) => {
     $(convertedLeadStatusRef.current).val(convertedLeadStatus.value).select2()
   }, [null])
 
+  const questionsObj = getConstant('gemini-extra-questions')
+
   return (<>
     <div className="row" >
       <div className="col-12">
@@ -408,7 +410,7 @@ const Settings = ({ can, constants, statuses }) => {
             </div>
           </div>
         </div>
-        <FlowContainer isOpen={canvasOpen} setIsOpen={setCanvasOpen} />
+        <FlowContainer questions={JSON.parse(questionsObj.value ?? '[]')} isOpen={canvasOpen} setIsOpen={setCanvasOpen} />
       </div>
     </div>
     <Modal modalRef={leadStatusModal} title='' onSubmit={onLeadStatusSubmit} size='sm'>
