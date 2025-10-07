@@ -36,6 +36,7 @@ import MailingModal from './components/modals/MailingModal.jsx'
 import FormatBytes from './Utils/FormatBytes.js'
 import LeadTable from './Reutilizables/Leads/LeadTable.jsx'
 import NewLeadsRest from './actions/NewLeadsRest.js'
+import IncompleteLeadsRest from './actions/IncompleteLeadsRest.js'
 import OffCanvas from './components/OffCanvas.jsx'
 import LeadKanban from './Reutilizables/Leads/LeadKanban.jsx'
 import { LeadsContext, LeadsProvider } from './Reutilizables/Leads/LeadsProvider.jsx'
@@ -44,6 +45,7 @@ import "driver.js/dist/driver.css";
 
 const leadsRest = new LeadsRest()
 const newLeadsRest = new NewLeadsRest()
+const incompleteLeadsRest = new IncompleteLeadsRest()
 const clientsRest = new ClientsRest()
 const clientNotesRest = new ClientNotesRest()
 const taskRest = new TasksRest()
@@ -59,7 +61,7 @@ const driverObj = driver({
 })
 
 const Leads = (properties) => {
-  const { statuses: statusesFromDB, defaultClientStatus, defaultLeadStatus, manageStatuses: manageStatusesFromDB, noteTypes, products = [], processes = [], defaultMessages = [], session: sessionDB, can, lead, signs, users } = properties
+  const { statuses: statusesFromDB, defaultClientStatus, defaultLeadStatus, manageStatuses: manageStatusesFromDB, noteTypes, products = [], processes = [], defaultMessages = [], session: sessionDB, can, lead, signs, users, hasForms } = properties
 
   const { leads, setLeads, getLeads, refreshLeads, defaultView, setDefaultView } = useContext(LeadsContext)
 
@@ -633,7 +635,22 @@ const Leads = (properties) => {
             users={users}
             title='Leads - En Gestion'
             cardClass='driver-js-in-progress-table' />
-          <LeadTable gridRef={gridRef} otherGridRef={managedGridRef} rest={newLeadsRest} can={can} defaultLeadStatus={defaultLeadStatus} manageStatuses={manageStatuses} statuses={statuses}
+          <LeadTable gridRef={gridRef} otherGridRef={managedGridRef}
+            rest={hasForms ? [
+              {
+                label: 'Interesados',
+                rest: newLeadsRest,
+                className: 'btn-soft-success',
+                classNameWhenActive: 'btn-success'
+              },  
+              {
+                label: 'Posibles interesados',
+                rest: incompleteLeadsRest,
+                className: 'btn-soft-secondary',
+                classNameWhenActive: 'btn-secondary'
+              },
+            ] : newLeadsRest}
+            can={can} defaultLeadStatus={defaultLeadStatus} manageStatuses={manageStatuses} statuses={statuses}
             onClientStatusClicked={onClientStatusClicked}
             onManageStatusChange={onManageStatusChange}
             onLeadClicked={onLeadClicked}
@@ -646,6 +663,7 @@ const Leads = (properties) => {
             setStatuses={setStatuses}
             setManageStatuses={setManageStatuses}
             users={users}
+            completeRegistration
             title='Leads - Recien llegados'
             cardClass='driver-js-new-leads-table'
             borderColor='#4CAF50' />

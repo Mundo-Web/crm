@@ -71,6 +71,21 @@ class LeadController extends BasicController
 
         $usersJpa = User::byBusiness();
 
+        $question = Setting::get('gemini-extra-questions');
+
+            $hasForms = false;
+            if ($question && is_string($question)) {
+                $decoded = json_decode($question, true);
+                if (is_array($decoded)) {
+                    foreach ($decoded as $form) {
+                        if (isset($form['questions']) && is_array($form['questions']) && count($form['questions']) > 0) {
+                            $hasForms = true;
+                            break;
+                        }
+                    }
+                }
+            }
+
         return [
             'lead' => $request->lead,
             'manageStatuses' => $manageStatuses,
@@ -82,7 +97,8 @@ class LeadController extends BasicController
             'processes' => $processes,
             'defaultMessages' => $defaultMessages,
             'signs' => $signs,
-            'users' => $usersJpa
+            'users' => $usersJpa,
+            'hasForms' => $hasForms,
         ];
     }
 
@@ -117,8 +133,31 @@ class LeadController extends BasicController
             ->where('clients.status', true)
             ->where('clients.business_id', Auth::user()->business_id);
 
-        if ($suffix == 'new') $query = $query->where('clients.status_id', $defaultLeadStatus);
-        else if ($suffix == 'served') $query = $query->where('clients.status_id', '<>', $defaultLeadStatus);
+        if ($suffix == 'served') $query = $query->where('clients.status_id', '<>', $defaultLeadStatus);
+        if ($suffix == 'new' || $suffix == 'incomplete') {
+            $query = $query->where('clients.status_id', $defaultLeadStatus);
+            $question = Setting::get('gemini-extra-questions');
+
+            $hasForms = false;
+            if ($question && is_string($question)) {
+                $decoded = json_decode($question, true);
+                if (is_array($decoded)) {
+                    foreach ($decoded as $form) {
+                        if (isset($form['questions']) && is_array($form['questions']) && count($form['questions']) > 0) {
+                            $hasForms = true;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if ($suffix == 'new' && $hasForms) {
+                $query = $query->where('clients.complete_registration', true);
+            }
+            if ($suffix == 'incomplete') {
+                $query = $query->where('clients.complete_registration', false);
+            }
+        }
 
         return $query;
     }

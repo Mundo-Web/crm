@@ -410,7 +410,7 @@ const Settings = ({ can, constants, statuses }) => {
             </div>
           </div>
         </div>
-        <FlowContainer questions={JSON.parse(questionsObj.value ?? '[]')} isOpen={canvasOpen} setIsOpen={setCanvasOpen} />
+        <FlowContainer questions={JSON.parse(questionsObj.value ?? '[]')} isOpen={canvasOpen} setIsOpen={setCanvasOpen} onModalOpen={onModalOpen}/>
       </div>
     </div>
     <Modal modalRef={leadStatusModal} title='' onSubmit={onLeadStatusSubmit} size='sm'>

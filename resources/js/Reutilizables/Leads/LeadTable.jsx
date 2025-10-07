@@ -16,7 +16,7 @@ import { LeadsContext } from "./LeadsProvider"
 const leadsRest = new LeadsRest()
 const clientsRest = new ClientsRest()
 
-const LeadTable = ({ gridRef, cardClass, otherGridRef, rest, can, defaultLeadStatus, statuses, manageStatuses, onClientStatusClicked, onManageStatusChange, onLeadClicked, onMessagesClicked, onAttendClient, onOpenModal, onMakeLeadClient, onArchiveClicked, onDeleteClicked, title, borderColor = '#315AFE', setStatuses, setManageStatuses, users, filterAssignation }) => {
+const LeadTable = ({ gridRef, cardClass, otherGridRef, rest, can, defaultLeadStatus, statuses, manageStatuses, onClientStatusClicked, onManageStatusChange, onLeadClicked, onMessagesClicked, onAttendClient, onOpenModal, onMakeLeadClient, onArchiveClicked, onDeleteClicked, title, borderColor = '#315AFE', setStatuses, setManageStatuses, users, filterAssignation, completeRegistration }) => {
 
   const { selectedUsersId, setSelectedUsersId, defaultView } = useContext(LeadsContext)
 
@@ -255,7 +255,8 @@ const LeadTable = ({ gridRef, cardClass, otherGridRef, rest, can, defaultLeadSta
         caption: 'Lead',
         width: 250,
         cellTemplate: (container, { data }) => {
-          container.attr('style', `height: 48px; border-left: 4px solid ${data.status.color}`)
+          container.attr('style', `height: 48px; border-left: 4px solid ${data.status.color}; cursor: pointer;`)
+          container.on('click', () => onLeadClicked(data))
 
           let integrationIcon = null
 
@@ -271,24 +272,41 @@ const LeadTable = ({ gridRef, cardClass, otherGridRef, rest, can, defaultLeadSta
               break;
           }
 
-          ReactAppend(container, <div className="d-flex align-items-center gap-1">
-            {
-              integrationIcon &&
-              <TippyButton className='btn btn-xs btn-white' title='Ver mensajes' onClick={() => onMessagesClicked(data)}>
-                {integrationIcon}
-              </TippyButton>
-            }
-            <div onClick={() => onLeadClicked(data)} style={{ cursor: 'pointer' }}>
+          ReactAppend(container, <div className="d-flex align-items-center justify-content-between gap-2">
+            <div className="d-flex align-items-center gap-2 overflow-hidden">
               {
-                data.status_id == defaultLeadStatus
-                  ? <b className='d-block'>{data.contact_name}</b>
-                  : <span className='d-block'>{data.contact_name}</span>
+                integrationIcon &&
+                <TippyButton className='btn btn-xs btn-white' title='Ver mensajes' onClick={(e) => {
+                  onMessagesClicked(data)
+                  e.stopPropagation()
+                }}>
+                  {integrationIcon}
+                </TippyButton>
               }
-              {
-                data.products_count > 0 &&
-                <small className='text-muted'>{data.products_count} {data.products_count > 1 ? 'productos' : 'producto'}</small>
-              }
+              <div className="text-truncate">
+                {
+                  data.status_id == defaultLeadStatus
+                    ? <b className='d-block text-truncate'>{data.contact_name}</b>
+                    : <span className='d-block text-truncate'>{data.contact_name}</span>
+                }
+                {
+                  data.products_count > 0 &&
+                  <small className='text-muted'>{data.products_count} {data.products_count > 1 ? 'productos' : 'producto'}</small>
+                }
+              </div>
             </div>
+            {
+              completeRegistration &&
+              <Tippy content={data.complete_registration ? 'Registro manual/completo' : 'Registro incompleto'}>
+                <span className={data.complete_registration ? 'text-success' : 'text-muted'}>
+                  {
+                    data.complete_registration
+                      ? <i className="mdi mdi-account-check"></i>
+                      : <i className="mdi mdi-account-clock"></i>
+                  }
+                </span>
+              </Tippy>
+            }
           </div>)
         },
         fixed: true,
@@ -455,6 +473,7 @@ const LeadTable = ({ gridRef, cardClass, otherGridRef, rest, can, defaultLeadSta
     cardStyle={{
       borderRight: `6px solid ${borderColor}`
     }} />
+
 }
 
 export default LeadTable

@@ -165,6 +165,8 @@ const DataGrid = ({ gridRef: dataGridRef, rest, columns, toolBar, masterDetail, 
     }
   }, reloadWith)
 
+  console.log(reloadWith)
+
   return (
     <div ref={dataGridRef}></div>
   )
