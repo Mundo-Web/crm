@@ -346,7 +346,7 @@ class MetaController extends Controller
         Message::create([
             'wa_id' => $origin == 'evoapi' ? $clientJpa->contact_phone : $clientJpa->integration_user_id,
             'role' => 'AI',
-            'message' => $message,
+            'message' => Text::html2wa($message),
             'prompt' => $prompt2save,
             'microtime' => (int) (microtime(true) * 1_000_000),
             'business_id' => $clientJpa->business_id
@@ -442,7 +442,7 @@ class MetaController extends Controller
                                     ],
                                     "telefonoCliente" => [
                                         "type" => "string",
-                                        "description" => "Número de teléfono del cliente."
+                                        "description" => "Número de teléfono del cliente incluyendo el código de área."
                                     ],
                                     "correoCliente" => [
                                         "type" => "string",
@@ -450,10 +450,12 @@ class MetaController extends Controller
                                     ],
                                     "fuenteCliente" => [
                                         "type" => "string",
-                                        "description" => "Fuente de referencia. Opciones válidas: Google, Facebook, Instagram, TikTok, Por un amigo, Otros (detalle exacto)."
+                                        "description" => "Fuente de referencia, muestralo como lista enumerada. Opciones válidas: Google, Facebook, Instagram, TikTok, Por un amigo, Otros (detalle exacto)."
                                     ]
                                 ],
-                                "required" => ["nombreCliente", "telefonoCliente", "correoCliente", "fuenteCliente"]
+                                "required" => $origin === 'evoapi'
+                                    ? ["nombreCliente", "correoCliente", "fuenteCliente"]
+                                    : ["nombreCliente", "telefonoCliente", "correoCliente", "fuenteCliente"]
                             ]
                         ]
                     ]]]

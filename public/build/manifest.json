@@ -3,241 +3,241 @@
     "file": "Adminto.css",
     "src": "_Adminto-!~{00A}~.js"
   },
-  "_Adminto-CTBD2R7O.js": {
-    "file": "assets/Adminto-CTBD2R7O.js",
+  "_Adminto-Cu7C99b0.js": {
+    "file": "assets/Adminto-Cu7C99b0.js",
     "name": "Adminto",
     "imports": [
-      "_CreateReactScript-BcJ_1dIf.js",
-      "_Logout-aPqlrXnw.js",
-      "_sweetalert2.esm.all-DNNX3wqF.js"
+      "_CreateReactScript-ByDl3m9l.js",
+      "_Logout-DquunmIv.js",
+      "_sweetalert2.esm.all-C32wHI3n.js"
     ],
     "css": [
       "Adminto.css"
     ]
   },
-  "_AssignUsersModal-DW9Ag7zs.js": {
-    "file": "assets/AssignUsersModal-DW9Ag7zs.js",
+  "_AssignUsersModal-Dkalgl8c.js": {
+    "file": "assets/AssignUsersModal-Dkalgl8c.js",
     "name": "AssignUsersModal",
     "imports": [
-      "_CreateReactScript-BcJ_1dIf.js",
-      "_Dropdown-Bw4ZuCmK.js",
-      "_DropdownItem-BF05DXd3.js",
-      "_DateRange-DTptV567.js",
-      "_sweetalert2.esm.all-DNNX3wqF.js",
-      "_Modal-CoxoxBf3.js",
-      "_InputFormGroup-C0fgdl_M.js",
-      "_Adminto-CTBD2R7O.js",
-      "_TippyButton-Cs85PR5F.js",
-      "_SetSelectValue-B_zgIiVh.js"
+      "_CreateReactScript-ByDl3m9l.js",
+      "_Dropdown-NF2SABu1.js",
+      "_DropdownItem-4Phh8VKH.js",
+      "_DateRange-CELAF5u8.js",
+      "_sweetalert2.esm.all-C32wHI3n.js",
+      "_Modal-CJxY9cBG.js",
+      "_InputFormGroup-DtEJO489.js",
+      "_Adminto-Cu7C99b0.js",
+      "_TippyButton-B0I9pC_1.js",
+      "_SetSelectValue-B3G3_8Rl.js"
     ]
   },
-  "_CreateReactScript-BcJ_1dIf.js": {
-    "file": "assets/CreateReactScript-BcJ_1dIf.js",
+  "_CreateReactScript-ByDl3m9l.js": {
+    "file": "assets/CreateReactScript-ByDl3m9l.js",
     "name": "CreateReactScript"
   },
-  "_DateRange-DTptV567.js": {
-    "file": "assets/DateRange-DTptV567.js",
+  "_DateRange-CELAF5u8.js": {
+    "file": "assets/DateRange-CELAF5u8.js",
     "name": "DateRange",
     "imports": [
-      "_CreateReactScript-BcJ_1dIf.js",
-      "_Adminto-CTBD2R7O.js",
-      "_server.browser-DGVgvs1X.js"
+      "_CreateReactScript-ByDl3m9l.js",
+      "_Adminto-Cu7C99b0.js",
+      "_server.browser-CMbz63Ok.js"
     ]
   },
-  "_Dropdown-Bw4ZuCmK.js": {
-    "file": "assets/Dropdown-Bw4ZuCmK.js",
+  "_Dropdown-NF2SABu1.js": {
+    "file": "assets/Dropdown-NF2SABu1.js",
     "name": "Dropdown",
     "imports": [
-      "_CreateReactScript-BcJ_1dIf.js",
-      "_Adminto-CTBD2R7O.js"
+      "_CreateReactScript-ByDl3m9l.js",
+      "_Adminto-Cu7C99b0.js"
     ]
   },
-  "_DropdownEnd-D5REoEjp.js": {
-    "file": "assets/DropdownEnd-D5REoEjp.js",
+  "_DropdownEnd-DTAMpBKi.js": {
+    "file": "assets/DropdownEnd-DTAMpBKi.js",
     "name": "DropdownEnd",
     "imports": [
-      "_CreateReactScript-BcJ_1dIf.js"
+      "_CreateReactScript-ByDl3m9l.js"
     ]
   },
-  "_DropdownItem-BF05DXd3.js": {
-    "file": "assets/DropdownItem-BF05DXd3.js",
+  "_DropdownItem-4Phh8VKH.js": {
+    "file": "assets/DropdownItem-4Phh8VKH.js",
     "name": "DropdownItem",
     "imports": [
-      "_CreateReactScript-BcJ_1dIf.js",
-      "_Adminto-CTBD2R7O.js"
+      "_CreateReactScript-ByDl3m9l.js",
+      "_Adminto-Cu7C99b0.js"
     ]
   },
-  "_DxBox-BCWnCHLn.js": {
-    "file": "assets/DxBox-BCWnCHLn.js",
+  "_DxBox-CSnabE6g.js": {
+    "file": "assets/DxBox-CSnabE6g.js",
     "name": "DxBox",
     "imports": [
-      "_CreateReactScript-BcJ_1dIf.js",
-      "_server.browser-DGVgvs1X.js"
+      "_CreateReactScript-ByDl3m9l.js",
+      "_server.browser-CMbz63Ok.js"
     ]
   },
   "_DxButton-CsjWvhyj.js": {
     "file": "assets/DxButton-CsjWvhyj.js",
     "name": "DxButton"
   },
-  "_DxPanelButton-DZdKsllR.js": {
-    "file": "assets/DxPanelButton-DZdKsllR.js",
+  "_DxPanelButton-Bfx2Xjlg.js": {
+    "file": "assets/DxPanelButton-Bfx2Xjlg.js",
     "name": "DxPanelButton",
     "imports": [
-      "_CreateReactScript-BcJ_1dIf.js",
-      "_server.browser-DGVgvs1X.js"
+      "_CreateReactScript-ByDl3m9l.js",
+      "_server.browser-CMbz63Ok.js"
     ]
   },
-  "_InputFormGroup-C0fgdl_M.js": {
-    "file": "assets/InputFormGroup-C0fgdl_M.js",
+  "_InputFormGroup-DtEJO489.js": {
+    "file": "assets/InputFormGroup-DtEJO489.js",
     "name": "InputFormGroup",
     "imports": [
-      "_CreateReactScript-BcJ_1dIf.js"
+      "_CreateReactScript-ByDl3m9l.js"
     ]
   },
   "_JSEncrypt-D3I3x59l.js": {
     "file": "assets/JSEncrypt-D3I3x59l.js",
     "name": "JSEncrypt"
   },
-  "_LeadsRest-Iu1WxF4Q.js": {
-    "file": "assets/LeadsRest-Iu1WxF4Q.js",
+  "_LeadsRest-CqxlQ32I.js": {
+    "file": "assets/LeadsRest-CqxlQ32I.js",
     "name": "LeadsRest",
     "imports": [
-      "_CreateReactScript-BcJ_1dIf.js",
-      "_Adminto-CTBD2R7O.js"
+      "_CreateReactScript-ByDl3m9l.js",
+      "_Adminto-Cu7C99b0.js"
     ]
   },
-  "_Logout-aPqlrXnw.js": {
-    "file": "assets/Logout-aPqlrXnw.js",
+  "_Logout-DquunmIv.js": {
+    "file": "assets/Logout-DquunmIv.js",
     "name": "Logout",
     "imports": [
-      "_CreateReactScript-BcJ_1dIf.js"
+      "_CreateReactScript-ByDl3m9l.js"
     ]
   },
-  "_Modal-CoxoxBf3.js": {
-    "file": "assets/Modal-CoxoxBf3.js",
+  "_Modal-CJxY9cBG.js": {
+    "file": "assets/Modal-CJxY9cBG.js",
     "name": "Modal",
     "imports": [
-      "_CreateReactScript-BcJ_1dIf.js"
+      "_CreateReactScript-ByDl3m9l.js"
     ]
   },
   "_Number2Currency-e57Tgsuk.js": {
     "file": "assets/Number2Currency-e57Tgsuk.js",
     "name": "Number2Currency"
   },
-  "_PermissionsRest-cE1g3pAO.js": {
-    "file": "assets/PermissionsRest-cE1g3pAO.js",
+  "_PermissionsRest-B60dIQaT.js": {
+    "file": "assets/PermissionsRest-B60dIQaT.js",
     "name": "PermissionsRest",
     "imports": [
-      "_CreateReactScript-BcJ_1dIf.js"
+      "_CreateReactScript-ByDl3m9l.js"
     ]
   },
-  "_ProductsByClientsRest-CjywJX2R.js": {
-    "file": "assets/ProductsByClientsRest-CjywJX2R.js",
+  "_ProductsByClientsRest-BJeO0smF.js": {
+    "file": "assets/ProductsByClientsRest-BJeO0smF.js",
     "name": "ProductsByClientsRest",
     "imports": [
-      "_CreateReactScript-BcJ_1dIf.js",
-      "_Adminto-CTBD2R7O.js"
+      "_CreateReactScript-ByDl3m9l.js",
+      "_Adminto-Cu7C99b0.js"
     ]
   },
-  "_QuillFormGroup-DEm37FgZ.js": {
-    "file": "assets/QuillFormGroup-DEm37FgZ.js",
+  "_QuillFormGroup-YUMtaqmS.js": {
+    "file": "assets/QuillFormGroup-YUMtaqmS.js",
     "name": "QuillFormGroup",
     "imports": [
-      "_CreateReactScript-BcJ_1dIf.js",
-      "_Adminto-CTBD2R7O.js"
+      "_CreateReactScript-ByDl3m9l.js",
+      "_Adminto-Cu7C99b0.js"
     ]
   },
-  "_ReactAppend-C9YTv2Kp.js": {
-    "file": "assets/ReactAppend-C9YTv2Kp.js",
+  "_ReactAppend-C4mird4q.js": {
+    "file": "assets/ReactAppend-C4mird4q.js",
     "name": "ReactAppend",
     "imports": [
-      "_CreateReactScript-BcJ_1dIf.js"
+      "_CreateReactScript-ByDl3m9l.js"
     ]
   },
   "_RepositoryDropzone-!~{00_}~.js": {
     "file": "RepositoryDropzone.css",
     "src": "_RepositoryDropzone-!~{00_}~.js"
   },
-  "_RepositoryDropzone-CfCBPxiP.js": {
-    "file": "assets/RepositoryDropzone-CfCBPxiP.js",
+  "_RepositoryDropzone-B_6LWTNb.js": {
+    "file": "assets/RepositoryDropzone-B_6LWTNb.js",
     "name": "RepositoryDropzone",
     "imports": [
-      "_CreateReactScript-BcJ_1dIf.js",
-      "_Adminto-CTBD2R7O.js",
-      "_sweetalert2.esm.all-DNNX3wqF.js",
-      "_Modal-CoxoxBf3.js",
-      "_InputFormGroup-C0fgdl_M.js"
+      "_CreateReactScript-ByDl3m9l.js",
+      "_Adminto-Cu7C99b0.js",
+      "_sweetalert2.esm.all-C32wHI3n.js",
+      "_Modal-CJxY9cBG.js",
+      "_InputFormGroup-DtEJO489.js"
     ],
     "css": [
       "RepositoryDropzone.css"
     ]
   },
-  "_SelectFormGroup-CLT0wIBy.js": {
-    "file": "assets/SelectFormGroup-CLT0wIBy.js",
+  "_SelectFormGroup-CLE8XJj3.js": {
+    "file": "assets/SelectFormGroup-CLE8XJj3.js",
     "name": "SelectFormGroup",
     "imports": [
-      "_CreateReactScript-BcJ_1dIf.js"
+      "_CreateReactScript-ByDl3m9l.js"
     ]
   },
-  "_SetSelectValue-B_zgIiVh.js": {
-    "file": "assets/SetSelectValue-B_zgIiVh.js",
+  "_SetSelectValue-B3G3_8Rl.js": {
+    "file": "assets/SetSelectValue-B3G3_8Rl.js",
     "name": "SetSelectValue",
     "imports": [
-      "_CreateReactScript-BcJ_1dIf.js"
+      "_CreateReactScript-ByDl3m9l.js"
     ]
   },
-  "_StatusesRest-BnpSvPZO.js": {
-    "file": "assets/StatusesRest-BnpSvPZO.js",
+  "_StatusesRest-CWC7l2Ic.js": {
+    "file": "assets/StatusesRest-CWC7l2Ic.js",
     "name": "StatusesRest",
     "imports": [
-      "_Adminto-CTBD2R7O.js"
+      "_Adminto-Cu7C99b0.js"
     ]
   },
-  "_SubdomainsRest-D298trN9.js": {
-    "file": "assets/SubdomainsRest-D298trN9.js",
+  "_SubdomainsRest-Xyv-Rsnw.js": {
+    "file": "assets/SubdomainsRest-Xyv-Rsnw.js",
     "name": "SubdomainsRest",
     "imports": [
-      "_Adminto-CTBD2R7O.js"
+      "_Adminto-Cu7C99b0.js"
     ]
   },
-  "_Table-BnewQH8Q.js": {
-    "file": "assets/Table-BnewQH8Q.js",
+  "_Table-BKM_Fad1.js": {
+    "file": "assets/Table-BKM_Fad1.js",
     "name": "Table",
     "imports": [
-      "_CreateReactScript-BcJ_1dIf.js",
-      "_server.browser-DGVgvs1X.js",
-      "_default-DCbknAzj.js"
+      "_CreateReactScript-ByDl3m9l.js",
+      "_server.browser-CMbz63Ok.js",
+      "_default-BbN4y6Mb.js"
     ]
   },
-  "_TasksRest-RKoefd_G.js": {
-    "file": "assets/TasksRest-RKoefd_G.js",
+  "_TasksRest-DTvQCP6V.js": {
+    "file": "assets/TasksRest-DTvQCP6V.js",
     "name": "TasksRest",
     "imports": [
-      "_Adminto-CTBD2R7O.js"
+      "_Adminto-Cu7C99b0.js"
     ]
   },
-  "_TextareaFormGroup-CeAm5sOA.js": {
-    "file": "assets/TextareaFormGroup-CeAm5sOA.js",
+  "_TextareaFormGroup-DELmltYl.js": {
+    "file": "assets/TextareaFormGroup-DELmltYl.js",
     "name": "TextareaFormGroup",
     "imports": [
-      "_CreateReactScript-BcJ_1dIf.js"
+      "_CreateReactScript-ByDl3m9l.js"
     ]
   },
-  "_TippyButton-Cs85PR5F.js": {
-    "file": "assets/TippyButton-Cs85PR5F.js",
+  "_TippyButton-B0I9pC_1.js": {
+    "file": "assets/TippyButton-B0I9pC_1.js",
     "name": "TippyButton",
     "imports": [
-      "_CreateReactScript-BcJ_1dIf.js",
-      "_Adminto-CTBD2R7O.js",
-      "_sweetalert2.esm.all-DNNX3wqF.js"
+      "_CreateReactScript-ByDl3m9l.js",
+      "_Adminto-Cu7C99b0.js",
+      "_sweetalert2.esm.all-C32wHI3n.js"
     ]
   },
-  "_UsersRest-Cmh1KPuu.js": {
-    "file": "assets/UsersRest-Cmh1KPuu.js",
+  "_UsersRest-CqbzP-V6.js": {
+    "file": "assets/UsersRest-CqbzP-V6.js",
     "name": "UsersRest",
     "imports": [
-      "_CreateReactScript-BcJ_1dIf.js",
-      "_Adminto-CTBD2R7O.js"
+      "_CreateReactScript-ByDl3m9l.js",
+      "_Adminto-Cu7C99b0.js"
     ]
   },
   "_coming-soon-!~{015}~.js": {
@@ -248,40 +248,40 @@
     "file": "default.css",
     "src": "_default-!~{00N}~.js"
   },
-  "_default-DCbknAzj.js": {
-    "file": "assets/default-DCbknAzj.js",
+  "_default-BbN4y6Mb.js": {
+    "file": "assets/default-BbN4y6Mb.js",
     "name": "default",
     "imports": [
-      "_CreateReactScript-BcJ_1dIf.js",
-      "_index-hcUuAJQm.js"
+      "_CreateReactScript-ByDl3m9l.js",
+      "_index-D_o9jIE1.js"
     ],
     "css": [
       "default.css"
     ]
   },
-  "_index-hcUuAJQm.js": {
-    "file": "assets/index-hcUuAJQm.js",
+  "_index-D_o9jIE1.js": {
+    "file": "assets/index-D_o9jIE1.js",
     "name": "index",
     "imports": [
-      "_CreateReactScript-BcJ_1dIf.js"
+      "_CreateReactScript-ByDl3m9l.js"
     ]
   },
-  "_server.browser-DGVgvs1X.js": {
-    "file": "assets/server.browser-DGVgvs1X.js",
+  "_server.browser-CMbz63Ok.js": {
+    "file": "assets/server.browser-CMbz63Ok.js",
     "name": "server.browser",
     "imports": [
-      "_CreateReactScript-BcJ_1dIf.js"
+      "_CreateReactScript-ByDl3m9l.js"
     ]
   },
   "_sweetalert2.esm.all-!~{00C}~.js": {
     "file": "sweetalert2.esm.css",
     "src": "_sweetalert2.esm.all-!~{00C}~.js"
   },
-  "_sweetalert2.esm.all-DNNX3wqF.js": {
-    "file": "assets/sweetalert2.esm.all-DNNX3wqF.js",
+  "_sweetalert2.esm.all-C32wHI3n.js": {
+    "file": "assets/sweetalert2.esm.all-C32wHI3n.js",
     "name": "sweetalert2.esm.all",
     "imports": [
-      "_CreateReactScript-BcJ_1dIf.js"
+      "_CreateReactScript-ByDl3m9l.js"
     ],
     "css": [
       "sweetalert2.esm.css"
@@ -341,143 +341,143 @@
     "src": "resources/img/plans/home-tablet.png"
   },
   "resources/js/Account.jsx": {
-    "file": "assets/Account-Cc5v9LRL.js",
+    "file": "assets/Account-PCfyojqa.js",
     "name": "Account",
     "src": "resources/js/Account.jsx",
     "isEntry": true,
     "imports": [
-      "_CreateReactScript-BcJ_1dIf.js",
-      "_Adminto-CTBD2R7O.js",
-      "_InputFormGroup-C0fgdl_M.js",
-      "_sweetalert2.esm.all-DNNX3wqF.js",
-      "_Logout-aPqlrXnw.js",
+      "_CreateReactScript-ByDl3m9l.js",
+      "_Adminto-Cu7C99b0.js",
+      "_InputFormGroup-DtEJO489.js",
+      "_sweetalert2.esm.all-C32wHI3n.js",
+      "_Logout-DquunmIv.js",
       "_JSEncrypt-D3I3x59l.js"
     ]
   },
   "resources/js/Apikeys.jsx": {
-    "file": "assets/Apikeys-BtEvlKZ-.js",
+    "file": "assets/Apikeys-CoG3Dq_T.js",
     "name": "Apikeys",
     "src": "resources/js/Apikeys.jsx",
     "isEntry": true,
     "imports": [
-      "_CreateReactScript-BcJ_1dIf.js",
-      "_Adminto-CTBD2R7O.js",
-      "_sweetalert2.esm.all-DNNX3wqF.js",
-      "_Logout-aPqlrXnw.js"
+      "_CreateReactScript-ByDl3m9l.js",
+      "_Adminto-Cu7C99b0.js",
+      "_sweetalert2.esm.all-C32wHI3n.js",
+      "_Logout-DquunmIv.js"
     ]
   },
   "resources/js/Archived.jsx": {
-    "file": "assets/Archived-DWToKG18.js",
+    "file": "assets/Archived-GnVuUiav.js",
     "name": "Archived",
     "src": "resources/js/Archived.jsx",
     "isEntry": true,
     "imports": [
-      "_CreateReactScript-BcJ_1dIf.js",
-      "_Adminto-CTBD2R7O.js",
-      "_sweetalert2.esm.all-DNNX3wqF.js",
-      "_ReactAppend-C9YTv2Kp.js",
-      "_ProductsByClientsRest-CjywJX2R.js",
-      "_Modal-CoxoxBf3.js",
-      "_Table-BnewQH8Q.js",
-      "_server.browser-DGVgvs1X.js",
-      "_DxPanelButton-DZdKsllR.js",
+      "_CreateReactScript-ByDl3m9l.js",
+      "_Adminto-Cu7C99b0.js",
+      "_sweetalert2.esm.all-C32wHI3n.js",
+      "_ReactAppend-C4mird4q.js",
+      "_ProductsByClientsRest-BJeO0smF.js",
+      "_Modal-CJxY9cBG.js",
+      "_Table-BKM_Fad1.js",
+      "_server.browser-CMbz63Ok.js",
+      "_DxPanelButton-Bfx2Xjlg.js",
       "_Number2Currency-e57Tgsuk.js",
-      "_TippyButton-Cs85PR5F.js",
-      "_Logout-aPqlrXnw.js",
-      "_default-DCbknAzj.js",
-      "_index-hcUuAJQm.js"
+      "_TippyButton-B0I9pC_1.js",
+      "_Logout-DquunmIv.js",
+      "_default-BbN4y6Mb.js",
+      "_index-D_o9jIE1.js"
     ]
   },
   "resources/js/Calendar.jsx": {
-    "file": "assets/Calendar-DbNzmKBf.js",
+    "file": "assets/Calendar-CH_Gw4wC.js",
     "name": "Calendar",
     "src": "resources/js/Calendar.jsx",
     "isEntry": true,
     "imports": [
-      "_CreateReactScript-BcJ_1dIf.js",
-      "_Adminto-CTBD2R7O.js",
-      "_Logout-aPqlrXnw.js",
-      "_sweetalert2.esm.all-DNNX3wqF.js"
+      "_CreateReactScript-ByDl3m9l.js",
+      "_Adminto-Cu7C99b0.js",
+      "_Logout-DquunmIv.js",
+      "_sweetalert2.esm.all-C32wHI3n.js"
     ]
   },
   "resources/js/Clients.jsx": {
-    "file": "assets/Clients-BYnUpy9z.js",
+    "file": "assets/Clients-CVhCa0O9.js",
     "name": "Clients",
     "src": "resources/js/Clients.jsx",
     "isEntry": true,
     "imports": [
-      "_CreateReactScript-BcJ_1dIf.js",
-      "_Adminto-CTBD2R7O.js",
-      "_Modal-CoxoxBf3.js",
-      "_sweetalert2.esm.all-DNNX3wqF.js",
-      "_ProductsByClientsRest-CjywJX2R.js",
-      "_InputFormGroup-C0fgdl_M.js",
-      "_TextareaFormGroup-CeAm5sOA.js",
-      "_SetSelectValue-B_zgIiVh.js",
-      "_DropdownItem-BF05DXd3.js",
-      "_DropdownEnd-D5REoEjp.js",
-      "_AssignUsersModal-DW9Ag7zs.js",
-      "_ReactAppend-C9YTv2Kp.js",
-      "_DateRange-DTptV567.js",
-      "_Table-BnewQH8Q.js",
-      "_TippyButton-Cs85PR5F.js",
+      "_CreateReactScript-ByDl3m9l.js",
+      "_Adminto-Cu7C99b0.js",
+      "_Modal-CJxY9cBG.js",
+      "_sweetalert2.esm.all-C32wHI3n.js",
+      "_ProductsByClientsRest-BJeO0smF.js",
+      "_InputFormGroup-DtEJO489.js",
+      "_TextareaFormGroup-DELmltYl.js",
+      "_SetSelectValue-B3G3_8Rl.js",
+      "_DropdownItem-4Phh8VKH.js",
+      "_DropdownEnd-DTAMpBKi.js",
+      "_AssignUsersModal-Dkalgl8c.js",
+      "_ReactAppend-C4mird4q.js",
+      "_DateRange-CELAF5u8.js",
+      "_Table-BKM_Fad1.js",
+      "_TippyButton-B0I9pC_1.js",
       "_Number2Currency-e57Tgsuk.js",
-      "_DxBox-BCWnCHLn.js",
-      "_Dropdown-Bw4ZuCmK.js",
-      "_LeadsRest-Iu1WxF4Q.js",
-      "_DxPanelButton-DZdKsllR.js",
-      "_server.browser-DGVgvs1X.js",
-      "_Logout-aPqlrXnw.js",
-      "_default-DCbknAzj.js",
-      "_index-hcUuAJQm.js"
+      "_DxBox-CSnabE6g.js",
+      "_Dropdown-NF2SABu1.js",
+      "_LeadsRest-CqxlQ32I.js",
+      "_DxPanelButton-Bfx2Xjlg.js",
+      "_server.browser-CMbz63Ok.js",
+      "_Logout-DquunmIv.js",
+      "_default-BbN4y6Mb.js",
+      "_index-D_o9jIE1.js"
     ]
   },
   "resources/js/DefaultMessages.jsx": {
-    "file": "assets/DefaultMessages-CfTc6HsO.js",
+    "file": "assets/DefaultMessages-DSP9yFvE.js",
     "name": "DefaultMessages",
     "src": "resources/js/DefaultMessages.jsx",
     "isEntry": true,
     "imports": [
-      "_CreateReactScript-BcJ_1dIf.js",
-      "_ReactAppend-C9YTv2Kp.js",
-      "_Adminto-CTBD2R7O.js",
-      "_Modal-CoxoxBf3.js",
-      "_Table-BnewQH8Q.js",
-      "_InputFormGroup-C0fgdl_M.js",
-      "_TippyButton-Cs85PR5F.js",
-      "_DxPanelButton-DZdKsllR.js",
-      "_sweetalert2.esm.all-DNNX3wqF.js",
-      "_SelectFormGroup-CLT0wIBy.js",
-      "_server.browser-DGVgvs1X.js",
-      "_QuillFormGroup-DEm37FgZ.js",
-      "_RepositoryDropzone-CfCBPxiP.js",
-      "_Logout-aPqlrXnw.js",
-      "_default-DCbknAzj.js",
-      "_index-hcUuAJQm.js"
+      "_CreateReactScript-ByDl3m9l.js",
+      "_ReactAppend-C4mird4q.js",
+      "_Adminto-Cu7C99b0.js",
+      "_Modal-CJxY9cBG.js",
+      "_Table-BKM_Fad1.js",
+      "_InputFormGroup-DtEJO489.js",
+      "_TippyButton-B0I9pC_1.js",
+      "_DxPanelButton-Bfx2Xjlg.js",
+      "_sweetalert2.esm.all-C32wHI3n.js",
+      "_SelectFormGroup-CLE8XJj3.js",
+      "_server.browser-CMbz63Ok.js",
+      "_QuillFormGroup-YUMtaqmS.js",
+      "_RepositoryDropzone-B_6LWTNb.js",
+      "_Logout-DquunmIv.js",
+      "_default-BbN4y6Mb.js",
+      "_index-D_o9jIE1.js"
     ]
   },
   "resources/js/Integrations.jsx": {
-    "file": "assets/Integrations-DPfLG5Ok.js",
+    "file": "assets/Integrations-BmprhVJI.js",
     "name": "Integrations",
     "src": "resources/js/Integrations.jsx",
     "isEntry": true,
     "imports": [
-      "_CreateReactScript-BcJ_1dIf.js",
-      "_Adminto-CTBD2R7O.js",
-      "_server.browser-DGVgvs1X.js",
-      "_Logout-aPqlrXnw.js",
-      "_sweetalert2.esm.all-DNNX3wqF.js"
+      "_CreateReactScript-ByDl3m9l.js",
+      "_Adminto-Cu7C99b0.js",
+      "_server.browser-CMbz63Ok.js",
+      "_Logout-DquunmIv.js",
+      "_sweetalert2.esm.all-C32wHI3n.js"
     ]
   },
   "resources/js/Join.jsx": {
-    "file": "assets/Join-BoRUfCoy.js",
+    "file": "assets/Join-VHK1fOvJ.js",
     "name": "Join",
     "src": "resources/js/Join.jsx",
     "isEntry": true,
     "imports": [
-      "_CreateReactScript-BcJ_1dIf.js",
-      "_server.browser-DGVgvs1X.js",
-      "_sweetalert2.esm.all-DNNX3wqF.js",
+      "_CreateReactScript-ByDl3m9l.js",
+      "_server.browser-CMbz63Ok.js",
+      "_sweetalert2.esm.all-C32wHI3n.js",
       "_JSEncrypt-D3I3x59l.js"
     ],
     "assets": [
@@ -493,71 +493,71 @@
     ]
   },
   "resources/js/KPILeads.jsx": {
-    "file": "assets/KPILeads-CH_NpNe5.js",
+    "file": "assets/KPILeads-CCPJLqO5.js",
     "name": "KPILeads",
     "src": "resources/js/KPILeads.jsx",
     "isEntry": true,
     "imports": [
-      "_CreateReactScript-BcJ_1dIf.js",
-      "_Adminto-CTBD2R7O.js",
-      "_SelectFormGroup-CLT0wIBy.js",
-      "_server.browser-DGVgvs1X.js",
+      "_CreateReactScript-ByDl3m9l.js",
+      "_Adminto-Cu7C99b0.js",
+      "_SelectFormGroup-CLE8XJj3.js",
+      "_server.browser-CMbz63Ok.js",
       "_Number2Currency-e57Tgsuk.js",
-      "_sweetalert2.esm.all-DNNX3wqF.js",
-      "_Logout-aPqlrXnw.js"
+      "_sweetalert2.esm.all-C32wHI3n.js",
+      "_Logout-DquunmIv.js"
     ],
     "css": [
       "KPILeads.css"
     ]
   },
   "resources/js/KPIProjects.jsx": {
-    "file": "assets/KPIProjects-BZgsSBYO.js",
+    "file": "assets/KPIProjects-Zn8kgPT1.js",
     "name": "KPIProjects",
     "src": "resources/js/KPIProjects.jsx",
     "isEntry": true,
     "imports": [
-      "_CreateReactScript-BcJ_1dIf.js",
-      "_Adminto-CTBD2R7O.js",
-      "_DropdownEnd-D5REoEjp.js",
-      "_DropdownItem-BF05DXd3.js",
-      "_DateRange-DTptV567.js",
+      "_CreateReactScript-ByDl3m9l.js",
+      "_Adminto-Cu7C99b0.js",
+      "_DropdownEnd-DTAMpBKi.js",
+      "_DropdownItem-4Phh8VKH.js",
+      "_DateRange-CELAF5u8.js",
       "_Number2Currency-e57Tgsuk.js",
-      "_Logout-aPqlrXnw.js",
-      "_sweetalert2.esm.all-DNNX3wqF.js",
-      "_server.browser-DGVgvs1X.js"
+      "_Logout-DquunmIv.js",
+      "_sweetalert2.esm.all-C32wHI3n.js",
+      "_server.browser-CMbz63Ok.js"
     ]
   },
   "resources/js/Leads.jsx": {
-    "file": "assets/Leads-BFrUkIsQ.js",
+    "file": "assets/Leads-g8AlP0qb.js",
     "name": "Leads",
     "src": "resources/js/Leads.jsx",
     "isEntry": true,
     "imports": [
-      "_CreateReactScript-BcJ_1dIf.js",
-      "_Adminto-CTBD2R7O.js",
-      "_QuillFormGroup-DEm37FgZ.js",
-      "_sweetalert2.esm.all-DNNX3wqF.js",
-      "_ProductsByClientsRest-CjywJX2R.js",
-      "_LeadsRest-Iu1WxF4Q.js",
-      "_TasksRest-RKoefd_G.js",
-      "_UsersRest-Cmh1KPuu.js",
-      "_Modal-CoxoxBf3.js",
-      "_InputFormGroup-C0fgdl_M.js",
-      "_TextareaFormGroup-CeAm5sOA.js",
-      "_SelectFormGroup-CLT0wIBy.js",
-      "_SetSelectValue-B_zgIiVh.js",
-      "_Dropdown-Bw4ZuCmK.js",
-      "_DropdownItem-BF05DXd3.js",
+      "_CreateReactScript-ByDl3m9l.js",
+      "_Adminto-Cu7C99b0.js",
+      "_QuillFormGroup-YUMtaqmS.js",
+      "_sweetalert2.esm.all-C32wHI3n.js",
+      "_ProductsByClientsRest-BJeO0smF.js",
+      "_LeadsRest-CqxlQ32I.js",
+      "_TasksRest-DTvQCP6V.js",
+      "_UsersRest-CqbzP-V6.js",
+      "_Modal-CJxY9cBG.js",
+      "_InputFormGroup-DtEJO489.js",
+      "_TextareaFormGroup-DELmltYl.js",
+      "_SelectFormGroup-CLE8XJj3.js",
+      "_SetSelectValue-B3G3_8Rl.js",
+      "_Dropdown-NF2SABu1.js",
+      "_DropdownItem-4Phh8VKH.js",
       "_Number2Currency-e57Tgsuk.js",
-      "_server.browser-DGVgvs1X.js",
-      "_RepositoryDropzone-CfCBPxiP.js",
-      "_Table-BnewQH8Q.js",
-      "_ReactAppend-C9YTv2Kp.js",
-      "_StatusesRest-BnpSvPZO.js",
-      "_TippyButton-Cs85PR5F.js",
-      "_Logout-aPqlrXnw.js",
-      "_default-DCbknAzj.js",
-      "_index-hcUuAJQm.js"
+      "_server.browser-CMbz63Ok.js",
+      "_RepositoryDropzone-B_6LWTNb.js",
+      "_Table-BKM_Fad1.js",
+      "_ReactAppend-C4mird4q.js",
+      "_StatusesRest-CWC7l2Ic.js",
+      "_TippyButton-B0I9pC_1.js",
+      "_Logout-DquunmIv.js",
+      "_default-BbN4y6Mb.js",
+      "_index-D_o9jIE1.js"
     ],
     "css": [
       "Leads.css"
@@ -567,89 +567,89 @@
     ]
   },
   "resources/js/Login.jsx": {
-    "file": "assets/Login-D8Ce1Gfd.js",
+    "file": "assets/Login-B6qkqXNY.js",
     "name": "Login",
     "src": "resources/js/Login.jsx",
     "isEntry": true,
     "imports": [
-      "_CreateReactScript-BcJ_1dIf.js",
+      "_CreateReactScript-ByDl3m9l.js",
       "_JSEncrypt-D3I3x59l.js",
-      "_index-hcUuAJQm.js"
+      "_index-D_o9jIE1.js"
     ],
     "css": [
       "Login.css"
     ]
   },
   "resources/js/Messages.jsx": {
-    "file": "assets/Messages-CYakgn2A.js",
+    "file": "assets/Messages-BZDUbQro.js",
     "name": "Messages",
     "src": "resources/js/Messages.jsx",
     "isEntry": true,
     "imports": [
-      "_CreateReactScript-BcJ_1dIf.js",
-      "_Adminto-CTBD2R7O.js",
-      "_server.browser-DGVgvs1X.js",
-      "_default-DCbknAzj.js",
-      "_sweetalert2.esm.all-DNNX3wqF.js",
-      "_Logout-aPqlrXnw.js",
-      "_index-hcUuAJQm.js"
+      "_CreateReactScript-ByDl3m9l.js",
+      "_Adminto-Cu7C99b0.js",
+      "_server.browser-CMbz63Ok.js",
+      "_default-BbN4y6Mb.js",
+      "_sweetalert2.esm.all-C32wHI3n.js",
+      "_Logout-DquunmIv.js",
+      "_index-D_o9jIE1.js"
     ]
   },
   "resources/js/Pages.jsx": {
-    "file": "assets/Pages-BxFVqJxs.js",
+    "file": "assets/Pages-C_WEDFHj.js",
     "name": "Pages",
     "src": "resources/js/Pages.jsx",
     "isEntry": true,
     "imports": [
-      "_CreateReactScript-BcJ_1dIf.js",
-      "_ReactAppend-C9YTv2Kp.js",
-      "_Adminto-CTBD2R7O.js",
-      "_Modal-CoxoxBf3.js",
-      "_Table-BnewQH8Q.js",
-      "_InputFormGroup-C0fgdl_M.js",
-      "_TextareaFormGroup-CeAm5sOA.js",
-      "_TippyButton-Cs85PR5F.js",
-      "_DxPanelButton-DZdKsllR.js",
-      "_sweetalert2.esm.all-DNNX3wqF.js",
-      "_SelectFormGroup-CLT0wIBy.js",
-      "_server.browser-DGVgvs1X.js",
-      "_Logout-aPqlrXnw.js",
-      "_default-DCbknAzj.js",
-      "_index-hcUuAJQm.js"
+      "_CreateReactScript-ByDl3m9l.js",
+      "_ReactAppend-C4mird4q.js",
+      "_Adminto-Cu7C99b0.js",
+      "_Modal-CJxY9cBG.js",
+      "_Table-BKM_Fad1.js",
+      "_InputFormGroup-DtEJO489.js",
+      "_TextareaFormGroup-DELmltYl.js",
+      "_TippyButton-B0I9pC_1.js",
+      "_DxPanelButton-Bfx2Xjlg.js",
+      "_sweetalert2.esm.all-C32wHI3n.js",
+      "_SelectFormGroup-CLE8XJj3.js",
+      "_server.browser-CMbz63Ok.js",
+      "_Logout-DquunmIv.js",
+      "_default-BbN4y6Mb.js",
+      "_index-D_o9jIE1.js"
     ]
   },
   "resources/js/Permissions.jsx": {
-    "file": "assets/Permissions-BuJpqJv7.js",
+    "file": "assets/Permissions-Di52LU3b.js",
     "name": "Permissions",
     "src": "resources/js/Permissions.jsx",
     "isEntry": true,
     "imports": [
-      "_CreateReactScript-BcJ_1dIf.js",
-      "_ReactAppend-C9YTv2Kp.js",
-      "_PermissionsRest-cE1g3pAO.js",
-      "_Adminto-CTBD2R7O.js",
-      "_Modal-CoxoxBf3.js",
-      "_Table-BnewQH8Q.js",
-      "_InputFormGroup-C0fgdl_M.js",
-      "_TextareaFormGroup-CeAm5sOA.js",
-      "_TippyButton-Cs85PR5F.js",
-      "_DxPanelButton-DZdKsllR.js",
-      "_Logout-aPqlrXnw.js",
-      "_sweetalert2.esm.all-DNNX3wqF.js",
-      "_server.browser-DGVgvs1X.js",
-      "_default-DCbknAzj.js",
-      "_index-hcUuAJQm.js"
+      "_CreateReactScript-ByDl3m9l.js",
+      "_ReactAppend-C4mird4q.js",
+      "_PermissionsRest-B60dIQaT.js",
+      "_Adminto-Cu7C99b0.js",
+      "_Modal-CJxY9cBG.js",
+      "_Table-BKM_Fad1.js",
+      "_InputFormGroup-DtEJO489.js",
+      "_TextareaFormGroup-DELmltYl.js",
+      "_TippyButton-B0I9pC_1.js",
+      "_DxPanelButton-Bfx2Xjlg.js",
+      "_Logout-DquunmIv.js",
+      "_sweetalert2.esm.all-C32wHI3n.js",
+      "_server.browser-CMbz63Ok.js",
+      "_default-BbN4y6Mb.js",
+      "_index-D_o9jIE1.js"
     ]
   },
   "resources/js/Plans.jsx": {
-    "file": "assets/Plans-JeU19xXR.js",
+    "file": "assets/Plans-BhxPTYNU.js",
     "name": "Plans",
     "src": "resources/js/Plans.jsx",
     "isEntry": true,
     "imports": [
-      "_CreateReactScript-BcJ_1dIf.js",
+      "_CreateReactScript-ByDl3m9l.js",
       "_Number2Currency-e57Tgsuk.js",
-      "_Logout-aPqlrXnw.js"
+      "_Logout-DquunmIv.js"
     ],
     "assets": [
       "home-desktop.png",
@@ -658,195 +658,195 @@
     ]
   },
   "resources/js/Processes.jsx": {
-    "file": "assets/Processes-Coth_JIb.js",
+    "file": "assets/Processes-CszyDA2m.js",
     "name": "Processes",
     "src": "resources/js/Processes.jsx",
     "isEntry": true,
     "imports": [
-      "_CreateReactScript-BcJ_1dIf.js",
-      "_Adminto-CTBD2R7O.js",
-      "_Modal-CoxoxBf3.js",
-      "_Table-BnewQH8Q.js",
-      "_InputFormGroup-C0fgdl_M.js",
-      "_TextareaFormGroup-CeAm5sOA.js",
-      "_sweetalert2.esm.all-DNNX3wqF.js",
-      "_DxPanelButton-DZdKsllR.js",
+      "_CreateReactScript-ByDl3m9l.js",
+      "_Adminto-Cu7C99b0.js",
+      "_Modal-CJxY9cBG.js",
+      "_Table-BKM_Fad1.js",
+      "_InputFormGroup-DtEJO489.js",
+      "_TextareaFormGroup-DELmltYl.js",
+      "_sweetalert2.esm.all-C32wHI3n.js",
+      "_DxPanelButton-Bfx2Xjlg.js",
       "_DxButton-CsjWvhyj.js",
-      "_Logout-aPqlrXnw.js",
-      "_server.browser-DGVgvs1X.js",
-      "_default-DCbknAzj.js",
-      "_index-hcUuAJQm.js"
+      "_Logout-DquunmIv.js",
+      "_server.browser-CMbz63Ok.js",
+      "_default-BbN4y6Mb.js",
+      "_index-D_o9jIE1.js"
     ]
   },
   "resources/js/Products.jsx": {
-    "file": "assets/Products-BMpggVOg.js",
+    "file": "assets/Products-D0IXjO_I.js",
     "name": "Products",
     "src": "resources/js/Products.jsx",
     "isEntry": true,
     "imports": [
-      "_CreateReactScript-BcJ_1dIf.js",
-      "_Adminto-CTBD2R7O.js",
-      "_Modal-CoxoxBf3.js",
-      "_server.browser-DGVgvs1X.js",
-      "_default-DCbknAzj.js",
-      "_InputFormGroup-C0fgdl_M.js",
-      "_TextareaFormGroup-CeAm5sOA.js",
-      "_sweetalert2.esm.all-DNNX3wqF.js",
+      "_CreateReactScript-ByDl3m9l.js",
+      "_Adminto-Cu7C99b0.js",
+      "_Modal-CJxY9cBG.js",
+      "_server.browser-CMbz63Ok.js",
+      "_default-BbN4y6Mb.js",
+      "_InputFormGroup-DtEJO489.js",
+      "_TextareaFormGroup-DELmltYl.js",
+      "_sweetalert2.esm.all-C32wHI3n.js",
       "_Number2Currency-e57Tgsuk.js",
-      "_Logout-aPqlrXnw.js",
-      "_index-hcUuAJQm.js"
+      "_Logout-DquunmIv.js",
+      "_index-D_o9jIE1.js"
     ]
   },
   "resources/js/Profile.jsx": {
-    "file": "assets/Profile-DxGgt6jq.js",
+    "file": "assets/Profile-CrntbNz6.js",
     "name": "Profile",
     "src": "resources/js/Profile.jsx",
     "isEntry": true,
     "imports": [
-      "_CreateReactScript-BcJ_1dIf.js",
-      "_Adminto-CTBD2R7O.js",
-      "_InputFormGroup-C0fgdl_M.js",
-      "_sweetalert2.esm.all-DNNX3wqF.js",
-      "_Logout-aPqlrXnw.js"
+      "_CreateReactScript-ByDl3m9l.js",
+      "_Adminto-Cu7C99b0.js",
+      "_InputFormGroup-DtEJO489.js",
+      "_sweetalert2.esm.all-C32wHI3n.js",
+      "_Logout-DquunmIv.js"
     ]
   },
   "resources/js/Projects.jsx": {
-    "file": "assets/Projects-urGkqnDo.js",
+    "file": "assets/Projects-CEtktJfQ.js",
     "name": "Projects",
     "src": "resources/js/Projects.jsx",
     "isEntry": true,
     "imports": [
-      "_CreateReactScript-BcJ_1dIf.js",
-      "_sweetalert2.esm.all-DNNX3wqF.js",
-      "_AssignUsersModal-DW9Ag7zs.js",
+      "_CreateReactScript-ByDl3m9l.js",
+      "_sweetalert2.esm.all-C32wHI3n.js",
+      "_AssignUsersModal-Dkalgl8c.js",
       "_Number2Currency-e57Tgsuk.js",
-      "_SetSelectValue-B_zgIiVh.js",
-      "_DateRange-DTptV567.js",
-      "_Adminto-CTBD2R7O.js",
-      "_Modal-CoxoxBf3.js",
-      "_Table-BnewQH8Q.js",
+      "_SetSelectValue-B3G3_8Rl.js",
+      "_DateRange-CELAF5u8.js",
+      "_Adminto-Cu7C99b0.js",
+      "_Modal-CJxY9cBG.js",
+      "_Table-BKM_Fad1.js",
       "_DxButton-CsjWvhyj.js",
-      "_InputFormGroup-C0fgdl_M.js",
-      "_TextareaFormGroup-CeAm5sOA.js",
-      "_DxBox-BCWnCHLn.js",
-      "_SelectFormGroup-CLT0wIBy.js",
-      "_DxPanelButton-DZdKsllR.js",
-      "_SubdomainsRest-D298trN9.js",
-      "_Dropdown-Bw4ZuCmK.js",
-      "_DropdownItem-BF05DXd3.js",
-      "_TippyButton-Cs85PR5F.js",
-      "_server.browser-DGVgvs1X.js",
-      "_Logout-aPqlrXnw.js",
-      "_default-DCbknAzj.js",
-      "_index-hcUuAJQm.js"
+      "_InputFormGroup-DtEJO489.js",
+      "_TextareaFormGroup-DELmltYl.js",
+      "_DxBox-CSnabE6g.js",
+      "_SelectFormGroup-CLE8XJj3.js",
+      "_DxPanelButton-Bfx2Xjlg.js",
+      "_SubdomainsRest-Xyv-Rsnw.js",
+      "_Dropdown-NF2SABu1.js",
+      "_DropdownItem-4Phh8VKH.js",
+      "_TippyButton-B0I9pC_1.js",
+      "_server.browser-CMbz63Ok.js",
+      "_Logout-DquunmIv.js",
+      "_default-BbN4y6Mb.js",
+      "_index-D_o9jIE1.js"
     ]
   },
   "resources/js/ProjectsArchived.jsx": {
-    "file": "assets/ProjectsArchived-Kaf5JSc8.js",
+    "file": "assets/ProjectsArchived-BxmLCDRQ.js",
     "name": "ProjectsArchived",
     "src": "resources/js/ProjectsArchived.jsx",
     "isEntry": true,
     "imports": [
-      "_CreateReactScript-BcJ_1dIf.js",
-      "_sweetalert2.esm.all-DNNX3wqF.js",
+      "_CreateReactScript-ByDl3m9l.js",
+      "_sweetalert2.esm.all-C32wHI3n.js",
       "_Number2Currency-e57Tgsuk.js",
-      "_Adminto-CTBD2R7O.js",
-      "_Table-BnewQH8Q.js",
+      "_Adminto-Cu7C99b0.js",
+      "_Table-BKM_Fad1.js",
       "_DxButton-CsjWvhyj.js",
-      "_DxBox-BCWnCHLn.js",
-      "_DateRange-DTptV567.js",
-      "_DxPanelButton-DZdKsllR.js",
-      "_ReactAppend-C9YTv2Kp.js",
-      "_Logout-aPqlrXnw.js",
-      "_server.browser-DGVgvs1X.js",
-      "_default-DCbknAzj.js",
-      "_index-hcUuAJQm.js"
+      "_DxBox-CSnabE6g.js",
+      "_DateRange-CELAF5u8.js",
+      "_DxPanelButton-Bfx2Xjlg.js",
+      "_ReactAppend-C4mird4q.js",
+      "_Logout-DquunmIv.js",
+      "_server.browser-CMbz63Ok.js",
+      "_default-BbN4y6Mb.js",
+      "_index-D_o9jIE1.js"
     ]
   },
   "resources/js/ProjectsDone.jsx": {
-    "file": "assets/ProjectsDone-DDAiNn9N.js",
+    "file": "assets/ProjectsDone-1whXXs4W.js",
     "name": "ProjectsDone",
     "src": "resources/js/ProjectsDone.jsx",
     "isEntry": true,
     "imports": [
-      "_CreateReactScript-BcJ_1dIf.js",
-      "_sweetalert2.esm.all-DNNX3wqF.js",
-      "_AssignUsersModal-DW9Ag7zs.js",
+      "_CreateReactScript-ByDl3m9l.js",
+      "_sweetalert2.esm.all-C32wHI3n.js",
+      "_AssignUsersModal-Dkalgl8c.js",
       "_Number2Currency-e57Tgsuk.js",
-      "_SetSelectValue-B_zgIiVh.js",
-      "_DateRange-DTptV567.js",
-      "_Adminto-CTBD2R7O.js",
-      "_Modal-CoxoxBf3.js",
-      "_Table-BnewQH8Q.js",
+      "_SetSelectValue-B3G3_8Rl.js",
+      "_DateRange-CELAF5u8.js",
+      "_Adminto-Cu7C99b0.js",
+      "_Modal-CJxY9cBG.js",
+      "_Table-BKM_Fad1.js",
       "_DxButton-CsjWvhyj.js",
-      "_InputFormGroup-C0fgdl_M.js",
-      "_TextareaFormGroup-CeAm5sOA.js",
-      "_DxBox-BCWnCHLn.js",
-      "_SelectFormGroup-CLT0wIBy.js",
-      "_DxPanelButton-DZdKsllR.js",
-      "_SubdomainsRest-D298trN9.js",
-      "_Dropdown-Bw4ZuCmK.js",
-      "_DropdownItem-BF05DXd3.js",
-      "_TippyButton-Cs85PR5F.js",
-      "_server.browser-DGVgvs1X.js",
-      "_Logout-aPqlrXnw.js",
-      "_default-DCbknAzj.js",
-      "_index-hcUuAJQm.js"
+      "_InputFormGroup-DtEJO489.js",
+      "_TextareaFormGroup-DELmltYl.js",
+      "_DxBox-CSnabE6g.js",
+      "_SelectFormGroup-CLE8XJj3.js",
+      "_DxPanelButton-Bfx2Xjlg.js",
+      "_SubdomainsRest-Xyv-Rsnw.js",
+      "_Dropdown-NF2SABu1.js",
+      "_DropdownItem-4Phh8VKH.js",
+      "_TippyButton-B0I9pC_1.js",
+      "_server.browser-CMbz63Ok.js",
+      "_Logout-DquunmIv.js",
+      "_default-BbN4y6Mb.js",
+      "_index-D_o9jIE1.js"
     ]
   },
   "resources/js/Repository.jsx": {
-    "file": "assets/Repository-DdzMVt05.js",
+    "file": "assets/Repository-CRsURoff.js",
     "name": "Repository",
     "src": "resources/js/Repository.jsx",
     "isEntry": true,
     "imports": [
-      "_CreateReactScript-BcJ_1dIf.js",
-      "_Adminto-CTBD2R7O.js",
-      "_RepositoryDropzone-CfCBPxiP.js",
-      "_sweetalert2.esm.all-DNNX3wqF.js",
-      "_Logout-aPqlrXnw.js",
-      "_Modal-CoxoxBf3.js",
-      "_InputFormGroup-C0fgdl_M.js"
+      "_CreateReactScript-ByDl3m9l.js",
+      "_Adminto-Cu7C99b0.js",
+      "_RepositoryDropzone-B_6LWTNb.js",
+      "_sweetalert2.esm.all-C32wHI3n.js",
+      "_Logout-DquunmIv.js",
+      "_Modal-CJxY9cBG.js",
+      "_InputFormGroup-DtEJO489.js"
     ]
   },
   "resources/js/Roles.jsx": {
-    "file": "assets/Roles-0O_ULrbn.js",
+    "file": "assets/Roles-CKcXH8xf.js",
     "name": "Roles",
     "src": "resources/js/Roles.jsx",
     "isEntry": true,
     "imports": [
-      "_CreateReactScript-BcJ_1dIf.js",
-      "_ReactAppend-C9YTv2Kp.js",
-      "_PermissionsRest-cE1g3pAO.js",
-      "_Adminto-CTBD2R7O.js",
-      "_Modal-CoxoxBf3.js",
-      "_Table-BnewQH8Q.js",
-      "_InputFormGroup-C0fgdl_M.js",
-      "_TextareaFormGroup-CeAm5sOA.js",
-      "_TippyButton-Cs85PR5F.js",
-      "_DxPanelButton-DZdKsllR.js",
-      "_sweetalert2.esm.all-DNNX3wqF.js",
-      "_Logout-aPqlrXnw.js",
-      "_server.browser-DGVgvs1X.js",
-      "_default-DCbknAzj.js",
-      "_index-hcUuAJQm.js"
+      "_CreateReactScript-ByDl3m9l.js",
+      "_ReactAppend-C4mird4q.js",
+      "_PermissionsRest-B60dIQaT.js",
+      "_Adminto-Cu7C99b0.js",
+      "_Modal-CJxY9cBG.js",
+      "_Table-BKM_Fad1.js",
+      "_InputFormGroup-DtEJO489.js",
+      "_TextareaFormGroup-DELmltYl.js",
+      "_TippyButton-B0I9pC_1.js",
+      "_DxPanelButton-Bfx2Xjlg.js",
+      "_sweetalert2.esm.all-C32wHI3n.js",
+      "_Logout-DquunmIv.js",
+      "_server.browser-CMbz63Ok.js",
+      "_default-BbN4y6Mb.js",
+      "_index-D_o9jIE1.js"
     ]
   },
   "resources/js/Settings.jsx": {
-    "file": "assets/Settings-CUF2sDCi.js",
+    "file": "assets/Settings-JU-RaRDL.js",
     "name": "Settings",
     "src": "resources/js/Settings.jsx",
     "isEntry": true,
     "imports": [
-      "_CreateReactScript-BcJ_1dIf.js",
-      "_Adminto-CTBD2R7O.js",
-      "_Modal-CoxoxBf3.js",
-      "_QuillFormGroup-DEm37FgZ.js",
-      "_SelectFormGroup-CLT0wIBy.js",
-      "_index-hcUuAJQm.js",
-      "_TextareaFormGroup-CeAm5sOA.js",
-      "_Logout-aPqlrXnw.js",
-      "_sweetalert2.esm.all-DNNX3wqF.js"
+      "_CreateReactScript-ByDl3m9l.js",
+      "_Adminto-Cu7C99b0.js",
+      "_Modal-CJxY9cBG.js",
+      "_QuillFormGroup-YUMtaqmS.js",
+      "_SelectFormGroup-CLE8XJj3.js",
+      "_index-D_o9jIE1.js",
+      "_TextareaFormGroup-DELmltYl.js",
+      "_Logout-DquunmIv.js",
+      "_sweetalert2.esm.all-C32wHI3n.js"
     ],
     "css": [
       "Settings.css",
@@ -854,146 +854,146 @@
     ]
   },
   "resources/js/Statuses.jsx": {
-    "file": "assets/Statuses-S7t48Uig.js",
+    "file": "assets/Statuses-C3nBE46I.js",
     "name": "Statuses",
     "src": "resources/js/Statuses.jsx",
     "isEntry": true,
     "imports": [
-      "_CreateReactScript-BcJ_1dIf.js",
-      "_SetSelectValue-B_zgIiVh.js",
-      "_StatusesRest-BnpSvPZO.js",
-      "_Adminto-CTBD2R7O.js",
-      "_Modal-CoxoxBf3.js",
-      "_InputFormGroup-C0fgdl_M.js",
-      "_TextareaFormGroup-CeAm5sOA.js",
-      "_sweetalert2.esm.all-DNNX3wqF.js",
-      "_Logout-aPqlrXnw.js"
+      "_CreateReactScript-ByDl3m9l.js",
+      "_SetSelectValue-B3G3_8Rl.js",
+      "_StatusesRest-CWC7l2Ic.js",
+      "_Adminto-Cu7C99b0.js",
+      "_Modal-CJxY9cBG.js",
+      "_InputFormGroup-DtEJO489.js",
+      "_TextareaFormGroup-DELmltYl.js",
+      "_sweetalert2.esm.all-C32wHI3n.js",
+      "_Logout-DquunmIv.js"
     ]
   },
   "resources/js/Tables.jsx": {
-    "file": "assets/Tables-KsTfJTNp.js",
+    "file": "assets/Tables-a92pXu_o.js",
     "name": "Tables",
     "src": "resources/js/Tables.jsx",
     "isEntry": true,
     "imports": [
-      "_CreateReactScript-BcJ_1dIf.js",
-      "_ReactAppend-C9YTv2Kp.js",
-      "_Adminto-CTBD2R7O.js",
-      "_Modal-CoxoxBf3.js",
-      "_Table-BnewQH8Q.js",
-      "_InputFormGroup-C0fgdl_M.js",
-      "_TextareaFormGroup-CeAm5sOA.js",
-      "_TippyButton-Cs85PR5F.js",
-      "_DxPanelButton-DZdKsllR.js",
-      "_Logout-aPqlrXnw.js",
-      "_sweetalert2.esm.all-DNNX3wqF.js",
-      "_server.browser-DGVgvs1X.js",
-      "_default-DCbknAzj.js",
-      "_index-hcUuAJQm.js"
+      "_CreateReactScript-ByDl3m9l.js",
+      "_ReactAppend-C4mird4q.js",
+      "_Adminto-Cu7C99b0.js",
+      "_Modal-CJxY9cBG.js",
+      "_Table-BKM_Fad1.js",
+      "_InputFormGroup-DtEJO489.js",
+      "_TextareaFormGroup-DELmltYl.js",
+      "_TippyButton-B0I9pC_1.js",
+      "_DxPanelButton-Bfx2Xjlg.js",
+      "_Logout-DquunmIv.js",
+      "_sweetalert2.esm.all-C32wHI3n.js",
+      "_server.browser-CMbz63Ok.js",
+      "_default-BbN4y6Mb.js",
+      "_index-D_o9jIE1.js"
     ]
   },
   "resources/js/Taskboard.jsx": {
-    "file": "assets/Taskboard-C6wEKE_L.js",
+    "file": "assets/Taskboard-CsxxSXWS.js",
     "name": "Taskboard",
     "src": "resources/js/Taskboard.jsx",
     "isEntry": true,
     "imports": [
-      "_CreateReactScript-BcJ_1dIf.js",
-      "_Adminto-CTBD2R7O.js",
-      "_DateRange-DTptV567.js",
-      "_Logout-aPqlrXnw.js",
-      "_sweetalert2.esm.all-DNNX3wqF.js",
-      "_server.browser-DGVgvs1X.js"
+      "_CreateReactScript-ByDl3m9l.js",
+      "_Adminto-Cu7C99b0.js",
+      "_DateRange-CELAF5u8.js",
+      "_Logout-DquunmIv.js",
+      "_sweetalert2.esm.all-C32wHI3n.js",
+      "_server.browser-CMbz63Ok.js"
     ]
   },
   "resources/js/Tasks.jsx": {
-    "file": "assets/Tasks-Brf1JLTP.js",
+    "file": "assets/Tasks-Cpc7BGep.js",
     "name": "Tasks",
     "src": "resources/js/Tasks.jsx",
     "isEntry": true,
     "imports": [
-      "_CreateReactScript-BcJ_1dIf.js",
-      "_TasksRest-RKoefd_G.js",
-      "_Adminto-CTBD2R7O.js",
-      "_sweetalert2.esm.all-DNNX3wqF.js",
-      "_Table-BnewQH8Q.js",
-      "_ReactAppend-C9YTv2Kp.js",
-      "_DxBox-BCWnCHLn.js",
-      "_Dropdown-Bw4ZuCmK.js",
-      "_DropdownItem-BF05DXd3.js",
-      "_DxPanelButton-DZdKsllR.js",
-      "_Logout-aPqlrXnw.js",
-      "_server.browser-DGVgvs1X.js",
-      "_default-DCbknAzj.js",
-      "_index-hcUuAJQm.js"
+      "_CreateReactScript-ByDl3m9l.js",
+      "_TasksRest-DTvQCP6V.js",
+      "_Adminto-Cu7C99b0.js",
+      "_sweetalert2.esm.all-C32wHI3n.js",
+      "_Table-BKM_Fad1.js",
+      "_ReactAppend-C4mird4q.js",
+      "_DxBox-CSnabE6g.js",
+      "_Dropdown-NF2SABu1.js",
+      "_DropdownItem-4Phh8VKH.js",
+      "_DxPanelButton-Bfx2Xjlg.js",
+      "_Logout-DquunmIv.js",
+      "_server.browser-CMbz63Ok.js",
+      "_default-BbN4y6Mb.js",
+      "_index-D_o9jIE1.js"
     ],
     "css": [
       "coming-soon.css"
     ]
   },
   "resources/js/Types.jsx": {
-    "file": "assets/Types-C19nIPr9.js",
+    "file": "assets/Types-DHhYK3cZ.js",
     "name": "Types",
     "src": "resources/js/Types.jsx",
     "isEntry": true,
     "imports": [
-      "_CreateReactScript-BcJ_1dIf.js",
-      "_ReactAppend-C9YTv2Kp.js",
-      "_SetSelectValue-B_zgIiVh.js",
-      "_Adminto-CTBD2R7O.js",
-      "_Modal-CoxoxBf3.js",
-      "_Table-BnewQH8Q.js",
-      "_InputFormGroup-C0fgdl_M.js",
-      "_TextareaFormGroup-CeAm5sOA.js",
-      "_TippyButton-Cs85PR5F.js",
-      "_DxPanelButton-DZdKsllR.js",
-      "_Logout-aPqlrXnw.js",
-      "_sweetalert2.esm.all-DNNX3wqF.js",
-      "_server.browser-DGVgvs1X.js",
-      "_default-DCbknAzj.js",
-      "_index-hcUuAJQm.js"
+      "_CreateReactScript-ByDl3m9l.js",
+      "_ReactAppend-C4mird4q.js",
+      "_SetSelectValue-B3G3_8Rl.js",
+      "_Adminto-Cu7C99b0.js",
+      "_Modal-CJxY9cBG.js",
+      "_Table-BKM_Fad1.js",
+      "_InputFormGroup-DtEJO489.js",
+      "_TextareaFormGroup-DELmltYl.js",
+      "_TippyButton-B0I9pC_1.js",
+      "_DxPanelButton-Bfx2Xjlg.js",
+      "_Logout-DquunmIv.js",
+      "_sweetalert2.esm.all-C32wHI3n.js",
+      "_server.browser-CMbz63Ok.js",
+      "_default-BbN4y6Mb.js",
+      "_index-D_o9jIE1.js"
     ]
   },
   "resources/js/Users.jsx": {
-    "file": "assets/Users-BLZCGhTJ.js",
+    "file": "assets/Users-BVm41jeg.js",
     "name": "Users",
     "src": "resources/js/Users.jsx",
     "isEntry": true,
     "imports": [
-      "_CreateReactScript-BcJ_1dIf.js",
-      "_Adminto-CTBD2R7O.js",
-      "_Modal-CoxoxBf3.js",
-      "_sweetalert2.esm.all-DNNX3wqF.js",
-      "_UsersRest-Cmh1KPuu.js",
-      "_Logout-aPqlrXnw.js"
+      "_CreateReactScript-ByDl3m9l.js",
+      "_Adminto-Cu7C99b0.js",
+      "_Modal-CJxY9cBG.js",
+      "_sweetalert2.esm.all-C32wHI3n.js",
+      "_UsersRest-CqbzP-V6.js",
+      "_Logout-DquunmIv.js"
     ]
   },
   "resources/js/Views.jsx": {
-    "file": "assets/Views-gnmRJEVz.js",
+    "file": "assets/Views-B8DM8L9X.js",
     "name": "Views",
     "src": "resources/js/Views.jsx",
     "isEntry": true,
     "imports": [
-      "_CreateReactScript-BcJ_1dIf.js",
-      "_Adminto-CTBD2R7O.js",
-      "_Modal-CoxoxBf3.js",
-      "_InputFormGroup-C0fgdl_M.js",
-      "_TextareaFormGroup-CeAm5sOA.js",
-      "_Logout-aPqlrXnw.js",
-      "_sweetalert2.esm.all-DNNX3wqF.js"
+      "_CreateReactScript-ByDl3m9l.js",
+      "_Adminto-Cu7C99b0.js",
+      "_Modal-CJxY9cBG.js",
+      "_InputFormGroup-DtEJO489.js",
+      "_TextareaFormGroup-DELmltYl.js",
+      "_Logout-DquunmIv.js",
+      "_sweetalert2.esm.all-C32wHI3n.js"
     ]
   },
   "resources/js/Webhooks.jsx": {
-    "file": "assets/Webhooks-BFIfYEjp.js",
+    "file": "assets/Webhooks-CmMQjZw7.js",
     "name": "Webhooks",
     "src": "resources/js/Webhooks.jsx",
     "isEntry": true,
     "imports": [
-      "_CreateReactScript-BcJ_1dIf.js",
-      "_Adminto-CTBD2R7O.js",
-      "_sweetalert2.esm.all-DNNX3wqF.js",
-      "_Modal-CoxoxBf3.js",
-      "_Logout-aPqlrXnw.js"
+      "_CreateReactScript-ByDl3m9l.js",
+      "_Adminto-Cu7C99b0.js",
+      "_sweetalert2.esm.all-C32wHI3n.js",
+      "_Modal-CJxY9cBG.js",
+      "_Logout-DquunmIv.js"
     ]
   },
   "resources/js/components/svg/google.svg": {
