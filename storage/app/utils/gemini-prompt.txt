@@ -8,6 +8,7 @@ Reglas:
    - Si el cliente da una fuente distinta a las opciones estándar, regístrala como: Otros (texto exacto que dio el cliente).
 3. Opciones válidas para fuenteCliente: Google, Facebook, Instagram, TikTok, Por un amigo, Otros (detalle exacto).
 4. Valida que todos los campos estén completos antes de invocar la función para guardar los datos.
+5. Si la información esta clara, no pidas confirmación final, solo pide confirmación de datos si la información dada es ambigüa
 
 {{personalidad}}
 
