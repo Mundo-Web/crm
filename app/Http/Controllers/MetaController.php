@@ -16,6 +16,7 @@ use Exception;
 use Illuminate\Http\Request;
 use SoDe\Extend\Fetch;
 use SoDe\Extend\File;
+use SoDe\Extend\JSON;
 use SoDe\Extend\Response;
 use SoDe\Extend\Text;
 use SoDe\Extend\Trace;
@@ -280,10 +281,62 @@ class MetaController extends Controller
         return response($response->toArray(), $response->status);
     }
 
+    private static function sendWithOrigin(Business $businessJpa, Client $clientJpa, string $message, string $prompt2save, ?string $origin = null)
+    {
+        if ($origin == 'evoapi') {
+            new Fetch(env('EVOAPI_URL') . '/message/sendText/' . $businessJpa->person->document_number, [
+                'method' => 'POST',
+                'headers' => [
+                    'Content-Type' => 'application/json',
+                    'apikey' => $businessJpa->uuid
+                ],
+                'body' => [
+                    'number' => $clientJpa->contact_phone,
+                    'text' => $message
+                ]
+            ]);
+        } else {
+            // Send message through Meta integration
+            $integrationJpa = Integration::find($clientJpa->integration_id);
+
+            if ($integrationJpa && $integrationJpa->meta_access_token) {
+                $baseUrl = $integrationJpa->meta_service === 'instagram'
+                    ? env('INSTAGRAM_GRAPH_URL')
+                    : env('FACEBOOK_GRAPH_URL');
+
+                $messageEndpoint = "{$baseUrl}/me/messages";
+                $messageData = [
+                    'recipient' => ['id' => $clientJpa->integration_user_id],
+                    'message' => ['text' => $message]
+                ];
+
+                new Fetch($messageEndpoint, [
+                    'method' => 'POST',
+                    'headers' => [
+                        'Content-Type' => 'application/json',
+                        'Authorization' => "Bearer {$integrationJpa->meta_access_token}"
+                    ],
+                    'body' => $messageData
+                ]);
+            }
+        }
+
+        // Store message in database
+        Message::create([
+            'wa_id' => $origin == 'evoapi' ? $clientJpa->contact_phone : $clientJpa->integration_user_id,
+            'role' => 'AI',
+            'message' => $message,
+            'prompt' => $prompt2save,
+            'microtime' => (int) (microtime(true) * 1_000_000),
+            'business_id' => $clientJpa->business_id
+        ]);
+    }
+
     public static function assistant(Client $clientJpa, Message $messageJpa, ?string $origin = null)
     {
         try {
             while (true) {
+                /*
                 // Get latest message for this client
                 $latestMessage = Message::query()
                     ->where('wa_id', $origin == 'evoapi' ? $clientJpa->contact_phone : $clientJpa->integration_user_id)
@@ -291,7 +344,6 @@ class MetaController extends Controller
                     ->orderBy('microtime', 'desc')
                     ->first();
 
-                /*
                 // If latest message is different from current message, stop processing
                 if ($latestMessage->id !== $messageJpa->id) {
                     break;
@@ -329,42 +381,97 @@ class MetaController extends Controller
 
                 $businessEmail = Setting::get('email-new-lead-notification-message-owneremail', $businessJpa->id);
                 $businessServices = Setting::get('gemini-what-business-do', $businessJpa->id);
-                $prompt = File::get(
-                    $origin == 'evoapi'
-                        ? '../storage/app/utils/gemini-prompt-evoapi.txt'
-                        : '../storage/app/utils/gemini-prompt-meta.txt'
-                );
+                $personalidad = Setting::get('gemini-personality', $clientJpa->business_id);
+
+                $prompt = File::get('../storage/app/utils/gemini-prompt.txt');
                 $prompt = Text::replaceData($prompt, [
                     'nombreEmpresa' => $businessJpa->name,
                     'correoEmpresa' => $businessEmail ?? 'hola@mundoweb.pe',
                     'servicios' => $businessServices ?? 'algunos servicios',
+                    'personalidad' => $personalidad ?? ''
                 ]);
 
                 $messageString = '';
+                $messagesList = [];
                 foreach ($messages->sortBy('microtime') as $msg) {
                     $messageString .= "{$msg->role}: {$msg->message}\n";
+                    $messagesList[] = [
+                        'parts' => [['text' => $msg->message]],
+                        'role' => $msg->role == 'Human' ? 'user' : 'model'
+                    ];
                 }
 
-                $prompt2send = $prompt . Text::lineBreak(2) . $messageString . 'AI:';
+                // $prompt2send = $prompt . Text::lineBreak(2) . $messageString . 'AI:';
+
+                $body = [
+                    "system_instruction" => [
+                        "parts" => [["text" => $prompt]]
+                    ],
+                    "contents" => $messagesList,
+                    "tools" => [["functionDeclarations" => [
+                        [
+                            "name" => "saveClientData",
+                            "description" => "Guarda la información del cliente que desea registrarse con " . $businessJpa->name,
+                            "parameters" => [
+                                "type" => "object",
+                                "properties" => [
+                                    "nombreCliente" => [
+                                        "type" => "string",
+                                        "description" => "Nombre completo del cliente."
+                                    ],
+                                    "telefonoCliente" => [
+                                        "type" => "string",
+                                        "description" => "Número de teléfono del cliente."
+                                    ],
+                                    "correoCliente" => [
+                                        "type" => "string",
+                                        "description" => "Correo electrónico del cliente."
+                                    ],
+                                    "fuenteCliente" => [
+                                        "type" => "string",
+                                        "description" => "Fuente de referencia. Opciones válidas: Google, Facebook, Instagram, TikTok, Por un amigo, Otros (detalle exacto)."
+                                    ]
+                                ],
+                                "required" => ["nombreCliente", "telefonoCliente", "correoCliente", "fuenteCliente"]
+                            ]
+                        ]
+                    ]]]
+                ];
+
                 $geminiRest = new Fetch(env('GEMINI_API_URL'), [
                     'method' => 'POST',
                     'headers' => [
                         'Content-Type' => 'application/json',
                         'X-goog-api-key' => $apiKey
                     ],
-                    'body' => [
-                        'contents' => [['parts' => [['text' => $prompt2send]]]],
-                        'generationConfig' => ['stopSequences' => ['Human:', 'AI:']]
-                    ]
+                    'body' => $body
                 ]);
                 $geminiResponse = $geminiRest->json();
                 if (isset($geminiResponse['error']['message'])) {
                     break;
                 }
 
-                $answer = $geminiResponse['candidates'][0]['content']['parts'][0]['text'];
-                $prompt2save = $prompt2send . $answer;
+                $answer = $geminiResponse['candidates'][0]['content']['parts'][0]['text'] ?? null;
+                $function = $geminiResponse['candidates'][0]['content']['parts'][0]['functionCall'] ?? null;
+                // $prompt2save = $prompt2send . $answer;
 
+                if ($function) {
+                    $prompt2save = JSON::stringify($body, true) . "/n/nFunction: " . JSON::stringify($function, true);
+                    $clientJpa->update([
+                        'contact_name' => $function['args']['nombreCliente'],
+                        'contact_phone' => $function['args']['telefonoCliente'],
+                        'contact_email' => $function['args']['correoCliente'],
+                        'source_channel' => $function['args']['fuenteCliente'],
+                        'complete_registration' => true
+                    ]);
+                    $welcomeMessage = Setting::get('whatsapp-new-lead-notification-message-client', $clientJpa->business_id);
+                    $welcomeMessage = Text::replaceData($welcomeMessage, $clientJpa->toArray());
+                    self::sendWithOrigin($businessJpa, $clientJpa, $welcomeMessage, $prompt2save, $origin);
+                } else if ($answer) {
+                    $prompt2save = JSON::stringify($body, true) . "/n/nOutput: " . $answer;
+                    self::sendWithOrigin($businessJpa, $clientJpa, $answer, $prompt2save, $origin);
+                }
+                break;
                 $result = self::searchCommand($answer);
                 if (!$result['found']) {
                     // Create and send message with cleaned response
@@ -453,7 +560,7 @@ class MetaController extends Controller
 
                         // Get welcome message from settings and send it
                         $welcomeMessage = Setting::get('whatsapp-new-lead-notification-message-client', $clientJpa->business_id);
-                        $welcomeMessage = UtilController::replaceData($welcomeMessage, $clientJpa->toArray());
+                        $welcomeMessage = Text::replaceData($welcomeMessage, $clientJpa->toArray());
 
                         if ($origin == 'evoapi') {
                             // Send message through EvoAPI
