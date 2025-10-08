@@ -281,6 +281,26 @@ class MetaController extends Controller
         return response($response->toArray(), $response->status);
     }
 
+    private static function timeToSleep(string $message): int
+    {
+        // Contar palabras (usando str_word_count para separar correctamente)
+        $numPalabras = str_word_count($message);
+
+        // Velocidad promedio: 2.5 palabras/segundo → 400ms por palabra
+        $tiempoBase = $numPalabras * 400;
+
+        // Aleatoriedad ±0–500ms
+        $random = rand(-500, 500);
+
+        // Calcular total en milisegundos
+        $tiempo = $tiempoBase + $random;
+
+        // Limitar entre 0ms y 30000ms (30s)
+        $tiempo = max(0, min($tiempo, 30000));
+
+        return $tiempo;
+    }
+
     private static function sendWithOrigin(Business $businessJpa, Client $clientJpa, string $message, string $prompt2save, ?string $origin = null)
     {
         if ($origin == 'evoapi') {
@@ -292,7 +312,8 @@ class MetaController extends Controller
                 ],
                 'body' => [
                     'number' => $clientJpa->contact_phone,
-                    'text' => $message
+                    'text' => $message,
+                    'delay' => self::timeToSleep($message)
                 ]
             ]);
         } else {
