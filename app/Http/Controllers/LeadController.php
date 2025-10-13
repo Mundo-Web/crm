@@ -182,6 +182,7 @@ class LeadController extends BasicController
         $body['time'] = Trace::getDate('time');
         $body['ip'] = $request->ip();
         $body['complete_registration'] = true;
+        
         return $body;
     }
 
@@ -348,6 +349,7 @@ class LeadController extends BasicController
             $leadJpa = Client::find($request->lead);
             if ($leadJpa->business_id != Auth::user()->business_id) throw new Exception('Este lead no pertenece a tu empresa');
             $leadJpa->complete_registration = true;
+            if ($leadJpa->form_answers) $leadJpa->complete_form = true;
             StatusController::updateStatus4Lead($leadJpa, $request->method() != 'DELETE');
 
             $leadJpa->save();

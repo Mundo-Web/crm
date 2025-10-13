@@ -299,7 +299,7 @@ const Table = ({ title, gridRef, rest, columns, toolBar, masterDetail, filterVal
               exportable={exportable}
               exportableName={text.toLowerCase()}
               customizeCell={customizeCell}
-              reloadWith={[...reloadWith, activeRestIndex]}
+              reloadWith={[...(reloadWith ?? []), activeRestIndex]}
               height={height}
               keyExpr={keyExpr}
               onSelectionChanged={(props) => {
