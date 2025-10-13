@@ -242,6 +242,13 @@ const OffCanvas = ({ offCanvasRef, dataLoaded, setDataLoaded, defaultMessages, s
               if (content.startsWith('/attachment:')) {
                 attachment = content.split('\n')[0]
               }
+              if (message.role == 'Form') {
+                return <li>
+                  <div class="chat-day-title" bis_skin_checked="1">
+                    <small class="title badge badge-soft-dark rounded-pill">{content}</small>
+                  </div>
+                </li>
+              }
               return <li key={i} className={message.role == 'Human' ? '' : 'odd'}>
                 <div className="message-list">
                   <div className="chat-avatar">
@@ -369,7 +376,7 @@ const OffCanvas = ({ offCanvasRef, dataLoaded, setDataLoaded, defaultMessages, s
           <textarea ref={inputMessageRef}
             className='form-control w-100'
             placeholder='Ingrese su mensaje aqui'
-            rows={1} 
+            rows={1}
             style={{ minHeight: 27, fieldSizing: 'content' }}
             disabled={isSending}
             required

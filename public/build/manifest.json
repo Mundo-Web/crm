@@ -1,7 +1,7 @@
 {
-  "_Adminto-!~{00A}~.js": {
+  "_Adminto-!~{00B}~.js": {
     "file": "Adminto.css",
-    "src": "_Adminto-!~{00A}~.js"
+    "src": "_Adminto-!~{00B}~.js"
   },
   "_Adminto-Cu7C99b0.js": {
     "file": "assets/Adminto-Cu7C99b0.js",
@@ -154,9 +154,9 @@
       "_CreateReactScript-ByDl3m9l.js"
     ]
   },
-  "_RepositoryDropzone-!~{00_}~.js": {
+  "_RepositoryDropzone-!~{00$}~.js": {
     "file": "RepositoryDropzone.css",
-    "src": "_RepositoryDropzone-!~{00_}~.js"
+    "src": "_RepositoryDropzone-!~{00$}~.js"
   },
   "_RepositoryDropzone-B_6LWTNb.js": {
     "file": "assets/RepositoryDropzone-B_6LWTNb.js",
@@ -240,13 +240,13 @@
       "_Adminto-Cu7C99b0.js"
     ]
   },
-  "_coming-soon-!~{015}~.js": {
+  "_coming-soon-!~{016}~.js": {
     "file": "coming-soon.css",
-    "src": "_coming-soon-!~{015}~.js"
+    "src": "_coming-soon-!~{016}~.js"
   },
-  "_default-!~{00N}~.js": {
+  "_default-!~{00O}~.js": {
     "file": "default.css",
-    "src": "_default-!~{00N}~.js"
+    "src": "_default-!~{00O}~.js"
   },
   "_default-BbN4y6Mb.js": {
     "file": "assets/default-BbN4y6Mb.js",
@@ -273,9 +273,9 @@
       "_CreateReactScript-ByDl3m9l.js"
     ]
   },
-  "_sweetalert2.esm.all-!~{00C}~.js": {
+  "_sweetalert2.esm.all-!~{00D}~.js": {
     "file": "sweetalert2.esm.css",
-    "src": "_sweetalert2.esm.all-!~{00C}~.js"
+    "src": "_sweetalert2.esm.all-!~{00D}~.js"
   },
   "_sweetalert2.esm.all-C32wHI3n.js": {
     "file": "assets/sweetalert2.esm.all-C32wHI3n.js",
@@ -392,6 +392,18 @@
     "file": "assets/Calendar-CH_Gw4wC.js",
     "name": "Calendar",
     "src": "resources/js/Calendar.jsx",
+    "isEntry": true,
+    "imports": [
+      "_CreateReactScript-ByDl3m9l.js",
+      "_Adminto-Cu7C99b0.js",
+      "_Logout-DquunmIv.js",
+      "_sweetalert2.esm.all-C32wHI3n.js"
+    ]
+  },
+  "resources/js/Chatrucho.jsx": {
+    "file": "assets/Chatrucho-DqI1OKOR.js",
+    "name": "Chatrucho",
+    "src": "resources/js/Chatrucho.jsx",
     "isEntry": true,
     "imports": [
       "_CreateReactScript-ByDl3m9l.js",
@@ -528,7 +540,7 @@
     ]
   },
   "resources/js/Leads.jsx": {
-    "file": "assets/Leads-g8AlP0qb.js",
+    "file": "assets/Leads-DP0xzs4j.js",
     "name": "Leads",
     "src": "resources/js/Leads.jsx",
     "isEntry": true,

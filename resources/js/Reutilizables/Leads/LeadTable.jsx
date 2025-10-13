@@ -295,18 +295,32 @@ const LeadTable = ({ gridRef, cardClass, otherGridRef, rest, can, defaultLeadSta
                 }
               </div>
             </div>
-            {
-              completeRegistration &&
-              <Tippy content={data.complete_registration ? 'Registro manual/completo' : 'Registro incompleto'}>
-                <span className={data.complete_registration ? 'text-success' : 'text-muted'}>
-                  {
-                    data.complete_registration
-                      ? <i className="mdi mdi-account-check"></i>
-                      : <i className="mdi mdi-account-clock"></i>
-                  }
-                </span>
-              </Tippy>
-            }
+            <div className="d-flex gap-1">
+              {
+                completeRegistration &&
+                <Tippy content={data.complete_registration ? 'Registro manual/completo' : 'Registro incompleto'}>
+                  <span className={data.complete_registration ? 'text-success' : 'text-muted'}>
+                    {
+                      data.complete_registration
+                        ? <i className="mdi mdi-account-check"></i>
+                        : <i className="mdi mdi-account-clock"></i>
+                    }
+                  </span>
+                </Tippy>
+              }
+              {
+                completeRegistration && data.complete_form !== null &&
+                <Tippy content={data.complete_form ? 'Formulario completado' : 'Formulario incompleto'}>
+                  <span className={data.complete_form ? 'text-success' : 'text-muted'}>
+                    {
+                      data.complete_form
+                        ? <i className="mdi mdi-file-check"></i>
+                        : <i className="mdi mdi-file-clock"></i>
+                    }
+                  </span>
+                </Tippy>
+              }
+            </div>
           </div>)
         },
         fixed: true,

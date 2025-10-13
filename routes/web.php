@@ -3,6 +3,7 @@
 use App\Http\Controllers\ApikeyController;
 use App\Http\Controllers\ArchivedController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\ChatruchoController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\DefaultMessageController;
 use App\Http\Controllers\KPILeadsController;
@@ -91,6 +92,8 @@ Route::middleware(['auth', 'firstTime', 'hasPlan'])->group(function () {
     Route::get('/webhooks', [WebhookController::class, 'reactView'])->name('Webhooks.jsx');
     Route::get('/types', [TypeController::class, 'reactView'])->name('Types.jsx');
     Route::get('/settings', [SettingController::class, 'reactView'])->name('Settings.jsx');
+
+    Route::get('/chatrucho', [ChatruchoController::class, 'reactView'])->name('Chatrucho.jsx');
 });
 
 if (env('APP_ENV') === 'local') {

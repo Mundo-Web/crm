@@ -62,6 +62,18 @@ class Client extends Model
         'integration_id',
         'integration_user_id',
         'source_channel',
+        'form_answers',
+        'complete_form',
+    ];
+
+    protected $casts = [
+        'form_answers' => 'array',
+        'complete_registration' => 'boolean',
+        'complete_form' => 'boolean',
+    ];
+    
+    protected $hidden = [
+        // 'business_id'
     ];
 
     static function getFields()
@@ -81,10 +93,6 @@ class Client extends Model
             ['field' => 'workers', 'name' => 'N° Trabajadores'],
         ];
     }
-
-    protected $hidden = [
-        // 'business_id'
-    ];
 
     public function creator()
     {

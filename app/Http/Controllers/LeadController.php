@@ -73,18 +73,18 @@ class LeadController extends BasicController
 
         $question = Setting::get('gemini-extra-questions');
 
-            $hasForms = false;
-            if ($question && is_string($question)) {
-                $decoded = json_decode($question, true);
-                if (is_array($decoded)) {
-                    foreach ($decoded as $form) {
-                        if (isset($form['questions']) && is_array($form['questions']) && count($form['questions']) > 0) {
-                            $hasForms = true;
-                            break;
-                        }
+        $hasForms = false;
+        if ($question && is_string($question)) {
+            $decoded = json_decode($question, true);
+            if (is_array($decoded)) {
+                foreach ($decoded as $form) {
+                    if (isset($form['questions']) && is_array($form['questions']) && count($form['questions']) > 0) {
+                        $hasForms = true;
+                        break;
                     }
                 }
             }
+        }
 
         return [
             'lead' => $request->lead,
