@@ -309,7 +309,7 @@ const LeadTable = ({ gridRef, cardClass, otherGridRef, rest, can, defaultLeadSta
                 </Tippy>
               }
               {
-                completeRegistration && data.complete_form !== null &&
+                completeRegistration && data.form_answers !== null &&
                 <Tippy content={data.complete_form ? 'Formulario completado' : 'Formulario incompleto'}>
                   <span className={data.complete_form ? 'text-success' : 'text-muted'}>
                     {

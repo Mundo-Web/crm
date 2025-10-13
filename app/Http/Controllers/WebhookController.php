@@ -90,8 +90,7 @@ class WebhookController extends BasicController
                 'origin' => 'WhatsApp',
                 'triggered_by' => 'Gemini AI',
                 'status' => true,
-                'complete_registration' => $completeRegistration,
-                'complete_form' => false,
+                'complete_registration' => $completeRegistration
             ]);
 
             $hasApikey = Setting::get('gemini-api-key', $businessJpa->id);
