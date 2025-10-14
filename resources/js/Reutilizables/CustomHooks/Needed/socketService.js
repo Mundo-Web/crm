@@ -3,8 +3,11 @@ import { io } from "socket.io-client";
 import Global from "../../../Utils/Global";
 
 const service = Global.APP_CORRELATIVE;
+const eventsURL = Global.EVENTS_URL;
 
-const socket = io(`${Global.EVENTS_URL}/${service}`, {
+console.log('Evento url:', eventsURL)
+
+const socket = io(`${eventsURL}/${service}`, {
   autoConnect: false,
 });
 

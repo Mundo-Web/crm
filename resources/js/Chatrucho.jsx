@@ -3,14 +3,14 @@ import { createRoot } from 'react-dom/client'
 import CreateReactScript from './Utils/CreateReactScript.jsx'
 import Adminto from './components/Adminto.jsx'
 import Global from './Utils/Global.js'
-// import useWebSocket from './Reutilizables/CustomHooks/useWebSocket.js'
+import useWebSocket from './Reutilizables/CustomHooks/useWebSocket.jsx'
 
 const Chatrucho = ({ session, messages: initialMessages = [], waDummy }) => {
   const [messages, setMessages] = useState(initialMessages)
   const [input, setInput] = useState('')
   const [dummyNumber, setDummyNumber] = useState(waDummy)
 
-  // const { socket } = useWebSocket({});
+  const { socket } = useWebSocket({});
 
   const messagesEndRef = useRef(null)
   const sortedMessages = [...messages].sort((a, b) => a.microtime - b.microtime)
@@ -49,16 +49,19 @@ const Chatrucho = ({ session, messages: initialMessages = [], waDummy }) => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
-  // useEffect(() => {
-  //   const handler = (data) => {
-  //     console.log("📩 Llego mensaje:", data);
-  //   };
-  //   socket.on("message.created", handler);
+  useEffect(() => {
+    socket.emit("register_filters", {
+      contactActive: dummyNumber
+    });
+    const handler = (data) => {
+      setMessages((prevMessages) => [...prevMessages, data])
+    };
+    socket.on("message.created", handler);
 
-  //   return () => {
-  //     socket.off("message.created", handler); 
-  //   };
-  // }, [socket])
+    return () => {
+      socket.off("message.created", handler);
+    };
+  }, [socket, dummyNumber])
 
   return (
     <div className="container d-flex justify-content-center align-items-center " style={{ minHeight: 'calc(100vh - 200px)' }}>
@@ -79,7 +82,7 @@ const Chatrucho = ({ session, messages: initialMessages = [], waDummy }) => {
                       ? 'bg-primary text-white'
                       : 'bg-white text-dark border'
                       }`}
-                    style={{ maxWidth: '75%' }}
+                    style={{ maxWidth: '75%', whiteSpace: 'pre-line' }}
                   >
                     {msg.message}
                   </div>
