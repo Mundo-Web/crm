@@ -9,10 +9,10 @@ class MessageObserver
 {
     public function created(Message $message)
     {
-        EventController::notify('message.created', $message->toArray());
+        EventController::notify('message.created', $message->toArray(), ['business_id' => $message->business_id]);
     }
     public function updated(Message $message)
     {
-        EventController::notify('message.updated', $message->toArray());
+        EventController::notify('message.updated', $message->toArray(), ['business_id' => $message->business_id]);
     }
 }

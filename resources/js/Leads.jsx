@@ -54,6 +54,7 @@ const productsByClients = new ProductsByClients()
 const gmailRest = new GmailRest()
 
 import driver_fn from '../json/driver.js'
+import LeadChat from './Reutilizables/Leads/LeadChat.jsx'
 
 const driverObj = driver({
   showProgress: true,
@@ -589,7 +590,7 @@ const Leads = (properties) => {
     $(messagesOffCanvasRef.current).offcanvas('show')
   }
 
-  return (<Adminto {...properties} setWAPhone={setWAPhone} title='Leads' description='Gerencie sus leads y oportunidades' floatEnd={<div className='d-flex gap-2 justify-content-between'>
+  return (<Adminto {...properties} setWAPhone={setWAPhone} title='Leads' description='Gerencie sus leads y oportunidades' floatEnd={<div className='d-flex gap-2 justify-content-between align-items-center'>
     {
       defaultView == 'kanban' &&
       <Tippy content='Refrescar'>
@@ -598,7 +599,7 @@ const Leads = (properties) => {
         </button>
       </Tippy>
     }
-    <div className='d-flex gap-0'>
+    <div className='d-flex gap-0 '>
       <input id='view-as-table' type="radio" name='view-as' defaultChecked={defaultView == 'table'} onClick={() => onDefaultViewClicked('table')} />
       <label htmlFor="view-as-table">
         <i className='mdi mdi-table me-1'></i>
@@ -609,76 +610,87 @@ const Leads = (properties) => {
         <i className='mdi mdi-view-week me-1'></i>
         Pipeline
       </label>
+      <input id='view-as-chat' type="radio" name='view-as' defaultChecked={defaultView == 'chat'} onClick={() => onDefaultViewClicked('chat')} />
+      <label htmlFor="view-as-chat">
+        <i className='mdi mdi-chat me-1'></i>
+        Chat
+      </label>
     </div>
     <button className='btn btn-sm btn-purple driver-js-btn-new-lead' onClick={() => onOpenModal()}>
-      <i className='mdi mdi-plus me-1'></i>
-      Nuevo Lead
+      <i className='mdi mdi-plus'></i>
+      <span className='d-none d-md-inline ms-1'>Nuevo Lead</span>
     </button>
   </div>}>
 
     {
-      defaultView == 'table' ?
-        <>
-          <LeadTable gridRef={managedGridRef} otherGridRef={gridRef} rest={leadsRest} can={can} defaultLeadStatus={defaultLeadStatus} manageStatuses={manageStatuses} statuses={statuses}
-            onClientStatusClicked={onClientStatusClicked}
-            onManageStatusChange={onManageStatusChange}
-            onLeadClicked={onLeadClicked}
-            onMessagesClicked={onMessagesClicked}
-            onAttendClient={onAttendClient}
-            onOpenModal={onOpenModal}
-            onMakeLeadClient={onMakeLeadClient}
-            onArchiveClicked={onArchiveClicked}
-            onDeleteClicked={onDeleteClicked}
-            setStatuses={setStatuses}
-            setManageStatuses={setManageStatuses}
-            filterAssignation
-            users={users}
-            title='Leads - En Gestion'
-            cardClass='driver-js-in-progress-table' />
-          <LeadTable gridRef={gridRef} otherGridRef={managedGridRef}
-            rest={hasForms ? [
-              {
-                label: 'Interesados',
-                rest: newLeadsRest,
-                className: 'btn-soft-success',
-                classNameWhenActive: 'btn-success'
-              },  
-              {
-                label: 'Posibles interesados',
-                rest: incompleteLeadsRest,
-                className: 'btn-soft-secondary',
-                classNameWhenActive: 'btn-secondary'
-              },
-            ] : newLeadsRest}
-            can={can} defaultLeadStatus={defaultLeadStatus} manageStatuses={manageStatuses} statuses={statuses}
-            onClientStatusClicked={onClientStatusClicked}
-            onManageStatusChange={onManageStatusChange}
-            onLeadClicked={onLeadClicked}
-            onMessagesClicked={onMessagesClicked}
-            onAttendClient={onAttendClient}
-            onOpenModal={onOpenModal}
-            onMakeLeadClient={onMakeLeadClient}
-            onArchiveClicked={onArchiveClicked}
-            onDeleteClicked={onDeleteClicked}
-            setStatuses={setStatuses}
-            setManageStatuses={setManageStatuses}
-            users={users}
-            completeRegistration
-            title='Leads - Recien llegados'
-            cardClass='driver-js-new-leads-table'
-            borderColor='#4CAF50' />
+      defaultView == 'chat'
+        ? <LeadChat users={users} />
+        : <>
+          {
+            defaultView == 'table' ?
+              <>
+                <LeadTable gridRef={managedGridRef} otherGridRef={gridRef} rest={leadsRest} can={can} defaultLeadStatus={defaultLeadStatus} manageStatuses={manageStatuses} statuses={statuses}
+                  onClientStatusClicked={onClientStatusClicked}
+                  onManageStatusChange={onManageStatusChange}
+                  onLeadClicked={onLeadClicked}
+                  onMessagesClicked={onMessagesClicked}
+                  onAttendClient={onAttendClient}
+                  onOpenModal={onOpenModal}
+                  onMakeLeadClient={onMakeLeadClient}
+                  onArchiveClicked={onArchiveClicked}
+                  onDeleteClicked={onDeleteClicked}
+                  setStatuses={setStatuses}
+                  setManageStatuses={setManageStatuses}
+                  filterAssignation
+                  users={users}
+                  title='Leads - En Gestion'
+                  cardClass='driver-js-in-progress-table' />
+                <LeadTable gridRef={gridRef} otherGridRef={managedGridRef}
+                  rest={hasForms ? [
+                    {
+                      label: 'Interesados',
+                      rest: newLeadsRest,
+                      className: 'btn-soft-success',
+                      classNameWhenActive: 'btn-success'
+                    },
+                    {
+                      label: 'Posibles interesados',
+                      rest: incompleteLeadsRest,
+                      className: 'btn-soft-secondary',
+                      classNameWhenActive: 'btn-secondary'
+                    },
+                  ] : newLeadsRest}
+                  can={can} defaultLeadStatus={defaultLeadStatus} manageStatuses={manageStatuses} statuses={statuses}
+                  onClientStatusClicked={onClientStatusClicked}
+                  onManageStatusChange={onManageStatusChange}
+                  onLeadClicked={onLeadClicked}
+                  onMessagesClicked={onMessagesClicked}
+                  onAttendClient={onAttendClient}
+                  onOpenModal={onOpenModal}
+                  onMakeLeadClient={onMakeLeadClient}
+                  onArchiveClicked={onArchiveClicked}
+                  onDeleteClicked={onDeleteClicked}
+                  setStatuses={setStatuses}
+                  setManageStatuses={setManageStatuses}
+                  users={users}
+                  completeRegistration
+                  title='Leads - Recien llegados'
+                  cardClass='driver-js-new-leads-table'
+                  borderColor='#4CAF50' />
+              </>
+              : (
+                <LeadKanban statuses={statuses} leads={leads} defaultView={defaultView} getLeads={getLeads}
+                  onLeadClicked={onLeadClicked}
+                  onOpenModal={onOpenModal}
+                  onMakeLeadClient={onMakeLeadClient}
+                  onArchiveClicked={onArchiveClicked}
+                  onDeleteClicked={onDeleteClicked}
+                  onAttendClient={onAttendClient}
+                  users={users}
+                />
+              )
+          }
         </>
-        : (
-          <LeadKanban statuses={statuses} leads={leads} defaultView={defaultView} getLeads={getLeads}
-            onLeadClicked={onLeadClicked}
-            onOpenModal={onOpenModal}
-            onMakeLeadClient={onMakeLeadClient}
-            onArchiveClicked={onArchiveClicked}
-            onDeleteClicked={onDeleteClicked}
-            onAttendClient={onAttendClient}
-            users={users}
-          />
-        )
     }
     <Modal modalRef={modalRef} title='Detalles del lead' btnSubmitText='Guardar' size='full-width' bodyClass='p-3 bg-light' isStatic onSubmit={(e) => e.preventDefault()} zIndex={1042}>
       <div className="row">
