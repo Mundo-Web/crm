@@ -64,6 +64,7 @@ class Client extends Model
         'source_channel',
         'form_answers',
         'complete_form',
+        'campaign_id',
     ];
 
     protected $casts = [
@@ -71,7 +72,7 @@ class Client extends Model
         'complete_registration' => 'boolean',
         'complete_form' => 'boolean',
     ];
-    
+
     protected $hidden = [
         // 'business_id'
     ];
@@ -164,5 +165,10 @@ class Client extends Model
     {
         return $this->belongsToMany(Product::class, 'client_has_products', 'client_id', 'product_id')
             ->withPivot('id');
+    }
+
+    public function campaign()
+    {
+        return $this->belongsTo(Campaign::class);
     }
 }

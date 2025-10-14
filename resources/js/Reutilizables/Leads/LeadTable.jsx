@@ -12,6 +12,7 @@ import Swal from "sweetalert2"
 import ClientsRest from "../../actions/ClientsRest"
 import ArrayJoin from "../../Utils/ArrayJoin"
 import { LeadsContext } from "./LeadsProvider"
+import sourceOptions from "../Campaigns/socials.json"
 
 const leadsRest = new LeadsRest()
 const clientsRest = new ClientsRest()
@@ -419,7 +420,7 @@ const LeadTable = ({ gridRef, cardClass, otherGridRef, rest, can, defaultLeadSta
       },
       {
         dataField: 'origin',
-        caption: 'Origen',
+        caption: 'Medio',
         dataType: 'string'
       },
       {
@@ -431,6 +432,38 @@ const LeadTable = ({ gridRef, cardClass, otherGridRef, rest, can, defaultLeadSta
         dataField: 'source_channel',
         caption: 'Canal de origen',
         dataType: 'string'
+      },
+      {
+        dataField: 'campaign.source',
+        caption: 'RS Campaña',
+        dataType: 'string',
+        width: 100,
+        lookup: {
+          dataSource: sourceOptions,
+          valueExpr: 'id',
+          displayExpr: 'label'
+        }
+      },
+      {
+        dataField: 'campaign.title',
+        caption: 'Campaña',
+        dataType: 'string',
+        width: 200,
+        cellTemplate: (container, { data }) => {
+          if (!data.campaign) return;
+          const campaignLink = data.campaign.link;
+          container.html(renderToString(
+            campaignLink
+              ? <a className="text-truncate d-block text-decoration-none" style={{ maxWidth: '100%', color: 'inherit' }} href={campaignLink} target="_blank" rel="noopener noreferrer">
+                <code style={{color: '#ff8acc'}}>{data.campaign.code}</code>
+                <small className="ms-1">{data.campaign.title}</small>
+              </a>
+              : <div className="text-truncate" style={{ maxWidth: '100%' }}>
+                <code>{data.campaign.code}</code>
+                <small className="ms-1">{data.campaign.title}</small>
+              </div>
+          ))
+        }
       },
       {
         dataField: 'created_at',

@@ -13,6 +13,7 @@ import DxPanelButton from './components/dx/DxPanelButton.jsx'
 import CampaignsRest from './actions/CampaignsRest.js'
 import DxButton from './components/dx/DxButton.jsx'
 import Swal from 'sweetalert2'
+import sourceOptions from './Reutilizables/Campaigns/socials.json'
 
 const campaignsRest = new CampaignsRest();
 
@@ -30,26 +31,6 @@ const Campaigns = ({ can }) => {
   const notesRef = useRef()
 
   const [isEditing, setIsEditing] = useState(false)
-
-  const sourceOptions = [
-    { id: 'facebook', label: 'Facebook' },
-    { id: 'youtube', label: 'YouTube' },
-    { id: 'instagram', label: 'Instagram' },
-    { id: 'whatsapp', label: 'WhatsApp' },
-    { id: 'tiktok', label: 'TikTok' },
-    { id: 'wechat', label: 'WeChat' },
-    { id: 'telegram', label: 'Telegram' },
-    { id: 'messenger', label: 'Facebook Messenger' },
-    { id: 'snapchat', label: 'Snapchat' },
-    { id: 'x', label: 'X (Twitter)' },
-    { id: 'mastodon', label: 'Mastodon' },
-    { id: 'douyin', label: 'Douyin' },
-    { id: 'kuaishou', label: 'Kuaishou' },
-    { id: 'reddit', label: 'Reddit' },
-    { id: 'pinterest', label: 'Pinterest' },
-    { id: 'linkedin', label: 'LinkedIn' },
-    { id: 'landing', label: 'Landing Page' }
-  ];
 
   const onModalOpen = (data) => {
     if (data?.id) setIsEditing(true)
@@ -130,7 +111,12 @@ const Campaigns = ({ can }) => {
         {
           dataField: 'source',
           caption: 'Fuente',
-          dataType: 'string'
+          dataType: 'string',
+          lookup: {
+            dataSource: sourceOptions,
+            valueExpr: 'id',
+            displayExpr: 'label'
+          }
         },
         {
           dataField: 'title',

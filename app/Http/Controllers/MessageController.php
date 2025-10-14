@@ -24,6 +24,11 @@ class MessageController extends BasicController
     public $model = Message::class;
     public $reactView = 'Messages';
 
+    public function setPaginationInstance(Request $request, string $model)
+    {
+        return $model::with('campaign');
+    }
+
     public function send(Request $request)
     {
         $response = Response::simpleTryCatch(function () use ($request) {

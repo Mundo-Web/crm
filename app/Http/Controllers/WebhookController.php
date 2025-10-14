@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Jobs\MetaAssistantJob;
 use App\Models\Atalaya\Business;
+use App\Models\Campaign;
 use App\Models\Client;
 use App\Models\ClientNote;
 use App\Models\Integration;
@@ -73,6 +74,25 @@ class WebhookController extends BasicController
 
             if ($alreadyExists && $alreadyExists->complete_registration && $alreadyExists->complete_form !== false) return;
 
+            $exists = $alreadyExists !== null;
+
+            $campaignJpa = null;
+            if (!$exists) {
+                $campaignCode = null;
+                if (is_string($message) && preg_match('/\[([A-Z0-9]{3,})\]/i', $message, $matches)) {
+                    $campaignCode = strtoupper($matches[1]);
+                }
+                if ($campaignCode) {
+                    $campaignJpa = Campaign::query()
+                        ->where('code', $campaignCode)
+                        ->where('business_id', $businessJpa->id)
+                        ->where('status', true)
+                        ->first();
+                    $messageJpa->campaign_id = $campaignJpa->id;
+                    $messageJpa->save();
+                }
+            }
+
             $completeRegistration = $alreadyExists->complete_registration ?? false;
             $clientJpa = Client::updateOrCreate([
                 'contact_phone' => $waId,
@@ -80,7 +100,7 @@ class WebhookController extends BasicController
             ], [
                 'message' => $message ?? 'Sin mensaje',
                 'contact_name' => $completeRegistration ? $alreadyExists->contact_name : $data['data']['pushName'],
-                'name' => $completeRegistration ? $alreadyExists->name : $data['data']['pushName'], 
+                'name' => $completeRegistration ? $alreadyExists->name : $data['data']['pushName'],
                 'source' => 'Externo',
                 'date' => Trace::getDate('date'),
                 'time' => Trace::getDate('time'),
@@ -92,6 +112,12 @@ class WebhookController extends BasicController
                 'status' => true,
                 'complete_registration' => $completeRegistration
             ]);
+
+            if ($campaignJpa) {
+                $clientJpa->campaign_id = $campaignJpa->id;
+                $clientJpa->save();
+
+            }
 
             $hasApikey = Setting::get('gemini-api-key', $businessJpa->id);
 
