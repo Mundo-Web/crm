@@ -561,7 +561,16 @@ class MetaController extends Controller
                             'business_id' => $clientJpa->business_id
                         ]);
                         // Segundo mensaje
-                        $welcomeMessage = "Ahora ayúdame respondiendo algunas preguntas, primero: " . $questions[0]['questions'][0]['text'];
+                        $welcomeMessage = $questions[0]['questions'][0]['text'];
+                        if ($questions[0]['questions'][0]['closed']) {
+                            try {
+                                foreach ($questions[0]['questions'][0]['answers'] as $key => $value) {
+                                    $q_index = $key + 1;
+                                    $welcomeMessage .= Text::lineBreak() . "{$q_index}. {$value}";
+                                }
+                            } catch (\Throwable $th) {
+                            }
+                        }
                         self::sendWithOrigin($businessJpa, $clientJpa, $welcomeMessage, '', $origin);
                     } else {
                         $welcomeMessage = Setting::get('whatsapp-new-lead-notification-message-client', $clientJpa->business_id);
@@ -654,7 +663,16 @@ class MetaController extends Controller
                             'microtime' => (int) (microtime(true) * 1_000_000),
                             'business_id' => $clientJpa->business_id
                         ]);
-                        $welcomeMessage = "Bien, ahora pasemos al siguiente bloque de preguntas: " . $nextForm['questions'][0]['text'];
+                        $welcomeMessage = $nextForm['questions'][0]['text'];
+                        if ($nextForm['questions'][0]['closed']) {
+                            try {
+                                foreach ($nextForm['questions'][0]['answers'] as $key => $value) {
+                                    $q_index = $key + 1;
+                                    $welcomeMessage .= Text::lineBreak() . "{$q_index}. {$value}";
+                                }
+                            } catch (\Throwable $th) {
+                            }
+                        }
                         self::sendWithOrigin($businessJpa, $clientJpa, $welcomeMessage, $prompt2save, $origin);
                     }
                 } else if ($answer) {
