@@ -1,0 +1,1 @@
+var m=Object.defineProperty;var o=(e,s,a)=>s in e?m(e,s,{enumerable:!0,configurable:!0,writable:!0,value:a}):e[s]=a;var t=(e,s,a)=>o(e,typeof s!="symbol"?s+"":s,a);import{B as p}from"./Adminto-CI_nj0HS.js";class g extends p{constructor(){super(...arguments);t(this,"path","messages")}}export{g as M};

@@ -3,6 +3,8 @@
 use App\Http\Controllers\ApikeyController;
 use App\Http\Controllers\ArchivedController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\CampaignController;
+use App\Http\Controllers\ChatruchoController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\DefaultMessageController;
 use App\Http\Controllers\KPILeadsController;
@@ -76,6 +78,7 @@ Route::middleware(['auth', 'firstTime', 'hasPlan'])->group(function () {
     Route::get('/messages', [MessageController::class, 'reactView'])->name('Messages.jsx');
     Route::get('/products', [ProductController::class, 'reactView'])->name('Products.jsx');
     Route::get('/processes', [ProcessController::class, 'reactView'])->name('Processes.jsx');
+    Route::get('/campaigns', [CampaignController::class, 'reactView'])->name('Campaigns.jsx');
     Route::get('/views', [ViewController::class, 'reactView'])->name('Views.jsx');
     Route::get('/projects', [ProjectController::class, 'reactView'])->name('Projects.jsx');
     Route::get('/projects/done', [ProjectDoneController::class, 'reactView'])->name('ProjectsDone.jsx');
@@ -91,6 +94,8 @@ Route::middleware(['auth', 'firstTime', 'hasPlan'])->group(function () {
     Route::get('/webhooks', [WebhookController::class, 'reactView'])->name('Webhooks.jsx');
     Route::get('/types', [TypeController::class, 'reactView'])->name('Types.jsx');
     Route::get('/settings', [SettingController::class, 'reactView'])->name('Settings.jsx');
+
+    Route::get('/chatrucho', [ChatruchoController::class, 'reactView'])->name('Chatrucho.jsx');
 });
 
 if (env('APP_ENV') === 'local') {

@@ -19,6 +19,10 @@ const Table = ({ title, gridRef, rest, columns, toolBar, masterDetail, filterVal
   const massiveDropdownId = `dropdown-${crypto.randomUUID()}`
   const [isMassiveDropdownOpen, setIsMassiveDropdownOpen] = useState(false)
 
+  // Detect if rest is an array of switchable configs
+  const isRestSwitch = Array.isArray(rest) && rest.length && rest[0].rest !== undefined
+  const [activeRestIndex, setActiveRestIndex] = useState(0)
+
   // Handle search with debounce
   const handleSearch = useCallback(
     debounce((searchText) => {
@@ -120,19 +124,47 @@ const Table = ({ title, gridRef, rest, columns, toolBar, masterDetail, filterVal
       <div className="col-12">
         <div className={`card ${cardClass}`} style={cardStyle}>
           <div className="card-body">
-            {
-              <div className='d-flex justify-content-between align-items-start mb-2'>
-                {
-                  typeof title == 'string'
-                    ? <h4 className='w-100 my-0 header-title'>Lista de {title}</h4>
-                    : <div className='w-100 my-0'>{title}</div>
-                }
+            <div className='d-flex justify-content-between align-items-center mb-2'>
+              {
+                typeof title == 'string'
+                  ? <h4 className='w-100 my-0 header-title'>Lista de {title}</h4>
+                  : <div className='w-100 my-0'>{title}</div>
+              }
 
-                <button className='btn btn-white btn-xs text-nowrap' onClick={() => $(gridRef.current).dxDataGrid('instance').refresh()}>
-                  <i className='mdi mdi-refresh me-1'></i>Actualizar
-                </button>
+              <button className='btn btn-white btn-xs text-nowrap' onClick={() => $(gridRef.current).dxDataGrid('instance').refresh()}>
+                <i className='mdi mdi-refresh me-1'></i>Actualizar
+              </button>
+            </div>
+
+            {/* Rest switcher buttons */}
+            {isRestSwitch && (
+              <div className='d-flex flex-wrap gap-1 mb-2'>
+                {rest.map((item, index) => (
+                  <button
+                    key={index}
+                    className={`btn ${index === activeRestIndex ? (item.classNameWhenActive || 'btn-success') : (item.className || 'btn-white')} btn-xs text-nowrap rounded-pill waves-effect`}
+                    onClick={() => setActiveRestIndex(index)}
+                  >
+                    {item.label}
+                  </button>
+                ))}
               </div>
-            }
+            )}
+
+            {/* Legacy rest buttons (non-switch) */}
+            {!isRestSwitch && Array.isArray(rest) && (
+              <div className='d-flex flex-wrap gap-1 mb-2'>
+                {rest.map((item, index) => (
+                  <button
+                    key={index}
+                    className={`btn ${item.className || 'btn-white'} btn-xs text-nowrap rounded-pill waves-effect`}
+                    onClick={() => item()}
+                  >
+                    {item.label}
+                  </button>
+                ))}
+              </div>
+            )}
 
             <div className='d-flex mb-2 gap-2'>
               <input
@@ -255,7 +287,7 @@ const Table = ({ title, gridRef, rest, columns, toolBar, masterDetail, filterVal
 
             <DataGrid
               gridRef={gridRef}
-              rest={rest}
+              rest={isRestSwitch ? rest[activeRestIndex].rest : rest}
               columns={columns.filter(Boolean)}
               toolBar={toolBar}
               masterDetail={masterDetail}
@@ -267,7 +299,7 @@ const Table = ({ title, gridRef, rest, columns, toolBar, masterDetail, filterVal
               exportable={exportable}
               exportableName={text.toLowerCase()}
               customizeCell={customizeCell}
-              reloadWith={reloadWith}
+              reloadWith={[...(reloadWith ?? []), activeRestIndex]}
               height={height}
               keyExpr={keyExpr}
               onSelectionChanged={(props) => {

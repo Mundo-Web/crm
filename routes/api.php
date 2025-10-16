@@ -5,6 +5,7 @@ use App\Http\Controllers\ArchivedController;
 use App\Http\Controllers\Atalaya\UserController as AtalayaUserController;
 use App\Http\Controllers\Atalaya\UsersByServicesByBusinessController as AtalayaUsersByServicesByBusinessController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\CampaignController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\ClientHasProductsController;
 use App\Http\Controllers\ClientNoteController;
@@ -154,6 +155,12 @@ Route::middleware('auth')->group(function () {
     Route::post('/processes/paginate', [ProcessController::class, 'paginate']);
     Route::patch('/processes/status', [ProcessController::class, 'status']);
     Route::delete('/processes/{id}', [ProcessController::class, 'delete']);
+
+    // Campaigns routes
+    Route::post('/campaigns', [CampaignController::class, 'save']);
+    Route::post('/campaigns/paginate', [CampaignController::class, 'paginate']);
+    Route::patch('/campaigns/status', [CampaignController::class, 'status']);
+    Route::delete('/campaigns/{id}', [CampaignController::class, 'delete']);
 
     // Projects routes
     Route::post('/projects', [ProjectController::class, 'save']);

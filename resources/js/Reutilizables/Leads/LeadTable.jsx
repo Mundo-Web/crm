@@ -12,11 +12,12 @@ import Swal from "sweetalert2"
 import ClientsRest from "../../actions/ClientsRest"
 import ArrayJoin from "../../Utils/ArrayJoin"
 import { LeadsContext } from "./LeadsProvider"
+import sourceOptions from "../Campaigns/socials.json"
 
 const leadsRest = new LeadsRest()
 const clientsRest = new ClientsRest()
 
-const LeadTable = ({ gridRef, cardClass, otherGridRef, rest, can, defaultLeadStatus, statuses, manageStatuses, onClientStatusClicked, onManageStatusChange, onLeadClicked, onMessagesClicked, onAttendClient, onOpenModal, onMakeLeadClient, onArchiveClicked, onDeleteClicked, title, borderColor = '#315AFE', setStatuses, setManageStatuses, users, filterAssignation }) => {
+const LeadTable = ({ gridRef, cardClass, otherGridRef, rest, can, defaultLeadStatus, statuses, manageStatuses, onClientStatusClicked, onManageStatusChange, onLeadClicked, onMessagesClicked, onAttendClient, onOpenModal, onMakeLeadClient, onArchiveClicked, onDeleteClicked, title, borderColor = '#315AFE', setStatuses, setManageStatuses, users, filterAssignation, completeRegistration }) => {
 
   const { selectedUsersId, setSelectedUsersId, defaultView } = useContext(LeadsContext)
 
@@ -255,7 +256,8 @@ const LeadTable = ({ gridRef, cardClass, otherGridRef, rest, can, defaultLeadSta
         caption: 'Lead',
         width: 250,
         cellTemplate: (container, { data }) => {
-          container.attr('style', `height: 48px; border-left: 4px solid ${data.status.color}`)
+          container.attr('style', `height: 48px; border-left: 4px solid ${data.status.color}; cursor: pointer;`)
+          container.on('click', () => onLeadClicked(data))
 
           let integrationIcon = null
 
@@ -271,22 +273,53 @@ const LeadTable = ({ gridRef, cardClass, otherGridRef, rest, can, defaultLeadSta
               break;
           }
 
-          ReactAppend(container, <div className="d-flex align-items-center gap-1">
-            {
-              integrationIcon &&
-              <TippyButton className='btn btn-xs btn-white' title='Ver mensajes' onClick={() => onMessagesClicked(data)}>
-                {integrationIcon}
-              </TippyButton>
-            }
-            <div onClick={() => onLeadClicked(data)} style={{ cursor: 'pointer' }}>
+          ReactAppend(container, <div className="d-flex align-items-center justify-content-between gap-2">
+            <div className="d-flex align-items-center gap-2 overflow-hidden">
               {
-                data.status_id == defaultLeadStatus
-                  ? <b className='d-block'>{data.contact_name}</b>
-                  : <span className='d-block'>{data.contact_name}</span>
+                integrationIcon &&
+                <TippyButton className='btn btn-xs btn-white' title='Ver mensajes' onClick={(e) => {
+                  onMessagesClicked(data)
+                  e.stopPropagation()
+                }}>
+                  {integrationIcon}
+                </TippyButton>
+              }
+              <div className="text-truncate">
+                {
+                  data.status_id == defaultLeadStatus
+                    ? <b className='d-block text-truncate'>{data.contact_name}</b>
+                    : <span className='d-block text-truncate'>{data.contact_name}</span>
+                }
+                {
+                  data.products_count > 0 &&
+                  <small className='text-muted'>{data.products_count} {data.products_count > 1 ? 'productos' : 'producto'}</small>
+                }
+              </div>
+            </div>
+            <div className="d-flex gap-1">
+              {
+                completeRegistration &&
+                <Tippy content={data.complete_registration ? 'Registro manual/completo' : 'Registro incompleto'}>
+                  <span className={data.complete_registration ? 'text-success' : 'text-muted'}>
+                    {
+                      data.complete_registration
+                        ? <i className="mdi mdi-account-check"></i>
+                        : <i className="mdi mdi-account-clock"></i>
+                    }
+                  </span>
+                </Tippy>
               }
               {
-                data.products_count > 0 &&
-                <small className='text-muted'>{data.products_count} {data.products_count > 1 ? 'productos' : 'producto'}</small>
+                completeRegistration && data.form_answers !== null &&
+                <Tippy content={data.complete_form ? 'Formulario completado' : 'Formulario incompleto'}>
+                  <span className={data.complete_form ? 'text-success' : 'text-muted'}>
+                    {
+                      data.complete_form
+                        ? <i className="mdi mdi-file-check"></i>
+                        : <i className="mdi mdi-file-clock"></i>
+                    }
+                  </span>
+                </Tippy>
               }
             </div>
           </div>)
@@ -387,7 +420,7 @@ const LeadTable = ({ gridRef, cardClass, otherGridRef, rest, can, defaultLeadSta
       },
       {
         dataField: 'origin',
-        caption: 'Origen',
+        caption: 'Medio',
         dataType: 'string'
       },
       {
@@ -399,6 +432,38 @@ const LeadTable = ({ gridRef, cardClass, otherGridRef, rest, can, defaultLeadSta
         dataField: 'source_channel',
         caption: 'Canal de origen',
         dataType: 'string'
+      },
+      {
+        dataField: 'campaign.source',
+        caption: 'RS Campaña',
+        dataType: 'string',
+        width: 100,
+        lookup: {
+          dataSource: sourceOptions,
+          valueExpr: 'id',
+          displayExpr: 'label'
+        }
+      },
+      {
+        dataField: 'campaign.title',
+        caption: 'Campaña',
+        dataType: 'string',
+        width: 200,
+        cellTemplate: (container, { data }) => {
+          if (!data.campaign) return;
+          const campaignLink = data.campaign.link;
+          container.html(renderToString(
+            campaignLink
+              ? <a className="text-truncate d-block text-decoration-none" style={{ maxWidth: '100%', color: 'inherit' }} href={campaignLink} target="_blank" rel="noopener noreferrer">
+                <code style={{color: '#ff8acc'}}>{data.campaign.code}</code>
+                <small className="ms-1">{data.campaign.title}</small>
+              </a>
+              : <div className="text-truncate" style={{ maxWidth: '100%' }}>
+                <code>{data.campaign.code}</code>
+                <small className="ms-1">{data.campaign.title}</small>
+              </div>
+          ))
+        }
       },
       {
         dataField: 'created_at',
@@ -455,6 +520,7 @@ const LeadTable = ({ gridRef, cardClass, otherGridRef, rest, can, defaultLeadSta
     cardStyle={{
       borderRight: `6px solid ${borderColor}`
     }} />
+
 }
 
 export default LeadTable

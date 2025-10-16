@@ -5,6 +5,7 @@ import Menu from './Menu'
 import Footer from './Footer'
 import WhatsAppModal from './modals/WhatsAppModal'
 import { Toaster } from 'sonner'
+import useWebSocket from '../Reutilizables/CustomHooks/useWebSocket'
 
 moment.tz.setDefault('UTC');
 
@@ -13,12 +14,14 @@ const Adminto = ({ session, children, notificationsCount, prefixes, title, showT
   const settings = Local.get('adminto_settings') ?? {}
   const [theme, setTheme] = useState(settings.theme ?? 'ligth');
   const [whatsappStatus, setWhatsAppStatus] = useState(null)
-  const [wsActive, setWsActive] = useState(false);
+  // const [wsActive, setWsActive] = useState(false);
+
+  const {wsActive} = useWebSocket()
 
   return (<>
     <div id="wrapper">
       <Toaster />
-      <NavBar session={session} services={services} theme={theme} setTheme={setTheme} title={title} can={can} whatsappStatus={whatsappStatus} businesses={businesses} APP_DOMAIN={APP_DOMAIN} APP_PROTOCOL={APP_PROTOCOL} notificationsCount={notificationsCount} wsActive={wsActive} setWsActive={setWsActive} />
+      <NavBar session={session} services={services} theme={theme} setTheme={setTheme} title={title} can={can} whatsappStatus={whatsappStatus} businesses={businesses} APP_DOMAIN={APP_DOMAIN} APP_PROTOCOL={APP_PROTOCOL} notificationsCount={notificationsCount} wsActive={wsActive} />
       <Menu session={session} theme={theme} can={can} presets={presets} whatsappStatus={whatsappStatus} APP_DOMAIN={APP_DOMAIN} businesses={businesses} APP_PROTOCOL={APP_PROTOCOL} leadsCount={leadsCount} tasksCount={tasksCount} wsActive={wsActive} />
       <div className="content-page">
         <div className="content">

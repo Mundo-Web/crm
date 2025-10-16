@@ -242,6 +242,13 @@ const OffCanvas = ({ offCanvasRef, dataLoaded, setDataLoaded, defaultMessages, s
               if (content.startsWith('/attachment:')) {
                 attachment = content.split('\n')[0]
               }
+              if (message.role == 'Form') {
+                return <li>
+                  <div class="chat-day-title" bis_skin_checked="1">
+                    <small class="title badge badge-soft-dark rounded-pill">{content}</small>
+                  </div>
+                </li>
+              }
               return <li key={i} className={message.role == 'Human' ? '' : 'odd'}>
                 <div className="message-list">
                   <div className="chat-avatar">
@@ -260,6 +267,18 @@ const OffCanvas = ({ offCanvasRef, dataLoaded, setDataLoaded, defaultMessages, s
                     <div className="ctext-wrap" onDoubleClick={() => {
                       if (message.prompt) console.log(message.prompt)
                     }}>
+                      {message.campaign && (
+                        <div className="rounded p-2 mb-2" style={{ backgroundColor: 'rgba(240, 240, 240, 0.125)', cursor: message.campaign.link ? 'pointer' : 'default', maxWidth: '240px' }}
+                          onClick={() => {
+                            if (message.campaign.link) window.open(message.campaign.link, '_blank')
+                          }}>
+                          <div className="d-flex gap-1" style={{ maxWidth: '100%' }}>
+                            <div className="fw-bold">{message.campaign.code}</div>
+                            <div className="small text-truncate">{message.campaign.title}</div>
+                          </div>
+                          <small className="d-block text-truncate" style={{ maxWidth: 300 }}>{message.campaign.link}</small>
+                        </div>
+                      )}
                       {/* <span className="user-name">{message.role == 'Human' ? dataLoaded?.contact_name : ''}</span> */}
                       {
                         content.startsWith('/signature:')
@@ -311,6 +330,7 @@ const OffCanvas = ({ offCanvasRef, dataLoaded, setDataLoaded, defaultMessages, s
                             }
                             {/* <p>{content.replace(attachment, '')}</p> */}
                             <HtmlContent className='text-start' html={wa2html(content.replace(attachment, ''))} />
+                            {/* Campaign preview box */}
                           </>
                       }
                     </div>
@@ -369,7 +389,7 @@ const OffCanvas = ({ offCanvasRef, dataLoaded, setDataLoaded, defaultMessages, s
           <textarea ref={inputMessageRef}
             className='form-control w-100'
             placeholder='Ingrese su mensaje aqui'
-            rows={1} 
+            rows={1}
             style={{ minHeight: 27, fieldSizing: 'content' }}
             disabled={isSending}
             required

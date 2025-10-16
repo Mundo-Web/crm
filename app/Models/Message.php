@@ -20,10 +20,16 @@ class Message extends Model
         'message',
         'prompt',
         'microtime',
-        'business_id'
+        'business_id',
+        'campaign_id',
     ];
 
     protected $hidden = [
         'business_id'
     ];
+
+    public function campaign()
+    {
+        return $this->belongsTo(Campaign::class);
+    }
 }

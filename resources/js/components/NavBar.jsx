@@ -9,6 +9,7 @@ import { io } from "socket.io-client"
 import Global from "../Utils/Global"
 import Tippy from "@tippyjs/react"
 import UsersByServicesByBusinessesRest from "../actions/Atalaya/UsersByServicesByBusinessesRest"
+import useWebSocket from "../Reutilizables/CustomHooks/useWebSocket"
 
 const notificationsRest = new NotificationsRest();
 const usersByServicesByBusinessesRest = new UsersByServicesByBusinessesRest();
@@ -18,8 +19,10 @@ const audio = new Audio('/assets/sounds/notification.wav');
 const NavBar = ({ can, session = {}, services, theme, setTheme, title = '', wsActive, setWsActive, whatsappStatus, businesses, APP_PROTOCOL, APP_DOMAIN, notificationsCount: notificationsCountDB }) => {
   const { color } = WhatsAppStatuses[whatsappStatus]
 
-  const [notificationsCount, setNotificationsCount] = useState(notificationsCountDB)
+  // const [notificationsCount, setNotificationsCount] = useState(notificationsCountDB)
   const [notifications, setNotifications] = useState([]);
+
+  const {notificationsCount} = useWebSocket();
 
   const otherBusinesses = businesses.filter(({ id }) => session.business_id != id)
 
@@ -27,7 +30,7 @@ const NavBar = ({ can, session = {}, services, theme, setTheme, title = '', wsAc
     const isVisible = $('#notifications').is(':visible')
     if (!isVisible) return
     const { data, totalCount } = await notificationsRest.paginate({ requireTotalCount: true })
-    setNotificationsCount(totalCount)
+    // setNotificationsCount(totalCount)
     setNotifications(data ?? [])
   }
 
@@ -45,7 +48,7 @@ const NavBar = ({ can, session = {}, services, theme, setTheme, title = '', wsAc
       field: 'seen',
       value: true
     }, false)
-    fetchNotificationsCount()
+    // fetchNotificationsCount()
     setNotifications([])
   }
 
@@ -82,7 +85,7 @@ const NavBar = ({ can, session = {}, services, theme, setTheme, title = '', wsAc
   }, [notificationsCount])
 
   useEffect(() => {
-
+    return
     // Conectar al servicio específico (el service se toma del path)
     const service = Global.APP_CORRELATIVE // Este sería el {service} en la URL
     const socket = io(`wss://events.atalaya.pe/${service}`)

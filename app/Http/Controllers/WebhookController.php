@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Jobs\MetaAssistantJob;
 use App\Models\Atalaya\Business;
+use App\Models\Campaign;
 use App\Models\Client;
 use App\Models\ClientNote;
 use App\Models\Integration;
@@ -71,15 +72,35 @@ class WebhookController extends BasicController
                 ->where('status', true)
                 ->first();
 
-            if ($alreadyExists && $alreadyExists->complete_registration) return;
+            if ($alreadyExists && $alreadyExists->complete_registration && $alreadyExists->complete_form !== false) return;
 
+            $exists = $alreadyExists !== null;
+
+            $campaignJpa = null;
+            if (!$exists) {
+                $campaignCode = null;
+                if (is_string($message) && preg_match('/\[([A-Z0-9]{3,})\]/i', $message, $matches)) {
+                    $campaignCode = strtoupper($matches[1]);
+                }
+                if ($campaignCode) {
+                    $campaignJpa = Campaign::query()
+                        ->where('code', $campaignCode)
+                        ->where('business_id', $businessJpa->id)
+                        ->where('status', true)
+                        ->first();
+                    $messageJpa->campaign_id = $campaignJpa->id;
+                    $messageJpa->save();
+                }
+            }
+
+            $completeRegistration = $alreadyExists->complete_registration ?? false;
             $clientJpa = Client::updateOrCreate([
                 'contact_phone' => $waId,
                 'business_id' => $businessJpa->id,
             ], [
                 'message' => $message ?? 'Sin mensaje',
-                'contact_name' => $data['data']['pushName'],
-                'name' => $data['data']['pushName'],
+                'contact_name' => $completeRegistration ? $alreadyExists->contact_name : $data['data']['pushName'],
+                'name' => $completeRegistration ? $alreadyExists->name : $data['data']['pushName'],
                 'source' => 'Externo',
                 'date' => Trace::getDate('date'),
                 'time' => Trace::getDate('time'),
@@ -89,12 +110,20 @@ class WebhookController extends BasicController
                 'origin' => 'WhatsApp',
                 'triggered_by' => 'Gemini AI',
                 'status' => true,
-                'complete_registration' => false
+                'complete_registration' => $completeRegistration
             ]);
+
+            if ($campaignJpa) {
+                $clientJpa->campaign_id = $campaignJpa->id;
+                $clientJpa->save();
+
+            }
 
             $hasApikey = Setting::get('gemini-api-key', $businessJpa->id);
 
             if ($hasApikey && !$clientJpa->complete_registration) {
+                MetaAssistantJob::dispatchAfterResponse($clientJpa, $messageJpa, 'evoapi');
+            } else if ($hasApikey && $clientJpa->complete_registration && $clientJpa->complete_form == false) {
                 MetaAssistantJob::dispatchAfterResponse($clientJpa, $messageJpa, 'evoapi');
             }
 

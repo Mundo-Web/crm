@@ -16,6 +16,7 @@ use Exception;
 use Illuminate\Http\Request;
 use SoDe\Extend\Fetch;
 use SoDe\Extend\File;
+use SoDe\Extend\JSON;
 use SoDe\Extend\Response;
 use SoDe\Extend\Text;
 use SoDe\Extend\Trace;
@@ -280,10 +281,100 @@ class MetaController extends Controller
         return response($response->toArray(), $response->status);
     }
 
+    private static function timeToSleep(string $message): int
+    {
+        // Contar palabras (usando str_word_count para separar correctamente)
+        $numPalabras = str_word_count($message);
+
+        // Velocidad promedio: 2.5 palabras/segundo → 400ms por palabra
+        $tiempoBase = $numPalabras * 400;
+
+        // Aleatoriedad ±0–500ms
+        $random = rand(-500, 500);
+
+        // Calcular total en milisegundos
+        $tiempo = $tiempoBase + $random;
+
+        // Limitar entre 0ms y 30000ms (30s)
+        $tiempo = max(0, min($tiempo, 30000));
+
+        return $tiempo;
+    }
+
+    private static function sendWithOrigin(Business $businessJpa, Client $clientJpa, string $message, string $prompt2save, ?string $origin = null)
+    {
+        if ($origin == 'evoapi') {
+            new Fetch(env('EVOAPI_URL') . '/message/sendText/' . $businessJpa->person->document_number, [
+                'method' => 'POST',
+                'headers' => [
+                    'Content-Type' => 'application/json',
+                    'apikey' => $businessJpa->uuid
+                ],
+                'body' => [
+                    'number' => $clientJpa->contact_phone,
+                    'text' => Text::html2wa($message),
+                    'delay' => self::timeToSleep($message)
+                ]
+            ]);
+        } else {
+            // Send message through Meta integration
+            $integrationJpa = Integration::find($clientJpa->integration_id);
+
+            if ($integrationJpa && $integrationJpa->meta_access_token) {
+                $baseUrl = $integrationJpa->meta_service === 'instagram'
+                    ? env('INSTAGRAM_GRAPH_URL')
+                    : env('FACEBOOK_GRAPH_URL');
+
+                $messageEndpoint = "{$baseUrl}/me/messages";
+                $messageData = [
+                    'recipient' => ['id' => $clientJpa->integration_user_id],
+                    'message' => ['text' => Text::html2wa($message)]
+                ];
+
+                new Fetch($messageEndpoint, [
+                    'method' => 'POST',
+                    'headers' => [
+                        'Content-Type' => 'application/json',
+                        'Authorization' => "Bearer {$integrationJpa->meta_access_token}"
+                    ],
+                    'body' => $messageData
+                ]);
+            }
+        }
+
+        // Store message in database
+        Message::create([
+            'wa_id' => $origin == 'evoapi' ? $clientJpa->contact_phone : $clientJpa->integration_user_id,
+            'role' => 'AI',
+            'message' => Text::html2wa($message),
+            'prompt' => $prompt2save,
+            'microtime' => (int) (microtime(true) * 1_000_000),
+            'business_id' => $clientJpa->business_id
+        ]);
+    }
+
+    private static function hasForms($businessId)
+    {
+        $raw = Setting::get('gemini-extra-questions', $businessId);
+        if (!$raw || !is_string($raw)) return [null, false];
+
+        $decoded = json_decode($raw, true);
+        if (!is_array($decoded)) return [null, false];
+
+        $formsWithQuestions = array_filter($decoded, function ($form) {
+            return isset($form['questions']) && is_array($form['questions']) && count($form['questions']) > 0;
+        });
+
+        return count($formsWithQuestions) > 0
+            ? [array_values($formsWithQuestions), true]
+            : [null, false];
+    }
+
     public static function assistant(Client $clientJpa, Message $messageJpa, ?string $origin = null)
     {
         try {
             while (true) {
+                /*
                 // Get latest message for this client
                 $latestMessage = Message::query()
                     ->where('wa_id', $origin == 'evoapi' ? $clientJpa->contact_phone : $clientJpa->integration_user_id)
@@ -291,7 +382,6 @@ class MetaController extends Controller
                     ->orderBy('microtime', 'desc')
                     ->first();
 
-                /*
                 // If latest message is different from current message, stop processing
                 if ($latestMessage->id !== $messageJpa->id) {
                     break;
@@ -313,11 +403,20 @@ class MetaController extends Controller
                 */
 
                 // Get last 40 messages
-                $messages = Message::query()
+                $messagesQuery = Message::query()
                     ->where('wa_id', $origin == 'evoapi' ? $clientJpa->contact_phone : $clientJpa->integration_user_id)
                     ->where('business_id', $clientJpa->business_id)
-                    ->orderBy('microtime', 'desc')
-                    ->limit(40)
+                    ->orderBy('microtime', 'desc');
+
+                if ($clientJpa->complete_registration) {
+                    $lastMessageMicrotime = Message::where('role', 'form')
+                        ->where('business_id', $clientJpa->business_id)
+                        ->orderBy('microtime', 'desc')
+                        ->value('microtime');
+                    $messagesQuery->where('microtime', '>', $lastMessageMicrotime);
+                }
+
+                $messages = $messagesQuery->limit(40)
                     ->get();
 
                 // Get Gemini API key from settings
@@ -329,229 +428,256 @@ class MetaController extends Controller
 
                 $businessEmail = Setting::get('email-new-lead-notification-message-owneremail', $businessJpa->id);
                 $businessServices = Setting::get('gemini-what-business-do', $businessJpa->id);
-                $prompt = File::get(
-                    $origin == 'evoapi'
-                        ? '../storage/app/utils/gemini-prompt-evoapi.txt'
-                        : '../storage/app/utils/gemini-prompt-meta.txt'
-                );
+                $personalidad = Setting::get('gemini-personality', $clientJpa->business_id);
+
+                $prompt = File::get('../storage/app/utils/gemini-prompt.txt');
                 $prompt = Text::replaceData($prompt, [
                     'nombreEmpresa' => $businessJpa->name,
                     'correoEmpresa' => $businessEmail ?? 'hola@mundoweb.pe',
                     'servicios' => $businessServices ?? 'algunos servicios',
+                    'personalidad' => $personalidad ? Text::lineBreak() . 'Personalidad General: ' . $personalidad . Text::lineBreak() : Text::lineBreak()
                 ]);
 
-                $messageString = '';
+                $messagesList = [];
                 foreach ($messages->sortBy('microtime') as $msg) {
-                    $messageString .= "{$msg->role}: {$msg->message}\n";
+                    $messagesList[] = [
+                        'parts' => [['text' => $msg->message]],
+                        'role' => $msg->role == 'Human' ? 'user' : 'model'
+                    ];
                 }
+                $formId = null;
+                if ($clientJpa->complete_registration) {
+                    $forms = $clientJpa->form_answers;
+                    $targetForm = null;
+                    foreach ($forms as $form) {
+                        $completed = $form['completed'] ?? false;
+                        if (!$completed) {
+                            $targetForm = $form;
+                            break;
+                        }
+                    }
+                    if (!$targetForm) break;
+                    $formId = $targetForm['id'];
+                    $properties = [];
+                    foreach ($targetForm['questions'] as $index => $question) {
+                        $paramName = 'answer_' . ($index + 1);
+                        $properties[$paramName] = [
+                            "type" => "string",
+                            "description" => $question['text'] . ($question['closed'] ? ' (Pregunta cerrada: Respuestas admitidas →  ' . implode(', ', array_map(fn($k, $v) => ($k + 1) . '. ' . $v, array_keys($question['answers']), $question['answers'])) . ')' : '')
+                        ];
+                    }
+                    $functionToCall = 'saveFormAnswers';
+                    $functionToCallDescription = 'Guarda las respuestas del formulario de registro de ' . $businessJpa->name;
+                } else {
+                    $properties = [
+                        "nombreCliente" => [
+                            "type" => "string",
+                            "description" => "Nombre completo del cliente."
+                        ],
+                        "correoCliente" => [
+                            "type" => "string",
+                            "description" => "Correo electrónico del cliente."
+                        ],
+                        "fuenteCliente" => [
+                            "type" => "string",
+                            "description" => "Fuente de referencia, muestralo como lista enumerada. Opciones válidas: Google, Facebook, Instagram, TikTok, Por un amigo, Otros (detalle exacto)."
+                        ]
+                    ];
+                    if ($origin !== 'evoapi') {
+                        $properties['telefonoCliente'] = [
+                            "type" => "string",
+                            "description" => "Número de teléfono del cliente incluyendo el código de área."
+                        ];
+                    }
+                    $functionToCall = 'saveClientData';
+                    $functionToCallDescription = 'Guarda la información del cliente que desea registrarse con ' . $businessJpa->name;
+                }
+                $body = [
+                    "system_instruction" => [
+                        "parts" => [["text" => $prompt]]
+                    ],
+                    "contents" => $messagesList,
+                    "tools" => [["functionDeclarations" => [
+                        [
+                            "name" => $functionToCall,
+                            "description" => $functionToCallDescription,
+                            "parameters" => [
+                                "type" => "object",
+                                "properties" => $properties,
+                                "required" => array_keys($properties)
+                            ]
+                        ]
+                    ]]]
+                ];
 
-                $prompt2send = $prompt . Text::lineBreak(2) . $messageString . 'AI:';
                 $geminiRest = new Fetch(env('GEMINI_API_URL'), [
                     'method' => 'POST',
                     'headers' => [
                         'Content-Type' => 'application/json',
                         'X-goog-api-key' => $apiKey
                     ],
-                    'body' => [
-                        'contents' => [['parts' => [['text' => $prompt2send]]]],
-                        'generationConfig' => ['stopSequences' => ['Human:', 'AI:']]
-                    ]
+                    'body' => $body
                 ]);
                 $geminiResponse = $geminiRest->json();
-                if (isset($geminiResponse['error']['message'])) {
-                    break;
-                }
 
-                $answer = $geminiResponse['candidates'][0]['content']['parts'][0]['text'];
-                $prompt2save = $prompt2send . $answer;
+                if (isset($geminiResponse['error']['message'])) throw new \Exception($geminiResponse['error']['message']);
 
-                $result = self::searchCommand($answer);
-                if (!$result['found']) {
-                    // Create and send message with cleaned response
-                    $message = trim(preg_replace('/^AI:\s*/', '', $result['message'])) ?: 'Lo siento, parece que no he entendido bien tu solicitud. ¿Podrías intentar formularla de nuevo o indicarme si necesitas ayuda de uno de nuestros ejecutivos?';
+                $answer = $geminiResponse['candidates'][0]['content']['parts'][0]['text'] ?? null;
+                $function = $geminiResponse['candidates'][0]['content']['parts'][0]['functionCall'] ?? null;
+                $function_name = $function['name'] ?? null;
 
-                    if ($origin == 'evoapi') {
-                        new Fetch(env('EVOAPI_URL') . '/message/sendText/' . $businessJpa->person->document_number, [
-                            'method' => 'POST',
-                            'headers' => [
-                                'Content-Type' => 'application/json',
-                                'apikey' => $businessJpa->uuid
-                            ],
-                            'body' => [
-                                'number' => $clientJpa->contact_phone,
-                                'text' => $message
-                            ]
-                        ]);
-                    } else {
-                        // Send message through Meta integration
-                        $integrationJpa = Integration::find($clientJpa->integration_id);
-
-                        if ($integrationJpa && $integrationJpa->meta_access_token) {
-                            $baseUrl = $integrationJpa->meta_service === 'instagram'
-                                ? env('INSTAGRAM_GRAPH_URL')
-                                : env('FACEBOOK_GRAPH_URL');
-
-                            $messageEndpoint = "{$baseUrl}/me/messages";
-                            $messageData = [
-                                'recipient' => ['id' => $clientJpa->integration_user_id],
-                                'message' => ['text' => $message]
-                            ];
-
-                            new Fetch($messageEndpoint, [
-                                'method' => 'POST',
-                                'headers' => [
-                                    'Content-Type' => 'application/json',
-                                    'Authorization' => "Bearer {$integrationJpa->meta_access_token}"
-                                ],
-                                'body' => $messageData
-                            ]);
-                        }
+                if ($function && $function_name == 'saveClientData') {
+                    $prompt2save = JSON::stringify($body, true) . "/n/nFunction: " . JSON::stringify($function, true);
+                    $data2Save = [
+                        'contact_name' => $function['args']['nombreCliente'],
+                        'contact_email' => $function['args']['correoCliente'],
+                        'source_channel' => $function['args']['fuenteCliente'],
+                        'complete_registration' => true
+                    ];
+                    if ($origin !== 'evoapi') {
+                        $data2Save['contact_phone'] = $function['args']['telefonoCliente'];
                     }
 
-                    // Store message in database
-                    Message::create([
-                        'wa_id' => $origin == 'evoapi' ? $clientJpa->contact_phone : $clientJpa->integration_user_id,
-                        'role' => 'AI',
-                        'message' => $message,
-                        'prompt' => $prompt2save,
-                        'microtime' => (int) (microtime(true) * 1_000_000),
-                        'business_id' => $clientJpa->business_id
-                    ]);
+                    [$questions, $hasForms] = self::hasForms($clientJpa->business_id);
 
-                    break;
-                }
+                    if ($hasForms) {
+                        $data2Save['form_answers'] = $questions;
+                        $data2Save['complete_form'] = false;
+                    }
 
-                // Get last command and parse it
-                $lastCommand = end($result['commands']);
-                $collected = self::pseudoToObject($lastCommand);
+                    $clientJpa->update($data2Save);
 
-                // Update client contact information if available
-                $updateData = [];
-                if (!empty($collected['correoCliente'])) {
-                    $updateData['contact_email'] = $collected['correoCliente'];
-                }
-                if (!empty($collected['nombreCliente']) && $collected['nombreCliente'] != '-') {
-                    $updateData['contact_name'] = $collected['nombreCliente'];
-                }
-                if (!empty($collected['telefonoCliente']) && $collected['telefonoCliente'] != '-') {
-                    $updateData['contact_phone'] = $collected['telefonoCliente'];
-                }
-                if (!empty($collected['fuenteCliente']) && $collected['fuenteCliente'] != '-') {
-                    $updateData['source_channel'] = $collected['fuenteCliente'];
-                }
+                    $clientJpa->refresh();
 
-                if (!empty($updateData)) {
-                    $clientJpa->update($updateData);
-
-                    // Check if all required fields are now complete
-                    if (
-                        $clientJpa->contact_name &&
-                        $clientJpa->contact_email &&
-                        $clientJpa->contact_phone
-                    ) {
-                        $clientJpa->update(['complete_registration' => true]);
-
-                        // Get welcome message from settings and send it
-                        $welcomeMessage = Setting::get('whatsapp-new-lead-notification-message-client', $clientJpa->business_id);
-                        $welcomeMessage = UtilController::replaceData($welcomeMessage, $clientJpa->toArray());
-
-                        if ($origin == 'evoapi') {
-                            // Send message through EvoAPI
-                            new Fetch(env('EVOAPI_URL') . '/message/sendText/' . $businessJpa->person->document_number, [
-                                'method' => 'POST',
-                                'headers' => [
-                                    'Content-Type' => 'application/json',
-                                    'apikey' => $businessJpa->uuid
-                                ],
-                                'body' => [
-                                    'number' => $clientJpa->contact_phone,
-                                    'text' => Text::html2wa($welcomeMessage)
-                                ]
-                            ]);
-                        } else {
-                            // Send message through Meta integration
-                            $integrationJpa = Integration::find($clientJpa->integration_id);
-                            if ($integrationJpa && $integrationJpa->meta_access_token) {
-                                $baseUrl = $integrationJpa->meta_service === 'instagram'
-                                    ? env('INSTAGRAM_GRAPH_URL')
-                                    : env('FACEBOOK_GRAPH_URL');
-
-                                $messageEndpoint = "{$baseUrl}/me/messages";
-                                $messageData = [
-                                    'recipient' => ['id' => $clientJpa->integration_user_id],
-                                    'message' => ['text' => UtilController::html2wa($welcomeMessage)]
-                                ];
-
-                                new Fetch($messageEndpoint, [
-                                    'method' => 'POST',
-                                    'headers' => [
-                                        'Content-Type' => 'application/json',
-                                        'Authorization' => "Bearer {$integrationJpa->meta_access_token}"
-                                    ],
-                                    'body' => $messageData
-                                ]);
-                            }
-                        }
-                        // Store welcome message in database
+                    if ($hasForms) {
+                        // Primer mensaje
+                        $firstName = explode(' ', trim($data2Save['contact_name']))[0];
+                        self::sendWithOrigin($businessJpa, $clientJpa, "Bien {$firstName}, ya tengo tus datos.", $prompt2save, $origin);
                         Message::create([
                             'wa_id' => $origin == 'evoapi' ? $clientJpa->contact_phone : $clientJpa->integration_user_id,
-                            'role' => 'AI',
-                            'message' => $welcomeMessage,
-                            'prompt' => $prompt2save,
+                            'role' => 'Form',
+                            'message' => 'Formulario: ' . $questions[0]['title'],
                             'microtime' => (int) (microtime(true) * 1_000_000),
                             'business_id' => $clientJpa->business_id
                         ]);
-                    } else {
-                        // Send the cleaned message from result if registration is not complete
-                        $message = trim(preg_replace('/^AI:\s*/', '', $result['message']));
-
-                        if ($origin == 'evoapi') {
-                            // Send message through EvoAPI
-                            new Fetch(env('EVOAPI_URL') . '/message/sendText/' . $businessJpa->person->document_number, [
-                                'method' => 'POST',
-                                'headers' => [
-                                    'Content-Type' => 'application/json',
-                                    'apikey' => $businessJpa->uuid
-                                ],
-                                'body' => [
-                                    'number' => $clientJpa->contact_phone,
-                                    'text' => $message
-                                ]
-                            ]);
-                        } else {
-
-                            $integrationJpa = Integration::find($clientJpa->integration_id);
-                            if ($integrationJpa && $integrationJpa->meta_access_token) {
-                                $baseUrl = $integrationJpa->meta_service === 'instagram'
-                                    ? env('INSTAGRAM_GRAPH_URL')
-                                    : env('FACEBOOK_GRAPH_URL');
-
-                                $messageEndpoint = "{$baseUrl}/me/messages";
-                                $messageData = [
-                                    'recipient' => ['id' => $clientJpa->integration_user_id],
-                                    'message' => ['text' => $message]
-                                ];
-
-                                new Fetch($messageEndpoint, [
-                                    'method' => 'POST',
-                                    'headers' => [
-                                        'Content-Type' => 'application/json',
-                                        'Authorization' => "Bearer {$integrationJpa->meta_access_token}"
-                                    ],
-                                    'body' => $messageData
-                                ]);
+                        // Segundo mensaje
+                        $welcomeMessage = $questions[0]['questions'][0]['text'];
+                        if ($questions[0]['questions'][0]['closed']) {
+                            try {
+                                foreach ($questions[0]['questions'][0]['answers'] as $key => $value) {
+                                    $q_index = $key + 1;
+                                    $welcomeMessage .= Text::lineBreak() . "{$q_index}. {$value}";
+                                }
+                            } catch (\Throwable $th) {
                             }
                         }
-                        // Store response message in database
+                        self::sendWithOrigin($businessJpa, $clientJpa, $welcomeMessage, '', $origin);
+                    } else {
+                        $welcomeMessage = Setting::get('whatsapp-new-lead-notification-message-client', $clientJpa->business_id);
+                        $welcomeMessage = Text::replaceData($welcomeMessage, $clientJpa->toArray());
+                        self::sendWithOrigin($businessJpa, $clientJpa, $welcomeMessage, $prompt2save, $origin);
+                    }
+                } else if ($function && $function_name == 'saveFormAnswers') {
+                    $prompt2save = JSON::stringify($body, true) . Text::lineBreak(2) . "Function: " . JSON::stringify($function, true);
+                    $formAnswers = $function['args'];
+
+                    // Obtener formularios actuales
+                    $forms = $clientJpa->form_answers ?? [];
+
+                    // Buscar el formulario por formId y marcarlo como completado
+                    foreach ($forms as $f_index => $form) {
+                        if ($form['id'] == $formId) {
+                            $forms[$f_index]['completed'] = true;
+
+                            // Actualizar respuestas en cada pregunta
+                            $questionIndex = 0;
+                            foreach ($form['questions'] as $q_index => $question) {
+                                $answerKey = 'answer_' . ($questionIndex + 1);
+                                if (isset($formAnswers[$answerKey])) {
+                                    $forms[$f_index]['questions'][$q_index]['answer'] = $formAnswers[$answerKey];
+                                }
+                                $questionIndex++;
+                            }
+                            break;
+                        }
+                    }
+
+                    // Verificar si hay algún formulario con completed false
+                    $hasIncompleteForms = false;
+                    foreach ($forms as $form) {
+                        if (!isset($form['completed']) || $form['completed'] === false) {
+                            $hasIncompleteForms = true;
+                            break;
+                        }
+                    }
+
+                    $clientJpa->update([
+                        'form_answers' => $forms,
+                        'complete_form' => !$hasIncompleteForms
+                    ]);
+
+                    if (!$hasIncompleteForms) {
+                        $welcomeMessage = Setting::get('whatsapp-new-lead-notification-message-client', $clientJpa->business_id);
+                        $clientData = $clientJpa->toArray();
+                        unset($clientData['form_answers']);
+                        $welcomeMessage = Text::replaceData($welcomeMessage, $clientData);
+                        self::sendWithOrigin($businessJpa, $clientJpa, $welcomeMessage, $prompt2save, $origin);
                         Message::create([
-                            'wa_id' => $clientJpa->integration_user_id,
-                            'role' => 'AI',
-                            'message' => $message,
-                            'prompt' => $prompt2save,
+                            'wa_id' => $origin == 'evoapi' ? $clientJpa->contact_phone : $clientJpa->integration_user_id,
+                            'role' => 'Form',
+                            'message' => '✓ Formulario completado',
                             'microtime' => (int) (microtime(true) * 1_000_000),
                             'business_id' => $clientJpa->business_id
                         ]);
+
+                        // Guardando formulario
+                        $formString = '';
+                        foreach ($forms as $form) {
+                            $formString .= "<b>{$form['title']}</b><br>";
+                            foreach ($form['questions'] as $index => $question) {
+                                $formString .= ($index + 1) . ". {$question['text']}<br>&emsp;{$question['answer']}<br>";
+                            }
+                            $formString .= '<br>';
+                        }
+                        ClientNote::create([
+                            'note_type_id' => '8e895346-3d87-4a87-897a-4192b917c211',
+                            'client_id' => $clientJpa->id,
+                            'name' => 'Formulario completado',
+                            'description' => $formString
+                        ]);
+                    } else {
+                        // Find the next form that hasn't been completed
+                        $nextForm = null;
+                        foreach ($forms as $form) {
+                            $completed = $form['completed'] ?? false;
+                            if (!$completed) {
+                                $nextForm = $form;
+                                break;
+                            }
+                        }
+                        if (!$nextForm) break;
+                        Message::create([
+                            'wa_id' => $origin == 'evoapi' ? $clientJpa->contact_phone : $clientJpa->integration_user_id,
+                            'role' => 'Form',
+                            'message' => 'Formulario: ' . $nextForm['title'],
+                            'microtime' => (int) (microtime(true) * 1_000_000),
+                            'business_id' => $clientJpa->business_id
+                        ]);
+                        $welcomeMessage = $nextForm['questions'][0]['text'];
+                        if ($nextForm['questions'][0]['closed']) {
+                            try {
+                                foreach ($nextForm['questions'][0]['answers'] as $key => $value) {
+                                    $q_index = $key + 1;
+                                    $welcomeMessage .= Text::lineBreak() . "{$q_index}. {$value}";
+                                }
+                            } catch (\Throwable $th) {
+                            }
+                        }
+                        self::sendWithOrigin($businessJpa, $clientJpa, $welcomeMessage, $prompt2save, $origin);
                     }
+                } else if ($answer) {
+                    $prompt2save = JSON::stringify($body, true) . Text::lineBreak(2) . "Output: " . $answer;
+                    self::sendWithOrigin($businessJpa, $clientJpa, $answer, $prompt2save, $origin);
                 }
                 break;
             }

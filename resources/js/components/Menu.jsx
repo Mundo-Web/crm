@@ -173,6 +173,7 @@ const Menu = ({ session, theme, can, whatsAppStatus, APP_PROTOCOL, APP_DOMAIN, l
           {whatsAppStatus == 'ready' && <MenuItem href="/messages" icon='mdi mdi-forum'>Mensajes</MenuItem>}
           <MenuItem href="/products" icon='mdi mdi-layers'>Productos</MenuItem>
           {can('processes', 'root', 'all', 'list') && <MenuItem href="/processes" icon='mdi mdi-timeline-text'>Procesos</MenuItem>}
+          {can('campaigns', 'root', 'all', 'list') && <MenuItem href="/campaigns" icon='mdi mdi-google-ads'>Campañas</MenuItem>}
 
           {can('projects', 'root', 'all', 'list') && <MenuItemContainer title='Proyectos' icon='mdi mdi-page-next'>
             <MenuItem href="/projects" icon='mdi mdi-lan-pending'>En curso</MenuItem>

@@ -150,6 +150,7 @@ class BasicController extends Controller
       'prefixes' => $prefixes,
       'global' => [
         'WA_URL' => env('WA_URL'),
+        'EVENTS_URL' => env('EVENTS_URL'),
         'PUBLIC_RSA_KEY' => Controller::$PUBLIC_RSA_KEY,
         'APP_PROTOCOL' => env('APP_PROTOCOL', 'https'),
         'APP_NAME' => env('APP_NAME'),
