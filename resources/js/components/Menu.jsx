@@ -163,6 +163,7 @@ const Menu = ({ session, theme, can, whatsAppStatus, APP_PROTOCOL, APP_DOMAIN, l
 
           {/* <MenuItem href="/calendar" icon='mdi mdi-calendar'>Calendario</MenuItem> */}
           <MenuItem href="/tasks" icon='mdi mdi-format-list-checks' badge={tasksCount > 0 ? tasksCount : ''}>Tareas</MenuItem>
+          <MenuItem href="/chat" icon='mdi mdi-chat'>Chat</MenuItem>
 
           <MenuItemContainer title='Personas' icon='mdi mdi-account-group'>
             <MenuItem href="/leads" icon='mdi mdi-check-bold' badge={leadsCount > 0 ? leadsCount : ''}>Leads</MenuItem>

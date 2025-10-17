@@ -242,36 +242,41 @@ class WhatsAppController extends Controller
 
             $message = $request->message;
 
-            // Validate if number exists in WhatsApp
-            $validateNumberRes = new Fetch(env('EVOAPI_URL') . '/chat/whatsappNumbers/' . $businessJpa->person->document_number, [
-                'method' => 'POST',
-                'headers' => [
-                    'Content-Type' => 'application/json',
-                    'apikey' => $businessJpa->uuid
-                ],
-                'body' => ['numbers' => [$number]]
-            ]);
-
-            $validationData = $validateNumberRes->json();
-            if (!$validateNumberRes->ok || empty($validationData) || !isset($validationData[0]['exists']) || !$validationData[0]['exists']) {
-                throw new Exception('El número de WhatsApp no existe o no está registrado');
-            }
-
-            if (Text::startsWith($message, '/signature:')) {
-                $res = new Fetch(env('EVOAPI_URL') . '/message/sendMedia/' . $businessJpa->person->document_number, [
+            if ($number != env('WA_DUMMY')) {
+                // Validate if number exists in WhatsApp
+                $validateNumberRes = new Fetch(env('EVOAPI_URL') . '/chat/whatsappNumbers/' . $businessJpa->person->document_number, [
                     'method' => 'POST',
                     'headers' => [
                         'Content-Type' => 'application/json',
                         'apikey' => $businessJpa->uuid
                     ],
-                    'body' => [
-                        'number' => $number,
-                        'mediatype' => 'image',
-                        'media' => str_replace('/signature:', '', $message),
-                        'fileName' => 'signature.png',
-                        'mimetype' => 'image/png'
-                    ]
+                    'body' => ['numbers' => [$number]]
                 ]);
+
+                $validationData = $validateNumberRes->json();
+                if (!$validateNumberRes->ok || empty($validationData) || !isset($validationData[0]['exists']) || !$validationData[0]['exists']) {
+                    throw new Exception('El número de WhatsApp no existe o no está registrado');
+                }
+            }
+
+            if ($number == env('WA_DUMMY')) $res = new Fetch(env('APP_URL') . '/');
+            if (Text::startsWith($message, '/signature:')) {
+                if ($number != env('WA_DUMMY')) {
+                    $res = new Fetch(env('EVOAPI_URL') . '/message/sendMedia/' . $businessJpa->person->document_number, [
+                        'method' => 'POST',
+                        'headers' => [
+                            'Content-Type' => 'application/json',
+                            'apikey' => $businessJpa->uuid
+                        ],
+                        'body' => [
+                            'number' => $number,
+                            'mediatype' => 'image',
+                            'media' => str_replace('/signature:', '', $message),
+                            'fileName' => 'signature.png',
+                            'mimetype' => 'image/png'
+                        ]
+                    ]);
+                }
                 Message::create([
                     'wa_id' => $number,
                     'role' => 'User',
@@ -302,21 +307,23 @@ class WhatsAppController extends Controller
                     $mediaType = 'audio';
                 }
 
-                $res = new Fetch(env('EVOAPI_URL') . '/message/sendMedia/' . $businessJpa->person->document_number, [
-                    'method' => 'POST',
-                    'headers' => [
-                        'Content-Type' => 'application/json',
-                        'apikey' => $businessJpa->uuid
-                    ],
-                    'body' => [
-                        'number' => $number,
-                        'mediatype' => $mediaType,
-                        'caption' => $message2send,
-                        'media' => $attachment,
-                        'fileName' => $filename,
-                        'mimetype' => $mimeType
-                    ]
-                ]);
+                if ($number != env('WA_DUMMY')) {
+                    $res = new Fetch(env('EVOAPI_URL') . '/message/sendMedia/' . $businessJpa->person->document_number, [
+                        'method' => 'POST',
+                        'headers' => [
+                            'Content-Type' => 'application/json',
+                            'apikey' => $businessJpa->uuid
+                        ],
+                        'body' => [
+                            'number' => $number,
+                            'mediatype' => $mediaType,
+                            'caption' => $message2send,
+                            'media' => $attachment,
+                            'fileName' => $filename,
+                            'mimetype' => $mimeType
+                        ]
+                    ]);
+                }
 
                 Message::create([
                     'wa_id' => $number,
@@ -326,17 +333,19 @@ class WhatsAppController extends Controller
                     'business_id' => Auth::user()->business_id,
                 ]);
             } else {
-                $res = new Fetch(env('EVOAPI_URL') . '/message/sendText/' . $businessJpa->person->document_number, [
-                    'method' => 'POST',
-                    'headers' => [
-                        'Content-Type' => 'application/json',
-                        'apikey' => $businessJpa->uuid
-                    ],
-                    'body' => [
-                        'number' => $number,
-                        'text' => Text::html2wa($request->message)
-                    ]
-                ]);
+                if ($number != env('WA_DUMMY')) {
+                    $res = new Fetch(env('EVOAPI_URL') . '/message/sendText/' . $businessJpa->person->document_number, [
+                        'method' => 'POST',
+                        'headers' => [
+                            'Content-Type' => 'application/json',
+                            'apikey' => $businessJpa->uuid
+                        ],
+                        'body' => [
+                            'number' => $number,
+                            'text' => Text::html2wa($request->message)
+                        ]
+                    ]);
+                }
                 Message::create([
                     'wa_id' => $number,
                     'role' => 'User',

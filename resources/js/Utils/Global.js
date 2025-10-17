@@ -5,7 +5,8 @@ class Global {
   static APP_PROTOCOL = null;
   static APP_URL = null;
   static APP_DOMAIN = null;
-  static APP_CORRELATIVE = null;
+  static APP_CORRELATIVE = 'crm';
+  static EVENTS_URL = 'https://events.atalaya.pe';
 
   static set = (name, value) => {
     Global[name] = value;
