@@ -94,7 +94,9 @@ class User extends Authenticable
         ])
             ->join('users_by_services_by_businesses', 'users_by_services_by_businesses.user_id', 'users.id')
             ->join('services_by_businesses', 'services_by_businesses.id', 'users_by_services_by_businesses.service_by_business_id')
+            ->join('services', 'services.id', 'services_by_businesses.service_id')
             ->join('businesses', 'businesses.id', 'services_by_businesses.business_id')
+            ->where('services.correlative', env('APP_CORRELATIVE'))
             ->where('services_by_businesses.business_id', Auth::user()->business_id);
 
         if ($id !== null) {
