@@ -62,7 +62,8 @@ const Chat = ({ users, ...properties }) => {
       withCount: ['unSeenMessages'],
       with: ['assigned'],
       sort: [{ selector: 'last_message_microtime', desc: true }],
-      limit: 40,
+      skip: 0,
+      take: 40,
       filter: [
         ['last_message_microtime', '<', oldestMicrotime]
       ]
