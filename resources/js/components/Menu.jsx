@@ -1,12 +1,19 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import Logout from '../actions/Logout'
 import MenuItem from './MenuItem'
 import MenuItemContainer from './MenuItemContainer'
 import Tippy from '@tippyjs/react'
 import 'tippy.js/dist/tippy.css';
 import BusinessCard from '../Reutilizables/Business/BusinessCard'
+import useWebSocket from '../Reutilizables/CustomHooks/useWebSocket'
+import MessagesRest from '../actions/MessagesRest'
+
+const messagesRest = new MessagesRest()
 
 const Menu = ({ session, theme, can, whatsAppStatus, APP_PROTOCOL, APP_DOMAIN, leadsCount, tasksCount, businesses, wsActive }) => {
+
+  const [chatBadge, setChatBadge] = useState(0)
+  const { socket } = useWebSocket()
 
   let mainRole = {}
   if (session.is_owner) {
@@ -25,6 +32,22 @@ const Menu = ({ session, theme, can, whatsAppStatus, APP_PROTOCOL, APP_DOMAIN, l
   const otherBusinesses = businesses.filter(({ id }) => session.business_id != id)
 
   const idBirthday = moment(session.birthdate).format('MM-DD') == moment().format('MM-DD')
+
+  const updateChatBadge = async () => {
+    const result = await messagesRest.countUnSeenMessages()
+    if (result === null) return
+    setChatBadge(result)
+  }
+  useEffect(() => {
+    socket.on('client.updated', (client) => {
+      updateChatBadge()
+    })
+    return () => { }
+  }, [socket])
+
+  useEffect(() => {
+    updateChatBadge()
+  }, [null])
 
   return (<div className="left-side-menu py-0">
     <div className="h-100 pt-3 driver-js-menu" data-simplebar >
@@ -163,7 +186,7 @@ const Menu = ({ session, theme, can, whatsAppStatus, APP_PROTOCOL, APP_DOMAIN, l
 
           {/* <MenuItem href="/calendar" icon='mdi mdi-calendar'>Calendario</MenuItem> */}
           <MenuItem href="/tasks" icon='mdi mdi-format-list-checks' badge={tasksCount > 0 ? tasksCount : ''}>Tareas</MenuItem>
-          <MenuItem href="/chat" icon='mdi mdi-chat'>Chat</MenuItem>
+          <MenuItem href="/chat" icon='mdi mdi-chat' badge={chatBadge || undefined}>Chat</MenuItem>
 
           <MenuItemContainer title='Personas' icon='mdi mdi-account-group'>
             <MenuItem href="/leads" icon='mdi mdi-check-bold' badge={leadsCount > 0 ? leadsCount : ''}>Leads</MenuItem>

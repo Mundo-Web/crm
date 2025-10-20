@@ -8,6 +8,8 @@ import LeadsRest from './actions/LeadsRest.js';
 import useWebSocket from './Reutilizables/CustomHooks/useWebSocket.jsx';
 import MessagesRest from './actions/MessagesRest.js';
 import ChatContent from './Reutilizables/Chat/ChatContent.jsx';
+import ArrayJoin from './Utils/ArrayJoin.js';
+import LaravelSession from './Utils/LaravelSession.js';
 
 const leadsRest = new LeadsRest()
 leadsRest.paginateSufix = null
@@ -21,28 +23,63 @@ const Chat = ({ users, ...properties }) => {
 
   const [leads, setLeads] = useState([])
   const [activeLeadId, setActiveLeadId] = useState(null);
-  const [selectedUsersId, setSelectedUsersId] = useState([]);
+  const [selectedUsersId, setSelectedUsersId] = useState([LaravelSession.service_user.id]);
   const [messages, setMessages] = useState([]);
   const [loadingLeads, setLoadingLeads] = useState(true);
   const [loadingMessages, setLoadingMessages] = useState(false);
+  const [loadingMoreLeads, setLoadingMoreLeads] = useState(false);
 
   const { socket } = useWebSocket()
   const messagesContainerRef = useRef()
+  const leadsContainerRef = useRef()
 
   const currentLead = leads.find(l => l.id == activeLeadId);
   const filteredMessages = messages.filter(m => m.wa_id == currentLead?.contact_phone);
 
   const getFirstLeads = async () => {
     setLoadingLeads(true);
-    const { data } = await leadsRest.paginate({
-      fields: ['clients.id', 'clients.contact_name', 'clients.contact_phone', 'clients.last_message', 'clients.last_message_microtime'],
+    const filters = {
+      fields: ['clients.id', 'clients.contact_name', 'clients.contact_phone', 'clients.last_message', 'clients.last_message_microtime', 'clients.assigned_to'],
       withCount: ['unSeenMessages'],
+      with: ['assigned'],
       sort: [{ selector: 'last_message_microtime', desc: true }],
       limit: 40
-    });
+    };
+    if (selectedUsersId.length) {
+      filters.filter = ArrayJoin(selectedUsersId.map(id => (['assigned_to', '=', id])), 'OR');
+    }
+    const { data } = await leadsRest.paginate(filters);
     setLeads(data ?? []);
     setLoadingLeads(false);
   }
+
+  const loadMoreLeads = async () => {
+    if (loadingMoreLeads || loadingLeads) return;
+    setLoadingMoreLeads(true);
+    const oldestMicrotime = Math.min(...leads.map(l => l.last_message_microtime ?? Date.now() * 1000));
+    const filters = {
+      fields: ['clients.id', 'clients.contact_name', 'clients.contact_phone', 'clients.last_message', 'clients.last_message_microtime', 'clients.assigned_to'],
+      withCount: ['unSeenMessages'],
+      with: ['assigned'],
+      sort: [{ selector: 'last_message_microtime', desc: true }],
+      limit: 40,
+      filter: [
+        ['last_message_microtime', '<', oldestMicrotime]
+      ]
+    };
+    if (selectedUsersId.length) {
+      filters.filter = [
+        ArrayJoin(selectedUsersId.map(id => (['assigned_to', '=', id])), 'OR'),
+        'and',
+        filters.filter
+      ];
+    }
+    const { data } = await leadsRest.paginate(filters);
+    if (data && data.length) {
+      setLeads(prev => [...prev, ...data]);
+    }
+    setLoadingMoreLeads(false);
+  };
 
   const getMessages = async () => {
     if (!currentLead) return
@@ -101,7 +138,7 @@ const Chat = ({ users, ...properties }) => {
 
   useEffect(() => {
     getFirstLeads()
-  }, [])
+  }, [selectedUsersId])
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -155,7 +192,17 @@ const Chat = ({ users, ...properties }) => {
     el.scrollTop = el.scrollHeight
   }, [messages])
 
-  console.log(activeLeadId)
+  useEffect(() => {
+    const el = leadsContainerRef.current;
+    if (!el) return;
+    const handleScroll = () => {
+      if (el.scrollTop + el.clientHeight >= el.scrollHeight - 10) {
+        loadMoreLeads();
+      }
+    };
+    el.addEventListener('scroll', handleScroll);
+    return () => el.removeEventListener('scroll', handleScroll);
+  }, [leads, loadingLeads, loadingMoreLeads, selectedUsersId]);
 
   return <Adminto {...properties} title='Chat' showTitle={false} setThemeParent={setTheme}>
     <div className="row">
@@ -214,16 +261,16 @@ const Chat = ({ users, ...properties }) => {
               </div>
             </div>
             <hr className="my-0" />
-            <div style={{ overflowY: 'auto' }}>
+            <div ref={leadsContainerRef} style={{ overflowY: 'auto', height: 'calc(100vh - 300px)' }}>
               {loadingLeads ? (
-                <div className="text-center py-4" style={{ height: 'calc(100vh - 300px)' }}>
+                <div className="text-center py-4">
                   <div className="spinner-border text-primary" role="status">
                     <span className="visually-hidden">Loading contacts...</span>
                   </div>
                   <p className="mt-2 mb-0 text-muted">Cargando contactos...</p>
                 </div>
               ) : (
-                <ul className="list-unstyled chat-list mb-0" style={{ height: 'calc(100vh - 300px)' }}>
+                <ul className="list-unstyled chat-list mb-0">
                   {leads
                     .sort((a, b) => new Date(b.last_message_microtime) - new Date(a.last_message_microtime))
                     .map(lead => {
@@ -252,9 +299,31 @@ const Chat = ({ users, ...properties }) => {
                       return <li key={lead.id} className={`${lead.unread ? 'unread' : ''} ${activeLeadId == lead.id ? 'bg-light' : ''}`}>
                         <a onClick={(e) => { setActiveLeadId(lead.id); e.stopPropagation() }} style={{ cursor: 'pointer' }}>
                           <div className="d-flex">
-                            <div className={`flex-shrink-0 chat-user-img ${lead.online ? 'active' : ''} align-self-center me-2`}>
+                            <div className={`position-relative flex-shrink-0 chat-user-img ${lead.online ? 'active' : ''} align-self-center me-2`}>
                               <img src={`//${Global.APP_DOMAIN}/api/profile/thumbnail/${lead.avatar}`}
-                                className="rounded-circle avatar-sm" alt={lead.name} />
+                                className="rounded-circle avatar-sm bg-light" alt={lead.name} style={{ padding: 0, border: 'none' }} />
+                              {
+                                lead.assigned_to && lead.assigned?.relative_id &&
+                                // Only show if no filters are applied OR if the assigned user is NOT the only selected one
+                                (selectedUsersId.length === 0 || 
+                                 (selectedUsersId.length > 1 || selectedUsersId[0] !== LaravelSession.service_user.id)) &&
+                                <Tippy
+                                  key={lead.assigned.id}
+                                  content={`${lead.assigned.name} ${lead.assigned.lastname}`}
+                                >
+                                  <img
+                                    className="position-absolute rounded-pill"
+                                    src={`//${Global.APP_DOMAIN}/api/profile/thumbnail/${lead.assigned.relative_id}`}
+                                    alt={lead.assigned.fullname}
+                                    style={{
+                                      right: '-4px', bottom: '-4px',
+                                      objectFit: 'cover', objectPosition: 'center',
+                                      padding: 0, border: `2px solid ${theme == 'light' ? '#ffffff' : '#313844'}`,
+                                      width: '18px', aspectRatio: 1
+                                    }}
+                                  />
+                                </Tippy>
+                              }
                             </div>
 
                             <div className="flex-grow-1 overflow-hidden">
@@ -262,7 +331,7 @@ const Chat = ({ users, ...properties }) => {
                               <p className="text-truncate mb-0" title={lead.last_message ?? undefined}>{lead.last_message ?? <i className='text-muted'>Sin mensaje</i>}</p>
                             </div>
                             <div className="d-flex flex-column align-items-end">
-                              <div className={`font-11 ${lead.un_seen_messages_count > 0 ? 'text-success':''}`}>{dateLabel}</div>
+                              <div className={`font-11 ${lead.un_seen_messages_count > 0 ? 'text-success' : ''}`}>{dateLabel}</div>
                               {lead.un_seen_messages_count > 0 && (
                                 <span className="badge bg-success rounded-pill mt-1">{lead.un_seen_messages_count}</span>
                               )}
@@ -271,6 +340,13 @@ const Chat = ({ users, ...properties }) => {
                         </a>
                       </li>
                     })}
+                  {loadingMoreLeads && (
+                    <li className="text-center py-2">
+                      <div className="spinner-border spinner-border-sm text-primary" role="status">
+                        <span className="visually-hidden">Loading more...</span>
+                      </div>
+                    </li>
+                  )}
                 </ul>
               )}
             </div>

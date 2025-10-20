@@ -26,6 +26,17 @@ class MessageController extends BasicController
     public $model = Message::class;
     public $reactView = 'Messages';
 
+    public function countUnSeenMessages(Request $request)
+    {
+        $response = Response::simpleTryCatch(function () {
+            return Client::where('business_id', Auth::user()->business_id)
+                ->where('assigned_to', Auth::user()->service_user->id)
+                ->whereHas('unSeenMessages')
+                ->count();
+        });
+        return response($response->toArray(), $response->status);
+    }
+
     public function setPaginationInstance(Request $request, string $model)
     {
         return $model::with('campaign');
