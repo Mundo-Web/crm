@@ -210,7 +210,7 @@ const Chat = ({ users, ...properties }) => {
         <div className="card chat-list-card mb-xl-0">
           <div className="card-body p-0">
             <div className="p-2">
-              <div className="d-flex w-100 gap-0 align-items-center">
+              <div className="d-flex w-100 gap-0 align-items-center" style={{ overflowX: 'auto' }}>
                 {users.map(user => (
                   <Tippy
                     key={user.id}
@@ -305,8 +305,8 @@ const Chat = ({ users, ...properties }) => {
                               {
                                 lead.assigned_to && lead.assigned?.relative_id &&
                                 // Only show if no filters are applied OR if the assigned user is NOT the only selected one
-                                (selectedUsersId.length === 0 || 
-                                 (selectedUsersId.length > 1 || selectedUsersId[0] !== LaravelSession.service_user.id)) &&
+                                (selectedUsersId.length === 0 ||
+                                  (selectedUsersId.length > 1 || selectedUsersId[0] !== LaravelSession.service_user.id)) &&
                                 <Tippy
                                   key={lead.assigned.id}
                                   content={`${lead.assigned.name} ${lead.assigned.lastname}`}
