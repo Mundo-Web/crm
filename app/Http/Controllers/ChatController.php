@@ -15,6 +15,7 @@ class ChatController extends BasicController
     {
         $usersJpa = User::byBusiness();
         return [
+            'activeLeadId' => $request->lead,
             'users' => $usersJpa
         ];
     }

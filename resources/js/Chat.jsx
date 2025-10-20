@@ -17,12 +17,12 @@ const messagesRest = new MessagesRest()
 
 const audio = new Audio('/assets/sounds/notification.wav');
 
-const Chat = ({ users, ...properties }) => {
+const Chat = ({ users, activeLeadId: activeLeadIdDB, ...properties }) => {
   const settings = Local.get('adminto_settings') ?? {}
   const [theme, setTheme] = useState(settings.theme ?? 'light');
 
   const [leads, setLeads] = useState([])
-  const [activeLeadId, setActiveLeadId] = useState(null);
+  const [activeLeadId, setActiveLeadId] = useState(activeLeadIdDB);
   const [selectedUsersId, setSelectedUsersId] = useState([LaravelSession.service_user.id]);
   const [messages, setMessages] = useState([]);
   const [loadingLeads, setLoadingLeads] = useState(true);
@@ -150,9 +150,13 @@ const Chat = ({ users, ...properties }) => {
   }, []);
 
   useEffect(() => {
-    if (!activeLeadId) return;
-    fetchMessagesIfEmpty()
-    fetchNewerMessages()
+    if (!activeLeadId) {
+      // history.replaceState({}, '', '/chat');
+      return;
+    }
+    // history.replaceState({}, '', `/chat/${activeLeadId}`);
+    fetchMessagesIfEmpty();
+    fetchNewerMessages();
   }, [activeLeadId]);
 
   useEffect(() => {
