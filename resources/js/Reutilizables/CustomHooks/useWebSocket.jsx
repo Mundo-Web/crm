@@ -29,6 +29,8 @@ const useWebSocket = (filters = {}) => {
       socket.connect();
     }
 
+    console.log('Conectando a socket...');
+
     socket.on("connect", () => {
       socket.emit("register_filters", {
         ...defaultFilters,
@@ -72,11 +74,11 @@ const useWebSocket = (filters = {}) => {
 
     return () => {
       console.log('Apagando eventos socket');
-      socket.off("notification");
-      socket.off("filters_registered");
-      socket.off("error");
-      socket.off("disconnect");
-      socket.off("connect");
+      // socket.off("notification");
+      // socket.off("filters_registered");
+      // socket.off("error");
+      // socket.off("disconnect");
+      // socket.off("connect");
     };
   }, []);
 
@@ -88,7 +90,7 @@ const useWebSocket = (filters = {}) => {
         ...filters,
       });
     }
-  }, [filters]);
+  }, [JSON.stringify({ ...defaultFilters, ...filters })]);
 
   return { wsActive, socket, notificationsCount };
 };

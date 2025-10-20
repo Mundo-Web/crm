@@ -71,6 +71,21 @@ class LeadController extends BasicController
 
         $usersJpa = User::byBusiness();
 
+        $question = Setting::get('gemini-extra-questions');
+
+        $hasForms = false;
+        if ($question && is_string($question)) {
+            $decoded = json_decode($question, true);
+            if (is_array($decoded)) {
+                foreach ($decoded as $form) {
+                    if (isset($form['questions']) && is_array($form['questions']) && count($form['questions']) > 0) {
+                        $hasForms = true;
+                        break;
+                    }
+                }
+            }
+        }
+
         return [
             'lead' => $request->lead,
             'manageStatuses' => $manageStatuses,
@@ -82,7 +97,8 @@ class LeadController extends BasicController
             'processes' => $processes,
             'defaultMessages' => $defaultMessages,
             'signs' => $signs,
-            'users' => $usersJpa
+            'users' => $usersJpa,
+            'hasForms' => $hasForms,
         ];
     }
 
@@ -107,18 +123,42 @@ class LeadController extends BasicController
     {
         $suffix = $request->suffix;
         $defaultLeadStatus = Setting::get('default-lead-status');
-        $query = $model::select('clients.*')
-            ->withCount(['notes', 'tasks', 'pendingTasks', 'products'])
-            ->with(['status', 'assigned', 'manageStatus', 'creator', 'integration'])
+        $query = $model::select($request->fields ?? 'clients.*')
+            ->withCount($request->withCount ?? ['notes', 'tasks', 'pendingTasks', 'products'])
+            ->with($request->with ?? ['status', 'assigned', 'manageStatus', 'creator', 'integration', 'campaign'])
             ->join('statuses AS status', 'status.id', 'status_id')
             ->leftJoin('statuses AS manage_status', 'manage_status.id', 'manage_status_id')
             ->leftJoin('users AS assigned', 'assigned.id', 'clients.assigned_to')
+            ->leftJoin('campaigns AS campaign', 'campaign.id', 'clients.campaign_id')
             ->where('status.table_id', 'e05a43e5-b3a6-46ce-8d1f-381a73498f33')
             ->where('clients.status', true)
             ->where('clients.business_id', Auth::user()->business_id);
 
-        if ($suffix == 'new') $query = $query->where('clients.status_id', $defaultLeadStatus);
-        else if ($suffix == 'served') $query = $query->where('clients.status_id', '<>', $defaultLeadStatus);
+        if ($suffix == 'served') $query = $query->where('clients.status_id', '<>', $defaultLeadStatus);
+        if ($suffix == 'new' || $suffix == 'incomplete') {
+            $query = $query->where('clients.status_id', $defaultLeadStatus);
+            $question = Setting::get('gemini-extra-questions');
+
+            $hasForms = false;
+            if ($question && is_string($question)) {
+                $decoded = json_decode($question, true);
+                if (is_array($decoded)) {
+                    foreach ($decoded as $form) {
+                        if (isset($form['questions']) && is_array($form['questions']) && count($form['questions']) > 0) {
+                            $hasForms = true;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if ($suffix == 'new' && $hasForms) {
+                $query = $query->where('clients.complete_registration', true);
+            }
+            if ($suffix == 'incomplete') {
+                $query = $query->where('clients.complete_registration', false);
+            }
+        }
 
         return $query;
     }
@@ -143,6 +183,7 @@ class LeadController extends BasicController
         $body['time'] = Trace::getDate('time');
         $body['ip'] = $request->ip();
         $body['complete_registration'] = true;
+
         return $body;
     }
 
@@ -309,6 +350,7 @@ class LeadController extends BasicController
             $leadJpa = Client::find($request->lead);
             if ($leadJpa->business_id != Auth::user()->business_id) throw new Exception('Este lead no pertenece a tu empresa');
             $leadJpa->complete_registration = true;
+            if ($leadJpa->form_answers) $leadJpa->complete_form = true;
             StatusController::updateStatus4Lead($leadJpa, $request->method() != 'DELETE');
 
             $leadJpa->save();

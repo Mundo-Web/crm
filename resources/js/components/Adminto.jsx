@@ -1,24 +1,31 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import RigthBar from './RightBar'
 import NavBar from './NavBar'
 import Menu from './Menu'
 import Footer from './Footer'
 import WhatsAppModal from './modals/WhatsAppModal'
 import { Toaster } from 'sonner'
+import { Local } from 'sode-extend-react'
+import useWebSocket from '../Reutilizables/CustomHooks/useWebSocket'
 
 moment.tz.setDefault('UTC');
 
-const Adminto = ({ session, children, notificationsCount, prefixes, title, showTitle = true, description, floatEnd, can, WA_URL, APP_URL, presets, businesses, services, APP_PROTOCOL, APP_DOMAIN, leadsCount, tasksCount, setWAPhone = () => { } }) => {
+const Adminto = ({ session, children, notificationsCount, prefixes, title, showTitle = true, description, floatEnd, can, WA_URL, APP_URL, presets, businesses, services, APP_PROTOCOL, APP_DOMAIN, leadsCount, tasksCount, setWAPhone = () => { }, setThemeParent = () => { } }) => {
 
   const settings = Local.get('adminto_settings') ?? {}
-  const [theme, setTheme] = useState(settings.theme ?? 'ligth');
+  const [theme, setTheme] = useState(settings.theme ?? 'light')
   const [whatsappStatus, setWhatsAppStatus] = useState(null)
-  const [wsActive, setWsActive] = useState(false);
+
+  const { wsActive } = useWebSocket()
+
+  useEffect(() => {
+    setThemeParent(theme)
+  }, [theme])
 
   return (<>
     <div id="wrapper">
       <Toaster />
-      <NavBar session={session} services={services} theme={theme} setTheme={setTheme} title={title} can={can} whatsappStatus={whatsappStatus} businesses={businesses} APP_DOMAIN={APP_DOMAIN} APP_PROTOCOL={APP_PROTOCOL} notificationsCount={notificationsCount} wsActive={wsActive} setWsActive={setWsActive} />
+      <NavBar session={session} services={services} theme={theme} setTheme={setTheme} title={title} can={can} whatsappStatus={whatsappStatus} businesses={businesses} APP_DOMAIN={APP_DOMAIN} APP_PROTOCOL={APP_PROTOCOL} notificationsCount={notificationsCount} wsActive={wsActive} />
       <Menu session={session} theme={theme} can={can} presets={presets} whatsappStatus={whatsappStatus} APP_DOMAIN={APP_DOMAIN} businesses={businesses} APP_PROTOCOL={APP_PROTOCOL} leadsCount={leadsCount} tasksCount={tasksCount} wsActive={wsActive} />
       <div className="content-page">
         <div className="content">

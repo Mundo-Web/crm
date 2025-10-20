@@ -62,6 +62,21 @@ class Client extends Model
         'integration_id',
         'integration_user_id',
         'source_channel',
+        'form_answers',
+        'complete_form',
+        'campaign_id',
+        'last_message',
+        'last_message_microtime',
+    ];
+
+    protected $casts = [
+        'form_answers' => 'array',
+        'complete_registration' => 'boolean',
+        'complete_form' => 'boolean',
+    ];
+
+    protected $hidden = [
+        // 'business_id'
     ];
 
     static function getFields()
@@ -81,10 +96,6 @@ class Client extends Model
             ['field' => 'workers', 'name' => 'N° Trabajadores'],
         ];
     }
-
-    protected $hidden = [
-        // 'business_id'
-    ];
 
     public function creator()
     {
@@ -156,5 +167,16 @@ class Client extends Model
     {
         return $this->belongsToMany(Product::class, 'client_has_products', 'client_id', 'product_id')
             ->withPivot('id');
+    }
+
+    public function campaign()
+    {
+        return $this->belongsTo(Campaign::class);
+    }
+
+    public function unSeenMessages()
+    {
+        return $this->hasMany(Message::class, 'wa_id', 'contact_phone')
+            ->where('seen', false);
     }
 }

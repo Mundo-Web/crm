@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Message extends Model
+class Campaign extends Model
 {
     use HasFactory, HasUuids;
 
@@ -14,23 +14,16 @@ class Message extends Model
     protected $keyType = 'string';
 
     protected $fillable = [
-        'id',
-        'wa_id',
-        'role',
-        'message',
-        'prompt',
-        'microtime',
-        'business_id',
-        'campaign_id',
-        'seen',
-    ];
-
-    protected $hidden = [
+        'code',
+        'source',
+        'title',
+        'link',
+        'notes',
+        'status',
         'business_id'
     ];
 
-    public function campaign()
-    {
-        return $this->belongsTo(Campaign::class);
-    }
+    protected $casts = [
+        'status' => 'boolean'
+    ];
 }

@@ -11,6 +11,8 @@ use App\Models\Setting;
 use App\Models\Task;
 use Carbon\Carbon;
 use Exception;
+use GuzzleHttp\Psr7\Query;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use SoDe\Extend\Fetch;
@@ -23,6 +25,32 @@ class MessageController extends BasicController
 {
     public $model = Message::class;
     public $reactView = 'Messages';
+
+    public function setPaginationInstance(Request $request, string $model)
+    {
+        return $model::with('campaign');
+    }
+
+    public function setPaginationSummary(Request $request, string $model, Builder $query)
+    {
+        $query = clone $query;
+        $query->where('seen', false)
+            ->update(['seen' => true]);
+        if ($request->summary) {
+            try {
+                $clientJpa = Client::select('id', 'contact_name', 'contact_phone', 'last_message', 'last_message_microtime')
+                    ->where('business_id', Auth::user()->business_id)
+                    ->where('contact_phone', $request->summary['contact_phone'])
+                    ->orderBy('updated_at', 'DESC')
+                    ->first();
+                $clientJpa->loadCount(['unSeenMessages']);
+                EventController::notify('client.updated', $clientJpa->toArray(), ['business_id' => Auth::user()->business_id]);
+            } catch (\Throwable $th) {
+                // Silently skip if client does not exist or any other error occurs
+            }
+        }
+        return [];
+    }
 
     public function send(Request $request)
     {
