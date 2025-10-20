@@ -329,7 +329,10 @@ const Chat = ({ users, ...properties }) => {
 
                             <div className="flex-grow-1 overflow-hidden">
                               <h5 className={`text-truncate font-14 mt-0 mb-1 ${lead.un_seen_messages_count > 0 ? 'fw-bold' : ''}`}>{lead.contact_name}</h5>
-                              <p className={`text-truncate mb-0 ${lead.un_seen_messages_count > 0 ? 'fw-bold' : ''}`} title={lead.last_message ?? undefined}>{lead.last_message ?? <i className='text-muted'>Sin mensaje</i>}</p>
+                              <p className={`text-truncate mb-0 ${lead.un_seen_messages_count > 0 ? 'fw-bold' : ''}`} title={lead.last_message ?? undefined}
+                                style={{
+                                  color: lead.un_seen_messages_count > 0 ? (theme == 'light' ? '#343a40' : '#f7f7f7') : undefined,
+                                }}>{lead.last_message ?? <i className='text-muted'>Sin mensaje</i>}</p>
                             </div>
                             <div className="d-flex flex-column align-items-end">
                               <div className={`font-11 ${lead.un_seen_messages_count > 0 ? 'text-success' : ''}`}>{dateLabel}</div>
