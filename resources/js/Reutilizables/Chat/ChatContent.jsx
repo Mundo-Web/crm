@@ -2,6 +2,7 @@ import { useRef, useState, useEffect } from "react"
 import HtmlContent from "../../Utils/HtmlContent"
 import wa2html from "../../Utils/wa2html"
 import WhatsAppRest from "../../actions/WhatsAppRest"
+import '../../../css/chat.css'
 
 const whatsAppRest = new WhatsAppRest()
 
@@ -193,7 +194,7 @@ const ChatContent = ({ messages, containerRef, lead, loading, getMessages, theme
 
     return (
         <div className="card-body p-0 position-relative border" style={{
-            backgroundColor: 'var(--bs-body-bg)',
+            backgroundColor: theme == 'light' ? 'rgb(245, 241, 235)' : 'rgb(22, 23, 23)',
         }}>
             <div className="position-absolute" style={{
                 top: 0, right: 0, bottom: 0, left: 0,
@@ -201,7 +202,7 @@ const ChatContent = ({ messages, containerRef, lead, loading, getMessages, theme
                 backgroundRepeat: 'repeat',
                 // backgroundPosition: 'contain',
                 zIndex: 0,
-                opacity: theme == 'light' ? 1 : 0.125
+                opacity: theme == 'light' ? 1 : 0.0625
             }} />
             <section className="d-flex flex-column position-relative" style={{ height: 'calc(100vh - 260px)', zIndex: 1 }}>
                 <ul
@@ -240,7 +241,7 @@ const ChatContent = ({ messages, containerRef, lead, loading, getMessages, theme
                             <li key={idx} className={fromMe ? 'odd' : ''} style={{ marginBottom: idx < messages.length - 1 ? '0px' : '24px', marginTop }}>
                                 <div className="message-list">
                                     <div className="conversation-text">
-                                        <div className="ctext-wrap">
+                                        <div className={`ctext-wrap ${fromMe ? `message-out-${theme}` : `message-in-${theme}`}`}>
                                             {message.campaign && (
                                                 <div className="rounded p-2 mb-2" style={{ backgroundColor: 'rgba(240, 240, 240, 0.125)', cursor: message.campaign.link ? 'pointer' : 'default', maxWidth: '240px' }}
                                                     onClick={() => {
