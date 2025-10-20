@@ -277,13 +277,13 @@ const ChatContent = ({ messages, containerRef, lead, loading, getMessages, theme
                                                     </div>
                                                     {
                                                         !content.trim() &&
-                                                        <span className="time mt-0 float-end" style={{ fontSize: '8px', marginLeft: '6px', marginTop: '6px !important' }}>{moment(message.created_at).format('HH:mm')}</span>
+                                                        <span className="time mt-0 float-end" style={{ fontSize: '8px', marginLeft: '6px', marginTop: '8px !important' }}>{moment(message.created_at).format('HH:mm')}</span>
                                                     }
                                                 </>
                                             )}
                                             {
                                                 content.trim() &&
-                                                <HtmlContent className="text-start font-13" html={wa2html(content + `<span class="time mt-0 float-end" style="font-size: 8px; margin-left: 6px; margin-top: 6px !important">${moment(message.created_at).format('HH:mm')}</span>`)} />
+                                                <HtmlContent className="text-start font-14" html={wa2html(content + `<span class="time mt-0 float-end" style="font-size: 8px; margin-left: 6px; margin-top: 8px !important">${moment(message.created_at).format('HH:mm')}</span>`)} />
                                             }
                                         </div>
                                     </div>
