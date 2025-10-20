@@ -51,7 +51,7 @@ class WhatsAppController extends Controller
             $businessJpa = Business::with(['person'])->find(Auth::user()->business_id);
             if (!$businessJpa) throw new Exception('Empresa no encontrada');
 
-            $res = new Fetch(env('EVOAPI_URL') . '/instance/fetchInstances', [
+            $res = new Fetch(env('EVOAPI_URL') . '/instance/fetchInstances?instanceName=' . $businessJpa->person->document_number, [
                 'headers' => ['apikey' => $businessJpa->uuid]
             ]);
 
