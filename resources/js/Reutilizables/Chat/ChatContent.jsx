@@ -241,7 +241,9 @@ const ChatContent = ({ messages, containerRef, lead, loading, getMessages, theme
                             <li key={idx} className={fromMe ? 'odd' : ''} style={{ marginBottom: idx < messages.length - 1 ? '0px' : '24px', marginTop }}>
                                 <div className="message-list">
                                     <div className="conversation-text">
-                                        <div className={`ctext-wrap ${fromMe ? `message-out-${theme}` : `message-in-${theme}`}`}>
+                                        <div className={`ctext-wrap ${fromMe ? `message-out-${theme}` : `message-in-${theme}`}`} style={{
+                                            boxShadow: 'rgba(11, 20, 26, 0.13) 0px 1px 0.5px 0px'
+                                        }}>
                                             {message.campaign && (
                                                 <div className="rounded p-2 mb-2" style={{ backgroundColor: 'rgba(240, 240, 240, 0.125)', cursor: message.campaign.link ? 'pointer' : 'default', maxWidth: '240px' }}
                                                     onClick={() => {
