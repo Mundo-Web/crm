@@ -1,3 +1,11 @@
+.message-in-light p,
+.message-in-dark p,
+.message-out-light p,
+.message-out-dark p {
+    padding-top: 0 !important;
+    line-height: 1.25
+}
+
 .message-in-light {
     background-color: rgb(255, 255, 255) !important;
     color: #0a0a0a !important;

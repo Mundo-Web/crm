@@ -242,7 +242,8 @@ const ChatContent = ({ messages, containerRef, lead, loading, getMessages, theme
                                 <div className="message-list">
                                     <div className="conversation-text">
                                         <div className={`ctext-wrap ${fromMe ? `message-out-${theme}` : `message-in-${theme}`}`} style={{
-                                            boxShadow: 'rgba(11, 20, 26, 0.13) 0px 1px 0.5px 0px'
+                                            boxShadow: 'rgba(11, 20, 26, 0.13) 0px 1px 0.5px 0px',
+                                            padding: '6px 8px'
                                         }}>
                                             {message.campaign && (
                                                 <div className="rounded p-2 mb-2" style={{ backgroundColor: 'rgba(240, 240, 240, 0.125)', cursor: message.campaign.link ? 'pointer' : 'default', maxWidth: '240px' }}
@@ -277,13 +278,13 @@ const ChatContent = ({ messages, containerRef, lead, loading, getMessages, theme
                                                     </div>
                                                     {
                                                         !content.trim() &&
-                                                        <span className="time mt-0 float-end" style={{ fontSize: '8px', marginLeft: '6px', marginTop: '8px !important' }}>{moment(message.created_at).format('HH:mm')}</span>
+                                                        <span className="time mt-0 float-end" style={{ fontSize: '10px', marginLeft: '6px', marginTop: '8px !important' }}>{moment(message.created_at).format('HH:mm')}</span>
                                                     }
                                                 </>
                                             )}
                                             {
                                                 content.trim() &&
-                                                <HtmlContent className="text-start font-14" html={wa2html(content + `<span class="time mt-0 float-end" style="font-size: 8px; margin-left: 6px; margin-top: 8px !important">${moment(message.created_at).format('HH:mm')}</span>`)} />
+                                                <HtmlContent className="text-start font-14" html={wa2html(content + `<span class="time mt-0 float-end" style="font-size: 10px; margin-left: 6px; margin-top: 8px !important">${moment(message.created_at).format('HH:mm')}</span>`)} />
                                             }
                                         </div>
                                     </div>
