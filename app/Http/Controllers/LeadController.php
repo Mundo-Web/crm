@@ -123,9 +123,9 @@ class LeadController extends BasicController
     {
         $suffix = $request->suffix;
         $defaultLeadStatus = Setting::get('default-lead-status');
-        $query = $model::select('clients.*')
-            ->withCount(['notes', 'tasks', 'pendingTasks', 'products'])
-            ->with(['status', 'assigned', 'manageStatus', 'creator', 'integration', 'campaign'])
+        $query = $model::select($request->fields ?? 'clients.*')
+            ->withCount($request->withCount ?? ['notes', 'tasks', 'pendingTasks', 'products'])
+            ->with($request->with ?? ['status', 'assigned', 'manageStatus', 'creator', 'integration', 'campaign'])
             ->join('statuses AS status', 'status.id', 'status_id')
             ->leftJoin('statuses AS manage_status', 'manage_status.id', 'manage_status_id')
             ->leftJoin('users AS assigned', 'assigned.id', 'clients.assigned_to')
@@ -183,7 +183,7 @@ class LeadController extends BasicController
         $body['time'] = Trace::getDate('time');
         $body['ip'] = $request->ip();
         $body['complete_registration'] = true;
-        
+
         return $body;
     }
 

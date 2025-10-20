@@ -510,21 +510,44 @@ class MetaController extends Controller
                     ]]]
                 ];
 
-                $geminiRest = new Fetch(env('GEMINI_API_URL'), [
-                    'method' => 'POST',
-                    'headers' => [
-                        'Content-Type' => 'application/json',
-                        'X-goog-api-key' => $apiKey
-                    ],
-                    'body' => $body
-                ]);
-                $geminiResponse = $geminiRest->json();
+                $attempts = 0;
+                $maxAttempts = 3;
+                $geminiResponse = null;
 
-                if (isset($geminiResponse['error']['message'])) throw new \Exception($geminiResponse['error']['message']);
+                do {
+                    $geminiRest = new Fetch(env('GEMINI_API_URL'), [
+                        'method' => 'POST',
+                        'headers' => [
+                            'Content-Type' => 'application/json',
+                            'X-goog-api-key' => $apiKey
+                        ],
+                        'body' => $body
+                    ]);
+                    $geminiResponse = $geminiRest->json();
 
-                $answer = $geminiResponse['candidates'][0]['content']['parts'][0]['text'] ?? null;
-                $function = $geminiResponse['candidates'][0]['content']['parts'][0]['functionCall'] ?? null;
-                $function_name = $function['name'] ?? null;
+                    if (isset($geminiResponse['error']['message'])) {
+                        throw new \Exception($geminiResponse['error']['message']);
+                    }
+
+                    $answer = $geminiResponse['candidates'][0]['content']['parts'][0]['text'] ?? null;
+                    $function = $geminiResponse['candidates'][0]['content']['parts'][0]['functionCall'] ?? null;
+                    $function_name = $function['name'] ?? null;
+
+                    // Check if response starts with "print(default_api."
+                    if ($answer && strpos(trim($answer), 'print(default_api.') === 0) {
+                        $attempts++;
+                        if ($attempts >= $maxAttempts) {
+                            // Save fallback message
+                            $answer = 'Me podrías proporcionar la información nuevamente';
+                            $function = null;
+                            $function_name = null;
+                            break;
+                        }
+                        // Retry
+                        continue;
+                    }
+                    break;
+                } while ($attempts < $maxAttempts);
 
                 if ($function && $function_name == 'saveClientData') {
                     $prompt2save = JSON::stringify($body, true) . "/n/nFunction: " . JSON::stringify($function, true);

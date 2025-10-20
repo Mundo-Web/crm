@@ -520,7 +520,6 @@ const LeadTable = ({ gridRef, cardClass, otherGridRef, rest, can, defaultLeadSta
     cardStyle={{
       borderRight: `6px solid ${borderColor}`
     }} />
-
 }
 
 export default LeadTable

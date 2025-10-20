@@ -69,7 +69,7 @@ class BasicController extends Controller
     return $model::select();
   }
 
-  public function setPaginationSummary(string $model, Builder $query)
+  public function setPaginationSummary(Request $request, string $model, Builder $query)
   {
     return [];
   }
@@ -242,7 +242,7 @@ class BasicController extends Controller
         }
       }
 
-      $response->summary = $this->setPaginationSummary($this->model, clone $instance);
+      $response->summary = $this->setPaginationSummary($request, $this->model, clone $instance);
 
       $jpas = [];
       if ($request->requireData !== false) {

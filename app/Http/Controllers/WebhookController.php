@@ -16,7 +16,6 @@ use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use SoDe\Extend\Response;
-use SoDe\Extend\Text;
 use SoDe\Extend\Trace;
 
 class WebhookController extends BasicController

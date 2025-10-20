@@ -259,7 +259,6 @@ class WhatsAppController extends Controller
                 }
             }
 
-            if ($number == env('WA_DUMMY')) $res = new Fetch(env('APP_URL') . '/');
             if (Text::startsWith($message, '/signature:')) {
                 if ($number != env('WA_DUMMY')) {
                     $res = new Fetch(env('EVOAPI_URL') . '/message/sendMedia/' . $businessJpa->person->document_number, [
@@ -354,7 +353,7 @@ class WhatsAppController extends Controller
                     'business_id' => Auth::user()->business_id,
                 ]);
             }
-            if (!$res?->ok) throw new Exception('Ocurrio un error al enviar el mensaje');
+            if ($number != env('WA_DUMMY') && !$res?->ok) throw new Exception('Ocurrio un error al enviar el mensaje');
         });
         return response($response->toArray(), $response->status);
     }

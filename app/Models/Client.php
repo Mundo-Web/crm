@@ -65,6 +65,8 @@ class Client extends Model
         'form_answers',
         'complete_form',
         'campaign_id',
+        'last_message',
+        'last_message_microtime',
     ];
 
     protected $casts = [
@@ -170,5 +172,11 @@ class Client extends Model
     public function campaign()
     {
         return $this->belongsTo(Campaign::class);
+    }
+
+    public function unSeenMessages()
+    {
+        return $this->hasMany(Message::class, 'wa_id', 'contact_phone')
+            ->where('seen', false);
     }
 }

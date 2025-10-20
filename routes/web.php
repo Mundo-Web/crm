@@ -4,6 +4,7 @@ use App\Http\Controllers\ApikeyController;
 use App\Http\Controllers\ArchivedController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CampaignController;
+use App\Http\Controllers\ChatController;
 use App\Http\Controllers\ChatruchoController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\DefaultMessageController;
@@ -68,6 +69,7 @@ Route::middleware(['auth', 'firstTime', 'hasPlan'])->group(function () {
     Route::get('/home', [KPILeadsController::class, 'reactView'])->name('KPILeads.jsx');
     Route::get('/home/projects', [KPIProjectsController::class, 'reactView'])->name('KPIProjects.jsx');
     Route::get('/clients', [ClientController::class, 'reactView'])->name('Clients.jsx');
+    Route::get('/chat', [ChatController::class, 'reactView'])->name('Chat.jsx');
     // Route::get('/calendar', [CalendarController::class, 'reactView'])->name('Calendar.jsx');
     Route::get('/tasks', [TaskController::class, 'reactView'])->name('Tasks.jsx');
     Route::get('/leads', [LeadController::class, 'reactView'])->name('Leads.jsx');

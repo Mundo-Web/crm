@@ -598,7 +598,7 @@ const Leads = (properties) => {
         </button>
       </Tippy>
     }
-    <div className='d-flex gap-0 '>
+    <div className='d-flex gap-0'>
       <input id='view-as-table' type="radio" name='view-as' defaultChecked={defaultView == 'table'} onClick={() => onDefaultViewClicked('table')} />
       <label htmlFor="view-as-table">
         <i className='mdi mdi-table me-1'></i>

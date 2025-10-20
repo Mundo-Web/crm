@@ -1,1 +1,0 @@
-import{C as a,c as o,j as t}from"./CreateReactScript-e3GvmO1h.js";import{A as s}from"./Adminto-CI_nj0HS.js";import"./Logout-C-9LAAR-.js";import"./sweetalert2.esm.all-CMZyvfN1.js";const i=()=>t.jsx(t.Fragment,{});a((e,r)=>{o(e).render(t.jsx(s,{...r,title:"Blank",showTitle:!1,children:t.jsx(i,{...r})}))});

@@ -22,6 +22,7 @@ class Message extends Model
         'microtime',
         'business_id',
         'campaign_id',
+        'seen',
     ];
 
     protected $hidden = [

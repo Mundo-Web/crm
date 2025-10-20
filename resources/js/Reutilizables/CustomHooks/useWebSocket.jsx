@@ -6,9 +6,14 @@ import NotificationsRest from "../../actions/NotificationsRest";
 
 const audio = new Audio('/assets/sounds/notification.wav');
 
-const useWebSocket = () => {
+const useWebSocket = (filters = {}) => {
   const [wsActive, setWsActive] = useState(false);
   const [notificationsCount, setNotificationsCount] = useState(0);
+
+  const defaultFilters = {
+    business_id: LaravelSession.business_id,
+    user_id: LaravelSession.service_user.id,
+  };
 
   const fetchNotificationsCount = async () => {
     const notiRest = new NotificationsRest()
@@ -24,18 +29,20 @@ const useWebSocket = () => {
       socket.connect();
     }
 
-    // Emitir filtros una sola vez
+    console.log('Conectando a socket...');
+
     socket.on("connect", () => {
       socket.emit("register_filters", {
-        business_id: LaravelSession.business_id,
-        user_id: LaravelSession.service_user.id,
+        ...defaultFilters,
+        ...filters,
       });
     });
 
     socket.on("filters_registered", ({ service, filters }) => {
       setWsActive(true);
       console.log(`✅ Conectado a eventos de ${service}`);
-      console.log(Object.keys(filters).map(key => `${key}: ${filters[key]}`).join('\n'))
+      const filtersArray = Object.entries(filters).map(([key, value]) => ({ Filtro: key, Valor: value }));
+      console.table(filtersArray);
     });
 
     socket.on("notification", (message) => {
@@ -65,20 +72,27 @@ const useWebSocket = () => {
       console.error("❌ Error:", error);
     });
 
-    socket.on("disconnect", () => {
-      setWsActive(false);
-      console.log("🔌 Desconectado del servidor");
-    });
+    socket.on("disconnect", () => setWsActive(false));
 
-    // ✅ No desconectamos en cleanup para mantener un único socket global
     return () => {
-      socket.off("notification");
-      socket.off("filters_registered");
-      socket.off("error");
-      socket.off("disconnect");
-      socket.off("connect");
+      console.log('Apagando eventos socket');
+      // socket.off("notification");
+      // socket.off("filters_registered");
+      // socket.off("error");
+      // socket.off("disconnect");
+      // socket.off("connect");
     };
   }, []);
+
+  // ✅ Este solo reacciona si cambian los filtros dinámicos
+  useEffect(() => {
+    if (socket.connected) {
+      socket.emit("update_filters", {
+        ...defaultFilters,
+        ...filters,
+      });
+    }
+  }, [JSON.stringify({ ...defaultFilters, ...filters })]);
 
   return { wsActive, socket, notificationsCount };
 };

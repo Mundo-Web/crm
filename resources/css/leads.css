@@ -7,7 +7,6 @@
     background-color: #fff;
     color: #323a46;
     cursor: pointer;
-    white-space: nowrap;
 }
 
 [for="view-as-table"] {

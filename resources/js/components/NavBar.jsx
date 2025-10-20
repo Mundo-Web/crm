@@ -16,10 +16,9 @@ const usersByServicesByBusinessesRest = new UsersByServicesByBusinessesRest();
 
 const audio = new Audio('/assets/sounds/notification.wav');
 
-const NavBar = ({ can, session = {}, services, theme, setTheme, title = '', wsActive, setWsActive, whatsappStatus, businesses, APP_PROTOCOL, APP_DOMAIN, notificationsCount: notificationsCountDB }) => {
+const NavBar = ({ can, session = {}, services, theme, setTheme, title = '', wsActive, setWsActive, whatsappStatus, businesses, APP_PROTOCOL, APP_DOMAIN }) => {
   const { color } = WhatsAppStatuses[whatsappStatus]
 
-  // const [notificationsCount, setNotificationsCount] = useState(notificationsCountDB)
   const [notifications, setNotifications] = useState([]);
 
   const {notificationsCount} = useWebSocket();
