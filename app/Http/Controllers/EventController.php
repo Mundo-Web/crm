@@ -20,6 +20,7 @@ class EventController extends Controller
                 ],
                 'body' => [
                     'service' => env('APP_CORRELATIVE'),
+                    'environment' => env('APP_ENV'),
                     'filters' => $filters,
                     'eventType' => $event,
                     'data' => $data

@@ -33,4 +33,8 @@ class Message extends Model
     {
         return $this->belongsTo(Campaign::class);
     }
+
+    public function client() {
+        return $this->hasOne(Client::class, 'contact_phone', 'wa_id');
+    }
 }

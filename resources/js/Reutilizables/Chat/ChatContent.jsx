@@ -2,12 +2,16 @@ import { useRef, useState, useEffect } from "react"
 import HtmlContent from "../../Utils/HtmlContent"
 import wa2html from "../../Utils/wa2html"
 import WhatsAppRest from "../../actions/WhatsAppRest"
+import LeadsRest from "../../actions/LeadsRest"
+import MessagesRest from "../../actions/MessagesRest"
+import useWebSocket from "../CustomHooks/useWebSocket"
 import '../../../css/chat.css'
 
 const whatsAppRest = new WhatsAppRest()
+const messagesRest = new MessagesRest()
+const leadsRest = new LeadsRest()
 
-const ChatContent = ({ messages, containerRef, lead, loading, getMessages, theme }) => {
-
+const ChatContent = ({ leadId, theme }) => {
     const inputMessageRef = useRef()
     const fileInputRef = useRef()
     const audioRef = useRef()
@@ -15,6 +19,14 @@ const ChatContent = ({ messages, containerRef, lead, loading, getMessages, theme
     const videoRef = useRef()
     const canvasRef = useRef()
     const dropdownRef = useRef()
+    const containerRef = useRef()
+
+    const [contact, setContact] = useState(null)
+    const [contactLoading, setContactLoading] = useState(true)
+    const [messages, setMessages] = useState([]);
+    const [messagesLoading, setMessagesLoading] = useState(true);
+
+    const { socket } = useWebSocket()
 
     const [isSending, setIsSending] = useState(false)
     const [isRecording, setIsRecording] = useState(false)
@@ -25,12 +37,12 @@ const ChatContent = ({ messages, containerRef, lead, loading, getMessages, theme
     const [cameraStream, setCameraStream] = useState(null)
     const [cameraBlob, setCameraBlob] = useState(null)
     const [showCamera, setShowCamera] = useState(false)
+    // Skeleton state
+    const [skeletonCount, setSkeletonCount] = useState(3)
+    const [skeletonSides, setSkeletonSides] = useState([])
 
-    useEffect(() => {
-        if (inputMessageRef.current) {
-            inputMessageRef.current.value = messageText
-        }
-    }, [messageText])
+    // Prevent auto-scroll when user is scrolling up
+    const userIsScrollingUp = useRef(false)
 
     useEffect(() => {
         // Cleanup audio URL on unmount or when blob changes
@@ -38,7 +50,6 @@ const ChatContent = ({ messages, containerRef, lead, loading, getMessages, theme
             if (audioUrl) URL.revokeObjectURL(audioUrl)
         }
     }, [audioUrl])
-
     // Cleanup camera stream on unmount
     useEffect(() => {
         return () => {
@@ -47,21 +58,84 @@ const ChatContent = ({ messages, containerRef, lead, loading, getMessages, theme
             }
         }
     }, [cameraStream])
+    // Skeleton randomizer
+    useEffect(() => {
+        if (!messagesLoading) return
+        const interval = setInterval(() => {
+            const newCount = 3 + Math.floor(Math.random() * 5) // 3-7
+            setSkeletonCount(newCount)
+            setSkeletonSides(Array.from({ length: newCount }, () => Math.random() > 0.5))
+        }, 1500)
+        return () => clearInterval(interval)
+    }, [messagesLoading])
+    // Scroll helpers
+
+    const scrollToBottom = (smooth = true) => {
+        const el = containerRef.current
+        if (!el) return
+        el.scrollTo({ top: el.scrollHeight, behavior: smooth ? 'smooth' : 'auto' })
+    }
+
+    const isScrolledNearBottom = () => {
+        const el = containerRef.current
+        if (!el) return true
+        return el.scrollTop + el.clientHeight >= el.scrollHeight - 60
+    }
+
+    // Initial scroll on first load
+    useEffect(() => {
+        if (!messagesLoading && messages.length) {
+            scrollToBottom(false)
+        }
+    }, [messagesLoading, messages.length])
+
+    // Scroll on new message
+    useEffect(() => {
+        if (!socket || !contact) return
+        socket.on('message.created', (props) => {
+            if (props.wa_id != contact?.contact_phone) return
+            const { id, microtime } = props;
+            setMessages(prev => {
+                const exists = prev.find(m => m.id === id);
+                if (exists) {
+                    return prev.map(m => m.id === id ? { ...m, ...props } : m);
+                }
+                const updated = [...prev, props].sort((a, b) => a.microtime - b.microtime);
+                return updated;
+            });
+
+            // Load newer messages if needed
+            const newestMicrotime = messages.reduce((max, m) => Math.max(max, m.microtime), 0)
+            if (microtime > newestMicrotime) {
+                loadNewerMessages(microtime)
+            }
+
+            // Auto-scroll only if near bottom and user is not scrolling up
+            if (isScrolledNearBottom() && !userIsScrollingUp.current) {
+                setTimeout(() => scrollToBottom(true), 100)
+            }
+        })
+        return () => {
+            socket.off('message.created')
+        }
+    }, [socket, contact, messages])
 
     // Infinite scroll handler
     useEffect(() => {
+        if (messagesLoading) return
         const el = containerRef.current
         if (!el) return
 
         const handleScroll = () => {
-            if (el.scrollTop === 0 && !loading && getMessages) {
-                getMessages()
+            if (el.scrollTop === 0) {
+                userIsScrollingUp.current = true
+                loadMessages()
             }
         }
 
         el.addEventListener('scroll', handleScroll)
         return () => el.removeEventListener('scroll', handleScroll)
-    }, [containerRef, loading, getMessages])
+    }, [containerRef, messagesLoading])
 
     // Close dropdown on outside click
     useEffect(() => {
@@ -120,7 +194,7 @@ const ChatContent = ({ messages, containerRef, lead, loading, getMessages, theme
 
     const onMessageSubmit = async (e) => {
         e.preventDefault()
-        if (!lead) return
+        if (!contact) return
         const text = messageText.trim()
         if (!text && !audioBlob && !cameraBlob) return
 
@@ -132,7 +206,7 @@ const ChatContent = ({ messages, containerRef, lead, loading, getMessages, theme
             // TODO: implement camera image upload
             console.warn('Camera image upload not implemented yet')
         } else {
-            await whatsAppRest.send(lead.id, text)
+            await whatsAppRest.send(contact.id, text)
         }
         setMessageText('')
         setAudioBlob(null)
@@ -192,7 +266,113 @@ const ChatContent = ({ messages, containerRef, lead, loading, getMessages, theme
 
     let lastFromMe = false
 
-    return (
+    const getContact = async () => {
+        setContactLoading(true)
+        const contactData = await leadsRest.get(leadId)
+        setContactLoading(false)
+        setContact(contactData)
+    }
+
+    const loadMessages = async () => {
+        if (!contact || !leadId) return
+        const el = containerRef.current
+        const prevScrollHeight = el ? el.scrollHeight : 0
+        const oldestMessage = messages
+            .filter(m => m.wa_id == contact.contact_phone)
+            .sort((a, b) => a.microtime - b.microtime)[0] ?? { microtime: (Date.now() + 5 * 60 * 60 * 1000) * 1000 }
+        setMessagesLoading(true)
+        const result = await messagesRest.paginate({
+            summary: {
+                'contact_phone': contact.contact_phone
+            },
+            filter: [
+                ["microtime", "<", oldestMessage.microtime], "and",
+                ["wa_id", "contains", contact.contact_phone]
+            ],
+            sort: [{ selector: 'microtime', desc: true }],
+            skip: 0,
+            take: 40
+        })
+        setMessagesLoading(false)
+        if (result.data?.length > 0) {
+            setMessages(prev => {
+                const existingIds = new Set(prev.map(m => m.id))
+                const newMessages = (result.data ?? []).filter(m => !existingIds.has(m.id))
+                return [...newMessages, ...prev].sort((a, b) => a.microtime - b.microtime)
+            })
+            // Mantener posición de scroll después de cargar mensajes antiguos
+            if (el) {
+                const newScrollHeight = el.scrollHeight
+                el.scrollTop = newScrollHeight - prevScrollHeight
+            }
+            // Reset user scroll flag after loading older messages
+            userIsScrollingUp.current = false
+        }
+    }
+
+    const loadNewerMessages = async (sinceMicrotime) => {
+        if (!contact) return
+        await messagesRest.paginate({
+            summary: {
+                'contact_phone': contact.contact_phone
+            },
+            filter: [
+                ["microtime", "<=", sinceMicrotime], "and",
+                ["wa_id", "contains", contact.contact_phone]
+            ],
+            sort: [{ selector: 'microtime', desc: true }],
+            skip: 0,
+            take: 40
+        })
+    }
+
+    useEffect(() => {
+        setContact(null)
+        setMessages([])
+        if (!leadId) return
+        getContact()
+    }, [leadId])
+
+    useEffect(() => {
+        setMessages([])
+        if (!leadId && !contact) return
+        loadMessages()
+    }, [contact, leadId])
+
+    // Render skeletons
+    const renderSkeletons = () => (
+        <>
+            {Array.from({ length: skeletonCount }).map((_, idx) => (
+                <li key={idx} className={skeletonSides[idx] ? 'odd' : ''} style={{ marginBottom: idx < skeletonCount - 1 ? '0px' : '24px', marginTop: idx > 0 && skeletonSides[idx] === skeletonSides[idx - 1] ? '3px' : '12px' }}>
+                    <div className="message-list">
+                        <div className="conversation-text">
+                            <div className={`ctext-wrap ${skeletonSides[idx] ? `message-out-${theme}` : `message-in-${theme}`}`} style={{ boxShadow: 'rgba(11, 20, 26, 0.13) 0px 1px 0.5px 0px', padding: '6px 8px', width: '300px' }}>
+                                <div className="placeholder-glow">
+                                    <span className="placeholder col-7" />
+                                    <span className="placeholder col-4" />
+                                    <span className="placeholder col-4 ms-2" />
+                                    <span className="placeholder col-6" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </li>
+            ))}
+        </>
+    )
+
+    return <>
+        <div className={`card-header ${theme == 'light' ? 'bg-white' : 'bg-light'}`}>
+            <div className="d-flex">
+                <div className={`flex-grow-1 ${contactLoading ? 'placeholder-glow' : ''}`}>
+                    <h5 className={`mt-0 mb-1 text-truncate ${contactLoading ? 'placeholder col-3' : ''}`}>{contact?.contact_name}</h5>
+                    <p className={`d-block font-13 text-muted mb-0 ${contactLoading ? 'placeholder col-2' : ''}`}>
+                        <i className="mdi mdi-phone me-1 font-11"></i>
+                        {contact?.contact_phone}
+                    </p>
+                </div>
+            </div>
+        </div>
         <div className="card-body p-0 position-relative border" style={{
             backgroundColor: theme == 'light' ? 'rgb(245, 241, 235)' : 'rgb(22, 23, 23)',
         }}>
@@ -200,23 +380,25 @@ const ChatContent = ({ messages, containerRef, lead, loading, getMessages, theme
                 top: 0, right: 0, bottom: 0, left: 0,
                 backgroundImage: 'url(/assets/img/doodles.png)',
                 backgroundRepeat: 'repeat',
-                // backgroundPosition: 'contain',
                 zIndex: 0,
                 opacity: theme == 'light' ? 1 : 0.0625
             }} />
             <section className="d-flex flex-column position-relative" style={{ height: 'calc(100vh - 260px)', zIndex: 1 }}>
                 <ul
                     ref={containerRef}
-                    className="conversation-list slimscroll flex-grow-1 px-3 pt-3"
+                    className="conversation-list flex-grow-1 px-3 pt-3"
                     style={{ overflowY: 'auto', scrollBehavior: 'smooth', position: 'relative' }}
                 >
                     {/* Loading overlay at the top */}
-                    {loading && (
+                    {/* {messagesLoading && messages.length === 0 && (
                         <li className="text-center py-1 px-2 rounded-pill mx-auto" style={{ position: 'sticky', top: 0, zIndex: 10, width: 'max-content', backgroundColor: 'var(--bs-light)' }}>
                             <i className="mdi mdi-spin mdi-loading" />
                             <small className="text-muted ms-2">Cargando mensajes...</small>
                         </li>
-                    )}
+                    )} */}
+                    {/* Skeletons */}
+                    {messagesLoading && messages.length === 0 && renderSkeletons()}
+                    {/* Messages */}
                     {messages.map((message, idx) => {
                         const fromMe = message.role !== 'Human'
                         const marginTop = lastFromMe === fromMe ? '3px' : '12px'
@@ -269,7 +451,12 @@ const ChatContent = ({ messages, containerRef, lead, loading, getMessages, theme
                                                             borderRadius: '4px',
                                                             objectFit: 'cover',
                                                         }}
-                                                        onError={e => $(e.target).remove()} />
+                                                        onError={e => {
+                                                            const img = e.target
+                                                            if (img && img.parentNode) {
+                                                                img.style.display = 'none'
+                                                            }
+                                                        }} />
                                                     <div className="d-flex justify-content-end">
                                                         <a className="btn btn-xs btn-light mb-1 text-nowrap d-flex text-end" href={attachment.replace('/attachment:', '')} target="_blank" rel="noreferrer" download>
                                                             <i className="mdi mdi-download me-1"></i>
@@ -506,8 +693,8 @@ const ChatContent = ({ messages, containerRef, lead, loading, getMessages, theme
                 </div>
             )}
         </div>
+    </>
 
-    )
 }
 
 export default ChatContent

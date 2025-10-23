@@ -5,6 +5,7 @@ class Global {
   static APP_PROTOCOL = null;
   static APP_URL = null;
   static APP_DOMAIN = null;
+  static APP_ENV = null;
   static APP_CORRELATIVE = 'crm';
   static EVENTS_URL = 'https://events.atalaya.pe';
 

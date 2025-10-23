@@ -275,15 +275,15 @@ const LeadTable = ({ gridRef, cardClass, otherGridRef, rest, can, defaultLeadSta
 
           ReactAppend(container, <div className="d-flex align-items-center justify-content-between gap-2">
             <div className="d-flex align-items-center gap-2 overflow-hidden">
-              {/* {
+              {
                 integrationIcon &&
                 <TippyButton className='btn btn-xs btn-white' title='Ver mensajes' onClick={(e) => {
-                  onMessagesClicked(data)
+                  window.location.href = `/chat/${data.id}`
                   e.stopPropagation()
                 }}>
                   {integrationIcon}
                 </TippyButton>
-              } */}
+              }
               <div className="text-truncate">
                 {
                   data.status_id == defaultLeadStatus

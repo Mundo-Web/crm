@@ -28,11 +28,15 @@ class MessageController extends BasicController
 
     public function countUnSeenMessages(Request $request)
     {
-        $response = Response::simpleTryCatch(function () {
-            return Client::where('business_id', Auth::user()->business_id)
-                ->where('assigned_to', Auth::user()->service_user->id)
-                ->whereHas('unSeenMessages')
-                ->count();
+        $response = Response::simpleTryCatch(function () use ($request) {
+            return Message::whereHas('client', function ($q) use ($request) {
+                $q->where('business_id', Auth::user()->business_id);
+                foreach ($request->assigneds ?? [] as $assigned) {
+                    $q->where('assigned_to', $assigned);
+                }
+            })
+            ->where('seen', false)
+            ->count();
         });
         return response($response->toArray(), $response->status);
     }
@@ -45,9 +49,10 @@ class MessageController extends BasicController
     public function setPaginationSummary(Request $request, string $model, Builder $query)
     {
         $query = clone $query;
-        $query->where('seen', false)
+        $updated = $query->where('seen', false)
             ->update(['seen' => true]);
-        if ($request->summary) {
+            dump($updated);
+        if ($request->summary && $updated > 0) {
             try {
                 $clientJpa = Client::select('id', 'contact_name', 'contact_phone', 'last_message', 'last_message_microtime')
                     ->where('business_id', Auth::user()->business_id)

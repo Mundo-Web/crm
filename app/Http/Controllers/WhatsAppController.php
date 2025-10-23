@@ -242,7 +242,9 @@ class WhatsAppController extends Controller
 
             $message = $request->message;
 
-            if ($number != env('WA_DUMMY')) {
+            $isDummy = in_array($number, explode(',', env('WA_DUMMY')), true);
+
+            if (!$isDummy) {
                 // Validate if number exists in WhatsApp
                 $validateNumberRes = new Fetch(env('EVOAPI_URL') . '/chat/whatsappNumbers/' . $businessJpa->person->document_number, [
                     'method' => 'POST',
@@ -260,7 +262,7 @@ class WhatsAppController extends Controller
             }
 
             if (Text::startsWith($message, '/signature:')) {
-                if ($number != env('WA_DUMMY')) {
+                if (!$isDummy) {
                     $res = new Fetch(env('EVOAPI_URL') . '/message/sendMedia/' . $businessJpa->person->document_number, [
                         'method' => 'POST',
                         'headers' => [
@@ -306,7 +308,7 @@ class WhatsAppController extends Controller
                     $mediaType = 'audio';
                 }
 
-                if ($number != env('WA_DUMMY')) {
+                if (!$isDummy) {
                     $res = new Fetch(env('EVOAPI_URL') . '/message/sendMedia/' . $businessJpa->person->document_number, [
                         'method' => 'POST',
                         'headers' => [
@@ -332,7 +334,7 @@ class WhatsAppController extends Controller
                     'business_id' => Auth::user()->business_id,
                 ]);
             } else {
-                if ($number != env('WA_DUMMY')) {
+                if (!$isDummy) {
                     $res = new Fetch(env('EVOAPI_URL') . '/message/sendText/' . $businessJpa->person->document_number, [
                         'method' => 'POST',
                         'headers' => [
@@ -353,7 +355,7 @@ class WhatsAppController extends Controller
                     'business_id' => Auth::user()->business_id,
                 ]);
             }
-            if ($number != env('WA_DUMMY') && !$res?->ok) throw new Exception('Ocurrio un error al enviar el mensaje');
+            if (!$isDummy && !$res?->ok) throw new Exception('Ocurrio un error al enviar el mensaje');
         });
         return response($response->toArray(), $response->status);
     }

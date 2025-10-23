@@ -6,11 +6,12 @@ import Global from './Utils/Global.js'
 import useWebSocket from './Reutilizables/CustomHooks/useWebSocket.jsx'
 
 const Chatrucho = ({ session, messages: initialMessages = [], waDummy }) => {
+  const dummyOptions = waDummy ? waDummy.split(',').map(n => n.trim()) : []
   const [messages, setMessages] = useState(initialMessages)
   const [input, setInput] = useState('')
-  const [dummyNumber, setDummyNumber] = useState(waDummy)
+  const [dummyNumber, setDummyNumber] = useState(dummyOptions[0] || '')
 
-  const { socket } = useWebSocket({});
+  const { socket } = useWebSocket({})
 
   const messagesEndRef = useRef(null)
   const sortedMessages = [...messages].sort((a, b) => a.microtime - b.microtime)
@@ -50,25 +51,46 @@ const Chatrucho = ({ session, messages: initialMessages = [], waDummy }) => {
   }, [messages])
 
   useEffect(() => {
-    socket.emit("register_filters", {
-      contactActive: dummyNumber
-    });
     const handler = (data) => {
       setMessages((prevMessages) => [...prevMessages, data])
-    };
-    socket.on("message.created", handler);
+    }
+    socket.on('message.created', handler)
 
     return () => {
-      socket.off("message.created", handler);
-    };
+      socket.off('message.created', handler)
+    }
   }, [socket, dummyNumber])
 
   return (
     <div className="container d-flex justify-content-center align-items-center " style={{ minHeight: 'calc(100vh - 200px)' }}>
       <div className="col-xl-4 col-lg-6 col-md-8 col-sm-10 col-12">
         <div className="card shadow-sm">
-          <div className="card-header bg-primary text-white text-center">
+          <div className="card-header bg-primary text-white d-flex justify-content-between align-items-center">
             <h5 className="mb-0">Chat</h5>
+            <div className="dropdown">
+              <button
+                className="btn btn-sm btn-outline-light border-0 dropdown-toggle"
+                type="button"
+                id="numberDropdown"
+                data-bs-toggle="dropdown"
+                aria-expanded="false"
+              >
+                {dummyNumber}
+              </button>
+              <ul className="dropdown-menu dropdown-menu-end" aria-labelledby="numberDropdown">
+                {dummyOptions.map((num) => (
+                  <li key={num}>
+                    <button
+                      className="dropdown-item"
+                      type="button"
+                      onClick={() => setDummyNumber(num)}
+                    >
+                      {num}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
           <div className="card-body p-0 d-flex flex-column" style={{ height: '600px' }}>
             <div className="flex-fill overflow-auto p-3 bg-light">
@@ -89,15 +111,6 @@ const Chatrucho = ({ session, messages: initialMessages = [], waDummy }) => {
                 </div>
               ))}
               <div ref={messagesEndRef} />
-            </div>
-            <div className="input-group p-2 border-top">
-              <input
-                type="text"
-                className="form-control form-control-sm"
-                value={dummyNumber}
-                onChange={(e) => setDummyNumber(e.target.value)}
-                placeholder="Número dummy..."
-              />
             </div>
             <div className="input-group p-2 border-top">
               <input
@@ -124,5 +137,5 @@ CreateReactScript((el, properties) => {
     <Adminto {...properties} title='Simple Chat'>
       <Chatrucho {...properties} />
     </Adminto>
-  );
+  )
 })

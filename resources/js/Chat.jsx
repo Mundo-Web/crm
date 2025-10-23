@@ -6,16 +6,13 @@ import Global from './Utils/Global.js';
 import { useEffect, useRef, useState } from 'react';
 import LeadsRest from './actions/LeadsRest.js';
 import useWebSocket from './Reutilizables/CustomHooks/useWebSocket.jsx';
-import MessagesRest from './actions/MessagesRest.js';
 import ChatContent from './Reutilizables/Chat/ChatContent.jsx';
 import ArrayJoin from './Utils/ArrayJoin.js';
 import LaravelSession from './Utils/LaravelSession.js';
+import useCrossTabSelectedUsers from './Reutilizables/CustomHooks/useCrossTabSelectedUsers.jsx';
 
 const leadsRest = new LeadsRest()
 leadsRest.paginateSufix = null
-const messagesRest = new MessagesRest()
-
-const audio = new Audio('/assets/sounds/notification.wav');
 
 const Chat = ({ users, activeLeadId: activeLeadIdDB, ...properties }) => {
   const settings = Local.get('adminto_settings') ?? {}
@@ -23,32 +20,29 @@ const Chat = ({ users, activeLeadId: activeLeadIdDB, ...properties }) => {
 
   const [leads, setLeads] = useState([])
   const [activeLeadId, setActiveLeadId] = useState(activeLeadIdDB);
-  const [selectedUsersId, setSelectedUsersId] = useState([LaravelSession.service_user.id]);
-  const [messages, setMessages] = useState([]);
+  const [selectedUsersId, setSelectedUsersId] = useCrossTabSelectedUsers(LaravelSession.business_id, [LaravelSession.service_user.id]);
   const [loadingLeads, setLoadingLeads] = useState(true);
-  const [loadingMessages, setLoadingMessages] = useState(false);
   const [loadingMoreLeads, setLoadingMoreLeads] = useState(false);
 
   const { socket } = useWebSocket()
   const messagesContainerRef = useRef()
   const leadsContainerRef = useRef()
 
-  const currentLead = leads.find(l => l.id == activeLeadId);
-  const filteredMessages = messages.filter(m => m.wa_id == currentLead?.contact_phone);
-
   const getFirstLeads = async () => {
     setLoadingLeads(true);
-    const filters = {
+    const request = {
       fields: ['clients.id', 'clients.contact_name', 'clients.contact_phone', 'clients.last_message', 'clients.last_message_microtime', 'clients.assigned_to'],
       withCount: ['unSeenMessages'],
       with: ['assigned'],
       sort: [{ selector: 'last_message_microtime', desc: true }],
-      limit: 40
+      limit: 40,
     };
+    const filter = [["clients.last_message_microtime", "isnotnull"]]
     if (selectedUsersId.length) {
-      filters.filter = ArrayJoin(selectedUsersId.map(id => (['assigned_to', '=', id])), 'OR');
+      filter.push(ArrayJoin(selectedUsersId.map(id => (['clients.assigned_to', '=', id])), 'or'))
     }
-    const { data } = await leadsRest.paginate(filters);
+    request.filter = ArrayJoin(filter, 'and')
+    const { data } = await leadsRest.paginate(request);
     setLeads(data ?? []);
     setLoadingLeads(false);
   }
@@ -64,9 +58,10 @@ const Chat = ({ users, activeLeadId: activeLeadIdDB, ...properties }) => {
       sort: [{ selector: 'last_message_microtime', desc: true }],
       skip: 0,
       take: 40,
-      filter: [
-        ['last_message_microtime', '<', oldestMicrotime]
-      ]
+      filter: ArrayJoin([
+        ['last_message_microtime', '<', oldestMicrotime],
+        ["microtime", "isnotnull"]
+      ], 'and')
     };
     if (selectedUsersId.length) {
       filters.filter = [
@@ -82,61 +77,6 @@ const Chat = ({ users, activeLeadId: activeLeadIdDB, ...properties }) => {
     setLoadingMoreLeads(false);
   };
 
-  const getMessages = async () => {
-    if (!currentLead) return
-    if (loadingMessages) return
-    setLoadingMessages(true)
-    const lastMessage = messages
-      .filter(m => m.wa_id == currentLead.contact_phone)
-      .sort((a, b) => b.microtime - a.microtime)[0] ?? { microtime: (Date.now() + 5 * 60 * 60 * 1000) * 1000 }
-    const result = await messagesRest.paginate({
-      summary: {
-        'contact_phone': currentLead.contact_phone
-      },
-      filter: [
-        ["microtime", "<=", lastMessage.microtime], "and",
-        ["wa_id", "contains", currentLead.contact_phone]
-      ],
-      sort: [{ selector: 'microtime', desc: true }],
-      skip: 0,
-      take: 40
-    })
-    setMessages(prev => [...prev, ...(result.data ?? [])].sort((a, b) => a.microtime - b.microtime))
-    setLoadingMessages(false)
-  }
-
-  // Fetch messages newer than the last one we have for the active lead
-  const fetchNewerMessages = async () => {
-    if (!currentLead) return
-    const lastMessage = messages
-      .filter(m => m.wa_id === currentLead.contact_phone)
-      .sort((a, b) => b.microtime - a.microtime)[0]
-    if (!lastMessage) return
-    const result = await messagesRest.paginate({
-      summary: { 'contact_phone': currentLead.contact_phone },
-      filter: [
-        ["microtime", ">", lastMessage.microtime], "and",
-        ["wa_id", "contains", currentLead.contact_phone]
-      ],
-      sort: [{ selector: 'microtime', desc: false }],
-      skip: 0,
-      take: 100
-    })
-    if (result.data && result.data.length) {
-      setMessages(prev => [...prev, ...result.data].sort((a, b) => a.microtime - b.microtime))
-    }
-  }
-
-  // New helper to fetch messages when no last_message exists
-  const fetchMessagesIfEmpty = async () => {
-    if (!currentLead) return
-    // const hasLastMessage = currentLead.last_message
-    const hasMessages = filteredMessages.length > 0
-    if (!hasMessages) {
-      await getMessages()
-    }
-  }
-
   useEffect(() => {
     getFirstLeads()
   }, [selectedUsersId])
@@ -150,31 +90,7 @@ const Chat = ({ users, activeLeadId: activeLeadIdDB, ...properties }) => {
   }, []);
 
   useEffect(() => {
-    if (!activeLeadId) {
-      // history.replaceState({}, '', '/chat');
-      return;
-    }
-    // history.replaceState({}, '', `/chat/${activeLeadId}`);
-    fetchMessagesIfEmpty();
-    fetchNewerMessages();
-  }, [activeLeadId]);
-
-  useEffect(() => {
     if (!socket) return
-    socket.on('message.created', (props) => {
-      if (props.role == 'Human') audio.play()
-      // Only add the message if the lead is currently selected
-      if (props.wa_id !== currentLead?.contact_phone) return
-      const { id } = props;
-      setMessages(prev => {
-        const exists = prev.find(m => m.id === id);
-        if (exists) {
-          return prev.map(m => m.id === id ? { ...m, ...props } : m);
-        }
-        return [...prev, props].sort((a, b) => a.microtime - b.microtime);
-      });
-    })
-
     socket.on('client.updated', (client) => {
       setLeads(prev => {
         const idx = prev.findIndex(l => l.id === client.id);
@@ -183,19 +99,17 @@ const Chat = ({ users, activeLeadId: activeLeadIdDB, ...properties }) => {
           updated[idx] = { ...updated[idx], ...client };
           return updated;
         }
-        return [...prev, client];
+        // Only add new lead if assigned_to is in selectedUsersId (or if no filter is applied)
+        if (!selectedUsersId.length || selectedUsersId.includes(client.assigned_to)) {
+          return [...prev, client];
+        }
+        return prev;
       });
     })
     return () => {
       // socket.off('message')
     }
-  }, [socket, activeLeadId, currentLead])
-
-  useEffect(() => {
-    if (!messagesContainerRef.current) return
-    const el = messagesContainerRef.current
-    el.scrollTop = el.scrollHeight
-  }, [messages])
+  }, [socket, selectedUsersId])
 
   useEffect(() => {
     const el = leadsContainerRef.current;
@@ -208,6 +122,14 @@ const Chat = ({ users, activeLeadId: activeLeadIdDB, ...properties }) => {
     el.addEventListener('scroll', handleScroll);
     return () => el.removeEventListener('scroll', handleScroll);
   }, [leads, loadingLeads, loadingMoreLeads, selectedUsersId]);
+
+  useEffect(() => {
+    if (activeLeadId) {
+      history.pushState({}, '', `/chat/${activeLeadId}`);
+    } else {
+      history.pushState({}, '', '/chat');
+    }
+  }, [activeLeadId])
 
   return <Adminto {...properties} title='Chat' showTitle={false} setThemeParent={setTheme}>
     <div className="row">
@@ -292,12 +214,20 @@ const Chat = ({ users, activeLeadId: activeLeadIdDB, ...properties }) => {
                       } else if (messageDate >= yesterday) {
                         dateLabel = 'Ayer';
                       } else {
-                        const currentYear = new Date().getFullYear();
-                        const messageYear = messageDate.getFullYear();
-                        if (messageYear === currentYear) {
-                          dateLabel = messageDate.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' });
+                        // Build a list of weekday names in Spanish
+                        const weekdays = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+                        const now = new Date();
+                        const daysDiff = Math.floor((now - messageDate) / (1000 * 60 * 60 * 24));
+
+                        if (daysDiff <= 6) {
+                          // Within the last 7 days (including yesterday handled above)
+                          dateLabel = weekdays[messageDate.getDay()];
                         } else {
-                          dateLabel = messageDate.toLocaleDateString('es-ES', { month: '2-digit', year: 'numeric' });
+                          // Older than 7 days: show d/m/yyyy
+                          const dd = String(messageDate.getDate()).padStart(2, '0');
+                          const mm = String(messageDate.getMonth() + 1).padStart(2, '0');
+                          const yyyy = messageDate.getFullYear();
+                          dateLabel = `${dd}/${mm}/${yyyy}`;
                         }
                       }
 
@@ -363,7 +293,7 @@ const Chat = ({ users, activeLeadId: activeLeadIdDB, ...properties }) => {
       </div>
       <div className="col-xl-9 col-lg-8">
         <div className="conversation-list-card card">
-          {!currentLead ? (
+          {!activeLeadId ? (
             <div className="card-body d-flex align-items-center justify-content-center" style={{ height: 'calc(100vh - 184px)' }}>
               <div className="text-center">
                 <img src="/assets/img/icon.svg" alt={`Logo ${Global.APP_NAME}`} className='mb-2' style={{ width: 60, height: 60, objectFit: 'contain' }} />
@@ -373,16 +303,7 @@ const Chat = ({ users, activeLeadId: activeLeadIdDB, ...properties }) => {
             </div>
           ) : (
             <>
-              <div className={`card-header ${theme == 'light' ? 'bg-white' : 'bg-light'}`}>
-                <div className="d-flex">
-                  <div className="flex-grow-1">
-                    <h5 className="my-0 text-truncate">{currentLead.contact_name}</h5>
-                    <p className="font-13 text-muted mb-0"><i
-                      className="mdi mdi-phone me-1 font-11"></i> {currentLead.contact_phone}</p>
-                  </div>
-                </div>
-              </div>
-              <ChatContent containerRef={messagesContainerRef} messages={filteredMessages} lead={currentLead} loading={loadingMessages} theme={theme} />
+              <ChatContent leadId={activeLeadId} containerRef={messagesContainerRef} theme={theme} />
             </>
           )}
         </div>

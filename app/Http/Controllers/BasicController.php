@@ -103,7 +103,7 @@ class BasicController extends Controller
     ])
       ->leftJoin('services_by_businesses', function ($join) {
         $join->on('services_by_businesses.service_id', 'services.id')
-             ->where('services_by_businesses.business_id', Auth::user()->business_id);
+          ->where('services_by_businesses.business_id', Auth::user()->business_id);
       })
       ->leftJoin('users_by_services_by_businesses', function ($join) {
         $join->on('users_by_services_by_businesses.service_by_business_id', 'services_by_businesses.id')
@@ -156,6 +156,7 @@ class BasicController extends Controller
         'APP_NAME' => env('APP_NAME'),
         'APP_URL' => env('APP_URL'),
         'APP_DOMAIN' => env('APP_DOMAIN', 'atalaya.localhost'),
+        'APP_ENV' => env('APP_ENV', 'local'),
         'APP_CORRELATIVE' => env('APP_CORRELATIVE', 'crm'),
       ],
       'WA_URL' => env('WA_URL'),

@@ -3,6 +3,7 @@ import LeadsRest from '../../actions/LeadsRest';
 import { Local } from 'sode-extend-react';
 import LaravelSession from "../../Utils/LaravelSession"
 import ArrayJoin from '../../Utils/ArrayJoin';
+import useCrossTabSelectedUsers from '../CustomHooks/useCrossTabSelectedUsers';
 
 export const LeadsContext = createContext();
 export const LeadsProvider = ({ statuses, children }) => {
@@ -10,7 +11,7 @@ export const LeadsProvider = ({ statuses, children }) => {
     const [statusesRest, setStatusesRest] = useState({})
     const [leadsCount, setLeadsCount] = useState({})
     const [statusesLoading, setStatusesLoading] = useState({})
-    const [selectedUsersId, setSelectedUsersId] = useState([LaravelSession.service_user.id]);
+    const [selectedUsersId, setSelectedUsersId] = useCrossTabSelectedUsers(LaravelSession.business_id, [LaravelSession.service_user.id]);
     const [defaultView, setDefaultView] = useState(Local.get('default-view') ?? 'kanban')
     const [lastLoadedDate, setLastLoadedDate] = useState(new Date())
     const [leads, setLeads] = useState([]);

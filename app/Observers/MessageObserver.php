@@ -26,7 +26,7 @@ class MessageObserver
                 ->update(['seen' => true]);
         }
         try {
-            $clientJpa = Client::select('id', 'contact_name', 'contact_phone', 'last_message', 'last_message_microtime')
+            $clientJpa = Client::select('id', 'contact_name', 'contact_phone', 'last_message', 'last_message_microtime', 'assigned_to')
                 ->where('business_id', $message->business_id)
                 ->where('contact_phone', $message->wa_id)
                 ->orderBy('updated_at', 'DESC')
@@ -48,7 +48,7 @@ class MessageObserver
         EventController::notify('message.updated', $message->toArray(), ['business_id' => $message->business_id]);
 
         try {
-            $clientJpa = Client::select('id', 'contact_name', 'contact_phone', 'last_message', 'last_message_microtime')
+            $clientJpa = Client::select('id', 'contact_name', 'contact_phone', 'last_message', 'last_message_microtime', 'assigned_to')
                 ->where('business_id', $message->business_id)
                 ->where('contact_phone', $message->wa_id)
                 ->orderBy('updated_at', 'DESC')

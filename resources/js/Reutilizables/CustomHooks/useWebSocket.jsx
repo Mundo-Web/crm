@@ -3,6 +3,7 @@ import socket from "./Needed/socketService";
 import LaravelSession from "../../Utils/LaravelSession";
 import { toast } from "sonner";
 import NotificationsRest from "../../actions/NotificationsRest";
+import Global from "../../Utils/Global";
 
 const audio = new Audio('/assets/sounds/notification.wav');
 
@@ -11,6 +12,7 @@ const useWebSocket = (filters = {}) => {
   const [notificationsCount, setNotificationsCount] = useState(0);
 
   const defaultFilters = {
+    environment: Global.APP_ENV,
     business_id: LaravelSession.business_id,
     user_id: LaravelSession.service_user.id,
   };

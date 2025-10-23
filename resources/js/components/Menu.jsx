@@ -7,12 +7,17 @@ import 'tippy.js/dist/tippy.css';
 import BusinessCard from '../Reutilizables/Business/BusinessCard'
 import useWebSocket from '../Reutilizables/CustomHooks/useWebSocket'
 import MessagesRest from '../actions/MessagesRest'
+import useCrossTabSelectedUsers from '../Reutilizables/CustomHooks/useCrossTabSelectedUsers'
+import LaravelSession from '../Utils/LaravelSession'
+
+const audio = new Audio('/assets/sounds/message.mp3');
 
 const messagesRest = new MessagesRest()
 
 const Menu = ({ session, theme, can, whatsAppStatus, APP_PROTOCOL, APP_DOMAIN, leadsCount, tasksCount, businesses, wsActive }) => {
 
   const [chatBadge, setChatBadge] = useState(0)
+  const [selectedUsers] = useCrossTabSelectedUsers(LaravelSession.business_id, [LaravelSession.service_user.id])
   const { socket } = useWebSocket()
 
   let mainRole = {}
@@ -34,20 +39,34 @@ const Menu = ({ session, theme, can, whatsAppStatus, APP_PROTOCOL, APP_DOMAIN, l
   const idBirthday = moment(session.birthdate).format('MM-DD') == moment().format('MM-DD')
 
   const updateChatBadge = async () => {
-    const result = await messagesRest.countUnSeenMessages()
+    const result = await messagesRest.countUnSeenMessages(selectedUsers)
     if (result === null) return
     setChatBadge(result)
   }
   useEffect(() => {
     socket.on('client.updated', (client) => {
+      if (
+        (selectedUsers.length === 0) ||
+        (selectedUsers.length > 0 && selectedUsers.includes(client.assigned_to))
+      ) {
+        console.log('Entró aqui');
+        audio.play()
+      } else {
+        console.log('selectedUsers.length:', selectedUsers.length)
+        console.log('selectedUsers.includes(client.assigned_to):', selectedUsers.includes(client.assigned_to))
+        console.log('client.assigned_to === null:', client.assigned_to === null)
+        console.log('selectedUsers.length === 0:', selectedUsers.length === 0)
+      }
       updateChatBadge()
     })
-    return () => { }
-  }, [socket])
+    return () => {
+      socket.off('client.updated')
+    }
+  }, [socket, selectedUsers])
 
   useEffect(() => {
     updateChatBadge()
-  }, [null])
+  }, [selectedUsers])
 
   return (<div className="left-side-menu py-0">
     <div className="h-100 pt-3 driver-js-menu" data-simplebar >

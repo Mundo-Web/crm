@@ -114,7 +114,7 @@ Route::middleware('auth')->group(function () {
     Route::delete('/clients/{id}', [ClientController::class, 'delete']);
     Route::post('/clients/massive-delete', [ClientController::class, 'massiveDelete']);
 
-    Route::get('/messages/count-unseen', [MessageController::class, 'countUnSeenMessages'])->withoutMiddleware('throttle:api');
+    Route::post('/messages/count-unseen', [MessageController::class, 'countUnSeenMessages'])->withoutMiddleware('throttle:api');
     Route::post('/messages/paginate', [MessageController::class, 'paginate'])->withoutMiddleware('throttle:api');
     Route::post('/messages/send', [WhatsAppController::class, 'send']);
 
