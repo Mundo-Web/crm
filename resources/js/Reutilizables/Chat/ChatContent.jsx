@@ -270,6 +270,11 @@ const ChatContent = ({ leadId, theme }) => {
         setContactLoading(true)
         const contactData = await leadsRest.get(leadId)
         setContactLoading(false)
+        if (!contactData) {
+            // Show friendly empty state when contact does not exist
+            setContact(null)
+            return
+        }
         setContact(contactData)
     }
 
@@ -361,6 +366,25 @@ const ChatContent = ({ leadId, theme }) => {
         </>
     )
 
+    // Render empty state when contact does not exist
+    const renderEmptyContact = () => (
+        <div className="d-flex flex-column align-items-center justify-content-center h-100 text-center px-4">
+            <div className="mb-3">
+                <i className="mdi mdi-account-off-outline text-muted" style={{ fontSize: '4rem' }}></i>
+            </div>
+            <h5 className="text-muted mb-2">Este contacto no existe en la empresa seleccionada</h5>
+            <p className="text-muted mb-3">
+                Por favor, elige otro contacto desde la lista o intenta refrescar la página si crees que debería estar aquí.
+            </p>
+            <button
+                className="btn btn-outline-primary"
+                onClick={() => window.location.reload()}
+            >
+                <i className="mdi mdi-refresh me-1"></i>Refrescar página
+            </button>
+        </div>
+    )
+
     return <>
         <div className={`card-header ${theme == 'light' ? 'bg-white' : 'bg-light'}`}>
             <div className="d-flex">
@@ -384,290 +408,296 @@ const ChatContent = ({ leadId, theme }) => {
                 opacity: theme == 'light' ? 1 : 0.0625
             }} />
             <section className="d-flex flex-column position-relative" style={{ height: 'calc(100vh - 260px)', zIndex: 1 }}>
-                <ul
-                    ref={containerRef}
-                    className="conversation-list flex-grow-1 px-3 pt-3"
-                    style={{ overflowY: 'auto', scrollBehavior: 'smooth', position: 'relative' }}
-                >
-                    {/* Loading overlay at the top */}
-                    {/* {messagesLoading && messages.length === 0 && (
-                        <li className="text-center py-1 px-2 rounded-pill mx-auto" style={{ position: 'sticky', top: 0, zIndex: 10, width: 'max-content', backgroundColor: 'var(--bs-light)' }}>
-                            <i className="mdi mdi-spin mdi-loading" />
-                            <small className="text-muted ms-2">Cargando mensajes...</small>
-                        </li>
-                    )} */}
-                    {/* Skeletons */}
-                    {messagesLoading && messages.length === 0 && renderSkeletons()}
-                    {/* Messages */}
-                    {messages.map((message, idx) => {
-                        const fromMe = message.role !== 'Human'
-                        const marginTop = lastFromMe === fromMe ? '3px' : '12px'
-                        lastFromMe = fromMe
-
-                        let content = message.message?.replace(/\{\{.*?\}\}/gs, '') || ''
-                        let attachment = ''
-                        if (content.startsWith('/attachment:')) {
-                            attachment = content.split('\n')[0]
-                            content = content.replace(attachment, '')
-                        }
-                        if (message.role == 'Form') {
-                            return (
-                                <li key={idx}>
-                                    <div className="chat-day-title mt-3 mb-0">
-                                        <small className="title badge badge-soft-dark rounded-pill">{content}</small>
-                                    </div>
+                {!contact && !contactLoading ? (
+                    renderEmptyContact()
+                ) : (
+                    <>
+                        <ul
+                            ref={containerRef}
+                            className="conversation-list flex-grow-1 px-3 pt-3"
+                            style={{ overflowY: 'auto', scrollBehavior: 'smooth', position: 'relative' }}
+                        >
+                            {/* Loading overlay at the top */}
+                            {/* {messagesLoading && messages.length === 0 && (
+                                <li className="text-center py-1 px-2 rounded-pill mx-auto" style={{ position: 'sticky', top: 0, zIndex: 10, width: 'max-content', backgroundColor: 'var(--bs-light)' }}>
+                                    <i className="mdi mdi-spin mdi-loading" />
+                                    <small className="text-muted ms-2">Cargando mensajes...</small>
                                 </li>
-                            )
-                        }
-                        return (
-                            <li key={idx} className={fromMe ? 'odd' : ''} style={{ marginBottom: idx < messages.length - 1 ? '0px' : '24px', marginTop }}>
-                                <div className="message-list">
-                                    <div className="conversation-text">
-                                        <div className={`ctext-wrap ${fromMe ? `message-out-${theme}` : `message-in-${theme}`}`} style={{
-                                            boxShadow: 'rgba(11, 20, 26, 0.13) 0px 1px 0.5px 0px',
-                                            padding: '6px 8px'
-                                        }}>
-                                            {message.campaign && (
-                                                <div className="rounded p-2 mb-2" style={{ backgroundColor: 'rgba(240, 240, 240, 0.125)', cursor: message.campaign.link ? 'pointer' : 'default', maxWidth: '240px' }}
-                                                    onClick={() => {
-                                                        if (message.campaign.link) window.open(message.campaign.link, '_blank')
-                                                    }}>
-                                                    <div className="d-flex gap-1" style={{ maxWidth: '100%' }}>
-                                                        <div className="fw-bold">{message.campaign.code}</div>
-                                                        <div className="small text-truncate">{message.campaign.title}</div>
-                                                    </div>
-                                                    <small className="d-block text-truncate" style={{ maxWidth: 300 }}>{message.campaign.link}</small>
-                                                </div>
-                                            )}
-                                            {attachment && (
-                                                <>
-                                                    <img src={attachment.replace('/attachment:', '')} className="mb-1" alt="attachment"
-                                                        style={{
-                                                            minWidth: '300px',
-                                                            width: '100%',
-                                                            maxWidth: '100%',
-                                                            minHeight: '200px',
-                                                            maxHeight: '300px',
-                                                            borderRadius: '4px',
-                                                            objectFit: 'cover',
-                                                        }}
-                                                        onError={e => {
-                                                            const img = e.target
-                                                            if (img && img.parentNode) {
-                                                                img.style.display = 'none'
+                            )} */}
+                            {/* Skeletons */}
+                            {messagesLoading && messages.length === 0 && renderSkeletons()}
+                            {/* Messages */}
+                            {messages.map((message, idx) => {
+                                const fromMe = message.role !== 'Human'
+                                const marginTop = lastFromMe === fromMe ? '3px' : '12px'
+                                lastFromMe = fromMe
+
+                                let content = message.message?.replace(/\{\{.*?\}\}/gs, '') || ''
+                                let attachment = ''
+                                if (content.startsWith('/attachment:')) {
+                                    attachment = content.split('\n')[0]
+                                    content = content.replace(attachment, '')
+                                }
+                                if (message.role == 'Form') {
+                                    return (
+                                        <li key={idx}>
+                                            <div className="chat-day-title mt-3 mb-0">
+                                                <small className="title badge badge-soft-dark rounded-pill">{content}</small>
+                                            </div>
+                                        </li>
+                                    )
+                                }
+                                return (
+                                    <li key={idx} className={fromMe ? 'odd' : ''} style={{ marginBottom: idx < messages.length - 1 ? '0px' : '24px', marginTop }}>
+                                        <div className="message-list">
+                                            <div className="conversation-text">
+                                                <div className={`ctext-wrap ${fromMe ? `message-out-${theme}` : `message-in-${theme}`}`} style={{
+                                                    boxShadow: 'rgba(11, 20, 26, 0.13) 0px 1px 0.5px 0px',
+                                                    padding: '6px 8px'
+                                                }}>
+                                                    {message.campaign && (
+                                                        <div className="rounded p-2 mb-2" style={{ backgroundColor: 'rgba(240, 240, 240, 0.125)', cursor: message.campaign.link ? 'pointer' : 'default', maxWidth: '240px' }}
+                                                            onClick={() => {
+                                                                if (message.campaign.link) window.open(message.campaign.link, '_blank')
+                                                            }}>
+                                                            <div className="d-flex gap-1" style={{ maxWidth: '100%' }}>
+                                                                <div className="fw-bold">{message.campaign.code}</div>
+                                                                <div className="small text-truncate">{message.campaign.title}</div>
+                                                            </div>
+                                                            <small className="d-block text-truncate" style={{ maxWidth: 300 }}>{message.campaign.link}</small>
+                                                        </div>
+                                                    )}
+                                                    {attachment && (
+                                                        <>
+                                                            <img src={attachment.replace('/attachment:', '')} className="mb-1" alt="attachment"
+                                                                style={{
+                                                                    minWidth: '300px',
+                                                                    width: '100%',
+                                                                    maxWidth: '100%',
+                                                                    minHeight: '200px',
+                                                                    maxHeight: '300px',
+                                                                    borderRadius: '4px',
+                                                                    objectFit: 'cover',
+                                                                }}
+                                                                onError={e => {
+                                                                    const img = e.target
+                                                                    if (img && img.parentNode) {
+                                                                        img.style.display = 'none'
+                                                                    }
+                                                                }} />
+                                                            <div className="d-flex justify-content-end">
+                                                                <a className="btn btn-xs btn-light mb-1 text-nowrap d-flex text-end" href={attachment.replace('/attachment:', '')} target="_blank" rel="noreferrer" download>
+                                                                    <i className="mdi mdi-download me-1"></i>
+                                                                    <span>Descargar adjunto</span>
+                                                                </a>
+                                                            </div>
+                                                            {
+                                                                !content.trim() &&
+                                                                <span className="time mt-0 float-end" style={{ fontSize: '10px', marginLeft: '6px', marginTop: '8px !important' }}>{moment(message.created_at).subtract(5, 'hours').format('HH:mm')}</span>
                                                             }
-                                                        }} />
-                                                    <div className="d-flex justify-content-end">
-                                                        <a className="btn btn-xs btn-light mb-1 text-nowrap d-flex text-end" href={attachment.replace('/attachment:', '')} target="_blank" rel="noreferrer" download>
-                                                            <i className="mdi mdi-download me-1"></i>
-                                                            <span>Descargar adjunto</span>
-                                                        </a>
-                                                    </div>
+                                                        </>
+                                                    )}
                                                     {
-                                                        !content.trim() &&
-                                                        <span className="time mt-0 float-end" style={{ fontSize: '10px', marginLeft: '6px', marginTop: '8px !important' }}>{moment(message.created_at).subtract(5, 'hours').format('HH:mm')}</span>
+                                                        content.trim() &&
+                                                        <HtmlContent className="text-start font-14" html={wa2html(content + `<span class="time mt-0 float-end" style="font-size: 10px; margin-left: 6px; margin-top: 8px !important">${moment(message.created_at).subtract(5, 'hours').format('HH:mm')}</span>`)} />
                                                     }
-                                                </>
-                                            )}
-                                            {
-                                                content.trim() &&
-                                                <HtmlContent className="text-start font-14" html={wa2html(content + `<span class="time mt-0 float-end" style="font-size: 10px; margin-left: 6px; margin-top: 8px !important">${moment(message.created_at).subtract(5, 'hours').format('HH:mm')}</span>`)} />
-                                            }
+                                                </div>
+                                            </div>
                                         </div>
-                                    </div>
-                                </div>
-                            </li>
-                        )
-                    })}
-                </ul>
-                <form className="p-2 pt-0 conversation-input" onSubmit={onMessageSubmit}>
-                    <label className={`row g-0 align-items-end p-1 ${theme == 'dark' ? 'bg-light' : 'bg-white'}`} htmlFor="message-input" style={{
-                        borderRadius: '24px'
-                    }}>
-                        <div className="col-auto mt-0">
-                            <div className="dropup" ref={dropdownRef}>
-                                <button
-                                    type="button"
-                                    className="btn btn-light btn-sm dropdown-toggle"
-                                    data-bs-toggle="dropdown"
-                                    aria-expanded={isDropdownOpen}
-                                    onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                                    disabled={isSending || isRecording}
-                                    title="Adjuntar archivo"
-                                    style={{ borderRadius: '50%', width: '38px', height: '38px', padding: 0 }}
-                                >
-                                    <i className={`mdi ${isDropdownOpen ? 'mdi-close' : 'mdi-plus'}`}></i>
-                                </button>
-                                <div className="dropdown-menu mb-1">
-                                    <button className="dropdown-item" href="#" onClick={(e) => {
-                                        e.preventDefault()
-                                        fileInputRef.current?.setAttribute('accept', '.pdf,.doc,.docx')
-                                        fileInputRef.current?.click()
-                                    }}>
-                                        <i className="mdi mdi-file-document me-2" style={{ color: '#7F66FF' }} />
-                                        Documentos
-                                    </button>
-                                    <button className="dropdown-item" href="#" onClick={(e) => {
-                                        e.preventDefault()
-                                        fileInputRef.current?.setAttribute('accept', 'image/*,video/*')
-                                        fileInputRef.current?.click()
-                                    }}>
-                                        <i className="mdi mdi-image me-2" style={{ color: '#007BFC' }} />
-                                        Fotos y videos
-                                    </button>
-                                    <button className="dropdown-item" href="#" onClick={(e) => {
-                                        e.preventDefault()
-                                        openCamera()
-                                    }}>
-                                        <i className="mdi mdi-camera me-2" style={{ color: '#FF2E74' }} />
-                                        Cámara
-                                    </button>
-                                    <button className="dropdown-item" href="#" onClick={(e) => {
-                                        e.preventDefault()
-                                        fileInputRef.current?.setAttribute('accept', 'audio/*')
-                                        fileInputRef.current?.click()
-                                    }}>
-                                        <i className="mdi mdi-headphones me-2" style={{ color: '#FB6533' }} />
-                                        Audio
-                                    </button>
-                                </div>
-                            </div>
-                            <input
-                                ref={fileInputRef}
-                                type="file"
-                                className="d-none"
-                                onChange={handleFileChange}
-                            />
-                        </div>
-                        <div className="col mt-0">
-                            {isRecording ? (
-                                <div className="d-flex align-items-center justify-content-center bg-light rounded-pill" style={{ minHeight: '38px' }}>
-                                    <span className="text-danger me-2">●</span> Grabando...
-                                </div>
-                            ) : audioBlob ? (
-                                <div className="d-flex align-items-center bg-light rounded-pill px-2" style={{ minHeight: '38px' }}>
-                                    <audio ref={audioRef} src={audioUrl} className="me-2" controls controlsList="nodownload" style={{ height: '30px' }} />
-                                </div>
-                            ) : cameraBlob ? (
-                                <div className="d-flex align-items-center bg-light rounded-pill px-2" style={{ minHeight: '38px' }}>
-                                    <span className="me-2">📷 Foto capturada</span>
-                                </div>
-                            ) : (
-                                <textarea
-                                    ref={inputMessageRef}
-                                    id="message-input"
-                                    className="form-control w-100"
-                                    placeholder="Ingrese su mensaje aquí"
-                                    rows={1}
-                                    style={{ minHeight: '38px', maxHeight: '188px', fieldSizing: 'content', resize: 'none', border: 'none', backgroundColor: 'transparent' }}
-                                    disabled={isSending || !!audioBlob || !!cameraBlob}
-                                    value={messageText}
-                                    onChange={(e) => setMessageText(e.target.value)}
-                                    onKeyDown={(e) => {
-                                        if (e.key === 'Enter' && !e.shiftKey) {
-                                            e.preventDefault()
-                                            if (hasContent()) onMessageSubmit(e)
-                                        }
-                                    }}
-                                />
-                            )}
-                        </div>
-                        <div className="col-auto mt-0">
-                            {cameraBlob && !showCamera ? (
-                                <>
-                                    <button
-                                        type="button"
-                                        className="btn btn-danger btn-sm me-1"
-                                        onClick={() => setCameraBlob(null)}
-                                        style={{ borderRadius: '50%', width: '38px', height: '38px', padding: 0 }}
-                                        title="Descartar foto"
-                                    >
-                                        <i className="mdi mdi-delete"></i>
-                                    </button>
-                                    <button
-                                        type="submit"
-                                        className="btn btn-success btn-sm"
-                                        disabled={isSending}
-                                        style={{ borderRadius: '50%', width: '38px', height: '38px', padding: 0 }}
-                                        title="Enviar foto"
-                                    >
-                                        <i className="mdi mdi-send"></i>
-                                    </button>
-                                </>
-                            ) : audioBlob && !isRecording ? (
-                                <>
-                                    <button
-                                        type="button"
-                                        className="btn btn-danger btn-sm me-1"
-                                        onClick={discardAudio}
-                                        style={{ borderRadius: '50%', width: '38px', height: '38px', padding: 0 }}
-                                        title="Descartar audio"
-                                    >
-                                        <i className="mdi mdi-delete"></i>
-                                    </button>
-                                    <button
-                                        type="submit"
-                                        className="btn btn-success btn-sm"
-                                        disabled={isSending}
-                                        style={{ borderRadius: '50%', width: '38px', height: '38px', padding: 0 }}
-                                        title="Enviar audio"
-                                    >
-                                        <i className="mdi mdi-send"></i>
-                                    </button>
-                                </>
-                            ) : isRecording ? (
-                                <>
-                                    <button
-                                        type="button"
-                                        className="btn btn-warning btn-sm me-1"
-                                        onClick={stopRecording}
-                                        style={{ borderRadius: '50%', width: '38px', height: '38px', padding: 0 }}
-                                        title="Pausar grabación"
-                                    >
-                                        <i className="mdi mdi-pause"></i>
-                                    </button>
-                                    <button
-                                        type="button"
-                                        className="btn btn-danger btn-sm"
-                                        onClick={discardAudio}
-                                        style={{ borderRadius: '50%', width: '38px', height: '38px', padding: 0 }}
-                                        title="Descartar grabación"
-                                    >
-                                        <i className="mdi mdi-delete"></i>
-                                    </button>
-                                </>
-                            ) : (
-                                <>
-                                    {messageText.trim() ? (
-                                        <button
-                                            type="submit"
-                                            className="btn btn-primary btn-sm"
-                                            disabled={isSending}
-                                            style={{ borderRadius: '50%', width: '38px', height: '38px', padding: 0 }}
-                                        >
-                                            {isSending ? (
-                                                <i className="mdi mdi-spin mdi-loading"></i>
-                                            ) : (
-                                                <i className="mdi mdi-send"></i>
-                                            )}
-                                        </button>
-                                    ) : (
+                                    </li>
+                                )
+                            })}
+                        </ul>
+                        <form className="p-2 pt-0 conversation-input" onSubmit={onMessageSubmit}>
+                            <label className={`row g-0 align-items-end p-1 ${theme == 'dark' ? 'bg-light' : 'bg-white'}`} htmlFor="message-input" style={{
+                                borderRadius: '24px'
+                            }}>
+                                <div className="col-auto mt-0">
+                                    <div className="dropup" ref={dropdownRef}>
                                         <button
                                             type="button"
-                                            className="btn btn-outline-primary btn-sm"
-                                            onClick={startRecording}
-                                            disabled={isSending}
+                                            className="btn btn-light btn-sm dropdown-toggle"
+                                            data-bs-toggle="dropdown"
+                                            aria-expanded={isDropdownOpen}
+                                            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                                            disabled={isSending || isRecording}
+                                            title="Adjuntar archivo"
                                             style={{ borderRadius: '50%', width: '38px', height: '38px', padding: 0 }}
-                                            title="Grabar audio"
                                         >
-                                            <i className="mdi mdi-microphone"></i>
+                                            <i className={`mdi ${isDropdownOpen ? 'mdi-close' : 'mdi-plus'}`}></i>
                                         </button>
+                                        <div className="dropdown-menu mb-1">
+                                            <button className="dropdown-item" href="#" onClick={(e) => {
+                                                e.preventDefault()
+                                                fileInputRef.current?.setAttribute('accept', '.pdf,.doc,.docx')
+                                                fileInputRef.current?.click()
+                                            }}>
+                                                <i className="mdi mdi-file-document me-2" style={{ color: '#7F66FF' }} />
+                                                Documentos
+                                            </button>
+                                            <button className="dropdown-item" href="#" onClick={(e) => {
+                                                e.preventDefault()
+                                                fileInputRef.current?.setAttribute('accept', 'image/*,video/*')
+                                                fileInputRef.current?.click()
+                                            }}>
+                                                <i className="mdi mdi-image me-2" style={{ color: '#007BFC' }} />
+                                                Fotos y videos
+                                            </button>
+                                            <button className="dropdown-item" href="#" onClick={(e) => {
+                                                e.preventDefault()
+                                                openCamera()
+                                            }}>
+                                                <i className="mdi mdi-camera me-2" style={{ color: '#FF2E74' }} />
+                                                Cámara
+                                            </button>
+                                            <button className="dropdown-item" href="#" onClick={(e) => {
+                                                e.preventDefault()
+                                                fileInputRef.current?.setAttribute('accept', 'audio/*')
+                                                fileInputRef.current?.click()
+                                            }}>
+                                                <i className="mdi mdi-headphones me-2" style={{ color: '#FB6533' }} />
+                                                Audio
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <input
+                                        ref={fileInputRef}
+                                        type="file"
+                                        className="d-none"
+                                        onChange={handleFileChange}
+                                    />
+                                </div>
+                                <div className="col mt-0">
+                                    {isRecording ? (
+                                        <div className="d-flex align-items-center justify-content-center bg-light rounded-pill" style={{ minHeight: '38px' }}>
+                                            <span className="text-danger me-2">●</span> Grabando...
+                                        </div>
+                                    ) : audioBlob ? (
+                                        <div className="d-flex align-items-center bg-light rounded-pill px-2" style={{ minHeight: '38px' }}>
+                                            <audio ref={audioRef} src={audioUrl} className="me-2" controls controlsList="nodownload" style={{ height: '30px' }} />
+                                        </div>
+                                    ) : cameraBlob ? (
+                                        <div className="d-flex align-items-center bg-light rounded-pill px-2" style={{ minHeight: '38px' }}>
+                                            <span className="me-2">📷 Foto capturada</span>
+                                        </div>
+                                    ) : (
+                                        <textarea
+                                            ref={inputMessageRef}
+                                            id="message-input"
+                                            className="form-control w-100"
+                                            placeholder="Ingrese su mensaje aquí"
+                                            rows={1}
+                                            style={{ minHeight: '38px', maxHeight: '188px', fieldSizing: 'content', resize: 'none', border: 'none', backgroundColor: 'transparent' }}
+                                            disabled={isSending || !!audioBlob || !!cameraBlob}
+                                            value={messageText}
+                                            onChange={(e) => setMessageText(e.target.value)}
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Enter' && !e.shiftKey) {
+                                                    e.preventDefault()
+                                                    if (hasContent()) onMessageSubmit(e)
+                                                }
+                                            }}
+                                        />
                                     )}
-                                </>
-                            )}
-                        </div>
-                    </label>
-                </form>
+                                </div>
+                                <div className="col-auto mt-0">
+                                    {cameraBlob && !showCamera ? (
+                                        <>
+                                            <button
+                                                type="button"
+                                                className="btn btn-danger btn-sm me-1"
+                                                onClick={() => setCameraBlob(null)}
+                                                style={{ borderRadius: '50%', width: '38px', height: '38px', padding: 0 }}
+                                                title="Descartar foto"
+                                            >
+                                                <i className="mdi mdi-delete"></i>
+                                            </button>
+                                            <button
+                                                type="submit"
+                                                className="btn btn-success btn-sm"
+                                                disabled={isSending}
+                                                style={{ borderRadius: '50%', width: '38px', height: '38px', padding: 0 }}
+                                                title="Enviar foto"
+                                            >
+                                                <i className="mdi mdi-send"></i>
+                                            </button>
+                                        </>
+                                    ) : audioBlob && !isRecording ? (
+                                        <>
+                                            <button
+                                                type="button"
+                                                className="btn btn-danger btn-sm me-1"
+                                                onClick={discardAudio}
+                                                style={{ borderRadius: '50%', width: '38px', height: '38px', padding: 0 }}
+                                                title="Descartar audio"
+                                            >
+                                                <i className="mdi mdi-delete"></i>
+                                            </button>
+                                            <button
+                                                type="submit"
+                                                className="btn btn-success btn-sm"
+                                                disabled={isSending}
+                                                style={{ borderRadius: '50%', width: '38px', height: '38px', padding: 0 }}
+                                                title="Enviar audio"
+                                            >
+                                                <i className="mdi mdi-send"></i>
+                                            </button>
+                                        </>
+                                    ) : isRecording ? (
+                                        <>
+                                            <button
+                                                type="button"
+                                                className="btn btn-warning btn-sm me-1"
+                                                onClick={stopRecording}
+                                                style={{ borderRadius: '50%', width: '38px', height: '38px', padding: 0 }}
+                                                title="Pausar grabación"
+                                            >
+                                                <i className="mdi mdi-pause"></i>
+                                            </button>
+                                            <button
+                                                type="button"
+                                                className="btn btn-danger btn-sm"
+                                                onClick={discardAudio}
+                                                style={{ borderRadius: '50%', width: '38px', height: '38px', padding: 0 }}
+                                                title="Descartar grabación"
+                                            >
+                                                <i className="mdi mdi-delete"></i>
+                                            </button>
+                                        </>
+                                    ) : (
+                                        <>
+                                            {messageText.trim() ? (
+                                                <button
+                                                    type="submit"
+                                                    className="btn btn-primary btn-sm"
+                                                    disabled={isSending}
+                                                    style={{ borderRadius: '50%', width: '38px', height: '38px', padding: 0 }}
+                                                >
+                                                    {isSending ? (
+                                                        <i className="mdi mdi-spin mdi-loading"></i>
+                                                    ) : (
+                                                        <i className="mdi mdi-send"></i>
+                                                    )}
+                                                </button>
+                                            ) : (
+                                                <button
+                                                    type="button"
+                                                    className="btn btn-outline-primary btn-sm"
+                                                    onClick={startRecording}
+                                                    disabled={isSending}
+                                                    style={{ borderRadius: '50%', width: '38px', height: '38px', padding: 0 }}
+                                                    title="Grabar audio"
+                                                >
+                                                    <i className="mdi mdi-microphone"></i>
+                                                </button>
+                                            )}
+                                        </>
+                                    )}
+                                </div>
+                            </label>
+                        </form>
+                    </>
+                )}
             </section>
 
             {/* Camera Modal */}
