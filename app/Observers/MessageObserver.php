@@ -37,6 +37,7 @@ class MessageObserver
                 $clientJpa->last_message_microtime = $message->microtime;
                 $clientJpa->save();
                 $clientJpa->loadCount(['unSeenMessages']);
+                $clientJpa->notify = !$message->seen;
                 EventController::notify('client.updated', $clientJpa->toArray(), ['business_id' => $message->business_id]);
                 EventController::notify('client.updated.menu', $clientJpa->toArray(), ['business_id' => $message->business_id]);
             }

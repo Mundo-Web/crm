@@ -49,12 +49,7 @@ const Menu = ({ session, theme, can, whatsAppStatus, APP_PROTOCOL, APP_DOMAIN, l
         (selectedUsers.length === 0) ||
         (selectedUsers.length > 0 && selectedUsers.includes(client.assigned_to))
       ) {
-        audio.play()
-      } else {
-        console.log('selectedUsers.length:', selectedUsers.length)
-        console.log('selectedUsers.includes(client.assigned_to):', selectedUsers.includes(client.assigned_to))
-        console.log('client.assigned_to === null:', client.assigned_to === null)
-        console.log('selectedUsers.length === 0:', selectedUsers.length === 0)
+        client.notify && audio.play()
       }
       updateChatBadge()
     })
