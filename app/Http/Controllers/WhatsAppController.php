@@ -153,7 +153,7 @@ class WhatsAppController extends Controller
 
             return $imageRes->blob();
         });
-        response($response->data ?? null, $response->status, ['Content-Type' => 'image/jpeg']);
+        return response($response->data ?? null, $response->status, ['Content-Type' => 'image/jpeg']);
     }
 
     /**
