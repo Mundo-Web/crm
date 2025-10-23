@@ -8,6 +8,8 @@ use App\Models\Message;
 use Exception;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Response as FacadesResponse;
 use SoDe\Extend\Fetch;
 use SoDe\Extend\JSON;
 use SoDe\Extend\Response;
@@ -122,36 +124,57 @@ class WhatsAppController extends Controller
 
     public function profile(Request $request)
     {
-        $response = Response::simpleTryCatch(function () use ($request) {
-            $businessJpa = Business::with(['person'])->find(Auth::user()->business_id);
-            if (!$businessJpa) throw new Exception('Business not found');
-            $res = new Fetch(env('EVENTS_URL') . '/chat/findContacts/' . $businessJpa->person->document_number, [
-                'headers' => [
-                    'Content-Type' => 'application/json',
-                    'apikey' => $businessJpa->uuid
+        try {
+            $business = Business::with('person')->find(Auth::user()->business_id);
+
+            if (!$business) {
+                return response()->json(['error' => 'Business not found'], 404);
+            }
+
+            // Paso 1: Llamar al endpoint de contactos
+            $res = Http::withHeaders([
+                'Content-Type' => 'application/json',
+                'apikey' => $business->uuid,
+            ])->post(env('EVENTS_URL') . '/chat/findContacts/' . $business->person->document_number, [
+                'where' => [
+                    'remoteJid' => $request->remoteJid,
                 ],
-                'body' => [
-                    'where' => [
-                        'remoteJid' => $request->remoteJid,
-                    ]
-                ]
             ]);
 
-            if (!$res->ok) throw new Exception('Contact not found');
+            if (!$res->ok()) {
+                return response()->json(['error' => 'Contact not found'], $res->status());
+            }
 
             $data = $res->json();
-            if (empty($data) || empty($data[0]['profilePicUrl'])) throw new Exception('Image not found');
+
+            if (empty($data) || empty($data[0]['profilePicUrl'])) {
+                return response()->json(['error' => 'Profile image not found'], 404);
+            }
 
             $imageUrl = $data[0]['profilePicUrl'];
 
-            // Paso 2: Obtener la imagen desde la URL
-            $imageRes = new Fetch($imageUrl);
+            // Paso 2: Descargar la imagen
+            $imageRes = Http::get($imageUrl);
 
-            if (!$imageRes->ok) throw new Exception('No se pudo descargar la imagen');
+            if (!$imageRes->ok()) {
+                return response()->json(['error' => 'Failed to fetch image'], 500);
+            }
 
-            return $imageRes->blob();
-        });
-        return response($response->data ?? null, $response->status, ['Content-Type' => 'image/jpeg']);
+            // Paso 3: Obtener tipo MIME
+            $contentType = $imageRes->header('Content-Type', 'image/jpeg');
+
+            // Paso 4: Retornar la imagen directamente
+            return FacadesResponse::make($imageRes->body(), 200, [
+                'Content-Type' => $contentType,
+                'Cache-Control' => 'public, max-age=86400',
+            ]);
+        } catch (Exception $e) {
+            // Manejo general de errores
+            return response()->json([
+                'error' => 'Internal server error',
+                'message' => $e->getMessage(),
+            ], 500);
+        }
     }
 
     /**
