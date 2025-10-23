@@ -141,7 +141,7 @@ class WhatsAppController extends Controller
                 ]
             ]);
 
-            dump($res->json());
+            dump($business->toArray());
 
             if (!$res->ok()) {
                 return response()->json(['error' => 'Contact not found'], $res->status());
