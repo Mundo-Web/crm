@@ -51,7 +51,6 @@ class MessageController extends BasicController
         $query = clone $query;
         $updated = $query->where('seen', false)
             ->update(['seen' => true]);
-            dump($updated);
         if ($request->summary && $updated > 0) {
             try {
                 $clientJpa = Client::select('id', 'contact_name', 'contact_phone', 'last_message', 'last_message_microtime')
