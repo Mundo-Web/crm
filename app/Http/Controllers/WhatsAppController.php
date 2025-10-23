@@ -125,7 +125,7 @@ class WhatsAppController extends Controller
     public function profile(Request $request)
     {
         try {
-            $business = Business::with('person')->find(Auth::user()->business_id);
+            $business = Business::with(['person'])->find(Auth::user()->business_id);
 
             if (!$business) {
                 return response()->json(['error' => 'Business not found'], 404);
@@ -138,8 +138,10 @@ class WhatsAppController extends Controller
             ])->post(env('EVENTS_URL') . '/chat/findContacts/' . $business->person->document_number, [
                 'where' => [
                     'remoteJid' => $request->remoteJid,
-                ],
+                ]
             ]);
+
+            dump($res->json());
 
             if (!$res->ok()) {
                 return response()->json(['error' => 'Contact not found'], $res->status());
