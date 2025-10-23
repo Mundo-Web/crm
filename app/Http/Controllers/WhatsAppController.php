@@ -135,13 +135,11 @@ class WhatsAppController extends Controller
             $res = Http::withHeaders([
                 'Content-Type' => 'application/json',
                 'apikey' => $business->uuid,
-            ])->post(env('EVENTS_URL') . '/chat/findContacts/' . $business->person->document_number, [
+            ])->post(env('EVOAPI_URL') . '/chat/findContacts/' . $business->person->document_number, [
                 'where' => [
                     'remoteJid' => $request->remoteJid,
                 ]
             ]);
-
-            dump($business->toArray());
 
             if (!$res->ok()) {
                 return response()->json(['error' => 'Contact not found'], $res->status());
