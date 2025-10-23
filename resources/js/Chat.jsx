@@ -248,7 +248,8 @@ const Chat = ({ users, activeLeadId: activeLeadIdDB, ...properties }) => {
                         <div className="d-flex">
                           <div className={`position-relative flex-shrink-0 chat-user-img ${lead.online ? 'active' : ''} align-self-center me-2`}>
                             <img src={`/api/whatsapp/profile/${lead.contact_phone}`}
-                              className="rounded-circle avatar-sm bg-light" alt={lead.name} style={{ padding: 0, border: 'none' }} />
+                              className="rounded-circle avatar-sm bg-light" alt={lead.name} style={{ padding: 0, border: 'none' }}
+                              onError={(e) => { e.target.src = `//${Global.APP_DOMAIN}/api/profile/thumbnail/null`; }} />
                             {
                               lead.assigned_to && lead.assigned?.relative_id &&
                               // Only show if no filters are applied OR if the assigned user is NOT the only selected one

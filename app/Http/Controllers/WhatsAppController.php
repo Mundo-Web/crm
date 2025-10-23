@@ -142,8 +142,6 @@ class WhatsAppController extends Controller
             $data = $res->json();
             if (empty($data) || empty($data[0]['profilePicUrl'])) throw new Exception('Image not found');
 
-            dump($data);
-
             $imageUrl = $data[0]['profilePicUrl'];
 
             // Paso 2: Obtener la imagen desde la URL
