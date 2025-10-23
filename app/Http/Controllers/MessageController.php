@@ -35,6 +35,7 @@ class MessageController extends BasicController
                     $q->where('assigned_to', $assigned);
                 }
             })
+            ->where('business_id', Auth::user()->business_id)
             ->where('seen', false)
             ->count();
         });
