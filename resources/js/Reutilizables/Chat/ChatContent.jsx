@@ -358,7 +358,7 @@ const ChatContent = ({ leadId, theme }) => {
                                         {Array.from({ length: lines }).map((_, lIdx) => (
                                             <span key={lIdx} className={`placeholder ${lIdx === lines - 1 ? 'col-6 ms-0' : 'col-12'} `} />
                                         ))}
-                                        <span className="placeholder time float-end col-1" style={{ fontSize: '10px', marginLeft: '6px', marginTop: '8px !important' }}/>
+                                        <span className="placeholder time float-end col-1" style={{ fontSize: '10px', marginLeft: '6px', marginTop: '8px !important' }} />
                                     </div>
                                 </div>
                             </div>
@@ -371,7 +371,7 @@ const ChatContent = ({ leadId, theme }) => {
 
     // Render empty state when contact does not exist
     const renderEmptyContact = () => (
-        <div className="d-flex flex-column align-items-center justify-content-center h-100 text-center px-4">
+        <div className="d-flex flex-column align-items-center justify-content-center text-center px-4" style={{ height: 'calc(100vh - 260px)' }}>
             <div className="mb-3">
                 <i className="mdi mdi-account-off-outline text-muted" style={{ fontSize: '4rem' }}></i>
             </div>
