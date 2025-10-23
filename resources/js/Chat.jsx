@@ -107,7 +107,7 @@ const Chat = ({ users, activeLeadId: activeLeadIdDB, ...properties }) => {
       });
     })
     return () => {
-      // socket.off('message')
+      socket.off('client.updated')
     }
   }, [socket, selectedUsersId])
 

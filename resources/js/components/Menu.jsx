@@ -44,12 +44,11 @@ const Menu = ({ session, theme, can, whatsAppStatus, APP_PROTOCOL, APP_DOMAIN, l
     setChatBadge(result)
   }
   useEffect(() => {
-    socket.on('client.updated', (client) => {
+    socket.on('client.updated.menu', (client) => {
       if (
         (selectedUsers.length === 0) ||
         (selectedUsers.length > 0 && selectedUsers.includes(client.assigned_to))
       ) {
-        console.log('Entró aqui');
         audio.play()
       } else {
         console.log('selectedUsers.length:', selectedUsers.length)
@@ -60,7 +59,7 @@ const Menu = ({ session, theme, can, whatsAppStatus, APP_PROTOCOL, APP_DOMAIN, l
       updateChatBadge()
     })
     return () => {
-      socket.off('client.updated')
+      socket.off('client.updated.menu')
     }
   }, [socket, selectedUsers])
 

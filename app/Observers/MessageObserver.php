@@ -38,6 +38,7 @@ class MessageObserver
                 $clientJpa->save();
                 $clientJpa->loadCount(['unSeenMessages']);
                 EventController::notify('client.updated', $clientJpa->toArray(), ['business_id' => $message->business_id]);
+                EventController::notify('client.updated.menu', $clientJpa->toArray(), ['business_id' => $message->business_id]);
             }
         } catch (\Exception $e) {
             // Silently skip if client does not exist or any other error occurs
@@ -60,6 +61,7 @@ class MessageObserver
                 $clientJpa->save();
                 $clientJpa->loadCount(['unSeenMessages']);
                 EventController::notify('client.updated', $clientJpa->toArray(), ['business_id' => $message->business_id]);
+                EventController::notify('client.updated.menu', $clientJpa->toArray(), ['business_id' => $message->business_id]);
             }
         } catch (\Exception $e) {
             // Silently skip if client does not exist or any other error occurs
