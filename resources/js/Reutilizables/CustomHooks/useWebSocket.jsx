@@ -42,9 +42,9 @@ const useWebSocket = (filters = {}) => {
 
     socket.on("filters_registered", ({ service, filters }) => {
       setWsActive(true);
-      console.log(`✅ Conectado a eventos de ${service}`);
-      const filtersArray = Object.entries(filters).map(([key, value]) => ({ Filtro: key, Valor: value }));
-      console.table(filtersArray);
+      // console.log(`✅ Conectado a eventos de ${service}`);
+      // const filtersArray = Object.entries(filters).map(([key, value]) => ({ Filtro: key, Valor: value }));
+      // console.table(filtersArray);
     });
 
     socket.on("notification", (message) => {
@@ -84,7 +84,7 @@ const useWebSocket = (filters = {}) => {
       // socket.off("disconnect");
       // socket.off("connect");
     };
-  }, []);
+  }, [null]);
 
   // ✅ Este solo reacciona si cambian los filtros dinámicos
   useEffect(() => {

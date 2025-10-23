@@ -68,6 +68,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/whatsapp', [WhatsAppController::class, 'verify']);
     Route::get('/whatsapp/verify', [WhatsAppController::class, 'stream']);
     Route::post('/whatsapp/send', [WhatsAppController::class, 'send']);
+    Route::get('/whatsapp/profile/{remoteJid}', [WhatsAppController::class, 'profile'])->withoutMiddleware('throttle:api');
     Route::delete('/whatsapp', [WhatsAppController::class, 'close']);
 
     Route::post('/meta/send', [MetaController::class, 'send']);
