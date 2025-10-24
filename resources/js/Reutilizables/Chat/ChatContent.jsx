@@ -389,15 +389,46 @@ const ChatContent = ({ leadId, theme }) => {
     )
 
     return <>
-        <div className={`card-header ${theme == 'light' ? 'bg-white' : 'bg-light'}`}>
-            <div className="d-flex">
+        <div
+            className={`card-header ${theme == 'light' ? 'bg-white' : 'bg-light'}`}
+            style={{ cursor: 'pointer' }}
+            onClick={() => contact?.id && (window.location.href = `/lead/${contact.id}`)}
+        >
+            <div className="d-flex align-items-center">
+                {/* Avatar */}
+                {!contactLoading && contact && (
+                    <img
+                        src={`/api/whatsapp/profile/${contact.contact_phone}`}
+                        className="rounded-circle avatar-sm bg-light me-2"
+                        alt={contact.contact_name}
+                        style={{ padding: 0, border: 'none' }}
+                        onError={(e) => {
+                            e.target.src = `//${window.Global?.APP_DOMAIN || location.host}/api/profile/thumbnail/null`;
+                        }}
+                    />
+                )}
+                {contactLoading && (
+                    <div className="placeholder-glow">
+                        <div className="rounded-circle avatar-sm bg-light me-2 placeholder" style={{ width: 32, height: 32 }} />
+                    </div>
+                )}
+
                 <div className={`flex-grow-1 ${contactLoading ? 'placeholder-glow' : ''}`}>
-                    <h5 className={`mt-0 mb-1 text-truncate ${contactLoading ? 'placeholder col-3' : ''}`}>{contact?.contact_name}</h5>
+                    <h5 className={`mt-0 mb-1 text-truncate ${contactLoading ? 'placeholder col-3' : ''}`}>
+                        {contact?.contact_name}
+                    </h5>
                     <p className={`d-block font-13 text-muted mb-0 ${contactLoading ? 'placeholder col-2' : ''}`}>
                         <i className="mdi mdi-phone me-1 font-11"></i>
                         {contact?.contact_phone}
                     </p>
                 </div>
+
+                {/* Arrow icon */}
+                {!contactLoading && contact && (
+                    <div className="ms-2">
+                        <i className="mdi mdi-arrow-top-right text-muted" style={{ fontSize: '1.2rem' }} />
+                    </div>
+                )}
             </div>
         </div>
         <div className="card-body p-0 position-relative border" style={{
