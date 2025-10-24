@@ -45,3 +45,12 @@
     border-left-color: rgb(20, 77, 55) !important;
     border-top-color: rgb(20, 77, 55) !important;
 }
+
+.scroll-hidden {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.scroll-hidden::-webkit-scrollbar {
+  display: none;
+}

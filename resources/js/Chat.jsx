@@ -10,6 +10,7 @@ import ChatContent from './Reutilizables/Chat/ChatContent.jsx';
 import ArrayJoin from './Utils/ArrayJoin.js';
 import LaravelSession from './Utils/LaravelSession.js';
 import useCrossTabSelectedUsers from './Reutilizables/CustomHooks/useCrossTabSelectedUsers.jsx';
+import ContactDetails from './Reutilizables/Chat/ContactDetails.jsx';
 
 const leadsRest = new LeadsRest()
 leadsRest.paginateSufix = null
@@ -25,6 +26,7 @@ const Chat = ({ users, activeLeadId: activeLeadIdDB, ...properties }) => {
   const [totalCount, setTotalCount] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
   const [searchTimeout, setSearchTimeout] = useState(null);
+  const [contactDetails, setContactDetails] = useState(null);
 
   const { socket } = useWebSocket()
   const messagesContainerRef = useRef()
@@ -95,7 +97,10 @@ const Chat = ({ users, activeLeadId: activeLeadIdDB, ...properties }) => {
 
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (e.key === 'Escape') setActiveLeadId(null);
+      if (e.key === 'Escape') {
+        setActiveLeadId(null)
+        setContactDetails(null)
+      };
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
@@ -151,7 +156,7 @@ const Chat = ({ users, activeLeadId: activeLeadIdDB, ...properties }) => {
         <div className="card chat-list-card mb-xl-0">
           <div className="card-body p-0">
             <div className="p-2">
-              <div className="d-flex w-100 gap-0 align-items-center" style={{ overflowX: 'auto' }}>
+              <div className="d-flex w-100 gap-0 align-items-center scroll-hidden" style={{ overflowX: 'auto' }}>
                 {users.map(user => (
                   <Tippy
                     key={user.id}
@@ -195,11 +200,12 @@ const Chat = ({ users, activeLeadId: activeLeadIdDB, ...properties }) => {
                   </Tippy>
                 }
               </div>
-              <hr className="my-2" />
+            </div>
+            <div className='p-2 border-top'>
               <div className="search-box chat-search-box">
                 <input
                   type="text"
-                  className="form-control"
+                  className="form-control rounded-pill"
                   placeholder="Buscar lead por nombre o número..."
                   value={searchTerm}
                   onChange={handleSearchChange}
@@ -207,7 +213,6 @@ const Chat = ({ users, activeLeadId: activeLeadIdDB, ...properties }) => {
                 <i className="mdi mdi-magnify search-icon"></i>
               </div>
             </div>
-            <hr className="my-0" />
             <div ref={leadsContainerRef} style={{ overflowY: 'auto', height: 'calc(100vh - 300px)' }}>
               <ul className="list-unstyled chat-list mb-0">
                 {leads
@@ -307,7 +312,7 @@ const Chat = ({ users, activeLeadId: activeLeadIdDB, ...properties }) => {
           </div>
         </div>
       </div>
-      <div className="col-xl-9 col-lg-8">
+      <div className={`col-xl-${contactDetails ? 6 : 9} col-lg-${contactDetails ? 8 : 12}`}>
         <div className="conversation-list-card card">
           {!activeLeadId ? (
             <div className="card-body d-flex align-items-center justify-content-center" style={{ height: 'calc(100vh - 184px)' }}>
@@ -319,11 +324,20 @@ const Chat = ({ users, activeLeadId: activeLeadIdDB, ...properties }) => {
             </div>
           ) : (
             <>
-              <ChatContent leadId={activeLeadId} containerRef={messagesContainerRef} theme={theme} />
+              <ChatContent leadId={activeLeadId} containerRef={messagesContainerRef} theme={theme} contactDetails={contactDetails} setContactDetails={setContactDetails} />
             </>
           )}
         </div>
       </div>
+      {contactDetails && (
+        <div className="col-xl-3 col-lg-12">
+          <div className="card contact-details-card mb-xl-0">
+            <div className="card-body scroll-hidden" style={{height: 'calc(100vh - 186px)', overflowY: 'auto'}}>
+              <ContactDetails {...contactDetails} />
+            </div>
+          </div>
+        </div>
+      )}
     </div >
   </Adminto>
 };

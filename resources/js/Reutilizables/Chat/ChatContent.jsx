@@ -12,7 +12,7 @@ const whatsAppRest = new WhatsAppRest()
 const messagesRest = new MessagesRest()
 const leadsRest = new LeadsRest()
 
-const ChatContent = ({ leadId, theme }) => {
+const ChatContent = ({ leadId, theme, contactDetails, setContactDetails }) => {
     const inputMessageRef = useRef()
     const fileInputRef = useRef()
     const audioRef = useRef()
@@ -274,6 +274,7 @@ const ChatContent = ({ leadId, theme }) => {
         if (!contactData) {
             // Show friendly empty state when contact does not exist
             setContact(null)
+            setContactDetails(null)
             return
         }
         setContact(contactData)
@@ -334,6 +335,7 @@ const ChatContent = ({ leadId, theme }) => {
 
     useEffect(() => {
         setContact(null)
+        setContactDetails(null)
         setMessages([])
         if (!leadId) return
         getContact()
@@ -393,7 +395,7 @@ const ChatContent = ({ leadId, theme }) => {
         <div
             className={`card-header ${theme == 'light' ? 'bg-white' : 'bg-light'}`}
             style={{ cursor: 'pointer' }}
-            onClick={() => contact?.id && (window.location.href = `/leads/${contact.id}`)}
+            onClick={() => contact?.id && setContactDetails(contactDetails ? null : contact)}
         >
             <div className="d-flex align-items-center">
                 {/* Avatar */}
@@ -410,7 +412,7 @@ const ChatContent = ({ leadId, theme }) => {
                 )}
                 {contactLoading && (
                     <div className="placeholder-glow">
-                        <div className="rounded-circle avatar-sm bg-light me-2 placeholder" style={{ width: 32, height: 32 }} />
+                        <div className="rounded-circle avatar-sm me-2 placeholder" style={{ width: 36, height: 36 }} />
                     </div>
                 )}
 
@@ -427,7 +429,7 @@ const ChatContent = ({ leadId, theme }) => {
                 {/* Arrow icon */}
                 {!contactLoading && contact && (
                     <div className="ms-2">
-                        <i className="mdi mdi-arrow-top-right text-muted" style={{ fontSize: '1.2rem' }} />
+                        <i className={`mdi mdi-24px mdi-chevron-double-${contactDetails ? 'left' : 'right'} text-muted`} />
                     </div>
                 )}
             </div>
@@ -449,7 +451,7 @@ const ChatContent = ({ leadId, theme }) => {
                     <>
                         <ul
                             ref={containerRef}
-                            className="conversation-list flex-grow-1 px-3 pt-3"
+                            className="conversation-list flex-grow-1 px-3 pt-3 scroll-hidden"
                             style={{ overflowY: 'auto', scrollBehavior: 'smooth', position: 'relative' }}
                         >
                             {/* Loading overlay at the top */}

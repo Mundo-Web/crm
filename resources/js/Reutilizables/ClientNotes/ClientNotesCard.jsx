@@ -1,8 +1,12 @@
 import React from "react"
 import HtmlContent from "../../Utils/HtmlContent"
 import TaskCard from "../Tasks/TaskCard"
+import LaravelSession from "../../Utils/LaravelSession"
 
-const ClientNotesCard = ({ id, type, name, process, description, created_at, updated_at, user_id, tasks, onTaskChange, showOptions = true, session, onDeleteNote, onUpdateNote, status, manage_status }) => {
+const ClientNotesCard = ({ id, type, name, process, description, created_at, updated_at, user_id, tasks, onTaskChange, showOptions = true, onDeleteNote, onUpdateNote, status, manage_status, extended = true }) => {
+
+  const session = LaravelSession
+
   if (!type) {
     return <div className="card card-body p-2 mb-2" style={{ border: '1px solid #dee2e6' }}>
       <p className="card-text mb-0">
@@ -48,8 +52,8 @@ const ClientNotesCard = ({ id, type, name, process, description, created_at, upd
     <div className='card-body p-2'>
       {
         description &&
-        <div className="card-text">
-          <HtmlContent html={description} />
+        <div className="card-text" style={extended ? {} : { display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+          <HtmlContent  html={description} />
         </div>
       }
       {
