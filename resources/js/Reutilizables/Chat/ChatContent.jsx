@@ -6,6 +6,7 @@ import LeadsRest from "../../actions/LeadsRest"
 import MessagesRest from "../../actions/MessagesRest"
 import useWebSocket from "../CustomHooks/useWebSocket"
 import '../../../css/chat.css'
+import Global from "../../Utils/Global"
 
 const whatsAppRest = new WhatsAppRest()
 const messagesRest = new MessagesRest()
@@ -403,7 +404,7 @@ const ChatContent = ({ leadId, theme }) => {
                         alt={contact.contact_name}
                         style={{ padding: 0, border: 'none' }}
                         onError={(e) => {
-                            e.target.src = `//${window.Global?.APP_DOMAIN || location.host}/api/profile/thumbnail/null`;
+                            e.target.src = `//${Global?.APP_DOMAIN}/api/profile/thumbnail/null`;
                         }}
                     />
                 )}
