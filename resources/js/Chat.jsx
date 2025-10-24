@@ -213,7 +213,7 @@ const Chat = ({ users, activeLeadId: activeLeadIdDB, ...properties }) => {
                 <i className="mdi mdi-magnify search-icon"></i>
               </div>
             </div>
-            <div ref={leadsContainerRef} style={{ overflowY: 'auto', height: 'calc(100vh - 300px)' }}>
+            <div ref={leadsContainerRef} className='scroll-hidden' style={{ overflowY: 'auto', height: 'calc(100vh - 300px)' }}>
               <ul className="list-unstyled chat-list mb-0">
                 {leads
                   .sort((a, b) => new Date(b.last_message_microtime) - new Date(a.last_message_microtime))
@@ -332,7 +332,7 @@ const Chat = ({ users, activeLeadId: activeLeadIdDB, ...properties }) => {
       {contactDetails && (
         <div className="col-xl-3 col-lg-12">
           <div className="card contact-details-card mb-xl-0">
-            <div className="card-body scroll-hidden" style={{height: 'calc(100vh - 186px)', overflowY: 'auto'}}>
+            <div className="card-body scroll-hidden" style={{ height: 'calc(100vh - 186px)', overflowY: 'auto' }}>
               <ContactDetails {...contactDetails} />
             </div>
           </div>
