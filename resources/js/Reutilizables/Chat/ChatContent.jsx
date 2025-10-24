@@ -392,7 +392,7 @@ const ChatContent = ({ leadId, theme }) => {
         <div
             className={`card-header ${theme == 'light' ? 'bg-white' : 'bg-light'}`}
             style={{ cursor: 'pointer' }}
-            onClick={() => contact?.id && (window.location.href = `/lead/${contact.id}`)}
+            onClick={() => contact?.id && (window.location.href = `/leads/${contact.id}`)}
         >
             <div className="d-flex align-items-center">
                 {/* Avatar */}
