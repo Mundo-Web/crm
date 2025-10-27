@@ -20,7 +20,7 @@ const MessageCard = ({ key: idx, message, isLast = false, fromMe, marginTop, the
         )
     }
     return (
-        <li key={idx} className={`${fromMe ? 'odd' : ''} ${marginTop ? '' : 'hide-after'}`} style={{ marginBottom: isLast ? '0px' : '24px', marginTop: marginTop ? '12px' : '3px' }}>
+        <li key={idx} className={`${fromMe ? 'odd' : ''} ${marginTop ? '' : 'hide-after'}`} style={{ marginBottom: isLast ? '0px' : '24px', marginTop: marginTop ? '12px' : '2px' }}>
             <div className="message-list">
                 <div className="conversation-text">
                     {
