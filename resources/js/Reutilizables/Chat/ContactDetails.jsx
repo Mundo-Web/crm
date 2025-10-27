@@ -44,14 +44,14 @@ const ContactDetails = (contact) => {
         <div className="d-flex flex-wrap gap-2 justify-content-around mb-2">
             <div className="text-center">
                 <b className="d-block">Estado de gestión</b>
-                <button className="btn" style={{ backgroundColor: contact.manage_status?.color || '#6c757d', color: '#fff', cursor: 'default' }}>
-                    {contact.manage_status?.name || 'Sin estado'}
+                <button className="btn" style={{ backgroundColor: contact.status?.color || '#6c757d', color: '#fff', cursor: 'default' }}>
+                    {contact.status?.name || 'Sin estado'}
                 </button>
             </div>
             <div className="text-center">
                 <b className="d-block">Estado del lead</b>
                 <button className="btn" style={{ backgroundColor: contact.manage_status?.color || '#6c757d', color: '#fff', cursor: 'default' }}>
-                    {contact.status?.name || 'Sin estado'}
+                    {contact.manage_status?.name || 'Sin estado'}
                 </button>
             </div>
         </div>

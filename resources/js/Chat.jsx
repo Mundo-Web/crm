@@ -37,9 +37,9 @@ const Chat = ({ users, activeLeadId: activeLeadIdDB, ...properties }) => {
     setLoading(true);
 
     const request = {
-      fields: ['clients.id', 'clients.contact_name', 'clients.contact_phone', 'clients.last_message', 'clients.last_message_microtime', 'clients.assigned_to'],
+      fields: ['clients.id', 'clients.contact_name', 'clients.contact_phone', 'clients.last_message', 'clients.last_message_microtime', 'clients.assigned_to', 'clients.status_id', 'clients.manage_status_id'],
       withCount: ['unSeenMessages'],
-      with: ['assigned'],
+      with: ['assigned', 'status', 'manageStatus'],
       sort: [{ selector: 'last_message_microtime', desc: true }],
       skip: 0,
       take: 40,
@@ -280,11 +280,15 @@ const Chat = ({ users, activeLeadId: activeLeadIdDB, ...properties }) => {
                           </div>
 
                           <div className="flex-grow-1 overflow-hidden">
-                            <h5 className={`text-truncate font-14 mt-0 mb-1 ${lead.un_seen_messages_count > 0 ? 'fw-bold' : ''}`}>{lead.contact_name}</h5>
+                            <h5 className={`text-truncate font-14 mt-0 mb-0 ${lead.un_seen_messages_count > 0 ? 'fw-bold' : ''}`}>{lead.contact_name}</h5>
                             <p className={`text-truncate mb-0 ${lead.un_seen_messages_count > 0 ? 'fw-bold' : ''}`} title={lead.last_message ?? undefined}
                               style={{
                                 color: lead.un_seen_messages_count > 0 ? (theme == 'light' ? '#343a40' : '#f7f7f7') : undefined,
                               }}>{lead.last_message ?? <i className='text-muted'>Sin mensaje</i>}</p>
+                            <div className='d-flex gap-1' >
+                              <span className="badge" style={{backgroundColor: lead.status?.color ?? '#6c757d'}}>{lead.status?.name ?? 'Sin estado'}</span>
+                              <span className="badge" style={{backgroundColor: lead.manage_status?.color ?? '#6c757d'}}>{lead.manage_status?.name ?? 'Sin estado'}</span>
+                            </div>
                           </div>
                           <div className="d-flex flex-column align-items-end">
                             <div className={`font-11 ${lead.un_seen_messages_count > 0 ? 'text-success' : ''}`}>{dateLabel}</div>

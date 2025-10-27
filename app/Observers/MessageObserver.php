@@ -26,7 +26,7 @@ class MessageObserver
                 ->update(['seen' => true]);
         }
         try {
-            $clientJpa = Client::select('id', 'contact_name', 'contact_phone', 'last_message', 'last_message_microtime', 'assigned_to')
+            $clientJpa = Client::select('id', 'contact_name', 'contact_phone', 'last_message', 'last_message_microtime', 'assigned_to', 'status_id', 'manage_status_id')
                 ->where('business_id', $message->business_id)
                 ->where('contact_phone', $message->wa_id)
                 ->orderBy('updated_at', 'DESC')
@@ -36,6 +36,7 @@ class MessageObserver
                 $clientJpa->last_message = $message->message;
                 $clientJpa->last_message_microtime = $message->microtime;
                 $clientJpa->save();
+                $clientJpa->load(['assigned', 'status', 'manageStatus']);
                 $clientJpa->loadCount(['unSeenMessages']);
                 $clientJpa->notify = !$message->seen;
                 EventController::notify('client.updated', $clientJpa->toArray(), ['business_id' => $message->business_id]);
@@ -50,7 +51,7 @@ class MessageObserver
         EventController::notify('message.updated', $message->toArray(), ['business_id' => $message->business_id]);
 
         try {
-            $clientJpa = Client::select('id', 'contact_name', 'contact_phone', 'last_message', 'last_message_microtime', 'assigned_to')
+            $clientJpa = Client::select('id', 'contact_name', 'contact_phone', 'last_message', 'last_message_microtime', 'assigned_to', 'status_id', 'manage_status_id')
                 ->where('business_id', $message->business_id)
                 ->where('contact_phone', $message->wa_id)
                 ->orderBy('updated_at', 'DESC')
@@ -60,6 +61,7 @@ class MessageObserver
                 $clientJpa->last_message = $message->message;
                 $clientJpa->last_message_microtime = $message->microtime;
                 $clientJpa->save();
+                $clientJpa->load(['assigned', 'status', 'manageStatus']);
                 $clientJpa->loadCount(['unSeenMessages']);
                 EventController::notify('client.updated', $clientJpa->toArray(), ['business_id' => $message->business_id]);
                 EventController::notify('client.updated.menu', $clientJpa->toArray(), ['business_id' => $message->business_id]);
