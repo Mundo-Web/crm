@@ -684,7 +684,7 @@ const Leads = (properties) => {
         <div className="col-lg-3 col-md-4 col-sm-6 col-xs-12">
           <div className="d-flex mb-3">
             <img className="flex-shrink-0 me-3 rounded-circle avatar-md" alt={leadLoaded?.contact_name}
-              src={`/api/whatsapp/profile/${leadLoaded.contact_phone}`}
+              src={`/api/whatsapp/profile/${leadLoaded?.contact_phone}`}
               onError={(e) => { e.target.src = `//${Global.APP_DOMAIN}/assets/img/user-404.svg`; }}
             />
             <div className="flex-grow-1">
