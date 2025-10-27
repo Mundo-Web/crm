@@ -52,11 +52,12 @@ const AudioMessage = ({ fromMe, theme, url, avatar, time }) => {
             className={`ctext-wrap d-flex align-items-start ${fromMe ? `message-out-${theme}` : `message-in-${theme}`}`}
             style={{ minWidth: '240px', maxWidth: '320px', padding: '6px 8px' }}
         >
-            {!fromMe && avatar && (
+            {avatar && (
                 <img
                     src={avatar}
                     alt="avatar"
                     className="rounded-circle me-2"
+                    onError={(e) => { e.target.src = `//${Global.APP_DOMAIN}/assets/img/user-404.svg`; }}
                     style={{ width: '40px', height: '40px', objectFit: 'cover' }}
                 />
             )}

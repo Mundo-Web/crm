@@ -26,6 +26,7 @@ const MessageCard = ({ key: idx, message, isLast = false, fromMe, marginTop, the
                     {
                         content.startsWith('/audio:')
                             ? <AudioMessage
+                                avatar={`/api/whatsapp/profile/${message.wa_id}`}
                                 fromMe={fromMe}
                                 theme={theme}
                                 url={content.replace('/audio:', `/storage/images/whatsapp/`)}
