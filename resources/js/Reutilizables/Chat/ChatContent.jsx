@@ -395,6 +395,8 @@ const ChatContent = ({ leadId, theme, contactDetails, setContactDetails }) => {
         </div>
     )
 
+    let lastMessageDate = 0
+
     return <>
         <ChatHeader contact={contact} contactDetails={contactDetails} setContactDetails={setContactDetails} loading={contactLoading} theme={theme} />
         <div className="card-body p-0 position-relative border" style={{
@@ -431,13 +433,48 @@ const ChatContent = ({ leadId, theme, contactDetails, setContactDetails }) => {
                                 const fromMe = message.role !== 'Human'
                                 const marginTop = lastFromMe !== fromMe
                                 lastFromMe = fromMe
-                                return <MessageCard
-                                    key={idx}
-                                    isLast={idx < messages.length - 1}
-                                    message={message}
-                                    fromMe={fromMe}
-                                    marginTop={marginTop}
-                                    theme={theme} />
+
+                                // Date label logic
+                                const messageDate = new Date(message.microtime / 1000)
+                                const today = new Date()
+                                const diffTime = today - messageDate
+                                const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
+
+                                let dateLabel = null
+                                if (diffDays === 0) {
+                                    dateLabel = 'Hoy'
+                                } else if (diffDays === 1) {
+                                    dateLabel = 'Ayer'
+                                } else if (diffDays <= 6) {
+                                    const dayNames = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado']
+                                    dateLabel = dayNames[messageDate.getDay()]
+                                } else {
+                                    dateLabel = `${messageDate.getDate()}/${messageDate.getMonth() + 1}/${messageDate.getFullYear()}`
+                                }
+
+                                const showDateLabel = idx === 0 ||
+                                    new Date(messages[idx - 1].microtime / 1000).toDateString() !== messageDate.toDateString()
+
+                                return (
+                                    <>
+                                        {showDateLabel && (
+                                            <li key={`date-${idx}`} className="text-center py-1 px-2 mx-auto" style={{
+                                                position: 'sticky',
+                                                top: 0, bottom: 0, zIndex: 10,
+                                                width: 'max-content',
+                                            }}>
+                                                <span className="badge text-muted" style={{ width: '68px', backgroundColor: theme == 'dark' ? 'rgb(36, 38, 38)' : 'rgb(217, 253, 211)' }}>{dateLabel}</span>
+                                            </li>
+                                        )}
+                                        <MessageCard
+                                            key={idx}
+                                            isLast={idx < messages.length - 1}
+                                            message={message}
+                                            fromMe={fromMe}
+                                            marginTop={marginTop}
+                                            theme={theme} />
+                                    </>
+                                )
                             })}
                         </ul>
                         <form className="p-2 pt-0 conversation-input" onSubmit={onMessageSubmit}>
