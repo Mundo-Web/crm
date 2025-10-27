@@ -463,7 +463,7 @@ const ChatContent = ({ leadId, theme, contactDetails, setContactDetails }) => {
                                                 marginTop: '12px',
                                                 marginBottom: '12px',
                                             }}>
-                                                <span className="badge text-muted" style={{
+                                                <span className="badge" style={{
                                                     width: '68px',
                                                     backgroundColor: theme == 'dark' ? 'rgb(36, 38, 38)' : 'rgb(255, 255, 255)',
                                                     color: theme == 'dark' ? '#0a0a0a' : '#fafafa'
