@@ -182,6 +182,7 @@ const Chat = ({ users, activeLeadId: activeLeadIdDB, ...properties }) => {
                       <img
                         className='avatar-xs rounded-circle'
                         src={`//${Global.APP_DOMAIN}/api/profile/thumbnail/${user.relative_id}`}
+                        onError={(e) => { e.target.src = `//${Global.APP_DOMAIN}/assets/img/user-404.svg`; }}
                         alt={user.name}
                         style={{ objectFit: 'cover', objectPosition: 'center' }}
                       />
@@ -254,7 +255,7 @@ const Chat = ({ users, activeLeadId: activeLeadIdDB, ...properties }) => {
                           <div className={`position-relative flex-shrink-0 chat-user-img ${lead.online ? 'active' : ''} align-self-center me-2`}>
                             <img src={`/api/whatsapp/profile/${lead.contact_phone}`}
                               className="rounded-circle avatar-sm bg-light" alt={lead.name} style={{ padding: 0, border: 'none' }}
-                              onError={(e) => { e.target.src = `//${Global.APP_DOMAIN}/api/profile/thumbnail/null`; }} />
+                              onError={(e) => { e.target.src = `//${Global.APP_DOMAIN}/assets/img/user-404.svg`; }} />
                             {
                               lead.assigned_to && lead.assigned?.relative_id &&
                               // Only show if no filters are applied OR if the assigned user is NOT the only selected one
@@ -267,6 +268,7 @@ const Chat = ({ users, activeLeadId: activeLeadIdDB, ...properties }) => {
                                 <img
                                   className="position-absolute rounded-pill"
                                   src={`//${Global.APP_DOMAIN}/api/profile/thumbnail/${lead.assigned.relative_id}`}
+                                  onError={(e) => { e.target.src = `//${Global.APP_DOMAIN}/assets/img/user-404.svg`; }}
                                   alt={lead.assigned.fullname}
                                   style={{
                                     right: '-4px', bottom: '-4px',

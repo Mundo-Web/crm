@@ -56,7 +56,7 @@ const UserCard = ({ roles, match, setUsers, ...user }) => {
         <div className="card-body widget-user">
             <div className="d-flex align-items-center gap-2 w-100">
                 <div className="flex-shrink-0 avatar-lg">
-                    <img src={`//${Global.APP_DOMAIN}/api/profile/thumbnail/${user.relative_id}`} className="img-fluid rounded-circle" alt="user" />
+                    <img src={`//${Global.APP_DOMAIN}/api/profile/thumbnail/${user.relative_id}`} onError={(e) => { e.target.src = `//${Global.APP_DOMAIN}/assets/img/user-404.svg`; }} className="img-fluid rounded-circle" alt="user" />
                 </div>
                 <div className='flex-grow-1'>
                     <div className="overflow-hidden" style={{ width: '228px' }}>

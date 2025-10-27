@@ -197,6 +197,7 @@ const Archived = ({ projectStatuses, finishedProjectStatus, archived, can, sessi
                 <div className="d-flex align-items-start">
                   <img className="d-flex me-2 rounded-circle"
                     src={`//${Global.APP_DOMAIN}/api/profile/thumbnail/${detailLoaded?.assigned?.relative_id}`}
+                    onError={(e) => { e.target.src = `//${Global.APP_DOMAIN}/assets/img/user-404.svg`; }}
                     alt={detailLoaded?.assigned?.name} height="32" />
                   <div className="w-100">
                     <h5 className='m-0 font-14'>{detailLoaded?.assigned?.name}</h5>

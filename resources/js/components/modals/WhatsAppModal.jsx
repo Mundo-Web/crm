@@ -206,10 +206,7 @@ const WhatsAppModal = ({ prefixes, status: whatsAppStatus, setStatus: setWhatsAp
               whatsAppStatus == 'ready' && <div className="d-block py-2">
                 <img className="d-block mb-2 avatar-md rounded-circle mx-auto"
                   src={sessionInfo?.profile || `//${Global.APP_DOMAIN}/api/profile/thumbnail/undefined`}
-                  onError={(e) => {
-                    e.target.onerror = null
-                    e.target.src = `//${Global.APP_DOMAIN}/api/profile/thumbnail/undefined`;
-                  }}
+                  onError={(e) => { e.target.src = `//${Global.APP_DOMAIN}/assets/img/user-404.svg`; }}
                   alt={sessionInfo?.pushname} />
                 <b>{sessionInfo?.pushname}</b>
                 <br />

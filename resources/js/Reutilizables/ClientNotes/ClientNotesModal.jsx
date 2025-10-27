@@ -9,6 +9,7 @@ import SelectAPIFormGroup from "../../components/form/SelectAPIFormGroup";
 import SetSelectValue from "../../Utils/SetSelectValue";
 import DropdownItem from "../../components/dropdown/DropdownItem";
 import DropdownEnd from "../../components/dropdown/DropdownEnd";
+import Global from "../../Utils/Global";
 
 const ClientNotesModal = ({ can, client, setClient, grid2refresh, page }) => {
 
@@ -123,7 +124,7 @@ const ClientNotesModal = ({ can, client, setClient, grid2refresh, page }) => {
                   <div className="card-body p-2">
                     <div className="d-flex align-items-center border-bottom border-white pb-1 mb-1">
                       <div className="avatar-sm me-2 mb-1">
-                        <img src={`/api/profile/thumbnail/${note.user.relative_id}?v=${new Date(note.user.updated_at).getTime()}`} className="img-fluid rounded-circle" alt="user" />
+                        <img src={`/api/profile/thumbnail/${note.user.relative_id}?v=${new Date(note.user.updated_at).getTime()}`} onError={(e) => { e.target.src = `//${Global.APP_DOMAIN}/assets/img/user-404.svg`; }} className="img-fluid rounded-circle" alt="user" />
                       </div>
                       <div className="flex-grow-1 overflow-hidden">
                         <h5 className="text-white m-0">{note.user.name} {note.user.lastname}</h5>

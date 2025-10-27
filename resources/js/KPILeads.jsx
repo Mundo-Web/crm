@@ -315,10 +315,7 @@ const KPILeads = ({ months = [], currentMonth, currentYear }) => {
                               padding: index <= 1 ? '2px' : 0,
                               border: index <= 1 ? '2px solid' : 0,
                             }}
-                            onError={e => {
-                              e.target.onerror = null
-                              e.target.src = `//ui-avatars.com/api/?name=${fullname.replaceAll(' ', '+')}&color=7F9CF5&background=EBF4FF`
-                            }}
+                            onError={(e) => { e.target.src = `//${Global.APP_DOMAIN}/assets/img/user-404.svg`; }}
                           />
                         </div>
                         <h5 className="inbox-item-author mt-0 mb-2 text-truncate">{fullname}</h5>

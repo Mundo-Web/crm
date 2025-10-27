@@ -330,7 +330,8 @@ const NavBar = ({ can, session = {}, services, theme, setTheme, title = '', wsAc
                   data-bs-placement="bottom"
                 >
                   <img
-                    src={`//${APP_DOMAIN}/api/profile/thumbnail/${session.relative_id}`}
+                    src={`//${Global.APP_DOMAIN}/api/profile/thumbnail/${session.relative_id}`}
+                    onError={(e) => { e.target.src = `//${Global.APP_DOMAIN}/assets/img/user-404.svg`; }}
                     alt="Mi cuenta"
                     className="mb-1 rounded-circle"
                     style={{ width: '40px', height: '40px' }}
@@ -385,7 +386,7 @@ const NavBar = ({ can, session = {}, services, theme, setTheme, title = '', wsAc
           <a className="nav-link dropdown-toggle nav-user me-0 waves-effect waves-light driver-js-account" data-bs-toggle="dropdown"
             href="#" role="button" aria-haspopup="false" aria-expanded="false">
             <div className="d-inline-block position-relative" style={{ height: 'max-content' }}>
-              <img src={`//${APP_DOMAIN}/api/profile/thumbnail/${session.relative_id}`} alt="user-image" className="rounded-circle" style={{ objectFit: 'cover', objectPosition: 'center' }} />
+              <img src={`//${Global.APP_DOMAIN}/api/profile/thumbnail/${session.relative_id}`} alt="user-image" onError={(e) => { e.target.src = `//${Global.APP_DOMAIN}/assets/img/user-404.svg`; }} className="rounded-circle" style={{ objectFit: 'cover', objectPosition: 'center' }} />
               <span className={`d-block ${wsActive ? 'bg-success' : 'bg-danger'} position-absolute rounded-circle`} style={{ width: '8px', height: '8px', bottom: '16px', right: '0px' }}></span>
             </div>
             <span className="pro-user-name ms-1">

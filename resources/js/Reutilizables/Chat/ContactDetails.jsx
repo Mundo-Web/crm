@@ -29,9 +29,7 @@ const ContactDetails = (contact) => {
                 className="rounded-circle avatar-lg bg-light border-0 mb-3 mb-md-0 mb-xl-0 flex-shrink-0"
                 alt={contact.name}
                 style={{ objectFit: 'cover' }}
-                onError={(e) => {
-                    e.target.src = `//${Global.APP_DOMAIN}/api/profile/thumbnail/null`;
-                }}
+                onError={(e) => { e.target.src = `//${Global.APP_DOMAIN}/assets/img/user-404.svg`; }}
             />
             <div className="text-center text-md-start text-xl-start w-100">
                 <div className="fw-bold fs-5 text-dark text-truncat">{contact.contact_name}</div>
@@ -59,7 +57,10 @@ const ContactDetails = (contact) => {
             contact.assigned_to && <div className="p-2 bg-light rounded mb-2">
                 <h5 className="mt-0 mb-2">Atendido por:</h5>
                 <div className="d-flex align-items-start" bis_skin_checked="1">
-                    <img className="d-flex me-2 rounded-circle" src={`//${Global.APP_DOMAIN}/api/profile/thumbnail/${contact.assigned.relative_id}`} alt="Manuel" height="32" />
+                    <img className="d-flex me-2 rounded-circle"
+                        src={`//${Global.APP_DOMAIN}/api/profile/thumbnail/${contact.assigned.relative_id}`}
+                        onError={(e) => { e.target.src = `//${Global.APP_DOMAIN}/assets/img/user-404.svg`; }}
+                        alt={contact.assigned.fullname} height="32" />
                     <div className="w-100 overflow-hidden" bis_skin_checked="1">
                         <h5 className="m-0 font-14 text-truncate">{contact.assigned.fullname}</h5>
                         <span className="font-12 mb-0 text-truncate d-block">{contact.assigned.email}</span>
@@ -71,9 +72,9 @@ const ContactDetails = (contact) => {
         <div className="d-flex justify-content-between align-items-center mb-2">
             <h5 className="my-0">Actividad</h5>
             <Tippy content='Ver más'>
-            <a href={`/leads/${contact.id}`} className="text-decoration-none">
-                <i className="mdi mdi-arrow-top-right"></i>
-            </a>
+                <a href={`/leads/${contact.id}`} className="text-decoration-none">
+                    <i className="mdi mdi-arrow-top-right"></i>
+                </a>
             </Tippy>
         </div>
         {loading ? (

@@ -252,7 +252,10 @@ const Clients = ({ projectStatuses, finishedProjectStatus, clientStatuses, produ
             container.on('click', () => onDetailLoaded(data))
             ReactAppend(container, <div className='d-flex align-items-center'>
               {data.assigned_to && <Tippy content={`Atendido por ${data.assigned.name} ${data.assigned.lastname}`}>
-                <img className='avatar-xs rounded-circle me-1' src={`//${Global.APP_DOMAIN}/api/profile/thumbnail/${data.assigned.relative_id}`} alt={data.assigned.name} />
+                <img className='avatar-xs rounded-circle me-1' 
+                src={`//${Global.APP_DOMAIN}/api/profile/thumbnail/${data.assigned.relative_id}`} 
+                onError={(e) => { e.target.src = `//${Global.APP_DOMAIN}/assets/img/user-404.svg`; }}
+                alt={data.assigned.name} />
               </Tippy>}
               <div>{data.tradename || <i className='text-muted'>- Sin nombre -</i>}</div>
             </div>)
@@ -490,6 +493,7 @@ const Clients = ({ projectStatuses, finishedProjectStatus, clientStatuses, produ
                 <div className="d-flex align-items-start">
                   <img className="d-flex me-2 rounded-circle"
                     src={`//${Global.APP_DOMAIN}/api/profile/thumbnail/${detailLoaded?.assigned?.relative_id}`}
+                    onError={(e) => { e.target.src = `//${Global.APP_DOMAIN}/assets/img/user-404.svg`; }}
                     alt={detailLoaded?.assigned?.name} height="32" />
                   <div className="w-100">
                     <h5 className='m-0 font-14'>{detailLoaded?.assigned?.name}</h5>

@@ -89,7 +89,11 @@ const Profile = (props) => {
             <Tippy content='Cambiar foto de perfil' arrow={true}>
               <label htmlFor='avatar' className='rounded-circle mx-auto d-block' style={{ cursor: 'pointer', width: 'max-content' }}>
                 <input className='d-none' type='file' name='avatar' id='avatar' accept='image/*' onChange={onProfileChange} />
-                <img className='avatar-xl rounded-circle' src={`api/profile/${session.relative_id}?v=${crypto.randomUUID()}`} alt={`Perfil de ${session.name} ${session.lastname}`} style={{ objectFit: 'cover', objectPosition: 'center' }} />
+                <img 
+                className='avatar-xl rounded-circle' 
+                src={`api/profile/${session.relative_id}?v=${crypto.randomUUID()}`} 
+                onError={(e) => { e.target.src = `//${Global.APP_DOMAIN}/assets/img/user-404.svg`; }}
+                alt={`Perfil de ${session.name} ${session.lastname}`} style={{ objectFit: 'cover', objectPosition: 'center' }} />
               </label>
             </Tippy>
             <hr className='mt-3 mb-2' />

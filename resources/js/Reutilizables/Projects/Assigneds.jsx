@@ -22,7 +22,7 @@ const Assigneds = (relatives) => {
             <div className="card-body widget-user p-2">
               <div className="d-flex align-items-center">
                 <div className="avatar-lg me-3 flex-shrink-0">
-                  <img src={`//${Global.APP_DOMAIN}/api/profile/thumbnail/${relative_id}`} className="img-fluid rounded-circle" alt="user" onError={e => e.target.src = `//${Global.APP_DOMAIN}/api/profile/thumbnail/undefined`} />
+                  <img src={`//${Global.APP_DOMAIN}/api/profile/thumbnail/${relative_id}`} className="img-fluid rounded-circle" alt="user" onError={(e) => { e.target.src = `//${Global.APP_DOMAIN}/assets/img/user-404.svg`; }} />
                 </div>
                 <div className="flex-grow-1 overflow-hidden">
                   <h5 className="text-blue mt-0 mb-1"> {user.name.split(' ')?.[0]} {user.lastname.split(' ')?.[0]}</h5>
@@ -36,7 +36,7 @@ const Assigneds = (relatives) => {
           <img
             className='avatar-group-item avatar-sm rounded-circle mb-0'
             src={`//${Global.APP_DOMAIN}/api/profile/thumbnail/${relative_id}`}
-            onError={e => e.target.src = `//${Global.APP_DOMAIN}/api/profile/thumbnail/undefined`}
+            onError={(e) => { e.target.src = `//${Global.APP_DOMAIN}/assets/img/user-404.svg`; }}
             style={{ backdropFilter: 'blur(40px)', marginRight: '6px' }}
           />
         </Tippy>)

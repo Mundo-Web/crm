@@ -405,9 +405,7 @@ const ChatContent = ({ leadId, theme, contactDetails, setContactDetails }) => {
                         className="rounded-circle avatar-sm bg-light me-2"
                         alt={contact.contact_name}
                         style={{ padding: 0, border: 'none' }}
-                        onError={(e) => {
-                            e.target.src = `//${Global?.APP_DOMAIN}/api/profile/thumbnail/null`;
-                        }}
+                        onError={(e) => { e.target.src = `//${Global.APP_DOMAIN}/assets/img/user-404.svg`; }}
                     />
                 )}
                 {contactLoading && (

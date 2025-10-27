@@ -1,4 +1,5 @@
 import NotificationsRest from "../../actions/NotificationsRest"
+import Global from "../../Utils/Global"
 
 const notificationsRest = new NotificationsRest()
 
@@ -20,7 +21,7 @@ const NotificationItem = ({ id, name, message, description, created_at, link_to,
         {
           creator
             ? <div className="position-relative">
-              <img src={`//${APP_DOMAIN}/api/profile/${creator.relative_id}`} className="img-fluid rounded-circle" alt={creator.fullname} />
+              <img src={`//${APP_DOMAIN}/api/profile/${creator.relative_id}`} onError={(e) => { e.target.src = `//${Global.APP_DOMAIN}/assets/img/user-404.svg`; }} className="img-fluid rounded-circle" alt={creator.fullname} />
               <span className="position-absolute top-100 translate-middle badge rounded-pill bg-success text-sm">
                 <small className={icon}></small>
               </span>

@@ -91,6 +91,7 @@ const LeadKanban = ({ statuses, leads, onLeadClicked, onOpenModal, onMakeLeadCli
             <img
               className='avatar-xs rounded-circle'
               src={`//${Global.APP_DOMAIN}/api/profile/thumbnail/${user.relative_id}`}
+              onError={(e) => { e.target.src = `//${Global.APP_DOMAIN}/assets/img/user-404.svg`; }}
               alt={user.name}
               style={{ objectFit: 'cover', objectPosition: 'center' }}
             />
@@ -207,6 +208,7 @@ const LeadKanban = ({ statuses, leads, onLeadClicked, onOpenModal, onMakeLeadCli
                                               <a href="" data-bs-toggle="tooltip" data-bs-placement="top"
                                                 title="Username">
                                                 <img src={`//${Global.APP_DOMAIN}/api/profile/${lead?.assigned?.relative_id}`} alt="img"
+                                                onError={(e) => { e.target.src = `//${Global.APP_DOMAIN}/assets/img/user-404.svg`; }}
                                                   className="avatar-xs rounded-circle" />
                                               </a>
                                             </Tippy>

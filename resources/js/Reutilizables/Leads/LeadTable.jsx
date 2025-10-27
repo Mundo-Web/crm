@@ -148,6 +148,7 @@ const LeadTable = ({ gridRef, cardClass, otherGridRef, rest, can, defaultLeadSta
               <img
                 className='avatar-xs rounded-circle'
                 src={`//${Global.APP_DOMAIN}/api/profile/thumbnail/${user.relative_id}`}
+                onError={(e) => { e.target.src = `//${Global.APP_DOMAIN}/assets/img/user-404.svg`; }}
                 alt={user.name}
                 style={{ objectFit: 'cover', objectPosition: 'center' }}
               />
@@ -212,7 +213,7 @@ const LeadTable = ({ gridRef, cardClass, otherGridRef, rest, can, defaultLeadSta
             users.map((user) => {
               return <li key={user.id}>
                 <button className="dropdown-item d-flex gap-1 align-items-center" onClick={() => onMassiveAssignClicked(user.service_user.id)}>
-                  <img className='avatar-xs rounded-circle' src={`//${Global.APP_DOMAIN}/api/profile/thumbnail/${user.relative_id}`} alt={user.name} />
+                  <img className='avatar-xs rounded-circle' src={`//${Global.APP_DOMAIN}/api/profile/thumbnail/${user.relative_id}`} onError={(e) => { e.target.src = `//${Global.APP_DOMAIN}/assets/img/user-404.svg`; }} alt={user.name} />
                   {user.name?.split(' ')?.[0]} {user.lastname?.split(' ')?.[0]}
                 </button>
               </li>
@@ -338,7 +339,7 @@ const LeadTable = ({ gridRef, cardClass, otherGridRef, rest, can, defaultLeadSta
             {data.assigned_to
               ? <>
                 <Tippy content={`Atendido por ${data.assigned.name} ${data.assigned.lastname}`}>
-                  <img className='avatar-sm rounded-circle' src={`//${Global.APP_DOMAIN}/api/profile/thumbnail/${data.assigned.relative_id}`} alt={data.assigned.name} />
+                  <img className='avatar-sm rounded-circle' src={`//${Global.APP_DOMAIN}/api/profile/thumbnail/${data.assigned.relative_id}`} onError={(e) => { e.target.src = `//${Global.APP_DOMAIN}/assets/img/user-404.svg`; }} alt={data.assigned.name} />
                 </Tippy>
               </>
               : ''}

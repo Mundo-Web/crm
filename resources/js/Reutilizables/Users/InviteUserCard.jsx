@@ -34,6 +34,7 @@ const InviteUserCard = ({ relative_id, fullname, email, match, setUsers, setInvi
         <div className="card-body p-2 d-flex align-items-center gap-2">
             <img
                 src={`//${Global.APP_DOMAIN}/api/profile/thumbnail/${relative_id}`}
+                onError={(e) => { e.target.src = `//${Global.APP_DOMAIN}/assets/img/user-404.svg`; }}
                 className="rounded-circle"
                 alt={fullname}
                 width="40"

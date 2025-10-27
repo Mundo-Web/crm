@@ -84,7 +84,11 @@ const TaskCard = ({ id, status, name, description, assigned, priority, type, onC
       {
         assigned &&
         <small>
-          <img src={`//${Global.APP_DOMAIN}/api/profile/thumbnail/${assigned.relative_id}`} alt={assigned.fullname} className="img-fluid avatar-xs rounded-circle me-1"></img>
+          <img 
+          src={`//${Global.APP_DOMAIN}/api/profile/thumbnail/${assigned.relative_id}`} 
+          onError={(e) => { e.target.src = `//${Global.APP_DOMAIN}/assets/img/user-404.svg`; }}
+          alt={assigned.fullname} 
+          className="img-fluid avatar-xs rounded-circle me-1"></img>
           Asignado a <b>{assigned.fullname}</b>
         </small>
       }

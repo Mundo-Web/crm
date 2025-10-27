@@ -195,7 +195,7 @@ const Tasks = () => {
         //   cellTemplate: (container, { data }) => {
         //     if (!data.assigned) return
         //     ReactAppend(container, <>
-        //       <img src={`//${Global.APP_DOMAIN}/api/profile/thumbnail/${data.assigned.relative_id}`} alt={data.assigned.fullname} class="img-fluid avatar-xs rounded-circle me-1"></img>
+        //       <img src={`//${Global.APP_DOMAIN}/api/profile/thumbnail/${data.assigned.relative_id}`} onError={(e) => { e.target.src = `//${Global.APP_DOMAIN}/assets/img/user-404.svg`; }} alt={data.assigned.fullname} class="img-fluid avatar-xs rounded-circle me-1"></img>
         //       <b>{data.assigned.fullname}</b>
         //     </>)
         //   }

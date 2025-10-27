@@ -9,6 +9,7 @@ import useWebSocket from '../Reutilizables/CustomHooks/useWebSocket'
 import MessagesRest from '../actions/MessagesRest'
 import useCrossTabSelectedUsers from '../Reutilizables/CustomHooks/useCrossTabSelectedUsers'
 import LaravelSession from '../Utils/LaravelSession'
+import Global from '../Utils/Global'
 
 const audio = new Audio('/assets/sounds/message.mp3');
 
@@ -105,9 +106,10 @@ const Menu = ({ session, theme, can, whatsAppStatus, APP_PROTOCOL, APP_DOMAIN, l
       <div className="user-box w-100 mb-2" style={{ padding: '0px 20px' }}>
         <div className='position-relative' style={{ width: 'max-content', height: 'max-content' }}>
           <img
-            src={`//${APP_DOMAIN}/api/profile/thumbnail/${session.relative_id}?v=${new Date(session.updated_at).getTime()}`}
+            src={`//${Global.APP_DOMAIN}/api/profile/thumbnail/${session.relative_id}?v=${new Date(session.updated_at).getTime()}`}
             alt={session.name}
             title={session.name}
+            onError={(e) => { e.target.src = `//${Global.APP_DOMAIN}/assets/img/user-404.svg`; }}
             className="rounded-circle img-thumbnail avatar-md mb-2"
             style={{
               padding: 0,
