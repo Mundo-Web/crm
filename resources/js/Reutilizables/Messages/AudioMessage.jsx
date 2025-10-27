@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 
-const AudioMessage = ({ fromMe, theme, url, avatar, time }) => {
+const AudioMessage = ({ fromMe, theme, url, time }) => {
     const [playing, setPlaying] = useState(false);
     const [duration, setDuration] = useState(0);
     const [currentTime, setCurrentTime] = useState(0);
@@ -65,31 +65,31 @@ const AudioMessage = ({ fromMe, theme, url, avatar, time }) => {
                 <div className="d-flex align-items-center mb-1">
                     <button
                         onClick={togglePlay}
-                        className="btn btn-sm d-flex align-items-center justify-content-center rounded-circle me-2"
+                        className="btn btn-sm d-flex align-items-center justify-content-center rounded-circle me-2 p-0"
                         style={{
                             width: '32px',
                             height: '32px',
-                            backgroundColor: 'rgba(255,255,255,0.25)',
+                            // backgroundColor: theme == 'dark' ? 'rgba(255,255,255,0.25)' : '',
                             border: 'none',
-                            color: '#fff',
+                            color: theme == 'dark' ? '#fff' : '#6f8171',
                             flexShrink: 0
                         }}
                     >
-                        <i className={`mdi mdi-${playing ? 'pause' : 'play'}`} style={{ fontSize: '16px' }}></i>
+                        <i className={`mdi mdi-${playing ? 'pause' : 'play'}`} style={{ fontSize: '24px' }}></i>
                     </button>
-                    <div className="flex-grow-1" style={{ height: '4px', backgroundColor: 'rgba(255,255,255,0.3)', borderRadius: '2px', position: 'relative' }}>
+                    <div className="flex-grow-1" style={{ height: '4px', backgroundColor: theme == 'dark' ? '#ffffff55' : '#6f817155', borderRadius: '2px', position: 'relative' }}>
                         <div
                             style={{
                                 height: '100%',
                                 width: `${progress}%`,
-                                backgroundColor: '#fff',
+                                backgroundColor: theme == 'dark' ? '#fff' : '#6f8171',
                                 borderRadius: '2px',
                                 transition: 'width 0.2s ease'
                             }}
                         ></div>
                     </div>
                 </div>
-                <div className="d-flex justify-content-between align-items-center px-1" style={{ fontSize: '10px', color: 'rgba(255,255,255,0.7)' }}>
+                <div className="d-flex justify-content-between align-items-center px-1" style={{ fontSize: '10px' }}>
                     <span>{formatTime(duration)}</span>
                     <span className="time mt-0 float-end" style={{ fontSize: '10px', marginLeft: '6px', marginTop: '8px !important' }}>{time}</span>
                 </div>
