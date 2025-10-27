@@ -52,7 +52,7 @@ const AudioMessage = ({ fromMe, theme, url, avatar, time }) => {
             className={`ctext-wrap d-flex align-items-start ${fromMe ? `message-out-${theme}` : `message-in-${theme}`}`}
             style={{ minWidth: '240px', maxWidth: '320px', padding: '6px 8px' }}
         >
-            {avatar && (
+            {/* {avatar && (
                 <img
                     src={avatar}
                     alt="avatar"
@@ -60,7 +60,7 @@ const AudioMessage = ({ fromMe, theme, url, avatar, time }) => {
                     onError={(e) => { e.target.src = `//${Global.APP_DOMAIN}/assets/img/user-404.svg`; }}
                     style={{ width: '40px', height: '40px', objectFit: 'cover' }}
                 />
-            )}
+            )} */}
             <div className="flex-grow-1">
                 <div className="d-flex align-items-center mb-1">
                     <button
