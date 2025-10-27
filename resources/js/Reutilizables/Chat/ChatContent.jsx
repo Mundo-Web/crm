@@ -395,8 +395,6 @@ const ChatContent = ({ leadId, theme, contactDetails, setContactDetails }) => {
         </div>
     )
 
-    let lastMessageDate = 0
-
     return <>
         <ChatHeader contact={contact} contactDetails={contactDetails} setContactDetails={setContactDetails} loading={contactLoading} theme={theme} />
         <div className="card-body p-0 position-relative border" style={{
@@ -458,12 +456,18 @@ const ChatContent = ({ leadId, theme, contactDetails, setContactDetails }) => {
                                 return (
                                     <>
                                         {showDateLabel && (
-                                            <li key={`date-${idx}`} className="text-center py-1 px-2 mx-auto" style={{
+                                            <li key={`date-${idx}`} className="text-center p-0 mx-auto" style={{
                                                 position: 'sticky',
                                                 top: 0, zIndex: 10,
                                                 width: 'max-content',
+                                                marginTop: '12px',
+                                                marginBottom: '12px',
                                             }}>
-                                                <span className="badge text-muted" style={{ width: '68px', backgroundColor: theme == 'dark' ? 'rgb(36, 38, 38)' : 'rgb(217, 253, 211)' }}>{dateLabel}</span>
+                                                <span className="badge text-muted" style={{
+                                                    width: '68px',
+                                                    backgroundColor: theme == 'dark' ? 'rgb(36, 38, 38)' : 'rgb(255, 255, 255)',
+                                                    color: theme == 'dark' ? '#0a0a0a' : '#fafafa'
+                                                }}>{dateLabel}</span>
                                             </li>
                                         )}
                                         <MessageCard
