@@ -300,8 +300,6 @@ class WhatsAppController extends Controller
 
             $message = $request->message;
 
-            dump($request->all());
-
             if ($request->hasFile('audio')) {
                 $file = $request->file('audio');
                 $filename = Crypto::short() . '.mp3';
