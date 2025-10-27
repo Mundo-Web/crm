@@ -460,7 +460,7 @@ const ChatContent = ({ leadId, theme, contactDetails, setContactDetails }) => {
                                         {showDateLabel && (
                                             <li key={`date-${idx}`} className="text-center py-1 px-2 mx-auto" style={{
                                                 position: 'sticky',
-                                                top: 0, bottom: 0, zIndex: 10,
+                                                top: 0, zIndex: 10,
                                                 width: 'max-content',
                                             }}>
                                                 <span className="badge text-muted" style={{ width: '68px', backgroundColor: theme == 'dark' ? 'rgb(36, 38, 38)' : 'rgb(217, 253, 211)' }}>{dateLabel}</span>
