@@ -54,3 +54,10 @@
 .scroll-hidden::-webkit-scrollbar {
   display: none;
 }
+
+.hide-after .ctext-wrap {
+    border-radius: 6px !important;
+}
+.hide-after .ctext-wrap:after {
+    display: none;
+}

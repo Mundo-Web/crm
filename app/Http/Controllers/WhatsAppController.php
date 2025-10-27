@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Response as FacadesResponse;
+use SoDe\Extend\Crypto;
 use SoDe\Extend\Fetch;
 use SoDe\Extend\JSON;
 use SoDe\Extend\Response;
@@ -289,7 +290,7 @@ class WhatsAppController extends Controller
 
     public function send(Request $request)
     {
-        $response = Response::simpleTryCatch(function (Response $response) use ($request) {
+        $response = Response::simpleTryCatch(function () use ($request) {
             $businessJpa = Business::with(['person'])->find(Auth::user()->business_id);
             $clientJpa = Client::find($request->client_id);
 
@@ -298,6 +299,15 @@ class WhatsAppController extends Controller
             if (!$number) throw new Exception('Número no encontrado');
 
             $message = $request->message;
+
+            dump($request->all());
+
+            if ($request->hasFile('audio')) {
+                $file = $request->file('audio');
+                $filename = Crypto::short() . '.mp3';
+                $file->storeAs('images/whatsapp', $filename, 'local');
+                $message = '/audio:' . $filename;
+            }
 
             $isDummy = in_array($number, explode(',', env('WA_DUMMY')), true);
 
@@ -379,6 +389,28 @@ class WhatsAppController extends Controller
                             'media' => $attachment,
                             'fileName' => $filename,
                             'mimetype' => $mimeType
+                        ]
+                    ]);
+                }
+
+                Message::create([
+                    'wa_id' => $number,
+                    'role' => 'User',
+                    'message' => Text::html2wa($message),
+                    'microtime' => (int) (microtime(true) * 1_000_000),
+                    'business_id' => Auth::user()->business_id,
+                ]);
+            } else if (Text::startsWith($message, '/audio:')) {
+                if (!$isDummy) {
+                    $res = new Fetch(env('EVOAPI_URL') . '/message/sendWhatsAppAudio/' . $businessJpa->person->document_number, [
+                        'method' => 'POST',
+                        'headers' => [
+                            'Content-Type' => 'application/json',
+                            'apikey' => $businessJpa->uuid
+                        ],
+                        'body' => [
+                            'number' => $number,
+                            'audio' => env('APP_URL') . '/storage/images/',
                         ]
                     ]);
                 }

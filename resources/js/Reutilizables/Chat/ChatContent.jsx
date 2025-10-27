@@ -7,6 +7,8 @@ import MessagesRest from "../../actions/MessagesRest"
 import useWebSocket from "../CustomHooks/useWebSocket"
 import '../../../css/chat.css'
 import Global from "../../Utils/Global"
+import ChatHeader from "./ChatHeader"
+import MessageCard from "./MessageCard"
 
 const whatsAppRest = new WhatsAppRest()
 const messagesRest = new MessagesRest()
@@ -163,7 +165,7 @@ const ChatContent = ({ leadId, theme, contactDetails, setContactDetails }) => {
             const chunks = []
             mediaRecorder.ondataavailable = (e) => chunks.push(e.data)
             mediaRecorder.onstop = () => {
-                const blob = new Blob(chunks, { type: 'audio/webm' })
+                const blob = new Blob(chunks, { type: 'audio/mp3' })
                 setAudioBlob(blob)
                 setAudioUrl(URL.createObjectURL(blob))
                 stream.getTracks().forEach(track => track.stop())
@@ -203,6 +205,8 @@ const ChatContent = ({ leadId, theme, contactDetails, setContactDetails }) => {
         if (audioBlob) {
             // TODO: implement audio upload
             console.warn('Audio upload not implemented yet')
+            console.log(audioBlob)
+            await whatsAppRest.sendAudio(contact.id, audioBlob)
         } else if (cameraBlob) {
             // TODO: implement camera image upload
             console.warn('Camera image upload not implemented yet')
@@ -392,46 +396,7 @@ const ChatContent = ({ leadId, theme, contactDetails, setContactDetails }) => {
     )
 
     return <>
-        <div
-            className={`card-header ${theme == 'light' ? 'bg-white' : 'bg-light'}`}
-            style={{ cursor: 'pointer' }}
-            onClick={() => contact?.id && setContactDetails(contactDetails ? null : contact)}
-        >
-            <div className="d-flex align-items-center">
-                {/* Avatar */}
-                {!contactLoading && contact && (
-                    <img
-                        src={`/api/whatsapp/profile/${contact.contact_phone}`}
-                        className="rounded-circle avatar-sm bg-light me-2"
-                        alt={contact.contact_name}
-                        style={{ padding: 0, border: 'none' }}
-                        onError={(e) => { e.target.src = `//${Global.APP_DOMAIN}/assets/img/user-404.svg`; }}
-                    />
-                )}
-                {contactLoading && (
-                    <div className="placeholder-glow">
-                        <div className="rounded-circle avatar-sm me-2 placeholder" style={{ width: 36, height: 36 }} />
-                    </div>
-                )}
-
-                <div className={`flex-grow-1 ${contactLoading ? 'placeholder-glow' : ''}`}>
-                    <h5 className={`mt-0 mb-1 text-truncate ${contactLoading ? 'placeholder col-3' : ''}`}>
-                        {contact?.contact_name}
-                    </h5>
-                    <p className={`d-block font-13 text-muted mb-0 ${contactLoading ? 'placeholder col-2' : ''}`}>
-                        <i className="mdi mdi-phone me-1 font-11"></i>
-                        {contact?.contact_phone}
-                    </p>
-                </div>
-
-                {/* Arrow icon */}
-                {!contactLoading && contact && (
-                    <div className="ms-2">
-                        <i className={`mdi mdi-24px mdi-chevron-double-${contactDetails ? 'left' : 'right'} text-muted`} />
-                    </div>
-                )}
-            </div>
-        </div>
+        <ChatHeader contact={contact} contactDetails={contactDetails} setContactDetails={setContactDetails} loading={contactLoading} theme={theme} />
         <div className="card-body p-0 position-relative border" style={{
             backgroundColor: theme == 'light' ? 'rgb(245, 241, 235)' : 'rgb(22, 23, 23)',
         }}>
@@ -464,83 +429,15 @@ const ChatContent = ({ leadId, theme, contactDetails, setContactDetails }) => {
                             {/* Messages */}
                             {messages.map((message, idx) => {
                                 const fromMe = message.role !== 'Human'
-                                const marginTop = lastFromMe === fromMe ? '3px' : '12px'
+                                const marginTop = lastFromMe !== fromMe
                                 lastFromMe = fromMe
-
-                                let content = message.message?.replace(/\{\{.*?\}\}/gs, '') || ''
-                                let attachment = ''
-                                if (content.startsWith('/attachment:')) {
-                                    attachment = content.split('\n')[0]
-                                    content = content.replace(attachment, '')
-                                }
-                                if (message.role == 'Form') {
-                                    return (
-                                        <li key={idx}>
-                                            <div className="chat-day-title mt-3 mb-0">
-                                                <small className="title badge badge-soft-dark rounded-pill">{content}</small>
-                                            </div>
-                                        </li>
-                                    )
-                                }
-                                return (
-                                    <li key={idx} className={fromMe ? 'odd' : ''} style={{ marginBottom: idx < messages.length - 1 ? '0px' : '24px', marginTop }}>
-                                        <div className="message-list">
-                                            <div className="conversation-text">
-                                                <div className={`ctext-wrap ${fromMe ? `message-out-${theme}` : `message-in-${theme}`}`} style={{
-                                                    boxShadow: 'rgba(11, 20, 26, 0.13) 0px 1px 0.5px 0px',
-                                                    padding: '6px 8px'
-                                                }}>
-                                                    {message.campaign && (
-                                                        <div className="rounded p-2 mb-2" style={{ backgroundColor: 'rgba(240, 240, 240, 0.125)', cursor: message.campaign.link ? 'pointer' : 'default', maxWidth: '240px' }}
-                                                            onClick={() => {
-                                                                if (message.campaign.link) window.open(message.campaign.link, '_blank')
-                                                            }}>
-                                                            <div className="d-flex gap-1" style={{ maxWidth: '100%' }}>
-                                                                <div className="fw-bold">{message.campaign.code}</div>
-                                                                <div className="small text-truncate">{message.campaign.title}</div>
-                                                            </div>
-                                                            <small className="d-block text-truncate" style={{ maxWidth: 300 }}>{message.campaign.link}</small>
-                                                        </div>
-                                                    )}
-                                                    {attachment && (
-                                                        <>
-                                                            <img src={attachment.replace('/attachment:', '')} className="mb-1" alt="attachment"
-                                                                style={{
-                                                                    minWidth: '300px',
-                                                                    width: '100%',
-                                                                    maxWidth: '100%',
-                                                                    minHeight: '200px',
-                                                                    maxHeight: '300px',
-                                                                    borderRadius: '4px',
-                                                                    objectFit: 'cover',
-                                                                }}
-                                                                onError={e => {
-                                                                    const img = e.target
-                                                                    if (img && img.parentNode) {
-                                                                        img.style.display = 'none'
-                                                                    }
-                                                                }} />
-                                                            <div className="d-flex justify-content-end">
-                                                                <a className="btn btn-xs btn-light mb-1 text-nowrap d-flex text-end" href={attachment.replace('/attachment:', '')} target="_blank" rel="noreferrer" download>
-                                                                    <i className="mdi mdi-download me-1"></i>
-                                                                    <span>Descargar adjunto</span>
-                                                                </a>
-                                                            </div>
-                                                            {
-                                                                !content.trim() &&
-                                                                <span className="time mt-0 float-end" style={{ fontSize: '10px', marginLeft: '6px', marginTop: '8px !important' }}>{moment(message.created_at).subtract(5, 'hours').format('HH:mm')}</span>
-                                                            }
-                                                        </>
-                                                    )}
-                                                    {
-                                                        content.trim() &&
-                                                        <HtmlContent className="text-start font-14" html={wa2html(content + `<span class="time mt-0 float-end" style="font-size: 10px; margin-left: 6px; margin-top: 8px !important">${moment(message.created_at).subtract(5, 'hours').format('HH:mm')}</span>`)} />
-                                                    }
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </li>
-                                )
+                                return <MessageCard
+                                    key={idx}
+                                    isLast={idx < messages.length - 1}
+                                    message={message}
+                                    fromMe={fromMe}
+                                    marginTop={marginTop}
+                                    theme={theme} />
                             })}
                         </ul>
                         <form className="p-2 pt-0 conversation-input" onSubmit={onMessageSubmit}>
