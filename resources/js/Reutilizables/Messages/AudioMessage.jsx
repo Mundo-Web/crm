@@ -84,7 +84,7 @@ const AudioMessage = ({ fromMe, theme, url, time }) => {
                                 width: `${progress}%`,
                                 backgroundColor: theme == 'dark' ? '#fff' : '#6f8171',
                                 borderRadius: '2px',
-                                transition: 'width 0.2s ease'
+                                transition: 'width 100ms ease'
                             }}
                         ></div>
                     </div>
