@@ -402,6 +402,7 @@ class WhatsAppController extends Controller
                 ]);
             } else if (Text::startsWith($message, '/audio:')) {
                 if (!$isDummy) {
+                    $audio = str_replace('/audio:', env('APP_URL') . '/storage/images/whatsapp/', $message);
                     $res = new Fetch(env('EVOAPI_URL') . '/message/sendWhatsAppAudio/' . $businessJpa->person->document_number, [
                         'method' => 'POST',
                         'headers' => [
@@ -410,7 +411,7 @@ class WhatsAppController extends Controller
                         ],
                         'body' => [
                             'number' => $number,
-                            'audio' => env('APP_URL') . '/storage/images/',
+                            'audio' => $audio,
                         ]
                     ]);
                 }
