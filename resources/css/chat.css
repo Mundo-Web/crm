@@ -61,3 +61,9 @@
 .hide-after .ctext-wrap:after {
     display: none;
 }
+
+.conversation-list .conversation-text,
+.conversation-list .odd .conversation-text {
+    width: max-content !important;
+    max-width: 70%;
+}
