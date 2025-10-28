@@ -96,7 +96,11 @@ class WebhookController extends BasicController
 
             $messageType = $data['data']['messageType'] ?? 'conversation';
             $waId = explode('@', $data['data']['key']['remoteJid'])[0];
-            $message = $data['data']['message'][$messageType]['caption'] ?? $data['data']['message'][$messageType] ?? '';
+            if ($messageType === 'conversation') {
+                $message = $data['data']['message'][$messageType] ?? '';
+            } else {
+                $message = $data['data']['message'][$messageType]['caption'] ?? '';
+            }
 
             if ($messageType === 'audioMessage') {
                 $filename = $this->getAndSaveMedia($businessJpa, $data['data']['key']['id'], 'audio');
