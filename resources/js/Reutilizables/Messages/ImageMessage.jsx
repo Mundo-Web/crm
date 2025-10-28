@@ -45,24 +45,32 @@ const ImageMessage = ({ fromMe, theme, url, time, caption }) => {
                     <img
                         src={url}
                         alt="imagen"
-                        onClick={openModal}
                         style={{
                             width: '100%',
-                            borderRadius: '6px',
-                            cursor: 'zoom-in'
+                            borderRadius: '6px'
                         }}
                         onError={(e) => { e.target.src = `//${Global.APP_DOMAIN}/assets/img/image-404.svg`; }}
                     />
                     {
-                        !caption && <span className="position-absolute time" style={{ 
-                            fontSize: '10px', 
-                            right: '6px', bottom: '2px', 
-                            textShadow: '0 0 5px rgba(0,0,0,1)' ,
-                            color: theme != 'dark' ? '#fafafa' : undefined
-                        
-                        }}>{time}</span>
+                        !caption && <>
+                            <div onClick={openModal}
+                                className="position-absolute"
+                                style={{
+                                    top: 0, bottom: 0, right: 0, left: 0,
+                                    background: 'linear-gradient(to top, rgba(0, 0, 0, .5) 0%, transparent 12%)',
+                                    cursor: 'zoom-in'
+                                }}
+                            />
+                            <span className="position-absolute time" style={{
+                                fontSize: '10px',
+                                right: '6px', bottom: '2px',
+                                textShadow: '0 0 5px rgba(0,0,0,1)',
+                                color: theme != 'dark' ? '#fafafa' : undefined
+
+                            }}>{time}</span>
+                        </>
                     }
-                    {caption?.trim() && <div style={{padding: '3px 5px', marginTop: '6px'}}>
+                    {caption?.trim() && <div style={{ padding: '3px 5px', marginTop: '6px' }}>
                         <HtmlContent className="text-start font-14" html={wa2html(caption + `<span class="time mt-0 float-end" style="font-size: 10px; margin-left: 6px; margin-top: 8px !important">${time}</span>`)} />
                     </div>
                     }
