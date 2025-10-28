@@ -11,6 +11,7 @@ import ArrayJoin from './Utils/ArrayJoin.js';
 import LaravelSession from './Utils/LaravelSession.js';
 import useCrossTabSelectedUsers from './Reutilizables/CustomHooks/useCrossTabSelectedUsers.jsx';
 import ContactDetails from './Reutilizables/Chat/ContactDetails.jsx';
+import getTextFromReactNode from './Utils/getTextFromReactNode.js';
 
 const leadsRest = new LeadsRest()
 leadsRest.paginateSufix = null
@@ -249,6 +250,11 @@ const Chat = ({ users, activeLeadId: activeLeadIdDB, ...properties }) => {
                       }
                     }
 
+                    let last_message = lead.last_message
+                    if (last_message.startsWith('/audio:')) {
+                      last_message = <><i className='mdi mdi-microphone' /> Audio</>
+                    }
+
                     return <li key={lead.id} className={`${lead.unread ? 'unread' : ''} ${activeLeadId == lead.id ? 'bg-light' : ''}`}>
                       <a onClick={(e) => { setActiveLeadId(lead.id); e.stopPropagation() }} style={{ cursor: 'pointer' }}>
                         <div className="d-flex">
@@ -283,13 +289,13 @@ const Chat = ({ users, activeLeadId: activeLeadIdDB, ...properties }) => {
 
                           <div className="flex-grow-1 overflow-hidden">
                             <h5 className={`text-truncate font-14 mt-0 mb-0 ${lead.un_seen_messages_count > 0 ? 'fw-bold' : ''}`}>{lead.contact_name}</h5>
-                            <p className={`text-truncate mb-0 ${lead.un_seen_messages_count > 0 ? 'fw-bold' : ''}`} title={lead.last_message ?? undefined}
+                            <p className={`text-truncate mb-0 ${lead.un_seen_messages_count > 0 ? 'fw-bold' : ''}`} title={getTextFromReactNode(last_message) ?? undefined}
                               style={{
                                 color: lead.un_seen_messages_count > 0 ? (theme == 'light' ? '#343a40' : '#f7f7f7') : undefined,
-                              }}>{lead.last_message ?? <i className='text-muted'>Sin mensaje</i>}</p>
+                              }}>{ last_message ?? <i className='text-muted'>Sin mensaje</i>}</p>
                             <div className='d-flex gap-1' >
-                              <span className="badge" style={{backgroundColor: lead.status?.color ?? '#6c757d'}}>{lead.status?.name ?? 'Sin estado'}</span>
-                              <span className="badge" style={{backgroundColor: lead.manage_status?.color ?? '#6c757d'}}>{lead.manage_status?.name ?? 'Sin estado'}</span>
+                              <span className="badge" style={{ backgroundColor: lead.status?.color ?? '#6c757d' }}>{lead.status?.name ?? 'Sin estado'}</span>
+                              <span className="badge" style={{ backgroundColor: lead.manage_status?.color ?? '#6c757d' }}>{lead.manage_status?.name ?? 'Sin estado'}</span>
                             </div>
                           </div>
                           <div className="d-flex flex-column align-items-end">
