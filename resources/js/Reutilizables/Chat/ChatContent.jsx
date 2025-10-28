@@ -433,11 +433,10 @@ const ChatContent = ({ leadId, theme, contactDetails, setContactDetails }) => {
                                 lastFromMe = fromMe
 
                                 // Date label logic
-                                const messageDate = new Date(message.microtime / 1000)
+                                const messageDate = new Date((message.microtime / 1000) - (5 * 60 * 60 * 1000))
                                 const today = new Date()
                                 const diffTime = today - messageDate
                                 const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
-
                                 let dateLabel = null
                                 if (diffDays === 0) {
                                     dateLabel = 'Hoy'
