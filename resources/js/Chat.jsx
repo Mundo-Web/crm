@@ -97,17 +97,6 @@ const Chat = ({ users, activeLeadId: activeLeadIdDB, ...properties }) => {
   }, [selectedUsersId]);
 
   useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (e.key === 'Escape') {
-        setActiveLeadId(null)
-        setContactDetails(null)
-      };
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
-
-  useEffect(() => {
     if (!socket) return
     socket.on('client.updated', (client) => {
       setLeads(prev => {
@@ -256,6 +245,9 @@ const Chat = ({ users, activeLeadId: activeLeadIdDB, ...properties }) => {
                     } else if (last_message.startsWith('/image:')) {
                       const content = String(last_message.split('\n').slice(1).join('\n') || '').trim()
                       last_message = <><i className='mdi mdi-image' /> {content || 'Foto'}</>
+                    } else if (last_message.startsWith('/document:')) {
+                      const content = String(last_message.split('\n').slice(1).join('\n') || '').trim()
+                      last_message = <><i className='mdi mdi-file-document' /> {content || 'Documento'}</>
                     }
 
 
@@ -340,7 +332,7 @@ const Chat = ({ users, activeLeadId: activeLeadIdDB, ...properties }) => {
             </div>
           ) : (
             <>
-              <ChatContent leadId={activeLeadId} containerRef={messagesContainerRef} theme={theme} contactDetails={contactDetails} setContactDetails={setContactDetails} />
+              <ChatContent leadId={activeLeadId} setLeadId={setActiveLeadId} containerRef={messagesContainerRef} theme={theme} contactDetails={contactDetails} setContactDetails={setContactDetails} />
             </>
           )}
         </div>

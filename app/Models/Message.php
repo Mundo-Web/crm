@@ -23,6 +23,8 @@ class Message extends Model
         'business_id',
         'campaign_id',
         'seen',
+        'message_id',
+        'mask'
     ];
 
     protected $hidden = [

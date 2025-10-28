@@ -302,9 +302,19 @@ class WhatsAppController extends Controller
 
             if ($request->hasFile('audio')) {
                 $file = $request->file('audio');
-                $filename = Crypto::short() . '.mp3';
+                $filename = 'audio-' . Crypto::short() . '.mp3';
                 $file->storeAs('images/whatsapp', $filename, 'local');
                 $message = '/audio:' . $filename;
+            } else if ($request->hasFile('image')) {
+                $file = $request->file('image');
+                $filename = 'image-' . Crypto::short() . '.jpeg';
+                $file->storeAs('images/whatsapp', $filename, 'local');
+                $message = trim('/image:' . $filename . Text::lineBreak() . $message);
+            } else if ($request->hasFile('document')) {
+                $file = $request->file('document');
+                $filename = 'document-' . Crypto::short() . '.' . $file->getClientOriginalExtension();
+                $file->storeAs('images/whatsapp', $filename, 'local');
+                $message = trim('/document:' . $filename . Text::lineBreak() . $message);
             }
 
             $isDummy = in_array($number, explode(',', env('WA_DUMMY')), true);
@@ -418,6 +428,54 @@ class WhatsAppController extends Controller
                     'wa_id' => $number,
                     'role' => 'User',
                     'message' => Text::html2wa($message),
+                    'microtime' => (int) (microtime(true) * 1_000_000),
+                    'business_id' => Auth::user()->business_id,
+                ]);
+            } else if (
+                Text::startsWith($message, '/image:') ||
+                Text::startsWith($message, '/document:')
+            ) {
+                // Split message to get file path and caption
+                [$fileTag] = explode(Text::lineBreak(), $message);
+                $caption = trim(str_replace($fileTag, '', $message) ?: '');
+
+                // Determine media type and file path
+                if (Text::startsWith($message, '/image:')) {
+                    $mediaType = 'image';
+                    $filePath = str_replace('/image:', env('APP_URL') . '/storage/images/whatsapp/', $message);
+                    $mimeType = 'image/jpeg'; // adjust if you store mime type elsewhere
+                } else {
+                    $mediaType = 'document';
+                    $filePath = str_replace('/document:', env('APP_URL') . '/storage/images/whatsapp/', $message);
+                    $mimeType = $request->file('document')->getMimeType();
+                }
+
+                // Extract filename from path
+                $filename = basename($filePath);
+
+                if (!$isDummy) {
+                    $res = new Fetch(env('EVOAPI_URL') . '/message/sendMedia/' . $businessJpa->person->document_number, [
+                        'method' => 'POST',
+                        'headers' => [
+                            'Content-Type' => 'application/json',
+                            'apikey' => $businessJpa->uuid
+                        ],
+                        'body' => [
+                            'number' => $number,
+                            'mediatype' => $mediaType,
+                            'mimetype' => $mimeType,
+                            'caption' => Text::html2wa($caption),
+                            'media' => $filePath,
+                            'fileName' => $filename
+                        ]
+                    ]);
+                }
+
+                Message::create([
+                    'wa_id' => $number,
+                    'role' => 'User',
+                    'mask' => $request->file('document')->getClientOriginalName() ?? null,
+                    'message' => Text::html2wa($message) ?? '',
                     'microtime' => (int) (microtime(true) * 1_000_000),
                     'business_id' => Auth::user()->business_id,
                 ]);

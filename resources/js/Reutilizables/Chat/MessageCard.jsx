@@ -1,5 +1,6 @@
 import AnyMessage from "../Messages/AnyMessage"
 import AudioMessage from "../Messages/AudioMessage"
+import DocumentMessage from "../Messages/DocumentMessage"
 import ImageMessage from "../Messages/ImageMessage"
 
 const MessageCard = ({ index, forceAfter, message, isLast = false, fromMe, marginTop, theme }) => {
@@ -32,6 +33,15 @@ const MessageCard = ({ index, forceAfter, message, isLast = false, fromMe, margi
             fromMe={fromMe}
             theme={theme}
             url={content.replace('/image:', `/storage/images/whatsapp/`).split('\n')[0]}
+            caption={content.split('\n').slice(1).join('\n') || ''}
+            time={moment(message.created_at).subtract(5, 'hours').format('HH:mm')}
+        />
+    } else if (content.startsWith('/document:')) {
+        messageCard = <DocumentMessage
+            fromMe={fromMe}
+            theme={theme}
+            url={content.replace('/document:', `/storage/images/whatsapp/`).split('\n')[0]}
+            mask={message.mask}
             caption={content.split('\n').slice(1).join('\n') || ''}
             time={moment(message.created_at).subtract(5, 'hours').format('HH:mm')}
         />

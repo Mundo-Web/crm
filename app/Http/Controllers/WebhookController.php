@@ -105,20 +105,29 @@ class WebhookController extends BasicController
                 $message = $data['data']['message'][$messageType]['caption'] ?? '';
             }
 
+            $messageId = $data['data']['key']['id'];
+
+            $mask = $data['data']['message'][$messageType]['fileName'] ?? null;
             if ($messageType === 'audioMessage') {
-                $filename = $this->getAndSaveMedia($businessJpa, $data['data']['key']['id'], 'audio');
+                $filename = $this->getAndSaveMedia($businessJpa, $messageId, 'audio');
                 if (!$filename) throw new Exception('El archivo no se pudo guardar o no se generó');
                 $message = '/audio:' . $filename;
             } else if ($messageType === 'imageMessage') {
-                $filename = $this->getAndSaveMedia($businessJpa, $data['data']['key']['id'], 'image');
+                $filename = $this->getAndSaveMedia($businessJpa, $messageId, 'image');
                 if (!$filename) throw new Exception('El archivo no se pudo guardar o no se generó');
                 $message = trim('/image:' . $filename . Text::lineBreak() . $message);
+            } else if ($messageType === 'documentMessage') {
+                $filename = $this->getAndSaveMedia($businessJpa, $messageId, 'document');
+                if (!$filename) throw new Exception('El archivo no se pudo guardar o no se generó');
+                $message = trim('/document:' . $filename . Text::lineBreak() . $message);
             }
 
             $messageJpa = Message::create([
                 'wa_id' => $waId,
                 'role' => $fromMe ? 'AI' : 'Human',
                 'message' => $message,
+                'mask' => $mask,
+                'message_id' => $messageId,
                 'microtime' => (int) (microtime(true) * 1_000_000),
                 'business_id' => $businessJpa->id
             ]);

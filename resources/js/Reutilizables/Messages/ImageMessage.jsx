@@ -1,6 +1,7 @@
 import React, { useState, useRef } from "react";
 import HtmlContent from "../../Utils/HtmlContent";
 import wa2html from "../../Utils/wa2html";
+import Global from "../../Utils/Global";
 
 const ImageMessage = ({ fromMe, theme, url, time, caption }) => {
     const [showModal, setShowModal] = useState(false);

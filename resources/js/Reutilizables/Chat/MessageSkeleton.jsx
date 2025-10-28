@@ -9,7 +9,6 @@ const MessageSkeleton = ({theme}) => {
             const newCount = 3 + Math.floor(Math.random() * 5) // 3-7
             setSkeletonCount(newCount)
             setSkeletonSides(Array.from({ length: newCount }, () => Math.random() > 0.5))
-            console.log('Hola interval')
         }, 1500)
         return () => clearInterval(interval)
     }, [null])
