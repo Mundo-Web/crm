@@ -38,21 +38,6 @@ class WebhookController extends BasicController
 
     public function getAndSaveMedia($businessJpa, $id, $type)
     {
-        /*
-         curl --request POST \
-            --url https://evoapi.sode.pe/chat/getBase64FromMediaMessage/SoDe \
-            --header 'Content-Type: application/json' \
-            --header 'apikey: D016E515D193-4E1B-A8B4-67F3801780D4' \
-            --data '{
-            "message": {
-                "key": {
-                "id": "3EB0FABD6B1A306429EF0E"
-                }
-            },
-            "convertToMp4": true
-            }'
-         */
-
         try {
             $res = new Fetch(env('EVOAPI_URL') . '/chat/getBase64FromMediaMessage/' . $businessJpa->person->document_number, [
                 'headers' => [
@@ -86,6 +71,7 @@ class WebhookController extends BasicController
 
             return $savedFilename;
         } catch (\Throwable $th) {
+            dump($th->getMessage());
             return null;
         }
     }
