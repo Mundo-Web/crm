@@ -1,6 +1,3 @@
-import Global from "../../Utils/Global"
-import HtmlContent from "../../Utils/HtmlContent"
-import wa2html from "../../Utils/wa2html"
 import AnyMessage from "../Messages/AnyMessage"
 import AudioMessage from "../Messages/AudioMessage"
 import ImageMessage from "../Messages/ImageMessage"

@@ -16,6 +16,7 @@ use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use SoDe\Extend\Fetch;
+use SoDe\Extend\JSON;
 use SoDe\Extend\Response;
 use SoDe\Extend\Text;
 use SoDe\Extend\Trace;
@@ -82,6 +83,8 @@ class WebhookController extends BasicController
     {
         $response = Response::simpleTryCatch(function () use ($request, $business_uuid) {
             $data = $request->all();
+
+            dump('Request: ' . JSON::stringify($data));
 
             $fromMe = $data['data']['key']['fromMe'];
             $isGroup = isset($data['data']['key']['participant']);
