@@ -17,6 +17,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use SoDe\Extend\Fetch;
 use SoDe\Extend\Response;
+use SoDe\Extend\Text;
 use SoDe\Extend\Trace;
 
 class WebhookController extends BasicController
@@ -101,6 +102,10 @@ class WebhookController extends BasicController
                 $filename = $this->getAndSaveMedia($businessJpa, $data['data']['key']['id'], 'audio');
                 if (!$filename) throw new Exception('El archivo no se pudo guardar o no se generó');
                 $message = '/audio:' . $filename;
+            } else if ($messageType === 'imageMessage') {
+                $filename = $this->getAndSaveMedia($businessJpa, $data['data']['key']['id'], 'image');
+                if (!$filename) throw new Exception('El archivo no se pudo guardar o no se generó');
+                $message = '/image:' . $filename . Text::lineBreak() . $message;
             }
 
             $messageJpa = Message::create([
