@@ -361,7 +361,7 @@ const ChatContent = ({ leadId, setLeadId, theme, contactDetails, setContactDetai
                                             placeholder="Ingrese su mensaje aquí"
                                             rows={1}
                                             style={{ minHeight: '38px', maxHeight: '122px', fieldSizing: 'content', resize: 'none', border: 'none', backgroundColor: 'transparent' }}
-                                            disabled={isSending || !!audioBlob || !!attachment}
+                                            disabled={isSending || !!audioBlob}
                                             value={messageText}
                                             onChange={(e) => setMessageText(e.target.value)}
                                             onKeyDown={(e) => {
