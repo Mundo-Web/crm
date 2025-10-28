@@ -46,6 +46,7 @@ class WebhookController extends BasicController
                 ],
                 'body' => ['message' => ['key' => ['id' => $id]]]
             ]);
+            dump($res->text());
             if (!$res->ok) throw new Exception('Ocurrió un error al obtener el archivo');
             $data = $res->json();
 
