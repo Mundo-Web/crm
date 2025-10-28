@@ -472,6 +472,7 @@ const ChatContent = ({ leadId, theme, contactDetails, setContactDetails }) => {
                                         )}
                                         <MessageCard
                                             key={idx}
+                                            index={idx}
                                             forceAfter={showDateLabel}
                                             isLast={idx < messages.length - 1}
                                             message={message}

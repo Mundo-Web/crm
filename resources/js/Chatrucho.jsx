@@ -113,12 +113,17 @@ const Chatrucho = ({ session, messages: initialMessages = [], waDummy }) => {
               <div ref={messagesEndRef} />
             </div>
             <div className="input-group p-2 border-top">
-              <input
-                type="text"
+              <textarea
+                rows={3}
                 className="form-control form-control-sm"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault()
+                    handleSend()
+                  }
+                }}
                 placeholder="Escribe un mensaje..."
               />
               <button className="btn btn-primary btn-sm" onClick={handleSend}>
