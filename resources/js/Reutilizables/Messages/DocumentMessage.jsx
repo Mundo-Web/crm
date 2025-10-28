@@ -29,7 +29,8 @@ const DocumentMessage = ({ fromMe, theme, url, time, mask, caption }) => {
                         style={{
                             backgroundColor: 'rgba(0, 0, 0, .125)',
                             padding: '3px 6px',
-                            cursor: 'pointer'
+                            cursor: 'pointer',
+                            minWidth: 0
                         }}
                         onClick={handleDownload}
                     >

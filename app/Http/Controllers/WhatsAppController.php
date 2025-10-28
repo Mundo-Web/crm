@@ -444,10 +444,12 @@ class WhatsAppController extends Controller
                     $mediaType = 'image';
                     $filePath = str_replace('/image:', env('APP_URL') . '/storage/images/whatsapp/', $message);
                     $mimeType = 'image/jpeg'; // adjust if you store mime type elsewhere
+                    $mask = $request->file('image')->getClientOriginalName() ?? $filename;
                 } else {
                     $mediaType = 'document';
                     $filePath = str_replace('/document:', env('APP_URL') . '/storage/images/whatsapp/', $message);
                     $mimeType = $request->file('document')->getMimeType();
+                    $mask = $request->file('document')->getClientOriginalName() ?? $filename;
                 }
 
                 // Extract filename from path
@@ -466,7 +468,7 @@ class WhatsAppController extends Controller
                             'mimetype' => $mimeType,
                             'caption' => Text::html2wa($caption),
                             'media' => $filePath,
-                            'fileName' => $request->file('document')->getClientOriginalName() ?? $request->file('image')->getClientOriginalName() ?? $filename
+                            'fileName' => $mask
                         ]
                     ]);
                 }
@@ -474,7 +476,7 @@ class WhatsAppController extends Controller
                 Message::create([
                     'wa_id' => $number,
                     'role' => 'User',
-                    'mask' => $request->file('document')->getClientOriginalName() ?? $request->file('image')->getClientOriginalName() ?? null,
+                    'mask' => $filename,
                     'message' => Text::html2wa($message) ?? '',
                     'microtime' => (int) (microtime(true) * 1_000_000),
                     'business_id' => Auth::user()->business_id,
