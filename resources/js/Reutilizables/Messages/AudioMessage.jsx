@@ -50,7 +50,11 @@ const AudioMessage = ({ fromMe, theme, url, time }) => {
     return (
         <div
             className={`ctext-wrap d-flex align-items-start ${fromMe ? `message-out-${theme}` : `message-in-${theme}`}`}
-            style={{ minWidth: '240px', maxWidth: '320px', padding: '6px 8px' }}
+            style={{
+                minWidth: '240px', maxWidth: '320px',
+                padding: '6px 8px',
+                boxShadow: 'rgba(11, 20, 26, 0.13) 0px 1px 0.5px 0px'
+            }}
         >
             {/* {avatar && (
                 <img

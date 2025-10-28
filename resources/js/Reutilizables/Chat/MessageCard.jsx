@@ -3,7 +3,7 @@ import HtmlContent from "../../Utils/HtmlContent"
 import wa2html from "../../Utils/wa2html"
 import AudioMessage from "../Messages/AudioMessage"
 
-const MessageCard = ({ key: idx, message, isLast = false, fromMe, marginTop, theme }) => {
+const MessageCard = ({ key: idx, forceAfter, message, isLast = false, fromMe, marginTop, theme }) => {
     let content = message.message?.replace(/\{\{.*?\}\}/gs, '') || ''
     let attachment = ''
     if (content.startsWith('/attachment:')) {
@@ -20,7 +20,7 @@ const MessageCard = ({ key: idx, message, isLast = false, fromMe, marginTop, the
         )
     }
     return (
-        <li key={idx} className={`${fromMe ? 'odd' : ''} ${marginTop ? '' : 'hide-after'}`} style={{ marginBottom: isLast ? '0px' : '24px', marginTop: marginTop ? '12px' : '2px' }}>
+        <li key={idx} className={`${fromMe ? 'odd' : ''} ${marginTop || forceAfter ? '' : 'hide-after'}`} style={{ marginBottom: isLast ? '0px' : '24px', marginTop: marginTop ? '12px' : '2px' }}>
             <div className="message-list">
                 <div className="conversation-text">
                     {

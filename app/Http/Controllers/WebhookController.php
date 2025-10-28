@@ -15,6 +15,7 @@ use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use SoDe\Extend\Fetch;
 use SoDe\Extend\Response;
 use SoDe\Extend\Trace;
 
@@ -35,6 +36,60 @@ class WebhookController extends BasicController
         ];
     }
 
+    public function getAndSaveMedia($businessJpa, $id, $type)
+    {
+        /*
+         curl --request POST \
+            --url https://evoapi.sode.pe/chat/getBase64FromMediaMessage/SoDe \
+            --header 'Content-Type: application/json' \
+            --header 'apikey: D016E515D193-4E1B-A8B4-67F3801780D4' \
+            --data '{
+            "message": {
+                "key": {
+                "id": "3EB0FABD6B1A306429EF0E"
+                }
+            },
+            "convertToMp4": true
+            }'
+         */
+
+        try {
+            $res = new Fetch(env('EVOAPI_URL') . '/chat/getBase64FromMediaMessage/' . $businessJpa->person->document_number, [
+                'headers' => [
+                    'Content-Type' => 'application/json',
+                    'apikey' => $businessJpa->uuid
+                ],
+                'body' => ['message' => ['key' => ['id' => $id]]]
+            ]);
+            if (!$res->ok) throw new Exception('Ocurrió un error al obtener el archivo');
+            $data = $res->json();
+
+            // Extraer extensión del filename
+            $filename = $data['fileName'] ?? '';
+            $extension = pathinfo($filename, PATHINFO_EXTENSION);
+            if (!$extension) $extension = 'bin';
+
+            // Decodificar base64
+            $base64 = $data['base64'] ?? '';
+            if (!$base64) throw new Exception('No se recibió base64');
+
+            $fileContent = base64_decode($base64);
+            if ($fileContent === false) throw new Exception('Error al decodificar base64');
+
+            // Guardar en /storage/app/images/whatsapp/
+            $storagePath = storage_path('app/images/whatsapp');
+            if (!is_dir($storagePath)) mkdir($storagePath, 0755, true);
+
+            $savedFilename = $type . '-' . $id . '.' . $extension;
+            $fullPath = $storagePath . '/' . $savedFilename;
+            file_put_contents($fullPath, $fileContent);
+
+            return $savedFilename;
+        } catch (\Throwable $th) {
+            return null;
+        }
+    }
+
     public function webhook(Request $request, string $business_uuid)
     {
         $response = Response::simpleTryCatch(function () use ($request, $business_uuid) {
@@ -45,7 +100,7 @@ class WebhookController extends BasicController
 
             if ($isGroup) return;
 
-            $businessJpa = Business::query()
+            $businessJpa = Business::with(['person'])
                 ->where('uuid', $business_uuid)
                 ->where('status', true)
                 ->first();
@@ -54,6 +109,12 @@ class WebhookController extends BasicController
             $messageType = $data['data']['messageType'] ?? 'conversation';
             $waId = explode('@', $data['data']['key']['remoteJid'])[0];
             $message = $data['data']['message'][$messageType]['caption'] ?? $data['data']['message'][$messageType] ?? null;
+
+            if ($messageType === 'audioMessage') {
+                $filename = $this->getAndSaveMedia($businessJpa, $data['key']['id'], 'audio');
+                if (!$filename) throw new Exception('El archivo no se pudo guardar o no se generó');
+                $message = '/audio:' . $filename;
+            }
 
             $messageJpa = Message::create([
                 'wa_id' => $waId,
@@ -115,7 +176,6 @@ class WebhookController extends BasicController
             if ($campaignJpa) {
                 $clientJpa->campaign_id = $campaignJpa->id;
                 $clientJpa->save();
-
             }
 
             $hasApikey = Setting::get('gemini-api-key', $businessJpa->id);
