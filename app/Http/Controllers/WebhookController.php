@@ -97,7 +97,7 @@ class WebhookController extends BasicController
             $message = $data['data']['message'][$messageType]['caption'] ?? $data['data']['message'][$messageType] ?? null;
 
             if ($messageType === 'audioMessage') {
-                $filename = $this->getAndSaveMedia($businessJpa, $data['key']['id'], 'audio');
+                $filename = $this->getAndSaveMedia($businessJpa, $data['data']['key']['id'], 'audio');
                 if (!$filename) throw new Exception('El archivo no se pudo guardar o no se generó');
                 $message = '/audio:' . $filename;
             }
