@@ -40,7 +40,7 @@ const DocumentMessage = ({ fromMe, theme, url, time, mask, caption }) => {
 
                         {/* Nombre del archivo */}
                         <div className="flex-grow-1 text-truncate text-start">
-                            <div className="font-14 text-truncate">{fileName}</div>
+                            <div className="font-14 text-truncate" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{fileName}</div>
                         </div>
 
                         {/* Icono de descarga */}

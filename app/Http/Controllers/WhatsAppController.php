@@ -466,7 +466,7 @@ class WhatsAppController extends Controller
                             'mimetype' => $mimeType,
                             'caption' => Text::html2wa($caption),
                             'media' => $filePath,
-                            'fileName' => $filename
+                            'fileName' => $request->file('document')->getClientOriginalName() ?? $filename
                         ]
                     ]);
                 }
