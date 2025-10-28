@@ -105,7 +105,7 @@ class WebhookController extends BasicController
             } else if ($messageType === 'imageMessage') {
                 $filename = $this->getAndSaveMedia($businessJpa, $data['data']['key']['id'], 'image');
                 if (!$filename) throw new Exception('El archivo no se pudo guardar o no se generó');
-                $message = '/image:' . $filename . Text::lineBreak() . $message;
+                $message = trim('/image:' . $filename . Text::lineBreak() . $message);
             }
 
             $messageJpa = Message::create([
