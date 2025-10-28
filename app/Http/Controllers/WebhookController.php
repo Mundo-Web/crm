@@ -39,14 +39,16 @@ class WebhookController extends BasicController
     public function getAndSaveMedia($businessJpa, $id, $type)
     {
         try {
-            $res = new Fetch(env('EVOAPI_URL') . '/chat/getBase64FromMediaMessage/' . $businessJpa->person->document_number, [
+            $url = env('EVOAPI_URL') . '/chat/getBase64FromMediaMessage/' . $businessJpa->person->document_number;
+            $res = new Fetch($url, [
                 'headers' => [
                     'Content-Type' => 'application/json',
                     'apikey' => $businessJpa->uuid
                 ],
                 'body' => ['message' => ['key' => ['id' => $id]]]
             ]);
-            dump($res->text());
+            dump($url);
+            dump($id . ': ' . $res->text());
             if (!$res->ok) throw new Exception('Ocurrió un error al obtener el archivo');
             $data = $res->json();
 
