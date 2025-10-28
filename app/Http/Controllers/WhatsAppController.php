@@ -466,7 +466,7 @@ class WhatsAppController extends Controller
                             'mimetype' => $mimeType,
                             'caption' => Text::html2wa($caption),
                             'media' => $filePath,
-                            'fileName' => $request->file('document')->getClientOriginalName() ?? $filename
+                            'fileName' => $request->file('document')->getClientOriginalName() ?? $request->file('image')->getClientOriginalName() ?? $filename
                         ]
                     ]);
                 }
@@ -474,7 +474,7 @@ class WhatsAppController extends Controller
                 Message::create([
                     'wa_id' => $number,
                     'role' => 'User',
-                    'mask' => $request->file('document')->getClientOriginalName() ?? null,
+                    'mask' => $request->file('document')->getClientOriginalName() ?? $request->file('image')->getClientOriginalName() ?? null,
                     'message' => Text::html2wa($message) ?? '',
                     'microtime' => (int) (microtime(true) * 1_000_000),
                     'business_id' => Auth::user()->business_id,
