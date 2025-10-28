@@ -54,7 +54,13 @@ const ImageMessage = ({ fromMe, theme, url, time, caption }) => {
                         onError={(e) => { e.target.src = `//${Global.APP_DOMAIN}/assets/img/image-404.svg`; }}
                     />
                     {
-                        !caption && <span className="position-absolute time" style={{ fontSize: '10px', right: '6px', bottom: '2px', textShadow: '0 0 10px rgba(0,0,0,1)' }}>{time}</span>
+                        !caption && <span className="position-absolute time" style={{ 
+                            fontSize: '10px', 
+                            right: '6px', bottom: '2px', 
+                            textShadow: '0 0 5px rgba(0,0,0,1)' ,
+                            color: theme != 'dark' ? '#fafafa' : undefined
+                        
+                        }}>{time}</span>
                     }
                     {caption?.trim() && <div style={{padding: '3px 5px', marginTop: '6px'}}>
                         <HtmlContent className="text-start font-14" html={wa2html(caption + `<span class="time mt-0 float-end" style="font-size: 10px; margin-left: 6px; margin-top: 8px !important">${time}</span>`)} />
