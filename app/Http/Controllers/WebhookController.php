@@ -84,8 +84,6 @@ class WebhookController extends BasicController
         $response = Response::simpleTryCatch(function () use ($request, $business_uuid) {
             $data = $request->all();
 
-            dump('Request: ' . JSON::stringify($data));
-
             $fromMe = $data['data']['key']['fromMe'];
             $isGroup = isset($data['data']['key']['participant']);
 
