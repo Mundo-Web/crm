@@ -452,6 +452,8 @@ class WhatsAppController extends Controller
                     $mask = $request->file('document')->getClientOriginalName() ?? null;
                 }
 
+                dump($filePath);
+
                 // Extract filename from path
                 $filename = basename($filePath);
 
