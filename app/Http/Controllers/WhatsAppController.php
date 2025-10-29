@@ -471,6 +471,8 @@ class WhatsAppController extends Controller
                             'fileName' => $mask ?? $filename
                         ]
                     ]);
+                    dump($res->text());
+                    dump($caption . ' : ' .  Text::html2wa($caption));
                 }
 
                 Message::create([
