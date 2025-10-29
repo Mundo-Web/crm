@@ -452,8 +452,6 @@ class WhatsAppController extends Controller
                     $mask = $request->file('document')->getClientOriginalName() ?? null;
                 }
 
-                dump($filePath);
-
                 // Extract filename from path
                 $filename = basename($filePath);
 
@@ -473,8 +471,6 @@ class WhatsAppController extends Controller
                             'fileName' => $mask ?? $filename
                         ]
                     ]);
-                    dump($res->text());
-                    dump($caption . ' : ' .  Text::html2wa($caption));
                 }
 
                 Message::create([
