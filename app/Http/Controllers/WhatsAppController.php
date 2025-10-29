@@ -442,12 +442,12 @@ class WhatsAppController extends Controller
                 // Determine media type and file path
                 if (Text::startsWith($message, '/image:')) {
                     $mediaType = 'image';
-                    $filePath = str_replace('/image:', env('APP_URL') . '/storage/images/whatsapp/', $message);
+                    $filePath = str_replace('/image:', env('APP_URL') . '/storage/images/whatsapp/', $fileTag);
                     $mimeType = 'image/jpeg'; // adjust if you store mime type elsewhere
                     $mask = $request->file('image')->getClientOriginalName() ?? null;
                 } else {
                     $mediaType = 'document';
-                    $filePath = str_replace('/document:', env('APP_URL') . '/storage/images/whatsapp/', $message);
+                    $filePath = str_replace('/document:', env('APP_URL') . '/storage/images/whatsapp/', $fileTag);
                     $mimeType = $request->file('document')->getMimeType();
                     $mask = $request->file('document')->getClientOriginalName() ?? null;
                 }
