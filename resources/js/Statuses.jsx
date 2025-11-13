@@ -211,8 +211,12 @@ const Statuses = ({ statuses: statusesFromDB, tables }) => {
                 {statuses.filter(status => status.table_id === table.id).map((status, index) => (
                   <div key={index} className="btn-group dropup col-auto">
                     <span type="button" className="btn btn-sm btn-white" style={{ cursor: 'default' }}>
-                      <i className='mdi mdi-circle me-1' style={{ color: status.color }}></i>
-                      {status.name}
+                      <div>
+                        <i className='mdi mdi-circle me-1' style={{ color: status.color }}></i>
+                        {status.name}
+                        <span className='badge rounded-pill bg-secondary ms-1'>{status.children_count}</span>
+                      </div>
+                      <small className='text-muted' style={{fontSize: '10px'}}>Ult. uso: {status.last_used_at}</small>
                     </span>
                     <button type="button" className="btn btn-sm btn-white dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                       <i className="mdi mdi-dots-vertical"></i>

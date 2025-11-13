@@ -13,6 +13,9 @@ class Table extends Model
     protected $keyType = 'string';
 
     protected $fillable = [
+        'model_name',
+        'table_name',
+        'column_pivot',
         'name',
         'description'
     ];
