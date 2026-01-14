@@ -544,7 +544,9 @@ const ChatContent = ({ leadId, setLeadId, theme, contactDetails, setContactDetai
                             position: 'absolute',
                             inset: 'auto auto 0px 0px',
                             margin: '0px',
-                            transform: 'translateY(-44px)'
+                            transform: 'translateY(-44px)',
+                            maxHeight: '200px',
+                            overflowY: 'auto'
                           }}>
                           {
                             defaultMessages
