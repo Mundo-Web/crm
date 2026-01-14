@@ -551,6 +551,7 @@ const ChatContent = ({ leadId, setLeadId, theme, contactDetails, setContactDetai
                           {
                             defaultMessages
                               .filter(dm => `/${dm.name}`.toLowerCase().startsWith(messageText.toLowerCase()))
+                              .sort((a, b) => a.name.localeCompare(b.name))
                               .map((message, idx) => {
                                 const content = $(`<div>${message.description}</div>`)
                                 content.find('.mention').each((_, element) => {
