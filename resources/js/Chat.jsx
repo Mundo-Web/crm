@@ -16,7 +16,7 @@ import getTextFromReactNode from './Utils/getTextFromReactNode.js';
 const leadsRest = new LeadsRest()
 leadsRest.paginateSufix = null
 
-const Chat = ({ users, activeLeadId: activeLeadIdDB, ...properties }) => {
+const Chat = ({ users = [], defaultMessages = [], activeLeadId: activeLeadIdDB, ...properties }) => {
   const settings = Local.get('adminto_settings') ?? {}
   const [theme, setTheme] = useState(settings.theme ?? 'light');
 
@@ -332,7 +332,7 @@ const Chat = ({ users, activeLeadId: activeLeadIdDB, ...properties }) => {
             </div>
           ) : (
             <>
-              <ChatContent leadId={activeLeadId} setLeadId={setActiveLeadId} containerRef={messagesContainerRef} theme={theme} contactDetails={contactDetails} setContactDetails={setContactDetails} />
+              <ChatContent leadId={activeLeadId} setLeadId={setActiveLeadId} containerRef={messagesContainerRef} theme={theme} contactDetails={contactDetails} setContactDetails={setContactDetails} defaultMessages={defaultMessages} />
             </>
           )}
         </div>
