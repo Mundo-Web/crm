@@ -35,6 +35,14 @@
       "_SetSelectValue-6o1ZO4ul.js"
     ]
   },
+  "_CheckboxFormGroup-CbEzdfwM.js": {
+    "file": "assets/CheckboxFormGroup-CbEzdfwM.js",
+    "name": "CheckboxFormGroup",
+    "imports": [
+      "_CreateReactScript-DEiMbi6B.js",
+      "_Adminto-Buk_sumw.js"
+    ]
+  },
   "_ClientNotesRest-BidYfNuz.js": {
     "file": "assets/ClientNotesRest-BidYfNuz.js",
     "name": "ClientNotesRest",
@@ -252,9 +260,9 @@
       "_Adminto-Buk_sumw.js"
     ]
   },
-  "_coming-soon-!~{01b}~.js": {
+  "_coming-soon-!~{01c}~.js": {
     "file": "coming-soon.css",
-    "src": "_coming-soon-!~{01b}~.js"
+    "src": "_coming-soon-!~{01c}~.js"
   },
   "_default-!~{00R}~.js": {
     "file": "default.css",
@@ -599,7 +607,7 @@
     ]
   },
   "resources/js/Leads.jsx": {
-    "file": "assets/Leads-BJtr6Eye.js",
+    "file": "assets/Leads-WvRKY_9x.js",
     "name": "Leads",
     "src": "resources/js/Leads.jsx",
     "isEntry": true,
@@ -884,7 +892,7 @@
     ]
   },
   "resources/js/Roles.jsx": {
-    "file": "assets/Roles-DS5UWehL.js",
+    "file": "assets/Roles-BUtu3nss.js",
     "name": "Roles",
     "src": "resources/js/Roles.jsx",
     "isEntry": true,
@@ -895,6 +903,7 @@
       "_Adminto-Buk_sumw.js",
       "_Modal-CJ2qLxAq.js",
       "_Table-DVmS4yPJ.js",
+      "_CheckboxFormGroup-CbEzdfwM.js",
       "_InputFormGroup-Gz9xvMIb.js",
       "_TextareaFormGroup-BQneKBWx.js",
       "_TippyButton-DV2dkcJ_.js",
@@ -928,7 +937,7 @@
     ]
   },
   "resources/js/Statuses.jsx": {
-    "file": "assets/Statuses-Dou1zjxd.js",
+    "file": "assets/Statuses-D1tPzTWg.js",
     "name": "Statuses",
     "src": "resources/js/Statuses.jsx",
     "isEntry": true,
@@ -941,6 +950,7 @@
       "_InputFormGroup-Gz9xvMIb.js",
       "_TextareaFormGroup-BQneKBWx.js",
       "_sweetalert2.esm.all-B5d0Dmk7.js",
+      "_CheckboxFormGroup-CbEzdfwM.js",
       "_Logout-DAQhHADr.js"
     ]
   },

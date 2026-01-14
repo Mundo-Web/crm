@@ -10,6 +10,7 @@ import InputFormGroup from './components/form/InputFormGroup.jsx'
 import SelectAPIFormGroup from './components/form/SelectAPIFormGroup.jsx'
 import TextareaFormGroup from './components/form/TextareaFormGroup.jsx'
 import Swal from 'sweetalert2'
+import CheckboxFormGroup from './components/form/CheckboxFormGroup.jsx'
 
 const statusesRest = new StatusesRest()
 
@@ -26,9 +27,10 @@ const Statuses = ({ statuses: statusesFromDB, tables }) => {
   const nameRef = useRef()
   const colorRef = useRef()
   const descriptionRef = useRef()
+  const requireRef = useRef()
 
   const [isEditing, setIsEditing] = useState(false)
-  const [statusLoaded, setStatusLoaded] = useState(null)
+  const [require, setRequire] = useState(false)
 
   const onModalOpen = (data) => {
     if (data?.id) setIsEditing(true)
@@ -44,6 +46,7 @@ const Statuses = ({ statuses: statusesFromDB, tables }) => {
     nameRef.current.value = data?.name || null
     colorRef.current.value = data?.color || '#343a40'
     descriptionRef.current.value = data?.description || null
+    setRequire(data?.require || false)
 
     $(modalRef.current).modal('show')
   }
@@ -57,6 +60,8 @@ const Statuses = ({ statuses: statusesFromDB, tables }) => {
       name: nameRef.current.value,
       color: colorRef.current.value,
       description: descriptionRef.current.value,
+      require: require,
+      action_required: require ? 'product' : null
     }
 
     const result = await statusesRest.save(request)
@@ -214,9 +219,13 @@ const Statuses = ({ statuses: statusesFromDB, tables }) => {
                       <div>
                         <i className='mdi mdi-circle me-1' style={{ color: status.color }}></i>
                         {status.name}
+                        {
+                          status.require &&
+                          <span className='text-danger ms-1'>*</span>
+                        }
                         <span className='badge rounded-pill bg-secondary ms-1'>{status.children_count}</span>
                       </div>
-                      <small className='text-muted' style={{fontSize: '10px'}}>Ult. uso: {status.last_used_at}</small>
+                      <small className='text-muted' style={{ fontSize: '10px' }}>Ult. uso: {status.last_used_at}</small>
                     </span>
                     <button type="button" className="btn btn-sm btn-white dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                       <i className="mdi mdi-dots-vertical"></i>
@@ -240,6 +249,9 @@ const Statuses = ({ statuses: statusesFromDB, tables }) => {
         <SelectAPIFormGroup eRef={tableRef} label='Tabla' col='col-12' dropdownParent='#status-crud-container' searchAPI='/api/tables/paginate' searchBy='name' required />
         <InputFormGroup eRef={colorRef} type='color' label='Color' col='col-12' required />
         <TextareaFormGroup eRef={descriptionRef} label='Descripcion' col='col-12' />
+        <div className="col-12">
+          <CheckboxFormGroup eRef={requireRef} label='¿Requerir producto?' id='require' title='Obliga al usuario a escoger un producto antes de cambiar a este estado' checked={require} setChecked={setRequire} />
+        </div>
       </div>
     </Modal>
   </>

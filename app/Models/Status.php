@@ -26,7 +26,13 @@ class Status extends Model
         'description',
         'color',
         'order',
-        'business_id'
+        'business_id',
+        'require',
+        'action_required'
+    ];
+
+    protected $casts = [
+        'require' => 'boolean',
     ];
 
     protected $hidden = [

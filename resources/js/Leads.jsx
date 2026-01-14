@@ -368,6 +368,9 @@ const Leads = (properties) => {
   }
 
   const onClientStatusClicked = async (lead, status) => {
+    console.log(status)
+    return
+
     await leadsRest.leadStatus({ lead, status })
 
     if (leadLoaded) {
@@ -407,6 +410,8 @@ const Leads = (properties) => {
   }
 
   const onManageStatusChange = async (lead, status) => {
+    console.log(status)
+    return
     await leadsRest.manageStatus({ lead: lead.id, status: status.id })
     const newLeadLoaded = structuredClone(lead)
     newLeadLoaded.manage_status = status;

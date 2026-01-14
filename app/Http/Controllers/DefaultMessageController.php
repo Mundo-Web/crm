@@ -23,8 +23,8 @@ class DefaultMessageController extends BasicController
 
     function setPaginationInstance(Request $request, string $model)
     {
-        return $model::with(['attachments'])
-            ->where('user_id', Auth::id());
+        return $model::with(['attachments']);
+            // ->where('user_id', Auth::id());
     }
     public function beforeSave(Request $request)
     {
