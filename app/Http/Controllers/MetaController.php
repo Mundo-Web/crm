@@ -301,7 +301,7 @@ class MetaController extends Controller
         return $tiempo;
     }
 
-    private static function sendWithOrigin(Business $businessJpa, Client $clientJpa, string $message, string $prompt2save, ?string $origin = null)
+    public static function sendWithOrigin(Business $businessJpa, Client $clientJpa, string $message, string $prompt2save, ?string $origin = null)
     {
         if ($origin == 'evoapi') {
             new Fetch(env('EVOAPI_URL') . '/message/sendText/' . $businessJpa->person->document_number, [

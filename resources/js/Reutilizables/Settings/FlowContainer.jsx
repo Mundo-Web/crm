@@ -181,16 +181,19 @@ const FlowContainer = ({ questions: questionsDB, isOpen, setIsOpen, onModalOpen 
 
                         {/* Data Collection (bot) */}
                         <div className="rounded bg-white border text-primary px-2 py-1 fw-semibold">
-                            <div className='mb-1'>
+                            <div className='mb-1 text-center'>
                                 <i className="mdi mdi-star-four-points me-1"></i>
                                 <span>Recolección de datos (bot)</span>
                             </div>
-                            <div className="d-flex justify-content-around text-default gap-2">
+                            <div className="d-flex flex-wrap justify-content-center text-default gap-2" style={{ maxWidth: '200px' }}>
                                 <small className='border-bottom fw-normal cursor-pointer' onClick={(e) => onModalOpen(e, 'gemini-api-key', 'API Key - Gemini', 'text')}>
-                                    <i className='mdi mdi-pencil me-1'></i><span>API Key</span>
+                                    <i className='mdi mdi-key me-1'></i><span>API Key</span>
                                 </small>
                                 <small className='border-bottom fw-normal cursor-pointer' onClick={(e) => onModalOpen(e, 'gemini-personality', 'Personalidad - Gemini', 'text', 'Ej. Sé claro y respetuoso.')}>
                                     <i className='mdi mdi-pencil me-1'></i><span>Personalidad</span>
+                                </small>
+                                <small className='border-bottom fw-normal cursor-pointer' onClick={(e) => onModalOpen(e, 'gemini-first-message', 'Mensaje inicial', 'text', 'Hola soy boti, me permites tus datos personales')}>
+                                    <i className='mdi mdi-chat me-1'></i><span>Mensaje inicial</span>
                                 </small>
                             </div>
                         </div>

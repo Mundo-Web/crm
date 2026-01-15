@@ -185,6 +185,11 @@ class WebhookController extends BasicController
             }
 
             $hasApikey = Setting::get('gemini-api-key', $businessJpa->id);
+            $firstMessage = Setting::get('gemini-first-message', $businessJpa->id);
+
+            if ($hasApikey && !$alreadyExists && $firstMessage) {
+                MetaController::sendWithOrigin($businessJpa, $clientJpa, $firstMessage, '', 'evoapi');
+            }
 
             if ($hasApikey && !$clientJpa->complete_registration) {
                 MetaAssistantJob::dispatchAfterResponse($clientJpa, $messageJpa, 'evoapi');
