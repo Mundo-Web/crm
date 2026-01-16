@@ -26,6 +26,7 @@ const Chatrucho = ({ session, messages: initialMessages = [], waDummy }) => {
           data: {
             pushName: 'Dummy',
             key: {
+              id: crypto.randomUUID(),
               fromMe: false,
               remoteJid: `${dummyNumber}@s.whatsapp.net`
             },

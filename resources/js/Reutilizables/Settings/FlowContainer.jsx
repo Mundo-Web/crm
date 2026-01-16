@@ -179,6 +179,14 @@ const FlowContainer = ({ questions: questionsDB, isOpen, setIsOpen, onModalOpen 
                         <div className="rounded bg-primary bg-opacity-10 text-primary px-2 py-1 fw-semibold">Saludo inicial (cliente)</div>
                         <i className="d-block mdi mdi-pan-down text-secondary opacity-50" style={{ fontSize: '24px' }}></i>
 
+                        <div className="rounded bg-primary bg-opacity-10 text-primary px-2 py-1 fw-semibold">
+                            Mensaje inicial (Bot)
+                            <small className='border-bottom fw-normal cursor-pointer' onClick={(e) => onModalOpen(e, 'gemini-first-message', 'Mensaje inicial', 'text', 'Hola soy boti, me permites tus datos personales')}>
+                                <i className='mdi mdi-chat me-1'></i><span>Mensaje inicial</span>
+                            </small>
+                        </div>
+                        <i className="d-block mdi mdi-pan-down text-secondary opacity-50" style={{ fontSize: '24px' }}></i>
+
                         {/* Data Collection (bot) */}
                         <div className="rounded bg-white border text-primary px-2 py-1 fw-semibold">
                             <div className='mb-1 text-center'>
@@ -192,9 +200,7 @@ const FlowContainer = ({ questions: questionsDB, isOpen, setIsOpen, onModalOpen 
                                 <small className='border-bottom fw-normal cursor-pointer' onClick={(e) => onModalOpen(e, 'gemini-personality', 'Personalidad - Gemini', 'text', 'Ej. Sé claro y respetuoso.')}>
                                     <i className='mdi mdi-pencil me-1'></i><span>Personalidad</span>
                                 </small>
-                                <small className='border-bottom fw-normal cursor-pointer' onClick={(e) => onModalOpen(e, 'gemini-first-message', 'Mensaje inicial', 'text', 'Hola soy boti, me permites tus datos personales')}>
-                                    <i className='mdi mdi-chat me-1'></i><span>Mensaje inicial</span>
-                                </small>
+
                             </div>
                         </div>
                         <i className="d-block mdi mdi-pan-down text-secondary opacity-50 mb-2" style={{ fontSize: '24px' }}></i>
