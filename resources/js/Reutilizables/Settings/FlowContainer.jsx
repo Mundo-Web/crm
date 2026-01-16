@@ -180,8 +180,8 @@ const FlowContainer = ({ questions: questionsDB, isOpen, setIsOpen, onModalOpen 
                         <i className="d-block mdi mdi-pan-down text-secondary opacity-50" style={{ fontSize: '24px' }}></i>
 
                         <div className="rounded bg-primary bg-opacity-10 text-primary px-2 py-1 fw-semibold">
-                            Mensaje inicial (Bot)
-                            <small className='border-bottom fw-normal cursor-pointer' onClick={(e) => onModalOpen(e, 'gemini-first-message', 'Mensaje inicial', 'text', 'Hola soy boti, me permites tus datos personales')}>
+                            <span className='d-block'>Mensaje inicial (Bot)</span>
+                            <small className='d-block border-bottom fw-normal cursor-pointer' onClick={(e) => onModalOpen(e, 'gemini-first-message', 'Mensaje inicial', 'text', 'Hola soy boti, me permites tus datos personales')}>
                                 <i className='mdi mdi-chat me-1'></i><span>Mensaje inicial</span>
                             </small>
                         </div>
