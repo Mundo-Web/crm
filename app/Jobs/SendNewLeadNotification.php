@@ -109,6 +109,8 @@ class SendNewLeadNotification implements ShouldQueue
 
     try {
       $mail = EmailConfig::config($client->name);
+      $mail->setFrom(env('MAIL_FROM_ADDRESS'), $business->name);
+      $mail->Subject = 'Nuevo lead - Desde ' . env('APP_NAME');
       $mail->addAddress($client->contact_email);
       $mail->Body = $html;
       $mail->isHTML(true);
