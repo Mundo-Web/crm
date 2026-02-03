@@ -193,26 +193,26 @@ const LeadKanban = ({ statuses, leads, onLeadClicked, onOpenModal, onMakeLeadCli
                                 <ul className="list-inline d-flex align-items-center gap-1 mb-0">
                                   <li className="list-inline-item">
                                     {
-                                      !lead.assigned_to
-                                        ? <TippyButton className='btn btn-xs btn-soft-dark rounded-pill' title="Atender lead"
-                                          onClick={() => onAttendClient(lead.id, true)}>
-                                          <i className='fas fa-hands-helping'></i>
-                                        </TippyButton>
-                                        : (
-                                          lead.assigned_to == LaravelSession.service_user.id
-                                            ? <TippyButton className='btn btn-xs btn-soft-danger' title="Dejar de atender"
-                                              onClick={() => onAttendClient(lead.id, false)}>
-                                              <i className='fas fa-hands-wash'></i>
-                                            </TippyButton>
-                                            : <Tippy content={`Atendido por ${lead?.assigned?.fullname}`}>
-                                              <a href="" data-bs-toggle="tooltip" data-bs-placement="top"
-                                                title="Username">
-                                                <img src={`//${Global.APP_DOMAIN}/api/profile/${lead?.assigned?.relative_id}`} alt="img"
-                                                onError={(e) => { e.target.src = `//${Global.APP_DOMAIN}/assets/img/user-404.svg`; }}
-                                                  className="avatar-xs rounded-circle" />
-                                              </a>
-                                            </Tippy>
-                                        )
+                                      // !lead.assigned_to
+                                      //   ? <TippyButton className='btn btn-xs btn-soft-dark rounded-pill' title="Atender lead"
+                                      //     onClick={() => onAttendClient(lead.id, true)}>
+                                      //     <i className='fas fa-hands-helping'></i>
+                                      //   </TippyButton>
+                                      //   : (
+                                      //     lead.assigned_to == LaravelSession.service_user.id
+                                      //       ? <TippyButton className='btn btn-xs btn-soft-danger' title="Dejar de atender"
+                                      //         onClick={() => onAttendClient(lead.id, false)}>
+                                      //         <i className='fas fa-hands-wash'></i>
+                                      //       </TippyButton>
+                                      //       : <Tippy content={`Atendido por ${lead?.assigned?.fullname}`}>
+                                      //         <a href="" data-bs-toggle="tooltip" data-bs-placement="top"
+                                      //           title="Username">
+                                      //           <img src={`//${Global.APP_DOMAIN}/api/profile/${lead?.assigned?.relative_id}`} alt="img"
+                                      //           onError={(e) => { e.target.src = `//${Global.APP_DOMAIN}/assets/img/user-404.svg`; }}
+                                      //             className="avatar-xs rounded-circle" />
+                                      //         </a>
+                                      //       </Tippy>
+                                      //   )
                                     }
                                   </li>
                                   <li className="list-inline-item">
