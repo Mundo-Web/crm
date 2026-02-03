@@ -410,6 +410,11 @@ const Leads = (properties) => {
     let result = null
     if (convertedLeadStatus && defaultClientStatus && status.id == convertedLeadStatus) {
       // Ask for DNI/RUC and full name before converting
+      const wasModalOpen = $(modalRef.current).hasClass('show');
+      if (wasModalOpen) {
+        $(modalRef.current).modal('hide');
+      }
+
       const { value: formValues } = await Swal.fire({
         title: '¿Convertir lead en cliente?',
         width: 360,
@@ -444,7 +449,16 @@ const Leads = (properties) => {
           return { dni, fullname };
         }
       });
-      if (!formValues) return;
+
+      if (!formValues) {
+        if (wasModalOpen) {
+          setLeadLoaded(lead)
+          history.pushState(null, null, `/leads/${lead.id}`)
+          setNotes([])
+          $(modalRef.current).modal('show')
+        }
+        return
+      };
 
       result = await leadsRest.leadStatus({ lead: lead.id, status: defaultClientStatus, ruc: formValues.dni, tradename: formValues.fullname })
       // Remove the lead from the list instead of replacing it
