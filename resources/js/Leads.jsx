@@ -1031,7 +1031,7 @@ const Leads = (properties) => {
         <InputFormGroup eRef={nameRef} label='Empresa / Marca' col='col-md-6' />
         <InputFormGroup eRef={webUrlRef} label='Link de WEB' col='col-md-6' />
         <TextareaFormGroup eRef={messageRef} label='Mensaje' placeholder='Ingresa tu mensaje' rows={4} />
-        <InputFormGroup eRef={sourceChannelRef} label='Canal de origen' placeholder='Ej. Facebook, Google, Tiktok, Otros' />
+        <InputFormGroup eRef={sourceChannelRef} label='Donde nos vio?' placeholder='Ej. Facebook, Google, Tiktok, Otros' />
       </div>
     </Modal>
 

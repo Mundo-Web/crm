@@ -14,6 +14,7 @@ class Product extends Model
     protected $keyType = 'string';
 
     protected $fillable = [
+        'image',
         'type_id',
         'name',
         'price',
@@ -24,7 +25,8 @@ class Product extends Model
         'business_id',
     ];
 
-    public function type() {
+    public function type()
+    {
         return $this->hasOne(Type::class, 'id', 'type_id');
     }
 }

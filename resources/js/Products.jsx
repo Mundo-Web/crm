@@ -2,24 +2,16 @@
 import React, { useRef, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import CreateReactScript from './Utils/CreateReactScript.jsx'
-import ReactAppend from './Utils/ReactAppend.jsx'
-import PermissionsRest from './actions/PermissionsRest.js'
-import RolesRest from './actions/RolesRest.js'
 import Adminto from './components/Adminto.jsx'
 import Modal from './components/Modal.jsx'
-import Table from './components/Table.jsx'
-import AccordionCard from './components/accordion/AccordionCard.jsx'
-import CheckboxFormGroup from './components/form/CheckboxFormGroup.jsx'
 import InputFormGroup from './components/form/InputFormGroup.jsx'
 import TextareaFormGroup from './components/form/TextareaFormGroup.jsx'
-import TippyButton from './components/form/TippyButton.jsx'
-import DxPanelButton from './components/dx/DxPanelButton.jsx'
 import ProductsRest from './actions/ProductsRest.js'
 import ProductCard from './Reutilizables/Products/ProductCard.jsx'
 import Tippy from '@tippyjs/react'
-import SelectFormGroup from './components/form/SelectFormGroup.jsx'
 import Swal from 'sweetalert2'
 import Number2Currency from './Utils/Number2Currency.jsx'
+import ImageFormGroup from './components/form/ImageFormGroup.jsx'
 
 const productsRest = new ProductsRest()
 
@@ -29,6 +21,7 @@ const Products = ({ products: productsFromDB = [], types: typesFromDB = [], can 
   // Form elements ref
   const idRef = useRef()
   // const typeRef = useRef()
+  const imageRef = useRef()
   const nameRef = useRef()
   const priceRef = useRef()
   const colorRef = useRef()
@@ -43,7 +36,7 @@ const Products = ({ products: productsFromDB = [], types: typesFromDB = [], can 
     else setIsEditing(false)
 
     idRef.current.value = data?.id || null
-    // $(typeRef.current).val(data?.type_id || null).trigger('change')
+    imageRef.image.src = `/storage/images/product/${data?.image || 'null'}`
     nameRef.current.value = data?.name || null
     priceRef.current.value = data?.price || null
     colorRef.current.value = data?.color || null
@@ -55,16 +48,15 @@ const Products = ({ products: productsFromDB = [], types: typesFromDB = [], can 
   const onModalSubmit = async (e) => {
     e.preventDefault()
 
-    const request = {
-      id: idRef.current.value || undefined,
-      // type_id: typeRef.current.value,
-      name: nameRef.current.value,
-      price: priceRef.current.value,
-      color: colorRef.current.value,
-      description: descriptionRef.current.value
-    }
+    const formData = new FormData();
+    if (idRef.current.value) formData.append('id', idRef.current.value);
+    formData.append('name', nameRef.current.value);
+    formData.append('price', priceRef.current.value);
+    formData.append('color', colorRef.current.value);
+    formData.append('description', descriptionRef.current.value);
+    if (imageRef.current.files[0]) formData.append('image', imageRef.current.files[0]);
 
-    const result = await productsRest.save(request)
+    const result = await productsRest.save(formData)
     if (!result) return
 
     $(modalRef.current).modal('hide')
@@ -144,21 +136,26 @@ const Products = ({ products: productsFromDB = [], types: typesFromDB = [], can 
                     border: `1px solid ${product.color}44`,
                     backgroundColor: `${product.color}11`
                   }}>
-                    <h4 className={`${product.ribbon ? 'ms-4' : ''} text-center text-truncate line-clamp-2`} style={{ cursor: product.color }}>{product.name}</h4>
-                    <table>
-                      <tbody>
-                        <tr>
-                          <td style={{ width: '100%' }}>
-                            <small className='mb-1' style={{
-                              overflow: 'hidden',
-                              display: '-webkit-box',
-                              WebkitBoxOrient: 'vertical',
-                              WebkitLineClamp: 2,
-                              height: '36px'
-                            }}>{product.description || '- Sin descripción -'}</small>
-                            <b>S/. {Number2Currency(product.price)}</b>
-                          </td>
-                          <td className='text-end'>
+                    <div className='d-flex justify-content-between gap-2 align-items-start'>
+                      <img
+                        src={`/storage/images/product/${product.image}`}
+                        alt={product.name}
+                        className='rounded'
+                        style={{ width: '48px', height: '48px', aspectRatio: 1, objectFit: 'cover', objectPosition: 'center' }}
+                        onError={(e) => { e.target.onerror = null; e.target.src = '//placehold.co/100x100'; }}
+                      />
+                      <div className='flex-1'>
+                        <h4 className={`${product.ribbon ? 'ms-4' : ''} text-truncate line-clamp-2 my-0`} style={{ cursor: product.color }}>{product.name}</h4>
+                        <small className='mb-1' style={{
+                          overflow: 'hidden',
+                          display: '-webkit-box',
+                          WebkitBoxOrient: 'vertical',
+                          WebkitLineClamp: 2,
+                          height: '36px'
+                        }}>{product.description || '- Sin descripción -'}</small>
+                        <div className='d-flex justify-content-between'>
+                          <b>S/. {Number2Currency(product.price)}</b>
+                          <div className='flex-1 d-flex gap-1 align-items-center'>
                             {
                               product.status == null
                                 ? <Tippy content='Restaurar'>
@@ -166,17 +163,17 @@ const Products = ({ products: productsFromDB = [], types: typesFromDB = [], can 
                                 </Tippy>
                                 : <>
                                   <Tippy content='Editar'>
-                                    <button className="btn btn-xs btn-soft-primary fa fa-pen mb-1" onClick={() => onModalOpen(product)}></button>
+                                    <button className="btn btn-xs btn-soft-primary fa fa-pen" onClick={() => onModalOpen(product)}></button>
                                   </Tippy>
                                   <Tippy content='Eliminar'>
                                     <button className="btn btn-xs btn-soft-danger fa fa-times" onClick={() => onDeleteClicked(product.id)}></button>
                                   </Tippy>
                                 </>
                             }
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </ProductCard>
                 })
               }
@@ -185,7 +182,7 @@ const Products = ({ products: productsFromDB = [], types: typesFromDB = [], can 
         </div>
       </div>
     </div>
-    <Modal modalRef={modalRef} title={isEditing ? 'Editar producto' : 'Agregar producto'} onSubmit={onModalSubmit} size='sm'>
+    <Modal modalRef={modalRef} title={isEditing ? 'Editar producto' : 'Agregar producto'} onSubmit={onModalSubmit} >
       <div className='row' id='main-container'>
         <input ref={idRef} type='hidden' />
         {/* <SelectFormGroup eRef={typeRef} label='Tipo de producto' dropdownParent='#main-container' tags required>
@@ -193,10 +190,15 @@ const Products = ({ products: productsFromDB = [], types: typesFromDB = [], can 
             return <option key={index} value={type.id}>{type.name}</option>
           })}
         </SelectFormGroup> */}
-        <InputFormGroup eRef={nameRef} label='Producto' col='col-12' required />
-        <InputFormGroup eRef={priceRef} label='Precio' col='col-7' type='number' step={0.01} />
-        <InputFormGroup eRef={colorRef} label='Color' col='col-5' type='color' />
-        <TextareaFormGroup eRef={descriptionRef} label='Descripcion' col='col-12' />
+        <ImageFormGroup eRef={imageRef} label='Imagen' col='col-6' onError='//placehold.co/400x400' aspect='1' />
+        <div className='col-md-6'>
+          <div className='row'>
+            <InputFormGroup eRef={nameRef} label='Producto' col='col-12' required />
+            <InputFormGroup eRef={priceRef} label='Precio' col='col-7' type='number' step={0.01} />
+            <InputFormGroup eRef={colorRef} label='Color' col='col-5' type='color' />
+            <TextareaFormGroup eRef={descriptionRef} label='Descripcion' col='col-12' />
+          </div>
+        </div>
       </div>
     </Modal>
   </>

@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from "react"
 
-const ImageFormGroup = ({ id, col, label, eRef, required = false, onChange = () => { }, aspect = '21/9', fit = 'cover', width = '100%', height, containerStyle, onError = '/api/cover/thumbnail/null'}) => {
+const ImageFormGroup = ({ id, col, label, eRef, required = false, onChange = () => { }, aspect = '21/9', fit = 'cover', width = '100%', height, containerStyle, onError = '/api/cover/thumbnail/null' }) => {
 
   if (!id) id = `ck-${crypto.randomUUID()}`
   if (!eRef) eRef = useRef()
@@ -22,7 +22,7 @@ const ImageFormGroup = ({ id, col, label, eRef, required = false, onChange = () 
     <label htmlFor={id} className="d-block form-label">
       {label} {required && <b className="text-danger">*</b>}
     </label>
-    <label className="d-block" htmlFor={id} style={{width: 'max-content'}}>
+    <label className="d-block" htmlFor={id} style={{ width: 'max-content', maxWidth: '100%' }}>
       <img ref={imageRef} className="d-block" src="" alt="aspect-video" onError={e => e.target.src = onError} style={{
         width,
         height,

@@ -14,6 +14,7 @@ class ProductController extends BasicController
 {
     public $model = Product::class;
     public $reactView = 'Products.jsx';
+    public $imageFields = ['image'];
 
     public function setReactViewProperties(Request $request)
     {

@@ -107,6 +107,13 @@
       "_server.browser-brRkNDR6.js"
     ]
   },
+  "_ImageFormGroup-ttcE19Bg.js": {
+    "file": "assets/ImageFormGroup-ttcE19Bg.js",
+    "name": "ImageFormGroup",
+    "imports": [
+      "_CreateReactScript-DcwmeAVN.js"
+    ]
+  },
   "_InputFormGroup-Ba-Teh2n.js": {
     "file": "assets/InputFormGroup-Ba-Teh2n.js",
     "name": "InputFormGroup",
@@ -260,9 +267,9 @@
       "_Adminto-8qxubLRL.js"
     ]
   },
-  "_coming-soon-!~{01c}~.js": {
+  "_coming-soon-!~{01d}~.js": {
     "file": "coming-soon.css",
-    "src": "_coming-soon-!~{01c}~.js"
+    "src": "_coming-soon-!~{01d}~.js"
   },
   "_default-!~{00R}~.js": {
     "file": "default.css",
@@ -607,7 +614,7 @@
     ]
   },
   "resources/js/Leads.jsx": {
-    "file": "assets/Leads-Cif-0ZXC.js",
+    "file": "assets/Leads-B0arTZgU.js",
     "name": "Leads",
     "src": "resources/js/Leads.jsx",
     "isEntry": true,
@@ -678,7 +685,7 @@
     ]
   },
   "resources/js/Pages.jsx": {
-    "file": "assets/Pages-VbA-sIxK.js",
+    "file": "assets/Pages-CHNvWQHA.js",
     "name": "Pages",
     "src": "resources/js/Pages.jsx",
     "isEntry": true,
@@ -695,6 +702,7 @@
       "_sweetalert2.esm.all-BB4SRWjP.js",
       "_SelectFormGroup-Csb1tKiR.js",
       "_server.browser-brRkNDR6.js",
+      "_ImageFormGroup-ttcE19Bg.js",
       "_Logout-CMhpjQt5.js",
       "_default-P54wx-21.js",
       "_index-0LxMiNUP.js"
@@ -761,7 +769,7 @@
     ]
   },
   "resources/js/Products.jsx": {
-    "file": "assets/Products-Ckjfey7A.js",
+    "file": "assets/Products-CgvnuOCj.js",
     "name": "Products",
     "src": "resources/js/Products.jsx",
     "isEntry": true,
@@ -769,14 +777,12 @@
       "_CreateReactScript-DcwmeAVN.js",
       "_Adminto-8qxubLRL.js",
       "_Modal-C2Wyq7YS.js",
-      "_server.browser-brRkNDR6.js",
-      "_default-P54wx-21.js",
       "_InputFormGroup-Ba-Teh2n.js",
       "_TextareaFormGroup-BKpwC6cY.js",
       "_sweetalert2.esm.all-BB4SRWjP.js",
       "_Number2Currency-e57Tgsuk.js",
-      "_Logout-CMhpjQt5.js",
-      "_index-0LxMiNUP.js"
+      "_ImageFormGroup-ttcE19Bg.js",
+      "_Logout-CMhpjQt5.js"
     ]
   },
   "resources/js/Profile.jsx": {
