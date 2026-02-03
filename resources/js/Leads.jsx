@@ -461,6 +461,12 @@ const Leads = (properties) => {
       };
 
       result = await leadsRest.leadStatus({ lead: lead.id, status: defaultClientStatus, ruc: formValues.dni, tradename: formValues.fullname })
+      await Swal.fire({
+        title: '¡Lead convertido!',
+        text: 'El lead ha sido convertido en cliente exitosamente.',
+        icon: 'success',
+        confirmButtonText: 'Entendido'
+      });
       // Remove the lead from the list instead of replacing it
       if (defaultView == 'kanban') {
         setLeads(prev => prev.filter(l => l.id !== lead.id))
