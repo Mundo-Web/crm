@@ -41,7 +41,7 @@ class LeadsRest extends BasicRest {
     try {
       const { status, result } = await Fetch(`/api/${this.path}/status`, {
         method: 'POST',
-        body: JSON.stringify(request)
+        body: JSON.stringify(request),
       })
       if (!status) throw new Error(result?.message || 'Ocurrio un error inesperado')
       return true
@@ -60,7 +60,7 @@ class LeadsRest extends BasicRest {
     try {
       const { status, result } = await Fetch(`/api/${this.path}/manage-status`, {
         method: 'POST',
-        body: JSON.stringify(request)
+        body: JSON.stringify(request),
       })
       if (!status) throw new Error(result?.message || 'Ocurrio un error inesperado')
       return true

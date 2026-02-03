@@ -29,11 +29,13 @@ const CreateReactScript = (render) => {
         }
         return false
       }
-      FetchParams.headers = {
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
-        'X-Xsrf-Token': decodeURIComponent(Cookies.get('XSRF-TOKEN'))
-      }
+      FetchParams.call = () => ({
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+          'X-Xsrf-Token': decodeURIComponent(Cookies.get('XSRF-TOKEN'))
+        }
+      })
       render(el, { ...properties, can })
       // el.removeAttribute('data-page')
     },
