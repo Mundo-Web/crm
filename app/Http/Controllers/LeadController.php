@@ -283,6 +283,9 @@ class LeadController extends BasicController
             if ($leadJpa->business_id != Auth::user()->business_id) throw new Exception('Este lead no pertenece a tu empresa');
             $leadJpa->status_id = $request->status;
 
+            if ($request->ruc) $leadJpa->ruc = $request->ruc;
+            if ($request->tradename) $leadJpa->tradename = $request->tradename;
+
             try {
                 $assignationStatus = JSON::parse(Setting::get('assignation-lead-status') ?? '{}');
                 $revertionStatus = JSON::parse(Setting::get('revertion-lead-status') ?? '{}');
