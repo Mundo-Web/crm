@@ -405,7 +405,7 @@ class BasicController extends Controller
         $snake_case = Text::camelToSnakeCase(str_replace('App\\Models\\', '', $this->model));
         foreach ($this->imageFields as $field) {
           $filename = $dataBeforeDelete->{$field};
-          if (!Text::has($filename, '.')) {
+          if (!Text::has($filename ?? '', '.')) {
             $filename = "{$filename}.enc";
           }
           $path = "images/{$snake_case}/{$filename}";
