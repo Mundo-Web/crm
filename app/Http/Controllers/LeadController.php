@@ -44,6 +44,7 @@ class LeadController extends BasicController
             ->get();
         $defaultClientStatus = Setting::get('default-client-status');
         $defaultLeadStatus = Setting::get('default-lead-status');
+        $convertedLeadStatus = Setting::get('converted-lead-status');
         $noteTypes = NoteType::all();
 
         $manageStatuses = Status::select()
@@ -91,6 +92,7 @@ class LeadController extends BasicController
             'manageStatuses' => $manageStatuses,
             'defaultClientStatus' => $defaultClientStatus,
             'defaultLeadStatus' => $defaultLeadStatus,
+            'convertedLeadStatus' => $convertedLeadStatus,
             'statuses' => $statuses,
             'noteTypes' => $noteTypes,
             'products' => $products,
@@ -291,6 +293,7 @@ class LeadController extends BasicController
             }
 
             $leadJpa->save();
+            return $leadJpa->load(['status', 'assigned', 'manageStatus', 'creator']);
         });
         return response($response->toArray(), $response->status);
     }
@@ -312,6 +315,7 @@ class LeadController extends BasicController
             }
 
             $leadJpa->save();
+            return $leadJpa->load(['status', 'assigned', 'manageStatus', 'creator']);
         });
         return response($response->toArray(), $response->status);
     }

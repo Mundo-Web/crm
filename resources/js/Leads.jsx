@@ -61,7 +61,7 @@ const driverObj = driver({
 })
 
 const Leads = (properties) => {
-  const { statuses: statusesFromDB, defaultClientStatus, defaultLeadStatus, manageStatuses: manageStatusesFromDB, noteTypes, products = [], processes = [], defaultMessages = [], session: sessionDB, can, lead, signs, users, hasForms } = properties
+  const { statuses: statusesFromDB, defaultClientStatus, defaultLeadStatus, convertedLeadStatus, manageStatuses: manageStatusesFromDB, noteTypes, products = [], processes = [], defaultMessages = [], session: sessionDB, can, lead, signs, users, hasForms } = properties
 
   const { leads, setLeads, getLeads, refreshLeads, defaultView, setDefaultView } = useContext(LeadsContext)
 
@@ -368,9 +368,6 @@ const Leads = (properties) => {
   }
 
   const onClientStatusClicked = async (lead, status) => {
-    console.log(status)
-    return
-
     await leadsRest.leadStatus({ lead, status })
 
     if (leadLoaded) {
@@ -410,9 +407,30 @@ const Leads = (properties) => {
   }
 
   const onManageStatusChange = async (lead, status) => {
-    await leadsRest.manageStatus({ lead: lead.id, status: status.id })
+    let result = null
+    if (convertedLeadStatus && defaultClientStatus && status.id == convertedLeadStatus) {
+      const { isConfirmed } = await Swal.fire({
+        title: '¿Convertir lead en cliente?',
+        text: 'El lead pasará a ser un cliente.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, continuar',
+        cancelButtonText: 'Cancelar'
+      })
+      if (!isConfirmed) return
+      result = await leadsRest.leadStatus({ lead: lead.id, status: defaultClientStatus })
+      // Remove the lead from the list instead of replacing it
+      if (defaultView == 'kanban') {
+        setLeads(prev => prev.filter(l => l.id !== lead.id))
+      } else {
+        $(gridRef.current).dxDataGrid('instance').refresh()
+        $(managedGridRef.current).dxDataGrid('instance').refresh()
+      }
+      return
+    }
+    result = await leadsRest.manageStatus({ lead: lead.id, status: status.id })
     const newLeadLoaded = structuredClone(lead)
-    newLeadLoaded.manage_status = status;
+    newLeadLoaded.manage_status = statuses.find(x => x.id == status.id);
     setLeadLoaded(newLeadLoaded)
     history.pushState(null, null, `/leads/${newLeadLoaded.id}`)
     if (defaultView == 'kanban') getLeads()

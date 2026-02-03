@@ -17,7 +17,9 @@ class SettingController extends BasicController
         $constants = $this->model::select()
             ->where('business_id', Auth::user()->business_id)
             ->get();
-        $statuses = Status::where('business_id', Auth::user()->business_id)->get();
+        $statuses = Status::where('business_id', Auth::user()->business_id)
+            ->where('status', true)
+            ->get();
         return [
             'constants' => $constants,
             'statuses' => $statuses
