@@ -143,8 +143,13 @@ class ClientController extends BasicController
     public function massiveDelete(Request $request)
     {
         $response = Response::simpleTryCatch(function () use ($request) {
-            Client::whereIn('id', $request->clientsId)
-                ->update(['status' => false]);
+            if ($request->hardDeletion) {
+                Client::whereIn('id', $request->clientsId)
+                    ->delete();
+            } else {
+                Client::whereIn('id', $request->clientsId)
+                    ->update(['status' => false]);
+            }
         });
         return response($response->toArray(), $response->status);
     }

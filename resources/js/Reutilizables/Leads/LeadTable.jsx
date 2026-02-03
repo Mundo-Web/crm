@@ -108,6 +108,46 @@ const LeadTable = ({ gridRef, cardClass, otherGridRef, rest, can, defaultLeadSta
     grid.refresh();
   }
 
+  const onMassiveDeleteClicked = async () => {
+    const selectedRows = $(gridRef.current).dxDataGrid('instance').getSelectedRowKeys().map(({ id }) => id);
+
+    if (!selectedRows.length) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'No hay leads seleccionados',
+        text: 'Por favor seleccione al menos un lead para eliminar'
+      });
+      return;
+    }
+
+    const { isConfirmed } = await Swal.fire({
+      icon: 'question',
+      title: 'Confirmar Eliminación',
+      text: `¿Está seguro que desea eliminar ${selectedRows.length} lead(s)?`,
+      showCancelButton: true,
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar'
+    });
+    if (!isConfirmed) return;
+
+    const result = await clientsRest.massiveDelete({
+      clientsId: selectedRows,
+      hardDeletion: true
+    });
+
+    if (!result) return;
+
+    Swal.fire({
+      icon: 'success',
+      title: 'Leads Eliminados',
+      text: 'Los leads han sido eliminados exitosamente'
+    });
+
+    const grid = $(gridRef.current).dxDataGrid('instance');
+    grid.clearSelection();
+    grid.refresh();
+  }
+
   useEffect(() => {
     if (defaultView != 'table' || !filterAssignation) return
     const grid = $(gridRef.current).dxDataGrid('instance');
@@ -231,6 +271,12 @@ const LeadTable = ({ gridRef, cardClass, otherGridRef, rest, can, defaultLeadSta
         <button className="dropdown-item" onClick={onMassiveArchiveClicked}>
           <i className="mdi mdi-archive me-1"></i>
           Archivar
+        </button>
+      </li>
+      <li>
+        <button className="dropdown-item" onClick={onMassiveDeleteClicked}>
+          <i className="mdi mdi-delete me-1"></i>
+          Eliminar
         </button>
       </li>
       <li>
@@ -456,7 +502,7 @@ const LeadTable = ({ gridRef, cardClass, otherGridRef, rest, can, defaultLeadSta
           container.html(renderToString(
             campaignLink
               ? <a className="text-truncate d-block text-decoration-none" style={{ maxWidth: '100%', color: 'inherit' }} href={campaignLink} target="_blank" rel="noopener noreferrer">
-                <code style={{color: '#ff8acc'}}>{data.campaign.code}</code>
+                <code style={{ color: '#ff8acc' }}>{data.campaign.code}</code>
                 <small className="ms-1">{data.campaign.title}</small>
               </a>
               : <div className="text-truncate" style={{ maxWidth: '100%' }}>
