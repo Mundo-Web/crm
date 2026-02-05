@@ -26,6 +26,7 @@ const Statuses = ({ statuses: statusesFromDB, tables }) => {
   const tableRef = useRef()
   const nameRef = useRef()
   const colorRef = useRef()
+  const orderRef = useRef()
   const descriptionRef = useRef()
   const requireRef = useRef()
 
@@ -45,6 +46,7 @@ const Statuses = ({ statuses: statusesFromDB, tables }) => {
     }
     nameRef.current.value = data?.name || null
     colorRef.current.value = data?.color || '#343a40'
+    orderRef.current.value = data?.order || ''
     descriptionRef.current.value = data?.description || null
     setRequire(data?.require || false)
 
@@ -59,6 +61,7 @@ const Statuses = ({ statuses: statusesFromDB, tables }) => {
       table_id: tableRef.current.value,
       name: nameRef.current.value,
       color: colorRef.current.value,
+      order: orderRef.current.value,
       description: descriptionRef.current.value,
       require: require,
       action_required: require ? 'product' : null
@@ -213,19 +216,22 @@ const Statuses = ({ statuses: statusesFromDB, tables }) => {
                 </div>
               </div>
               <div className="card-body d-flex align-items-start justify-content-center gap-2" style={{ flexWrap: 'wrap', minHeight: '200px' }}>
-                {statuses.filter(status => status.table_id === table.id).map((status, index) => (
+                {statuses.filter(status => status.table_id === table.id).sort((a, b) => a.order - b.order).map((status, index) => (
                   <div key={index} className="btn-group dropup col-auto">
-                    <span type="button" className="btn btn-sm btn-white" style={{ cursor: 'default' }}>
-                      <div>
-                        <i className='mdi mdi-circle me-1' style={{ color: status.color }}></i>
-                        {status.name}
-                        {
-                          status.require &&
-                          <span className='text-danger ms-1'>*</span>
-                        }
-                        <span className='badge rounded-pill bg-secondary ms-1'>{status.children_count}</span>
+                    <span type="button" className="btn btn-sm btn-white d-flex gap-2 align-items-center" style={{ cursor: 'default' }}>
+                      <h4 className='my-0'>{status.order}</h4>
+                      <div className='flex-1'>
+                        <div>
+                          <i className='mdi mdi-circle me-1' style={{ color: status.color }}></i>
+                          {status.name}
+                          {
+                            status.require &&
+                            <span className='text-danger ms-1'>*</span>
+                          }
+                          <span className='badge rounded-pill bg-secondary ms-1'>{status.children_count}</span>
+                        </div>
+                        <small className='text-muted' style={{ fontSize: '10px' }}>Ult. uso: {status.last_used_at}</small>
                       </div>
-                      <small className='text-muted' style={{ fontSize: '10px' }}>Ult. uso: {status.last_used_at}</small>
                     </span>
                     <button type="button" className="btn btn-sm btn-white dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                       <i className="mdi mdi-dots-vertical"></i>
@@ -247,7 +253,8 @@ const Statuses = ({ statuses: statusesFromDB, tables }) => {
         <input ref={idRef} type='hidden' />
         <InputFormGroup eRef={nameRef} label='Nombre de estado' col='col-12' required />
         <SelectAPIFormGroup eRef={tableRef} label='Tabla' col='col-12' dropdownParent='#status-crud-container' searchAPI='/api/tables/paginate' searchBy='name' required />
-        <InputFormGroup eRef={colorRef} type='color' label='Color' col='col-12' required />
+        <InputFormGroup eRef={colorRef} type='color' label='Color' col='col-6' required />
+        <InputFormGroup eRef={orderRef} type='number' label='Orden' col='col-6' required />
         <TextareaFormGroup eRef={descriptionRef} label='Descripcion' col='col-12' />
         <div className="col-12">
           <CheckboxFormGroup eRef={requireRef} label='¿Requerir producto?' id='require' title='Obliga al usuario a escoger un producto antes de cambiar a este estado' checked={require} setChecked={setRequire} />
