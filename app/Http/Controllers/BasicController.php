@@ -86,7 +86,8 @@ class BasicController extends Controller
     $archivedLeadStatusDays = Setting::get('archived-lead-status-days');
 
     if ($archivedLeadStatus && $archivedLeadStatusDays) {
-      Client::whereIn('manage_status_id', $archivedLeadStatus)
+      Client::where('business_id', Auth::user()->business_id)
+        ->whereIn('manage_status_id', $archivedLeadStatus)
         ->where('updated_at', '<', Carbon::now()->subDays($archivedLeadStatusDays))
         ->update(['status' => null]);
     }
