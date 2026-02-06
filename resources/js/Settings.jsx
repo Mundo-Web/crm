@@ -132,7 +132,7 @@ const Settings = ({ can, constants, statuses }) => {
       settingsRest.save({
         type: 'text',
         name: 'archived-lead-status',
-        value: archivedLeadStatusRef.current.value,
+        value: $(archivedLeadStatusRef.current).val()
       }),
       settingsRest.save({
         type: 'text',
@@ -194,7 +194,7 @@ const Settings = ({ can, constants, statuses }) => {
   }, [activeTab])
 
   useEffect(() => {
-    $(archivedLeadStatusRef.current).val(archivedLeadStatus.value).select2()
+    $(archivedLeadStatusRef.current).val(JSON.parse(archivedLeadStatus.value)).select2()
     $(archivedLeadStatusDaysRef.current).val(archivedLeadStatusDays.value)
     $(finishedProjectStatusRef.current).val(finishedProjectStatus.value).select2()
     $(convertedLeadStatusRef.current).val(convertedLeadStatus.value).select2()
@@ -303,8 +303,8 @@ const Settings = ({ can, constants, statuses }) => {
                         <form className="card card-body border p-2" onSubmit={onArchivedLeadStatusSubmit}>
                           <h5 className="card-title mb-1">Estado para archivar</h5>
                           <p className="card-text">¿Qué estado define mejor a un lead que debe archivarse tras N días de inactividad?</p>
-                          <SelectFormGroup eRef={archivedLeadStatusRef} label="Escoge un estado" required >
-                            {statuses.filter(item => item.table_id == 'e05a43e5-b3a6-46ce-8d1f-381a73498f33').map((status, index) => {
+                          <SelectFormGroup eRef={archivedLeadStatusRef} label="Escoge un estado" required multiple>
+                            {statuses.filter(item => item.table_id == '9c27e649-574a-47eb-82af-851c5d425434').map((status, index) => {
                               return <option key={index} value={status.id}>{status.name}</option>
                             })}
                           </SelectFormGroup>

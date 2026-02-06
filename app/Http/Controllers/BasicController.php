@@ -82,12 +82,12 @@ class BasicController extends Controller
 
   public function reactView(Request $request)
   {
-
-    $archivedLeadStatus = Setting::get('archived-lead-status');
+    dump(Setting::get('archived-lead-status'));
+    $archivedLeadStatus = JSON::parseable(Setting::get('archived-lead-status') ?? '[]') ?? [];
     $archivedLeadStatusDays = Setting::get('archived-lead-status-days');
 
     if ($archivedLeadStatus && $archivedLeadStatusDays) {
-      Client::where('status', $archivedLeadStatus)
+      Client::whereIn('manage_status_id', $archivedLeadStatus)
         ->where('updated_at', '<', Carbon::now()->subDays($archivedLeadStatusDays))
         ->update(['status' => null]);
     }
