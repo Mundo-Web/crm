@@ -12,6 +12,7 @@ import SelectFormGroup from './components/form/SelectFormGroup.jsx'
 import { Editor } from '@tinymce/tinymce-react'
 import TextareaFormGroup from './components/form/TextareaFormGroup.jsx'
 import FlowContainer from './Reutilizables/Settings/FlowContainer.jsx'
+import InputFormGroup from './components/form/InputFormGroup.jsx'
 
 const settingsRest = new SettingsRest()
 
@@ -26,6 +27,8 @@ const Settings = ({ can, constants, statuses }) => {
   const tinyRef = useRef()
   const finishedProjectStatusRef = useRef()
   const convertedLeadStatusRef = useRef()
+  const archivedLeadStatusRef = useRef()
+  const archivedLeadStatusDaysRef = useRef()
 
   const [constantType, setConstantType] = useState()
   const [specification, setSpecification] = useState()
@@ -122,6 +125,26 @@ const Settings = ({ can, constants, statuses }) => {
     $(leadStatusModal.current).modal('show')
   }
 
+  const onArchivedLeadStatusSubmit = async (e) => {
+    e.preventDefault()
+
+    await Promise.all([
+      settingsRest.save({
+        type: 'text',
+        name: 'archived-lead-status',
+        value: archivedLeadStatusRef.current.value,
+      }),
+      settingsRest.save({
+        type: 'text',
+        name: 'archived-lead-status-days',
+        value: archivedLeadStatusDaysRef.current.value,
+      })
+    ])
+
+    $(modalRef.current).modal('hide')
+    location.reload()
+  }
+
   const onLeadStatusSubmit = async (e) => {
     e.preventDefault()
 
@@ -160,6 +183,9 @@ const Settings = ({ can, constants, statuses }) => {
     await settingsRest.save(request)
   }
 
+  const archivedLeadStatus = getConstant('archived-lead-status');
+  const archivedLeadStatusDays = getConstant('archived-lead-status-days');
+
   const finishedProjectStatus = getConstant('finished-project-status');
   const convertedLeadStatus = getConstant('converted-lead-status');
 
@@ -168,6 +194,8 @@ const Settings = ({ can, constants, statuses }) => {
   }, [activeTab])
 
   useEffect(() => {
+    $(archivedLeadStatusRef.current).val(archivedLeadStatus.value).select2()
+    $(archivedLeadStatusDaysRef.current).val(archivedLeadStatusDays.value)
     $(finishedProjectStatusRef.current).val(finishedProjectStatus.value).select2()
     $(convertedLeadStatusRef.current).val(convertedLeadStatus.value).select2()
   }, [null])
@@ -268,9 +296,24 @@ const Settings = ({ can, constants, statuses }) => {
                       </div>
                     </div>
                   </div>
-                  <div className={`tab-pane fade ${activeTab === 'clientsleads' ? 'show active' : ''}`} id="v-clients-leads" role="tabpanel" aria-labelledby="v-clients-leads-tab">
+                  <div className={`tab-pane fade ${activeTab === 'clients-leads' ? 'show active' : ''}`} id="v-clients-leads" role="tabpanel" aria-labelledby="v-clients-leads-tab">
                     <h4>Configuracion de clientes y leads</h4>
                     <div className="row">
+                      <div className="col-md-4 col-sm-6 col-xs-12">
+                        <form className="card card-body border p-2" onSubmit={onArchivedLeadStatusSubmit}>
+                          <h5 className="card-title mb-1">Estado para archivar</h5>
+                          <p className="card-text">¿Qué estado define mejor a un lead que debe archivarse tras N días de inactividad?</p>
+                          <SelectFormGroup eRef={archivedLeadStatusRef} label="Escoge un estado" required >
+                            {statuses.filter(item => item.table_id == 'e05a43e5-b3a6-46ce-8d1f-381a73498f33').map((status, index) => {
+                              return <option key={index} value={status.id}>{status.name}</option>
+                            })}
+                          </SelectFormGroup>
+                          <InputFormGroup eRef={archivedLeadStatusDaysRef} label="Días de inactividad" type='number' min={1} required />
+                          <div>
+                            <button type="submit" className="btn btn-sm btn-primary">Guardar</button>
+                          </div>
+                        </form>
+                      </div>
                       <div className="col-md-4 col-sm-6 col-xs-12">
                         <div className="card card-body border p-2" onClick={onAsignationStatusClicked}>
                           <h5 className="card-title mb-1">Estados de asignacion</h5>
@@ -410,7 +453,7 @@ const Settings = ({ can, constants, statuses }) => {
             </div>
           </div>
         </div>
-        <FlowContainer questions={JSON.parse(questionsObj.value ?? '[]')} isOpen={canvasOpen} setIsOpen={setCanvasOpen} onModalOpen={onModalOpen}/>
+        <FlowContainer questions={JSON.parse(questionsObj.value ?? '[]')} isOpen={canvasOpen} setIsOpen={setCanvasOpen} onModalOpen={onModalOpen} />
       </div>
     </div>
     <Modal modalRef={leadStatusModal} title='' onSubmit={onLeadStatusSubmit} size='sm'>

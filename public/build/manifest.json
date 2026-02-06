@@ -922,7 +922,7 @@
     ]
   },
   "resources/js/Settings.jsx": {
-    "file": "assets/Settings-CpBohEIX.js",
+    "file": "assets/Settings-CFK1eYbp.js",
     "name": "Settings",
     "src": "resources/js/Settings.jsx",
     "isEntry": true,
@@ -934,6 +934,7 @@
       "_SelectFormGroup-Yhre-Fgb.js",
       "_index-BdYZYpiQ.js",
       "_TextareaFormGroup-xGDLKjaY.js",
+      "_InputFormGroup-2ffCkRLw.js",
       "_Logout-Djwh9QSR.js",
       "_sweetalert2.esm.all-BLfQoUmi.js"
     ],

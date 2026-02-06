@@ -158,9 +158,9 @@ const DefaultMessages = ({ title, clientFields }) => {
           cellTemplate: (container, { value, data }) => {
             if (!value) container.html(renderToString(<i className='text-muted'>- Sin descripcion -</i>))
             // else if (data.type === 'email') {
-              container.text($(`<div>${value}</div>`).text().trim())
+            container.text($(`<div>${value}</div>`).text().trim())
             // } else {
-              // container.text(value)
+            // container.text(value)
             // }
           }
         },
