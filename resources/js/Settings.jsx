@@ -216,9 +216,9 @@ const Settings = ({ can, constants, statuses }) => {
                   <button className={`nav-link mb-1 text-start ${activeTab === 'general' ? 'active show' : ''}`} id="v-general-tab" data-bs-toggle="pill" href="#v-general" role="tab" aria-controls="v-general" aria-selected="true" onClick={() => setActiveTab('general')}>
                     General
                   </button>
-                  <button className={`nav-link mb-1 text-start ${activeTab === 'dashboard' ? 'active show' : ''}`} id="v-dashboard-tab" data-bs-toggle="pill" href="#v-dashboard" role="tab" aria-controls="v-dashboard" aria-selected="true" onClick={() => setActiveTab('dashboard')}>
+                  {/* <button className={`nav-link mb-1 text-start ${activeTab === 'dashboard' ? 'active show' : ''}`} id="v-dashboard-tab" data-bs-toggle="pill" href="#v-dashboard" role="tab" aria-controls="v-dashboard" aria-selected="true" onClick={() => setActiveTab('dashboard')}>
                     Dashboard
-                  </button>
+                  </button> */}
                   <button className={`nav-link mb-1 text-start ${activeTab === 'clients-leads' ? 'active show' : ''}`} id="v-clients-leads-tab" data-bs-toggle="pill" href="#v-clients-leads" role="tab" aria-controls="v-clients-leads" aria-selected="false" onClick={() => setActiveTab('clients-leads')}>
                     Clientes y leads
                   </button>
@@ -273,7 +273,7 @@ const Settings = ({ can, constants, statuses }) => {
                   <div className={`tab-pane fade ${activeTab === 'dashboard' ? 'show active' : ''}`} id="v-dashboard" role="tabpanel" aria-labelledby="v-dashboard-tab">
                     <h4>Configuracion de dashboard</h4>
                     <div className="row">
-                      <div className="col-md-4 col-sm-6 col-xs-12">
+                      {/* <div className="col-md-4 col-sm-6 col-xs-12">
                         <div className="card card-body border p-2" style={{ cursor: 'default' }}>
                           <h5 className="card-title mb-1">Estado de Conversión</h5>
                           <p className="card-text mb-0">¿Cuál es el estado que define mejor a un lead que ha sido convertido exitosamente?</p>
@@ -293,7 +293,7 @@ const Settings = ({ can, constants, statuses }) => {
                             })}
                           </SelectFormGroup>
                         </div>
-                      </div>
+                      </div> */}
                     </div>
                   </div>
                   <div className={`tab-pane fade ${activeTab === 'clients-leads' ? 'show active' : ''}`} id="v-clients-leads" role="tabpanel" aria-labelledby="v-clients-leads-tab">
@@ -324,6 +324,27 @@ const Settings = ({ can, constants, statuses }) => {
                         <div className="card card-body border p-2" onClick={onRevertionStatusClicked}>
                           <h5 className="card-title mb-1">Estados de reversion</h5>
                           <p className="card-text mb-0">Cuales son los estados que quitan la asignacion del usuario directamente?</p>
+                        </div>
+                      </div>
+                      <div className="col-md-4 col-sm-6 col-xs-12">
+                        <div className="card card-body border p-2" style={{ cursor: 'default' }}>
+                          <h5 className="card-title mb-1">Estado de Conversión</h5>
+                          <p className="card-text mb-0">¿Cuál es el estado que define mejor a un lead que ha sido convertido exitosamente?</p>
+                          <blockquote className='my-1' style={{
+                            borderLeft: '4px solid #007bff',
+                            backgroundColor: 'var(--bs-gray-300)',
+                            padding: '5px 10px',
+                            // color: '#333',
+                          }}>
+                            <small>
+                              Esta configuración nos ayudará a identificar y medir las conversiones efectivas en el sistema.
+                            </small>
+                          </blockquote>
+                          <SelectFormGroup eRef={convertedLeadStatusRef} label="Escoge un estado" noMargin onChange={onConvertedLeadStatusChange} >
+                            {statuses.filter(item => item.table_id == '9c27e649-574a-47eb-82af-851c5d425434').map((status, index) => {
+                              return <option key={index} value={status.id}>{status.name}</option>
+                            })}
+                          </SelectFormGroup>
                         </div>
                       </div>
                     </div>
