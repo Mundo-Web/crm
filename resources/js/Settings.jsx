@@ -130,7 +130,7 @@ const Settings = ({ can, constants, statuses }) => {
 
     await Promise.all([
       settingsRest.save({
-        type: 'text',
+        type: 'json',
         name: 'archived-lead-status',
         value: $(archivedLeadStatusRef.current).val()
       }),
