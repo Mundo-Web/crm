@@ -63,6 +63,8 @@ const driverObj = driver({
 const Leads = (properties) => {
   const { statuses: statusesFromDB, defaultClientStatus, defaultLeadStatus, convertedLeadStatus, manageStatuses: manageStatusesFromDB, noteTypes, products = [], processes = [], defaultMessages = [], session: sessionDB, can, lead, signs, users, hasForms } = properties
 
+  console.log(statusesFromDB)
+
   const { leads, setLeads, getLeads, refreshLeads, defaultView, setDefaultView } = useContext(LeadsContext)
 
   const modalRef = useRef()
@@ -93,6 +95,9 @@ const Leads = (properties) => {
   const webUrlRef = useRef()
   const messageRef = useRef()
   const sourceChannelRef = useRef()
+
+  const [processStatus, setProcessStatus] = useState(null)
+  const [processManageStatus, setProcessManageStatus] = useState(null)
 
   const [session, setSession] = useState(sessionDB)
   const [statuses, setStatuses] = useState(statusesFromDB);
@@ -218,8 +223,10 @@ const Leads = (properties) => {
   useEffect(() => {
     getNotes()
     getClientProducts()
-    $(statusRef.current).val(leadLoaded?.status?.id).trigger('change')
-    $(manageStatusRef.current).val(leadLoaded?.manage_status?.id).trigger('change')
+    setProcessStatus(leadLoaded?.status?.id)
+    setProcessManageStatus(leadLoaded?.manage_status?.id)
+    // $(statusRef.current).val(leadLoaded?.status?.id).trigger('change').select2()
+    // $(manageStatusRef.current).val(leadLoaded?.manage_status?.id).trigger('change').select2()
   }, [leadLoaded]);
 
   const getNotes = async () => {
@@ -276,8 +283,10 @@ const Leads = (properties) => {
       id: idRefs[type].current.value || undefined,
       note_type_id: type,
       process: processRef.current.value,
-      status_id: $(statusRef.current).is(':visible') ? statusRef.current.value : undefined,
-      manage_status_id: $(manageStatusRef.current).is(':visible') ? manageStatusRef.current.value : undefined,
+      // status_id: $(statusRef.current).is(':visible') ? statusRef.current.value : undefined,
+      // manage_status_id: $(manageStatusRef.current).is(':visible') ? manageStatusRef.current.value : undefined,
+      status_id: $(statusRef.current).is(':visible') ? processStatus : undefined,
+      manage_status_id: $(manageStatusRef.current).is(':visible') ? processManageStatus : undefined,
       name: title,
       description: !isTask ? content : undefined,
       raw: !isTask ? text : undefined,
@@ -971,16 +980,65 @@ const Leads = (properties) => {
                       </div>
                       {
                         (type.id == '8e895346-3d87-4a87-897a-4192b917c211') && <>
-                          <SelectFormGroup eRef={statusRef} label='Estado de gestión' col='col-sm-12 col-md-12 col-lg-6' dropdownParent={`#note-type-${type.id}`} minimumResultsForSearch={-1}>
-                            {statuses.map((status, index) => {
-                              return <option key={index} value={status.id}>{status.name}</option>
-                            })}
-                          </SelectFormGroup>
-                          <SelectFormGroup eRef={manageStatusRef} label='Estado del lead' col='col-lg-6 col-md-12' dropdownParent={`#note-type-${type.id}`} minimumResultsForSearch={-1}>
-                            {manageStatuses.map((status, index) => {
-                              return <option key={index} value={status.id}>{status.name}</option>
-                            })}
-                          </SelectFormGroup>
+                          <div className="col-sm-12 col-md-12 col-lg-6 mb-2">
+                            <label className="form-label">Estado de gestión</label>
+                            <div className="dropdown">
+                              <button
+                                className="btn btn-white btn-sm dropdown-toggle w-100 text-start"
+                                type="button"
+                                data-bs-toggle="dropdown"
+                                aria-expanded="false"
+                                ref={statusRef}
+                              >
+                                {statuses.find(s => s.id === processStatus)?.name || 'Seleccionar estado'}
+                                <i className="mdi mdi-chevron-down float-end"/>
+                              </button>
+                              <ul className="dropdown-menu w-100">
+                                {statuses.map((status) => (
+                                  <li key={status.id}>
+                                    <button
+                                      className="dropdown-item"
+                                      type="button"
+                                      onClick={() => setProcessStatus(status.id)}
+                                    >
+                                      <i className="mdi mdi-circle me-1" style={{color: status.color}}/>
+                                      {status.name}
+                                    </button>
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          </div>
+
+                          <div className="col-sm-12 col-md-12 col-lg-6 mb-2">
+                            <label className="form-label">Estado del lead</label>
+                            <div className="dropdown">
+                              <button
+                                className="btn btn-white btn-sm dropdown-toggle w-100 text-start"
+                                type="button"
+                                data-bs-toggle="dropdown"
+                                aria-expanded="false"
+                                ref={manageStatusRef}
+                              >
+                                {manageStatuses.find(s => s.id === processManageStatus)?.name || 'Seleccionar estado'}
+                                <i className="mdi mdi-chevron-down float-end"/>
+                              </button>
+                              <ul className="dropdown-menu w-100">
+                                {manageStatuses.map((status) => (
+                                  <li key={status.id}>
+                                    <button
+                                      className="dropdown-item"
+                                      type="button"
+                                      onClick={() => setProcessManageStatus(status.id)}
+                                    >
+                                      <i className="mdi mdi-circle me-1" style={{color: status.color}}/>
+                                      {status.name}
+                                    </button>
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          </div>
                         </>
                       }
                       {
