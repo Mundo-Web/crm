@@ -82,7 +82,6 @@ class BasicController extends Controller
 
   public function reactView(Request $request)
   {
-    dump(Setting::get('archived-lead-status'));
     $archivedLeadStatus = JSON::parseable(Setting::get('archived-lead-status') ?? '[]') ?? [];
     $archivedLeadStatusDays = Setting::get('archived-lead-status-days');
 
