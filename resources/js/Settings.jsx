@@ -300,7 +300,7 @@ const Settings = ({ can, constants, statuses }) => {
                     <h4>Configuracion de clientes y leads</h4>
                     <div className="row">
                       <div className="col-md-4 col-sm-6 col-xs-12">
-                        <form className="card card-body border p-2" onSubmit={onArchivedLeadStatusSubmit}>
+                        <form className="card card-body border p-2" onSubmit={onArchivedLeadStatusSubmit} style={{cursor: 'default'}}>
                           <h5 className="card-title mb-1">Estado para archivar</h5>
                           <p className="card-text">¿Qué estado define mejor a un lead que debe archivarse tras N días de inactividad?</p>
                           <SelectFormGroup eRef={archivedLeadStatusRef} label="Escoge un estado" required multiple>
