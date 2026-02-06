@@ -994,7 +994,7 @@ const Leads = (properties) => {
                                 <i className="mdi mdi-chevron-down float-end"/>
                               </button>
                               <ul className="dropdown-menu w-100">
-                                {statuses.map((status) => (
+                                {statuses.sort((a, b) => a.order - b.order).map((status) => (
                                   <li key={status.id}>
                                     <button
                                       className="dropdown-item"
@@ -1024,7 +1024,7 @@ const Leads = (properties) => {
                                 <i className="mdi mdi-chevron-down float-end"/>
                               </button>
                               <ul className="dropdown-menu w-100">
-                                {manageStatuses.map((status) => (
+                                {manageStatuses.sort((a, b) => a.order - b.order).map((status) => (
                                   <li key={status.id}>
                                     <button
                                       className="dropdown-item"
