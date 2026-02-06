@@ -12,6 +12,7 @@ use App\Models\Setting;
 use App\Models\Task;
 use App\Models\View;
 use Exception;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
@@ -81,6 +82,16 @@ class BasicController extends Controller
 
   public function reactView(Request $request)
   {
+
+    $archivedLeadStatus = Setting::get('archived-lead-status');
+    $archivedLeadStatusDays = Setting::get('archived-lead-status-days');
+
+    if ($archivedLeadStatus && $archivedLeadStatusDays) {
+      Client::where('status', $archivedLeadStatus)
+        ->where('updated_at', '<', Carbon::now()->subDays($archivedLeadStatusDays))
+        ->update(['status' => null]);
+    }
+
     $businessesIWork = Business::select([
       DB::raw('DISTINCT businesses.*')
     ])

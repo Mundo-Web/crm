@@ -46,15 +46,6 @@ class LeadController extends BasicController
         $defaultLeadStatus = Setting::get('default-lead-status');
         $convertedLeadStatus = Setting::get('converted-lead-status');
 
-        $archivedLeadStatus = Setting::get('archived-lead-status');
-        $archivedLeadStatusDays = Setting::get('archived-lead-status-days');
-
-        if ($archivedLeadStatus && $archivedLeadStatusDays) {
-            Client::where('status', $archivedLeadStatus)
-                ->where('updated_at', '<', Carbon::now()->subDays($archivedLeadStatusDays))
-                ->update(['status' => null]);
-        }
-
         $noteTypes = NoteType::all();
 
         $manageStatuses = Status::select()
