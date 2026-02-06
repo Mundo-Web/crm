@@ -221,7 +221,7 @@ const Menu = ({ session, theme, can, whatsAppStatus, APP_PROTOCOL, APP_DOMAIN, l
             <MenuItem href="/projects/taskboard" icon='mdi mdi-view-dashboard'>Cuadro de control</MenuItem>
           </MenuItemContainer>
           }
-          {
+          {/* {
             (can('users', 'root', 'all', 'list') || can('roles', 'root', 'all', 'list') || can('permissions', 'root', 'all', 'list')) &&
             <MenuItemContainer title='Usuarios y roles' icon='mdi mdi-account-lock'>
               {
@@ -232,10 +232,6 @@ const Menu = ({ session, theme, can, whatsAppStatus, APP_PROTOCOL, APP_DOMAIN, l
                 can('roles', 'root', 'all', 'list') &&
                 <MenuItem href="/roles" icon='mdi mdi-account-convert'>Roles</MenuItem>
               }
-              {/* {
-                can('permissions', 'root', 'all', 'list') &&
-                <MenuItem href="/permissions" icon='mdi mdi-account-check'>Permisos</MenuItem>
-              } */}
             </MenuItemContainer>
           }
 
@@ -254,10 +250,6 @@ const Menu = ({ session, theme, can, whatsAppStatus, APP_PROTOCOL, APP_DOMAIN, l
             (can('tables', 'root', 'all', 'list') || can('statuses', 'root', 'all', 'list') || can('types', 'root', 'all', 'list')) && <>
               <li className="menu-title">Menus del sistema</li>
               <MenuItemContainer title='Mantenimiento' icon='mdi mdi-application-cog'>
-                {/* {
-                  can('tables', 'root', 'all', 'list') &&
-                  <MenuItem href='/tables' icon='mdi mdi-table'>Tablas</MenuItem>
-                } */}
                 {
                   can('statuses', 'root', 'all', 'list') &&
                   <MenuItem href='/statuses' icon='mdi mdi-format-list-checks'>Estados</MenuItem>
@@ -267,16 +259,12 @@ const Menu = ({ session, theme, can, whatsAppStatus, APP_PROTOCOL, APP_DOMAIN, l
                   <MenuItem href="/types" icon='mdi mdi-format-list-text'>Tipos</MenuItem>
                 }
               </MenuItemContainer>
-              {/* {
-                can('views', 'root', 'all', 'list') &&
-                <MenuItem href="/views" icon='mdi mdi-view-carousel'>Vistas</MenuItem>
-              } */}
               {
                 can('settings', 'root', 'all', 'list') &&
                 <MenuItem href='/settings' icon='mdi mdi-cogs'>Configuraciones</MenuItem>
               }
             </>
-          }
+          } */}
         </ul>
 
       </div>

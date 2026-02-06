@@ -10,6 +10,8 @@ import Global from "../Utils/Global"
 import Tippy from "@tippyjs/react"
 import UsersByServicesByBusinessesRest from "../actions/Atalaya/UsersByServicesByBusinessesRest"
 import useWebSocket from "../Reutilizables/CustomHooks/useWebSocket"
+import MenuItemContainer from "./MenuItemContainer"
+import MenuItem from "./MenuItem"
 
 const notificationsRest = new NotificationsRest();
 const usersByServicesByBusinessesRest = new UsersByServicesByBusinessesRest();
@@ -21,7 +23,7 @@ const NavBar = ({ can, session = {}, services, theme, setTheme, title = '', wsAc
 
   const [notifications, setNotifications] = useState([]);
 
-  const {notificationsCount} = useWebSocket();
+  const { notificationsCount } = useWebSocket();
 
   const otherBusinesses = businesses.filter(({ id }) => session.business_id != id)
 
@@ -58,7 +60,7 @@ const NavBar = ({ can, session = {}, services, theme, setTheme, title = '', wsAc
       location.href = `${APP_PROTOCOL}://${APP_DOMAIN}/businesses`
       return
     }
-    
+
     const result = await usersByServicesByBusinessesRest.authorize({
       service: correlative
     })
@@ -394,7 +396,7 @@ const NavBar = ({ can, session = {}, services, theme, setTheme, title = '', wsAc
               <i className="mdi mdi-chevron-down"></i>
             </span>
           </a>
-          <div className="dropdown-menu dropdown-menu-end profile-dropdown driver-js-account-dropdown ">
+          <div className="dropdown-menu dropdown-menu-end profile-dropdown driver-js-account-dropdown " onClick={e => e.stopPropagation()}>
 
             <div className="dropdown-header noti-title">
               <h6 className="text-overflow m-0">Bienvenido !</h6>
@@ -410,7 +412,7 @@ const NavBar = ({ can, session = {}, services, theme, setTheme, title = '', wsAc
               <i className="mdi mdi-account-key-outline"></i>
               <span>Mi cuenta</span>
             </a>
-            {
+            {/* {
               otherBusinesses.length > 0 &&
               <>
                 <div className="dropdown-header noti-title">
@@ -423,6 +425,95 @@ const NavBar = ({ can, session = {}, services, theme, setTheme, title = '', wsAc
                     })
                   }
                 </div>
+              </>
+            } */}
+            <div className="dropdown-divider"></div>
+            {
+              (can('users', 'root', 'all', 'list') || can('roles', 'root', 'all', 'list') || can('permissions', 'root', 'all', 'list')) &&
+              <>
+                <a href="#users-roles" className="dropdown-item notify-item" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="users-roles">
+                  <i className="mdi mdi-account-lock me-1"></i>
+                  <span>Usuarios y roles</span>
+                  <i className="mdi mdi-chevron-down float-end"></i>
+                </a>
+                <div className="collapse ms-3" id="users-roles">
+                  {can('users', 'root', 'all', 'list') &&
+                    <a href="/users" className="dropdown-item notify-item">
+                      <i className="mdi mdi-account me-1"></i>
+                      <span>Usuarios</span>
+                    </a>
+                  }
+                  {can('roles', 'root', 'all', 'list') &&
+                    <a href="/roles" className="dropdown-item notify-item">
+                      <i className="mdi mdi-account-convert me-1"></i>
+                      <span>Roles</span>
+                    </a>
+                  }
+                </div>
+              </>
+            }
+
+            <a href="/default-messages" className="dropdown-item notify-item">
+              <i className="mdi mdi-message-bulleted me-1"></i>
+              <span>Mensajes predeter...</span>
+            </a>
+
+            <a href="/repository" className="dropdown-item notify-item">
+              <i className="mdi mdi-database me-1"></i>
+              <span>Repositorio</span>
+            </a>
+
+            {
+              can('apikeys', 'root', 'all', 'list') &&
+              <>
+                <a href="#integrations" className="dropdown-item notify-item" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="integrations">
+                  <i className="mdi mdi-api me-1"></i>
+                  <span>Integraciones</span>
+                  <i className="mdi mdi-chevron-down float-end"></i>
+                </a>
+                <div className="collapse ms-3" id="integrations">
+                  <a href="/webhooks" className="dropdown-item notify-item">
+                    <i className="mdi mdi-webhook me-1"></i>
+                    <span>Redes sociales</span>
+                  </a>
+                  <a href="/apikeys" className="dropdown-item notify-item">
+                    <i className="mdi mdi-form-textbox me-1"></i>
+                    <span>Formulario Externo</span>
+                  </a>
+                </div>
+              </>
+            }
+
+            {
+              (can('tables', 'root', 'all', 'list') || can('statuses', 'root', 'all', 'list') || can('types', 'root', 'all', 'list')) && <>
+                <div className="dropdown-header noti-title">
+                  <h6 className="text-overflow m-0">Menus del sistema</h6>
+                </div>
+                <a href="#maintenance" className="dropdown-item notify-item" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="maintenance">
+                  <i className="mdi mdi-application-cog me-1"></i>
+                  <span>Mantenimiento</span>
+                  <i className="mdi mdi-chevron-down float-end"></i>
+                </a>
+                <div className="collapse ms-3" id="maintenance">
+                  {can('statuses', 'root', 'all', 'list') &&
+                    <a href="/statuses" className="dropdown-item notify-item">
+                      <i className="mdi mdi-format-list-checks me-1"></i>
+                      <span>Estados</span>
+                    </a>
+                  }
+                  {can('types', 'root', 'all', 'list') &&
+                    <a href="/types" className="dropdown-item notify-item">
+                      <i className="mdi mdi-format-list-text me-1"></i>
+                      <span>Tipos</span>
+                    </a>
+                  }
+                </div>
+                {can('settings', 'root', 'all', 'list') &&
+                  <a href="/settings" className="dropdown-item notify-item">
+                    <i className="mdi mdi-cogs me-1"></i>
+                    <span>Configuraciones</span>
+                  </a>
+                }
               </>
             }
             <div className="dropdown-divider"></div>
