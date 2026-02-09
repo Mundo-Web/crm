@@ -22,6 +22,7 @@ use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Maatwebsite\Excel\Excel as MaatwebsiteExcel;
 use Maatwebsite\Excel\Facades\Excel;
 use Ramsey\Uuid\Uuid;
 use SoDe\Extend\JSON;
@@ -176,8 +177,15 @@ class LeadController extends BasicController
             $file = $request->file('file');
             $mapping = json_decode($request->mapping, true);
 
-            // Load the spreadsheet using maatwebsite/excel
-            $rows = Excel::toArray([], $file->getRealPath())[0];
+            $readerType = MaatwebsiteExcel::XLSX;
+            $extension = strtolower($file->getClientOriginalExtension());
+            if ($extension === 'xls') {
+                $readerType = MaatwebsiteExcel::XLS;
+            } elseif ($extension === 'csv') {
+                $readerType = MaatwebsiteExcel::CSV;
+            }
+
+            $rows = Excel::toArray([], $file->getRealPath(), null, $readerType)[0];
 
             // Extract headers
             $headers = array_shift($rows);
