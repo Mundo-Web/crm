@@ -29,6 +29,7 @@ const Settings = ({ can, constants, statuses }) => {
   const convertedLeadStatusRef = useRef()
   const archivedLeadStatusRef = useRef()
   const archivedLeadStatusDaysRef = useRef()
+  const archivedLeadStatusDirectRef = useRef()
 
   const [constantType, setConstantType] = useState()
   const [specification, setSpecification] = useState()
@@ -145,6 +146,19 @@ const Settings = ({ can, constants, statuses }) => {
     location.reload()
   }
 
+  const onArchivedLeadStatusDirectSubmit = async (e) => {
+    e.preventDefault()
+
+    await settingsRest.save({
+      type: 'text',
+      name: 'archived-lead-status-direct',
+      value: JSON.stringify($(archivedLeadStatusDirectRef.current).val())
+    })
+
+    $(modalRef.current).modal('hide')
+    location.reload()
+  }
+
   const onLeadStatusSubmit = async (e) => {
     e.preventDefault()
 
@@ -185,6 +199,7 @@ const Settings = ({ can, constants, statuses }) => {
 
   const archivedLeadStatus = getConstant('archived-lead-status');
   const archivedLeadStatusDays = getConstant('archived-lead-status-days');
+  const archivedLeadStatusDirect = getConstant('archived-lead-status-direct');
 
   const finishedProjectStatus = getConstant('finished-project-status');
   const convertedLeadStatus = getConstant('converted-lead-status');
@@ -195,6 +210,7 @@ const Settings = ({ can, constants, statuses }) => {
 
   useEffect(() => {
     $(archivedLeadStatusRef.current).val(JSON.parse(archivedLeadStatus.value)).select2()
+    $(archivedLeadStatusDirectRef.current).val(JSON.parse(archivedLeadStatusDirect.value)).select2()
     $(archivedLeadStatusDaysRef.current).val(archivedLeadStatusDays.value)
     $(finishedProjectStatusRef.current).val(finishedProjectStatus.value).select2()
     $(convertedLeadStatusRef.current).val(convertedLeadStatus.value).select2()
@@ -315,12 +331,24 @@ const Settings = ({ can, constants, statuses }) => {
                         </form>
                       </div>
                       <div className="col-md-4 col-sm-6 col-xs-12">
+                        <form className="card card-body border p-2" onSubmit={onArchivedLeadStatusDirectSubmit} style={{ cursor: 'default' }}>
+                          <h5 className="card-title mb-1">Estado de archivación (directo)</h5>
+                          <p className="card-text">¿Qué estado define mejor a un lead que debe archivarse tras N días de inactividad?</p>
+                          <SelectFormGroup eRef={archivedLeadStatusDirectRef} label="Escoge un estado" required multiple>
+                            {statuses.filter(item => item.table_id == '9c27e649-574a-47eb-82af-851c5d425434').map((status, index) => {
+                              return <option key={index} value={status.id}>{status.name}</option>
+                            })}
+                          </SelectFormGroup>
+                          <div>
+                            <button type="submit" className="btn btn-sm btn-primary">Guardar</button>
+                          </div>
+                        </form>
+                      </div>
+                      <div className="col-md-4 col-sm-6 col-xs-12">
                         <div className="card card-body border p-2" onClick={onAsignationStatusClicked}>
                           <h5 className="card-title mb-1">Estados de asignacion</h5>
                           <p className="card-text mb-0">Cuales son los estados que asignan el usuario al cliente directamente?</p>
                         </div>
-                      </div>
-                      <div className="col-md-4 col-sm-6 col-xs-12">
                         <div className="card card-body border p-2" onClick={onRevertionStatusClicked}>
                           <h5 className="card-title mb-1">Estados de reversion</h5>
                           <p className="card-text mb-0">Cuales son los estados que quitan la asignacion del usuario directamente?</p>

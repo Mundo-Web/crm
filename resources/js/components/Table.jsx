@@ -6,6 +6,7 @@ import { DateRange } from 'react-date-range'
 import es from 'date-fns/locale/es'
 import 'react-date-range/dist/styles.css'
 import 'react-date-range/dist/theme/default.css'
+import Tippy from '@tippyjs/react'
 
 const Table = ({ title, gridRef, rest, columns, toolBar, masterDetail, filterValue = [], defaultRows, selection, cardClass = '', className = '', allowedPageSizes, pageSize, exportable = false, customizeCell, reloadWith, height, cardStyle, keyExpr, onSelectionChanged, massiveActions }) => {
   const html = renderToString(<div>{title}</div>)
@@ -124,16 +125,18 @@ const Table = ({ title, gridRef, rest, columns, toolBar, masterDetail, filterVal
       <div className="col-12">
         <div className={`card ${cardClass}`} style={cardStyle}>
           <div className="card-body">
-            <div className='d-flex justify-content-between align-items-center mb-2'>
+            <div className='d-flex justify-content-between align-items-start mb-2 gap-1'>
               {
                 typeof title == 'string'
-                  ? <h4 className='w-100 my-0 header-title'>Lista de {title}</h4>
-                  : <div className='w-100 my-0'>{title}</div>
+                  ? <h4 className='my-0 header-title flex-1 text-break'>Lista de {title}</h4>
+                  : <div className='my-0 flex-1 overflow-hidden'>{title}</div>
               }
-
-              <button className='btn btn-white btn-xs text-nowrap' onClick={() => $(gridRef.current).dxDataGrid('instance').refresh()}>
-                <i className='mdi mdi-refresh me-1'></i>Actualizar
-              </button>
+              <div className='d-flex gap-1 flex-wrap'>
+                <button className='btn btn-white btn-xs text-nowrap' onClick={() => $(gridRef.current).dxDataGrid('instance').refresh()}>
+                  <i className='mdi mdi-refresh me-md-1'></i>
+                  <span className='d-none d-md-inline-block'>Actualizar</span>
+                </button>
+              </div>
             </div>
 
             {/* Rest switcher buttons */}
@@ -184,8 +187,8 @@ const Table = ({ title, gridRef, rest, columns, toolBar, masterDetail, filterVal
                       onClick={() => setIsMassiveDropdownOpen(!isMassiveDropdownOpen)}
                       style={{ zIndex: isMassiveDropdownOpen ? 10000 : undefined }}
                     >
-                      <i className='mdi mdi-format-list-checks me-1' />
-                      Acciones
+                      <i className='mdi mdi-format-list-checks me-md-1' />
+                      <span className='d-none d-md-inline-block'>Acciones</span>
                       <span className="badge bg-primary ms-1">{selectionCount}</span>
                       <i className="mdi mdi-chevron-down ms-1"></i>
                     </button>
@@ -223,8 +226,8 @@ const Table = ({ title, gridRef, rest, columns, toolBar, masterDetail, filterVal
                     onClick={() => setIsDatePickerOpen(!isDatePickerOpen)}
                     style={{ zIndex: isDatePickerOpen ? 10000 : undefined }}
                   >
-                    <i className="mdi mdi-calendar-range me-1"></i>
-                    Periodo
+                    <i className="mdi mdi-calendar-range me-md-1"></i>
+                    <span className='d-none d-md-inline-block'>Periodo</span>
                     {filtering && <span className='ms-1 badge bg-primary'>
                       <i className='mdi mdi-filter'></i>
                     </span>}
@@ -280,7 +283,8 @@ const Table = ({ title, gridRef, rest, columns, toolBar, masterDetail, filterVal
                   onClick={handleExport}
                   disabled={!exportable}
                 >
-                  <i className='mdi mdi-download me-1'></i>Exportar
+                  <i className='mdi mdi-download me-md-1'></i>
+                  <span className='d-none d-md-inline-block'>Exportar</span>
                 </button>
               </div>
             </div>

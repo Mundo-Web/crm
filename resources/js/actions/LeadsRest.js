@@ -1,4 +1,4 @@
-import { Fetch, Notify } from "sode-extend-react";
+import { Cookies, Fetch, Notify } from "sode-extend-react";
 import BasicRest from "./BasicRest";
 
 class LeadsRest extends BasicRest {
@@ -94,12 +94,35 @@ class LeadsRest extends BasicRest {
     }
   }
 
-
   attend = async (lead, attend) => {
     try {
       const { status, result } = await Fetch(`/api/${this.path}/attend/${lead}`, {
         method: attend ? 'PUT' : 'DELETE'
       })
+      if (!status) throw new Error(result?.message || 'Ocurrio un error inesperado')
+      return true
+    } catch (error) {
+      Notify.add({
+        icon: '/assets/img/logo-login.svg',
+        title: 'Error',
+        body: error.message,
+        type: 'danger'
+      })
+      return false
+    }
+  }
+
+  import = async (request) => {
+    try {
+      const res = await fetch(`/api/${this.path}/import`, {
+        method: 'POST',
+        headers: {
+          'X-Xsrf-Token': decodeURIComponent(Cookies.get('XSRF-TOKEN'))
+        },
+        body: request
+      })
+      const status = res.ok
+      const result = JSON.parseable(await res.text())
       if (!status) throw new Error(result?.message || 'Ocurrio un error inesperado')
       return true
     } catch (error) {

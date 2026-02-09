@@ -63,8 +63,6 @@ const driverObj = driver({
 const Leads = (properties) => {
   const { statuses: statusesFromDB, defaultClientStatus, defaultLeadStatus, convertedLeadStatus, manageStatuses: manageStatusesFromDB, noteTypes, products = [], processes = [], defaultMessages = [], session: sessionDB, can, lead, signs, users, hasForms } = properties
 
-  console.log(statusesFromDB)
-
   const { leads, setLeads, getLeads, refreshLeads, defaultView, setDefaultView } = useContext(LeadsContext)
 
   const modalRef = useRef()
@@ -667,32 +665,143 @@ const Leads = (properties) => {
     $(messagesOffCanvasRef.current).offcanvas('show')
   }
 
-  return (<Adminto {...properties} setWAPhone={setWAPhone} title='Leads' description='Gerencie sus leads y oportunidades' floatEnd={<div className='d-flex gap-2 justify-content-between align-items-center'>
-    {
-      defaultView == 'kanban' &&
-      <Tippy content='Refrescar'>
-        <button className='btn btn-sm btn-light rounded-pill' onClick={refreshLeads}>
-          <i className='mdi mdi-refresh'></i>
-        </button>
-      </Tippy>
+  const [excelFile, setExcelFile] = useState(null)
+  const [excelFields, setExcelFields] = useState([])
+  const [leadMapping, setLeadMapping] = useState({
+    name: null,
+    email: null,
+    phone: null,
+    source: null,
+    form: []
+  })
+  const [rowsCount, setRowsCount] = useState(0);
+  const importModalRef = useState()
+
+  const handleImport = (file) => {
+    if (!file) return;
+    const validTypes = ['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'application/vnd.ms-excel',
+      'text/csv'];
+    if (!validTypes.includes(file.type)) {
+      Swal.fire('Formato inválido', 'Solo se permiten archivos .xlsx, .xls o .csv', 'warning');
+      return;
     }
-    <div className='d-flex gap-0'>
-      <input id='view-as-table' type="radio" name='view-as' defaultChecked={defaultView == 'table'} onClick={() => onDefaultViewClicked('table')} />
-      <label htmlFor="view-as-table">
-        <i className='mdi mdi-table me-1'></i>
-        Tabla
-      </label>
-      <input id='view-as-kanban' type="radio" name='view-as' defaultChecked={defaultView == 'kanban'} onClick={() => onDefaultViewClicked('kanban')} />
-      <label htmlFor="view-as-kanban">
-        <i className='mdi mdi-view-week me-1'></i>
-        Pipeline
-      </label>
+    setExcelFile(file);
+
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      const data = new Uint8Array(e.target.result);
+      // Use ExcelJS instead of XLSX
+      const workbook = new ExcelJS.Workbook();
+      await workbook.xlsx.load(data);
+      const worksheet = workbook.worksheets[0];
+      const headers = [];
+      worksheet.getRow(1).eachCell((cell) => {
+        headers.push(cell.value);
+      });
+      setExcelFields(headers);
+      // Count only rows with at least one non-empty cell (excluding header row)
+      let rowCount = worksheet.rowCount
+      setRowsCount(rowCount - 1);
+    };
+    reader.readAsArrayBuffer(file);
+    $(importModalRef.current).modal('show')
+  }
+
+  const handleImportSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!leadMapping.name || !leadMapping.email || !leadMapping.phone || !leadMapping.source) {
+      Swal.fire({
+        title: 'Campos faltantes',
+        text: 'Por favor asigna las columnas de nombre, email, teléfono y fuente antes de continuar.',
+        icon: 'warning',
+        confirmButtonText: 'Entendido'
+      });
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('file', excelFile);
+    formData.append('mapping', JSON.stringify(leadMapping));
+
+    await leadsRest.import(formData);
+    $(importModalRef.current).modal('hide');
+    if (defaultView === 'kanban') getLeads();
+    else {
+      $(gridRef.current).dxDataGrid('instance').refresh();
+      $(managedGridRef.current).dxDataGrid('instance').refresh();
+    }
+  }
+
+  useEffect(() => {
+    if (excelFields.length === 0) {
+      setLeadMapping({ name: null, email: null, phone: null, source: null, form: [] });
+      return;
+    }
+
+    const mapping = { name: null, email: null, phone: null, source: null, form: [] };
+
+    excelFields.forEach(col => {
+      const lower = col.toLowerCase();
+      if (!mapping.name && (lower.includes('name') || lower.includes('nombre')) && col.trim().split(/\s+/).length <= 2) {
+        mapping.name = col;
+      } else if (!mapping.email && (lower.includes('email') || lower.includes('correo')) && col.trim().split(/\s+/).length <= 2) {
+        mapping.email = col;
+      } else if (!mapping.phone && (lower.includes('phone') || lower.includes('telefono') || lower.includes('celular')) && col.trim().split(/\s+/).length <= 2) {
+        mapping.phone = col;
+      } else if (col.includes('?') && col.split(/\s+/).length >= 4) {
+        mapping.form.push(col);
+      }
+    });
+
+    setLeadMapping(mapping);
+  }, [excelFields]);
+
+  return (<Adminto {...properties} setWAPhone={setWAPhone} title='Leads' description='Gerencie sus leads y oportunidades' floatEnd={<>
+    <div className='d-flex gap-1 justify-content-between align-items-center'>
+      {
+        defaultView == 'kanban' &&
+        <Tippy content='Refrescar'>
+          <button className='btn btn-sm btn-light rounded-pill' onClick={refreshLeads}>
+            <i className='mdi mdi-refresh'></i>
+          </button>
+        </Tippy>
+      }
+      <div className='d-flex gap-0'>
+        <input id='view-as-table' type="radio" name='view-as' defaultChecked={defaultView == 'table'} onClick={() => onDefaultViewClicked('table')} />
+        <label htmlFor="view-as-table">
+          <i className='mdi mdi-table me-md-1'></i>
+          <span className='d-none d-md-inline-block'>Tabla</span>
+        </label>
+        <input id='view-as-kanban' type="radio" name='view-as' defaultChecked={defaultView == 'kanban'} onClick={() => onDefaultViewClicked('kanban')} />
+        <label htmlFor="view-as-kanban">
+          <i className='mdi mdi-view-week me-md-1'></i>
+          <span className='d-none d-md-inline-block'>Pipeline</span>
+        </label>
+      </div>
+      <Tippy content='Importar leads'>
+        <label className='btn btn-light btn-sm mb-0' style={{ cursor: 'pointer' }}>
+          <i className='mdi mdi-upload'></i>
+          <span className='d-none d-md-inline-block ms-1'>Importar</span>
+          <input
+            type='file'
+            accept='.xlsx,.xls,.csv'
+            onChange={(e) => {
+              const file = e.target.files[0];
+              if (file) handleImport(file);
+              e.target.value = null;
+            }}
+            style={{ display: 'none' }}
+          />
+        </label>
+      </Tippy>
+      <button className='btn btn-sm btn-purple driver-js-btn-new-lead' onClick={() => onOpenModal()}>
+        <i className='mdi mdi-plus'></i>
+        <span className='d-none d-md-inline ms-1'>Nuevo Lead</span>
+      </button>
     </div>
-    <button className='btn btn-sm btn-purple driver-js-btn-new-lead' onClick={() => onOpenModal()}>
-      <i className='mdi mdi-plus'></i>
-      <span className='d-none d-md-inline ms-1'>Nuevo Lead</span>
-    </button>
-  </div>}>
+  </>}>
     {
       defaultView == 'table' ?
         <>
@@ -991,7 +1100,7 @@ const Leads = (properties) => {
                                 ref={statusRef}
                               >
                                 {statuses.find(s => s.id === processStatus)?.name || 'Seleccionar estado'}
-                                <i className="mdi mdi-chevron-down float-end"/>
+                                <i className="mdi mdi-chevron-down float-end" />
                               </button>
                               <ul className="dropdown-menu w-100">
                                 {statuses.sort((a, b) => a.order - b.order).map((status) => (
@@ -1001,7 +1110,7 @@ const Leads = (properties) => {
                                       type="button"
                                       onClick={() => setProcessStatus(status.id)}
                                     >
-                                      <i className="mdi mdi-circle me-1" style={{color: status.color}}/>
+                                      <i className="mdi mdi-circle me-1" style={{ color: status.color }} />
                                       {status.name}
                                     </button>
                                   </li>
@@ -1021,7 +1130,7 @@ const Leads = (properties) => {
                                 ref={manageStatusRef}
                               >
                                 {manageStatuses.find(s => s.id === processManageStatus)?.name || 'Seleccionar estado'}
-                                <i className="mdi mdi-chevron-down float-end"/>
+                                <i className="mdi mdi-chevron-down float-end" />
                               </button>
                               <ul className="dropdown-menu w-100">
                                 {manageStatuses.sort((a, b) => a.order - b.order).map((status) => (
@@ -1031,7 +1140,7 @@ const Leads = (properties) => {
                                       type="button"
                                       onClick={() => setProcessManageStatus(status.id)}
                                     >
-                                      <i className="mdi mdi-circle me-1" style={{color: status.color}}/>
+                                      <i className="mdi mdi-circle me-1" style={{ color: status.color }} />
                                       {status.name}
                                     </button>
                                   </li>
@@ -1258,6 +1367,182 @@ const Leads = (properties) => {
       signs={signs}
       waPhone={waPhone}
     />
+
+    <Modal modalRef={importModalRef} title='Importar leads' onClose={() => {
+      setExcelFile(null)
+      setExcelFields([])
+    }} onSubmit={handleImportSubmit}>
+      <div className="row">
+        {/* Campos primarios a la izquierda */}
+        <div className="col-6">
+          <label className="form-label text-muted small fw-semibold mb-2">Campos primarios</label>
+
+          {/* Nombre */}
+          <div className="mb-2">
+            <label className="form-label small">Nombre</label>
+            <div className="dropdown">
+              <button
+                className="btn btn-sm btn-white dropdown-toggle w-100 text-start border text-truncate"
+                type="button"
+                data-bs-toggle="dropdown"
+                aria-expanded="false"
+              >
+                {leadMapping.name || 'Seleccionar columna'}
+              </button>
+              <ul className="dropdown-menu w-100">
+                {excelFields?.map((field, idx) => (
+                  <li key={idx}>
+                    <button
+                      className="dropdown-item small text-truncate"
+                      type="button"
+                      onClick={() => setLeadMapping(prev => ({ ...prev, name: field }))}
+                    >
+                      {field}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+
+          {/* Correo */}
+          <div className="mb-2">
+            <label className="form-label small">Correo</label>
+            <div className="dropdown">
+              <button
+                className="btn btn-sm btn-white dropdown-toggle w-100 text-start border text-truncate"
+                type="button"
+                data-bs-toggle="dropdown"
+                aria-expanded="false"
+              >
+                {leadMapping.email || 'Seleccionar columna'}
+              </button>
+              <ul className="dropdown-menu w-100">
+                {excelFields?.map((field, idx) => (
+                  <li key={idx}>
+                    <button
+                      className="dropdown-item small text-truncate"
+                      type="button"
+                      onClick={() => setLeadMapping(prev => ({ ...prev, email: field }))}
+                    >
+                      {field}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+
+          {/* Teléfono */}
+          <div className="mb-2">
+            <label className="form-label small">Teléfono</label>
+            <div className="dropdown">
+              <button
+                className="btn btn-sm btn-white dropdown-toggle w-100 text-start border text-truncate"
+                type="button"
+                data-bs-toggle="dropdown"
+                aria-expanded="false"
+              >
+                {leadMapping.phone || 'Seleccionar columna'}
+              </button>
+              <ul className="dropdown-menu w-100">
+                {excelFields?.map((field, idx) => (
+                  <li key={idx}>
+                    <button
+                      className="dropdown-item small text-truncate"
+                      type="button"
+                      onClick={() => setLeadMapping(prev => ({ ...prev, phone: field }))}
+                    >
+                      {field}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+
+          {/* Formulario */}
+          <div className="mb-2">
+            <label className="form-label small">Formulario (opcional)</label>
+            <div className="dropdown">
+              <button
+                className="btn btn-sm btn-white dropdown-toggle w-100 text-start border text-wrap"
+                type="button"
+                data-bs-toggle="dropdown"
+                aria-expanded="false"
+              >
+                {leadMapping.form?.length > 0 ? leadMapping.form.join(', ') : 'Seleccionar columna(s)'}
+              </button>
+              <ul className="dropdown-menu w-100">
+                {excelFields?.map((field, idx) => {
+                  const isSelected = leadMapping.form?.includes(field);
+                  return (
+                    <li key={idx}>
+                      <button
+                        className="dropdown-item small d-flex justify-content-between align-items-center w-full"
+                        type="button"
+                        onClick={() => {
+                          setLeadMapping(prev => {
+                            const current = prev.form || [];
+                            const next = isSelected
+                              ? current.filter(f => f !== field)
+                              : [...current, field];
+                            return { ...prev, form: next };
+                          });
+                        }}
+                      >
+                        <span className='d-inline-block text-truncate'>{field}</span>
+                        {isSelected && <i className="mdi mdi-check" />}
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        {/* Vista previa del mapeo a la derecha */}
+        <div className="col-6">
+          <div className="mb-2">
+            <label className="form-label small">
+              Medio de  importación
+            </label>
+            <input
+              type="text"
+              className="form-control form-control-sm"
+              placeholder="Ej. Meta"
+              value={leadMapping.source || ''}
+              required
+              onChange={(e) =>
+                setLeadMapping(prev => ({ ...prev, source: e.target.value }))
+              }
+            />
+          </div>
+          <div className="p-2 bg-light rounded">
+            <label className="form-label small">Así se importarán los leads:</label>
+            <ul className="list-unstyled mb-0 small">
+              <li><b>Nombre:</b> {leadMapping.name || '—'}</li>
+              <li><b>Correo:</b> {leadMapping.email || '—'}</li>
+              <li><b>Teléfono:</b> {leadMapping.phone || '—'}</li>
+              <li>
+                <b>Formulario:</b>
+                {
+                  leadMapping.form?.length > 0
+                    ? <ol className="mb-0 ps-2">
+                      {leadMapping.form.map((f, idx) => <li key={idx}>{f}</li>)}
+                    </ol>
+                    : <span className='ms-1'>—</span>
+                }
+              </li>
+            </ul>
+          </div>
+          <div className="mt-2 text-muted small">
+            Se importarán {rowsCount} filas
+          </div>
+        </div>
+      </div>
+    </Modal>
   </Adminto>)
 };
 

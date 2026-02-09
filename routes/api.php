@@ -244,6 +244,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/leads/{lead}', [LeadController::class, 'get']);
     Route::get('/leads', [LeadController::class, 'all']);
     Route::post('/leads', [LeadController::class, 'save']);
+    Route::post('/leads/import', [LeadController::class, 'import']);
     Route::post('/leads/paginate/{suffix?}', [LeadController::class, 'paginate'])->withoutMiddleware('throttle:api');
     // Route::post('/leads/paginate/{recentOnly?}', [NewLeadController::class, 'paginate']);
     Route::post('/leads/status', [LeadController::class, 'leadStatus']);

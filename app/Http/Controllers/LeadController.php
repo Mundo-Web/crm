@@ -21,6 +21,9 @@ use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Maatwebsite\Excel\Facades\Excel;
+use Ramsey\Uuid\Uuid;
 use SoDe\Extend\JSON;
 use SoDe\Extend\Response;
 use SoDe\Extend\Text;
@@ -164,6 +167,136 @@ class LeadController extends BasicController
         }
 
         return $query;
+    }
+
+    public function import(Request $request)
+    {
+        DB::beginTransaction();
+        $response = Response::simpleTryCatch(function () use ($request) {
+            $file = $request->file('file');
+            $mapping = json_decode($request->mapping, true);
+
+            // Load the spreadsheet using maatwebsite/excel
+            $rows = Excel::toArray([], $file->getRealPath())[0];
+
+            // Extract headers
+            $headers = array_shift($rows);
+
+            // Build objects with headers as keys
+            $cleanRows = [];
+            foreach ($rows as $row) {
+                $rowData = [];
+                foreach ($headers as $index => $header) {
+                    $rowData[$header] = $row[$index] ?? null;
+                }
+
+                // Check if row has any non-empty value
+                if (collect($rowData)->filter(fn($v) => trim($v) !== '')->isNotEmpty()) {
+                    $cleanRows[] = $rowData;
+                }
+            }
+
+            $business_id = Auth::user()->business_id;
+            // Map rows to desired format using mapping
+            $mappedRows = [];
+            foreach ($cleanRows as $row) {
+                $phone = Text::keep($row[$mapping['phone']], '0123456789');
+                if (strlen($phone) === 9 && str_starts_with($phone, '9')) {
+                    $phone = '51' . $phone;
+                }
+                $mapped = [
+                    'id'     => Uuid::uuid1()->toString(),
+                    'business_id' => $business_id,
+                    'name' => $row[$mapping['name']] ?? null,
+                    'contact_name'   => $row[$mapping['name']] ?? null,
+                    'contact_email'  => $row[$mapping['email']] ?? null,
+                    'contact_phone' => $phone ?: null,
+                    'source' => $mapping['source'],
+                    'origin' => 'Importación',
+                    'status_id' => Setting::get('default-lead-status'),
+                    'manage_status_id' => Setting::get('default-manage-lead-status'),
+                    'form_answers'   => [
+                        [
+                            'title'     => 'Formulario de meta',
+                            'completed' => true,
+                            'questions' => []
+                        ]
+                    ],
+                    'complete_form' => true,
+                    'message' => 'Sin mensaje',
+                    'date' => now()->subHours(5)->format('Y-m-d'),
+                    'time' => now()->subHours(5)->format('H:i:s'),
+                    'ip' => $request->ip(),
+                    'created_at' => now(),
+                    'updated_at' => now()
+                ];
+
+                // Build form answers array
+                foreach ($mapping['form'] as $question) {
+                    $mapped['form_answers'][0]['questions'][] = [
+                        'text'    => $question,
+                        'answer'  => $row[$question] ?? null,
+                    ];
+                }
+                $mapped['form_answers'] = JSON::stringify($mapped['form_answers']);
+                $mappedRows[] = $mapped;
+            }
+
+            // Check existing records by email or phone to avoid duplicates
+            $existing = Client::where('business_id', Auth::user()->business_id)
+                ->where(function ($q) use ($mappedRows) {
+                    $q->whereIn('contact_email', array_column($mappedRows, 'contact_email'))
+                        ->orWhereIn('contact_phone', array_column($mappedRows, 'contact_phone'));
+                })
+                ->get(['contact_email', 'contact_phone']);
+
+            $existingEmails = $existing->pluck('contact_email')->toArray();
+            $existingPhones = $existing->pluck('contact_phone')->toArray();
+
+            // Filter out rows that already exist by email or phone
+            $rowsToInsert = array_filter($mappedRows, function ($row) use ($existingEmails, $existingPhones) {
+                return !in_array($row['contact_email'], $existingEmails) && !in_array($row['contact_phone'], $existingPhones);
+            });
+
+            // Bulk insert only the new rows
+            if (!empty($rowsToInsert)) {
+                Client::insert(array_values($rowsToInsert));
+
+                // Build ClientNote records for the newly inserted leads
+                $notesToInsert = [];
+                foreach ($rowsToInsert as $row) {
+                    $formString = '';
+                    dump($row);
+                    $forms = JSON::parse((string) $row['form_answers']);
+                    foreach ($forms as $form) {
+                        dump($form);
+                        $formString .= "<b>{$form['title']}</b><br>";
+                        foreach ($form['questions'] as $index => $question) {
+                            $formString .= ($index + 1) . ". {$question['text']}<br>&emsp;{$question['answer']}<br>";
+                        }
+                        $formString .= '<br>';
+                    }
+                    $notesToInsert[] = [
+                        'id' => Uuid::uuid1()->toString(),
+                        'note_type_id' => '8e895346-3d87-4a87-897a-4192b917c211',
+                        'client_id' => $row['id'],
+                        'name' => 'Formulario ' . $row['source'],
+                        'description' => $formString,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ];
+                }
+                if (!empty($notesToInsert)) {
+                    ClientNote::insert($notesToInsert);
+                }
+            }
+            DB::commit();
+        }, function ($res, $th) {
+            dump($th->getLine());
+            DB::rollBack();
+        });
+
+        return response($response->toArray(), $response->status);
     }
 
     public function beforeSave(Request $request)
