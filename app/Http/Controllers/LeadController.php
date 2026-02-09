@@ -212,7 +212,8 @@ class LeadController extends BasicController
                     'contact_email'  => $row[$mapping['email']] ?? null,
                     'contact_phone' => $phone ?: null,
                     'source' => $mapping['source'],
-                    'origin' => 'Importación',
+                    'origin' => $mapping['source'],
+                    'triggered_by' => 'Importación',
                     'status_id' => Setting::get('default-lead-status'),
                     'manage_status_id' => Setting::get('default-manage-lead-status'),
                     'form_answers'   => [
@@ -266,10 +267,8 @@ class LeadController extends BasicController
                 $notesToInsert = [];
                 foreach ($rowsToInsert as $row) {
                     $formString = '';
-                    dump($row);
                     $forms = JSON::parse((string) $row['form_answers']);
                     foreach ($forms as $form) {
-                        dump($form);
                         $formString .= "<b>{$form['title']}</b><br>";
                         foreach ($form['questions'] as $index => $question) {
                             $formString .= ($index + 1) . ". {$question['text']}<br>&emsp;{$question['answer']}<br>";
@@ -291,10 +290,7 @@ class LeadController extends BasicController
                 }
             }
             DB::commit();
-        }, function ($res, $th) {
-            dump($th->getLine());
-            DB::rollBack();
-        });
+        }, fn() =>       DB::rollBack());
 
         return response($response->toArray(), $response->status);
     }

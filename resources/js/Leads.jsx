@@ -675,6 +675,7 @@ const Leads = (properties) => {
     form: []
   })
   const [rowsCount, setRowsCount] = useState(0);
+  const [importSaving, setImportSaving] = useState(false)
   const importModalRef = useState()
 
   const handleImport = (file) => {
@@ -725,7 +726,9 @@ const Leads = (properties) => {
     formData.append('file', excelFile);
     formData.append('mapping', JSON.stringify(leadMapping));
 
+    setImportSaving(true)
     await leadsRest.import(formData);
+    setImportSaving(false)
     $(importModalRef.current).modal('hide');
     if (defaultView === 'kanban') getLeads();
     else {
@@ -1371,7 +1374,7 @@ const Leads = (properties) => {
     <Modal modalRef={importModalRef} title='Importar leads' onClose={() => {
       setExcelFile(null)
       setExcelFields([])
-    }} onSubmit={handleImportSubmit}>
+    }} onSubmit={handleImportSubmit} loading={importSaving} btnSubmitText='Importar'>
       <div className="row">
         {/* Campos primarios a la izquierda */}
         <div className="col-6">
