@@ -1540,9 +1540,9 @@ const Leads = (properties) => {
               </li>
             </ul>
           </div>
-          <div className="mt-2 text-muted small">
+          {/* <div className="mt-2 text-muted small">
             Se importarán {rowsCount} filas
-          </div>
+          </div> */}
         </div>
       </div>
     </Modal>
