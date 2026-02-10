@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 
-const MenuItem = ({ id, className = '', href, icon, children, badge, pinned, setPinned }) => {
+const MenuItem = ({ id, className = '', href, icon, children, badge, pinned, setPinned, pinLabel }) => {
   const [showDropdown, setShowDropdown] = useState(false)
   const itemRef = useRef(null)
 
@@ -14,7 +14,7 @@ const MenuItem = ({ id, className = '', href, icon, children, badge, pinned, set
     if (exists) {
       setPinned(prev => prev.filter(p => p.href !== href));
     } else {
-      setPinned(prev => [...prev, { icon, href, name: children }]);
+      setPinned(prev => [...prev, { icon, href, name: pinLabel ?? children }]);
     }
     setShowDropdown(false);
   };
@@ -46,7 +46,7 @@ const MenuItem = ({ id, className = '', href, icon, children, badge, pinned, set
         {
           badge && <span className="badge bg-info float-end text-truncate">{badge}</span>
         }
-        <span style={{fontSize: '16px'}}> {children} </span>
+        <span style={{ fontSize: '16px' }}> {children} </span>
       </a>
       {showDropdown && (
         <div
@@ -72,7 +72,7 @@ const MenuItem = ({ id, className = '', href, icon, children, badge, pinned, set
           }}
         >
           <button className="dropdown-item" onClick={handlePin}>
-            <i className={`mdi ${isPinned ? 'mdi-pin-off': 'mdi-pin'} me-1`}/>
+            <i className={`mdi ${isPinned ? 'mdi-pin-off' : 'mdi-pin'} me-1`} />
             {isPinned ? 'Desfijar' : 'Fijar'}
           </button>
         </div>

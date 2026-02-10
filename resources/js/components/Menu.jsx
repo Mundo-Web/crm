@@ -193,8 +193,8 @@ const Menu = ({ session, theme, can, whatsAppStatus, APP_PROTOCOL, APP_DOMAIN, l
         <ul id="side-menu">
           <li className="menu-title">Panel de navegacion</li>
           <MenuItemContainer title='KPIs' icon='mdi mdi-chart-donut-variant'>
-            <MenuItem pinned={pinned} setPinned={setPinned} href="/home" icon='mdi mdi-account-multiple'>Leads</MenuItem>
-            {can('dashboard', 'all', 'list') && <MenuItem pinned={pinned} setPinned={setPinned} href="/home/projects" icon='mdi mdi-page-next'>Proyectos</MenuItem>}
+            <MenuItem pinned={pinned} setPinned={setPinned} href="/home" icon='mdi mdi-account-multiple' pinLabel='KPIs • Leads'>Leads</MenuItem>
+            {can('dashboard', 'all', 'list') && <MenuItem pinned={pinned} setPinned={setPinned} href="/home/projects" icon='mdi mdi-page-next' pinLabel='KPIs • Proyectos'>Proyectos</MenuItem>}
           </MenuItemContainer>
 
           {/* {can('dashboard', 'all', 'list') && <MenuItem pinned={pinned} setPinned={setPinned} href="/home" icon='mdi mdi-home'>Inicio</MenuItem>} */}
@@ -204,9 +204,9 @@ const Menu = ({ session, theme, can, whatsAppStatus, APP_PROTOCOL, APP_DOMAIN, l
           <MenuItem pinned={pinned} setPinned={setPinned} href="/chat" icon='mdi mdi-chat' badge={chatBadge || undefined}>Chat</MenuItem>
 
           <MenuItemContainer title='Personas' icon='mdi mdi-account-group'>
-            <MenuItem pinned={pinned} setPinned={setPinned} href="/leads" icon='mdi mdi-account' badge={leadsCount > 0 ? leadsCount : ''}>Leads</MenuItem>
-            {can('clients', 'all', 'list') && <MenuItem pinned={pinned} setPinned={setPinned} href="/clients" icon='mdi mdi-account-multiple'>Clientes</MenuItem>}
-            <MenuItem pinned={pinned} setPinned={setPinned} id='archived-item' href="/archived" icon='mdi mdi-archive'>Archivados</MenuItem>
+            <MenuItem pinned={pinned} setPinned={setPinned} href="/leads" icon='mdi mdi-account' badge={leadsCount > 0 ? leadsCount : ''} pinLabel='Personas • Leads'>Leads</MenuItem>
+            {can('clients', 'all', 'list') && <MenuItem pinned={pinned} setPinned={setPinned} href="/clients" icon='mdi mdi-account-multiple' pinLabel='Personas • Clientes'>Clientes</MenuItem>}
+            <MenuItem pinned={pinned} setPinned={setPinned} id='archived-item' href="/archived" icon='mdi mdi-archive' pinLabel='Personas • Archivados'>Archivados</MenuItem>
           </MenuItemContainer>
 
           {whatsAppStatus == 'ready' && <MenuItem pinned={pinned} setPinned={setPinned} href="/messages" icon='mdi mdi-forum'>Mensajes</MenuItem>}
@@ -215,10 +215,10 @@ const Menu = ({ session, theme, can, whatsAppStatus, APP_PROTOCOL, APP_DOMAIN, l
           {can('campaigns', 'root', 'all', 'list') && <MenuItem pinned={pinned} setPinned={setPinned} href="/campaigns" icon='mdi mdi-google-ads'>Campañas</MenuItem>}
 
           {can('projects', 'root', 'all', 'list') && <MenuItemContainer title='Proyectos' icon='mdi mdi-page-next'>
-            <MenuItem pinned={pinned} setPinned={setPinned} href="/projects" icon='mdi mdi-lan-pending'>En curso</MenuItem>
-            <MenuItem pinned={pinned} setPinned={setPinned} href="/projects/done" icon='mdi mdi-check'>Entregados</MenuItem>
-            <MenuItem pinned={pinned} setPinned={setPinned} href="/projects/archived" icon='mdi mdi-archive'>Archivados</MenuItem>
-            <MenuItem pinned={pinned} setPinned={setPinned} href="/projects/taskboard" icon='mdi mdi-view-dashboard'>Cuadro de control</MenuItem>
+            <MenuItem pinned={pinned} setPinned={setPinned} href="/projects" icon='mdi mdi-lan-pending' pinLabel='Proyectos • En curso'>En curso</MenuItem>
+            <MenuItem pinned={pinned} setPinned={setPinned} href="/projects/done" icon='mdi mdi-check' pinLabel='Proyectos • Entregados'>Entregados</MenuItem>
+            <MenuItem pinned={pinned} setPinned={setPinned} href="/projects/archived" icon='mdi mdi-archive'  pinLabel='Proyectos • Archivados'>Archivados</MenuItem>
+            <MenuItem pinned={pinned} setPinned={setPinned} href="/projects/taskboard" icon='mdi mdi-view-dashboard'  pinLabel='Proyectos • Cuadro de control'>Cuadro de control</MenuItem>
           </MenuItemContainer>
           }
           {/* {
