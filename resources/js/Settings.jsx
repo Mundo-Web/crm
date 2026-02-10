@@ -319,12 +319,12 @@ const Settings = ({ can, constants, statuses }) => {
                         <form className="card card-body border p-2" onSubmit={onArchivedLeadStatusSubmit} style={{ cursor: 'default' }}>
                           <h5 className="card-title mb-1">Estado para archivar</h5>
                           <p className="card-text">¿Qué estado define mejor a un lead que debe archivarse tras N días de inactividad?</p>
-                          <SelectFormGroup eRef={archivedLeadStatusRef} label="Escoge un estado" required multiple>
+                          <SelectFormGroup eRef={archivedLeadStatusRef} label="Escoge un estado" multiple>
                             {statuses.filter(item => item.table_id == '9c27e649-574a-47eb-82af-851c5d425434').map((status, index) => {
                               return <option key={index} value={status.id}>{status.name}</option>
                             })}
                           </SelectFormGroup>
-                          <InputFormGroup eRef={archivedLeadStatusDaysRef} label="Días de inactividad" type='number' min={1} required />
+                          <InputFormGroup eRef={archivedLeadStatusDaysRef} label="Días de inactividad" type='number' min={1} />
                           <div>
                             <button type="submit" className="btn btn-sm btn-primary">Guardar</button>
                           </div>
@@ -333,8 +333,8 @@ const Settings = ({ can, constants, statuses }) => {
                       <div className="col-md-4 col-sm-6 col-xs-12">
                         <form className="card card-body border p-2" onSubmit={onArchivedLeadStatusDirectSubmit} style={{ cursor: 'default' }}>
                           <h5 className="card-title mb-1">Estado de archivación (directo)</h5>
-                          <p className="card-text">¿Qué estado define mejor a un lead que debe archivarse tras N días de inactividad?</p>
-                          <SelectFormGroup eRef={archivedLeadStatusDirectRef} label="Escoge un estado" required multiple>
+                          <p className="card-text">Define el estado que archiva inmediatamente al lead</p>
+                          <SelectFormGroup eRef={archivedLeadStatusDirectRef} label="Escoge un estado" multiple>
                             {statuses.filter(item => item.table_id == '9c27e649-574a-47eb-82af-851c5d425434').map((status, index) => {
                               return <option key={index} value={status.id}>{status.name}</option>
                             })}
