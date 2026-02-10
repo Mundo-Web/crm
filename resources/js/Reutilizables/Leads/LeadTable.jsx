@@ -149,9 +149,15 @@ const LeadTable = ({ gridRef, cardClass, otherGridRef, rest, can, defaultLeadSta
   }
 
   useEffect(() => {
-    if (defaultView != 'table' || !filterAssignation) return
-    const grid = $(gridRef.current).dxDataGrid('instance');
-    grid.filter(ArrayJoin(selectedUsersId.map(id => (['assigned_to', '=', id])), 'or'));
+    // if (defaultView != 'table' || !filterAssignation) return
+    // const grid = $(gridRef.current).dxDataGrid('instance');
+    // grid.clearFilter('assigned_to')
+    // if (selectedUsersId.length > 0) {
+    //   const prevFilter = grid.filter()
+    //   grid.filter(ArrayJoin([prevFilter, ArrayJoin(selectedUsersId.map(id => (['assigned_to', '=', id])), 'or')].filter(Boolean), 'and'));
+    // } else {
+    //   grid.refresh()
+    // }
   }, [selectedUsersId, defaultView])
 
   return <Table cardClass={cardClass} gridRef={gridRef} title={<>
@@ -204,6 +210,7 @@ const LeadTable = ({ gridRef, cardClass, otherGridRef, rest, can, defaultLeadSta
       </div>
     }
   </>} rest={rest} reloadWith={[statuses, manageStatuses]}
+    filter={filterAssignation ? ArrayJoin(selectedUsersId.map((id) => (['assigned_to', '=', id])), 'or') : []}
     toolBar={(container) => {
       // container.unshift(DxPanelButton({
       //   className: 'btn btn-xs btn-soft-dark text-nowrap',
@@ -518,6 +525,17 @@ const LeadTable = ({ gridRef, cardClass, otherGridRef, rest, can, defaultLeadSta
           </>))
         },
         sortOrder: 'desc',
+      },
+      {
+        dataField: 'updated_at',
+        caption: 'Fecha actualización',
+        dataType: 'date',
+        cellTemplate: (container, { data }) => {
+          container.html(renderToString(<>
+            <i className="mdi mdi-calendar-blank text-blue me-1"></i>
+            {moment(data.updated_at.replace('Z', '+05:00')).format('lll')}
+          </>))
+        },
       },
       {
         caption: 'Acciones',

@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef } from 'react'
+import React, { useState, useCallback, useRef, useEffect } from 'react'
 import DataGrid from './DataGrid'
 import { renderToString } from 'react-dom/server'
 import { debounce } from 'lodash'
@@ -7,11 +7,14 @@ import es from 'date-fns/locale/es'
 import 'react-date-range/dist/styles.css'
 import 'react-date-range/dist/theme/default.css'
 import Tippy from '@tippyjs/react'
+import ArrayJoin from '../Utils/ArrayJoin'
 
-const Table = ({ title, gridRef, rest, columns, toolBar, masterDetail, filterValue = [], defaultRows, selection, cardClass = '', className = '', allowedPageSizes, pageSize, exportable = false, customizeCell, reloadWith, height, cardStyle, keyExpr, onSelectionChanged, massiveActions }) => {
+const Table = ({ title, filter, gridRef, rest, columns, toolBar, masterDetail, filterValue = [], defaultRows, selection, cardClass = '', className = '', allowedPageSizes, pageSize, exportable = false, customizeCell, reloadWith, height, cardStyle, keyExpr, onSelectionChanged, massiveActions }) => {
   const html = renderToString(<div>{title}</div>)
   const text = $(html).text().trim().replace('-', '')
   const [range, setRange] = useState([{ startDate: new Date(), endDate: new Date(), key: 'selection', }])
+  const [dateFilter, setDateFilter] = useState([]);
+  const [dateFilterType, setDateFilterType] = useState('created_at')
   const [filtering, setFiltering] = useState(false)
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false)
   const [selectionCount, setSelectionCount] = useState(0)
@@ -44,28 +47,35 @@ const Table = ({ title, gridRef, rest, columns, toolBar, masterDetail, filterVal
     const adjustedEndDate = new Date(endDate)
     adjustedEndDate.setHours(18, 59, 59, 999)
 
-    const dataGrid = $(gridRef.current).dxDataGrid('instance')
-    dataGrid.filter([
-      ['created_at', '>=', adjustedStartDate],
-      'and',
-      ['created_at', '<=', adjustedEndDate]
-    ])
+    // const dataGrid = $(gridRef.current).dxDataGrid('instance')
+    // const prevFilter = dataGrid.filter()
+    setDateFilter(ArrayJoin([
+      [dateFilterType, '>=', adjustedStartDate],
+      [dateFilterType, '<=', adjustedEndDate]
+    ], 'and'))
     setFiltering(true)
     setIsDatePickerOpen(false)
   }
 
   // Handle reset date filter
   const handleResetDateFilter = () => {
-    const dataGrid = $(gridRef.current).dxDataGrid('instance')
-    dataGrid.clearFilter()
+    // const dataGrid = $(gridRef.current).dxDataGrid('instance')
+    // dataGrid.clearFilter('created_at')
     setRange([{
       startDate: new Date(),
       endDate: new Date(),
-      key: 'selection',
+      key: 'selection'
     }])
+    setDateFilter([])
     setFiltering(false)
     setIsDatePickerOpen(false)
   }
+
+  useEffect(() => {
+    const dataGrid = $(gridRef.current).dxDataGrid('instance')
+    const realFilter = [dateFilter, filter].filter(arr => arr.length > 0)
+    dataGrid.filter(ArrayJoin(realFilter, 'and'))
+  }, [filter, dateFilter])
 
   // Handle export
   const handleExport = () => {
@@ -266,6 +276,36 @@ const Table = ({ title, gridRef, rest, columns, toolBar, masterDetail, filterVal
                           showDateDisplay={false}
                         />
                         <div className="d-flex justify-content-end gap-2 mt-2">
+                          <div className="dropdown">
+                            <button
+                              className="btn btn-sm btn-white dropdown-toggle"
+                              type="button"
+                              data-bs-toggle="dropdown"
+                              aria-expanded="false"
+                            >
+                              {dateFilterType === 'created_at' ? 'Fecha creación' : 'Fecha actualización'}
+                            </button>
+                            <ul className="dropdown-menu">
+                              <li>
+                                <button
+                                  className="dropdown-item"
+                                  type="button"
+                                  onClick={() => setDateFilterType('created_at')}
+                                >
+                                  Fecha creación
+                                </button>
+                              </li>
+                              <li>
+                                <button
+                                  className="dropdown-item"
+                                  type="button"
+                                  onClick={() => setDateFilterType('updated_at')}
+                                >
+                                  Fecha actualización
+                                </button>
+                              </li>
+                            </ul>
+                          </div>
                           <button className="btn btn-sm btn-danger" onClick={handleResetDateFilter}>
                             <i className="mdi mdi-filter-remove me-1"></i>Limpiar
                           </button>
