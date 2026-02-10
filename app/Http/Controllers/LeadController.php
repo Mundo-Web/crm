@@ -250,6 +250,7 @@ class LeadController extends BasicController
                     'updated_at' => isset($mapping['date']) && !empty($row[$mapping['date']])
                         ? $mappingDate
                         : now(),
+                    'status' => true
                 ];
 
                 // Build form answers array
@@ -263,12 +264,12 @@ class LeadController extends BasicController
                 $mappedRows[] = $mapped;
             }
 
-            // Check existing records by email or phone to avoid duplicates
             $existing = Client::where('business_id', Auth::user()->business_id)
                 ->where(function ($q) use ($mappedRows) {
                     $q->whereIn('contact_email', array_column($mappedRows, 'contact_email'))
                         ->orWhereIn('contact_phone', array_column($mappedRows, 'contact_phone'));
                 })
+                ->whereNotNull('status')
                 ->get(['contact_email', 'contact_phone']);
 
             $existingEmails = $existing->pluck('contact_email')->toArray();
