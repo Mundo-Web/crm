@@ -668,15 +668,17 @@ const Leads = (properties) => {
   const [excelFile, setExcelFile] = useState(null)
   const [excelFields, setExcelFields] = useState([])
   const [leadMapping, setLeadMapping] = useState({
+    date: null,
     name: null,
     email: null,
     phone: null,
     source: null,
+    triggered_by: null,
     form: []
   })
   const [rowsCount, setRowsCount] = useState(0);
   const [importSaving, setImportSaving] = useState(false)
-  const importModalRef = useState()
+  const importModalRef = useRef()
 
   const handleImport = (file) => {
     if (!file) return;
@@ -739,11 +741,11 @@ const Leads = (properties) => {
 
   useEffect(() => {
     if (excelFields.length === 0) {
-      setLeadMapping({ name: null, email: null, phone: null, source: null, form: [] });
+      setLeadMapping({ date: null, name: null, email: null, phone: null, source: null, triggered_by: null, form: [] });
       return;
     }
 
-    const mapping = { name: null, email: null, phone: null, source: null, form: [] };
+    const mapping = { date: null, name: null, email: null, phone: null, source: null, triggered_by: null, form: [] };
 
     excelFields.forEach(col => {
       const lower = col.toLowerCase();
@@ -753,6 +755,8 @@ const Leads = (properties) => {
         mapping.email = col;
       } else if (!mapping.phone && (lower.includes('phone') || lower.includes('telefono') || lower.includes('celular')) && col.trim().split(/\s+/).length <= 2) {
         mapping.phone = col;
+      } else if (!mapping.date && (lower.includes('date') || lower.includes('fecha') || lower.includes('creacion') || lower.includes('creado') || lower.includes('created') || lower.includes('fecha de registro') || lower.includes('fecha registro') || lower.includes('fecha de creacion') || lower.includes('fecha creacion')) && col.trim().split(/\s+/).length <= 3) {
+        mapping.date = col;
       } else if (col.includes('?') && col.split(/\s+/).length >= 4) {
         mapping.form.push(col);
       }
@@ -1379,7 +1383,32 @@ const Leads = (properties) => {
         {/* Campos primarios a la izquierda */}
         <div className="col-6">
           <label className="form-label text-muted small fw-semibold mb-2">Campos primarios</label>
-
+          <div className="mb-2">
+            <label className="form-label small">Fecha creación</label>
+            <div className="dropdown">
+              <button
+                className="btn btn-sm btn-white dropdown-toggle w-100 text-start border text-truncate"
+                type="button"
+                data-bs-toggle="dropdown"
+                aria-expanded="false"
+              >
+                {leadMapping.date || 'Seleccionar columna'}
+              </button>
+              <ul className="dropdown-menu w-100">
+                {excelFields?.map((field, idx) => (
+                  <li key={idx}>
+                    <button
+                      className="dropdown-item small text-truncate"
+                      type="button"
+                      onClick={() => setLeadMapping(prev => ({ ...prev, date: field }))}
+                    >
+                      {field}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
           {/* Nombre */}
           <div className="mb-2">
             <label className="form-label small">Nombre</label>
@@ -1509,16 +1538,53 @@ const Leads = (properties) => {
         <div className="col-6">
           <div className="mb-2">
             <label className="form-label small">
-              Medio de  importación
+              Medio de importación
+            </label>
+            <div className="dropdown">
+              <button
+                className="btn btn-sm btn-white dropdown-toggle w-100 text-start border"
+                type="button"
+                data-bs-toggle="dropdown"
+                aria-expanded="false"
+              >
+                {leadMapping.source || 'Seleccionar medio'}
+              </button>
+              {/* Hidden input synchronized with dropdown selection for native required validation */}
+              {/* <input
+                type="text"
+                value={leadMapping.source || ''}
+                required
+                onInvalid={(e) => e.target.setCustomValidity('Selecciona una opción')}
+                onInput={(e) => e.target.setCustomValidity('')}
+                style={{ position: 'absolute', bottom: 0, left: '50%', transform: 'translateX(-50%)', width: 0, height: 0, opacity: 0, pointerEvents: 'none' }}
+              /> */}
+              <ul className="dropdown-menu w-100">
+                {['Facebook', 'Instagram', 'TikTok', 'Otros'].map((network) => (
+                  <li key={network}>
+                    <button
+                      className="dropdown-item small"
+                      type="button"
+                      onClick={() => setLeadMapping(prev => ({ ...prev, source: network }))}
+                    >
+                      {network}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+          <div className="mb-2">
+            <label className="form-label small">
+              Disparado por
             </label>
             <input
               type="text"
               className="form-control form-control-sm"
-              placeholder="Ej. Meta"
-              value={leadMapping.source || ''}
+              placeholder="Ej. Formulario"
+              value={leadMapping.triggered_by || ''}
               required
               onChange={(e) =>
-                setLeadMapping(prev => ({ ...prev, source: e.target.value }))
+                setLeadMapping(prev => ({ ...prev, triggered_by: e.target.value }))
               }
             />
           </div>

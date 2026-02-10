@@ -212,6 +212,7 @@ class LeadController extends BasicController
                 if (strlen($phone) === 9 && str_starts_with($phone, '9')) {
                     $phone = '51' . $phone;
                 }
+                $mappingDate = Carbon::parse($row[$mapping['date']]);
                 $mapped = [
                     'id'     => Uuid::uuid1()->toString(),
                     'business_id' => $business_id,
@@ -221,7 +222,7 @@ class LeadController extends BasicController
                     'contact_phone' => $phone ?: null,
                     'source' => $mapping['source'],
                     'origin' => $mapping['source'],
-                    'triggered_by' => 'Importación',
+                    'triggered_by' => $mapping['triggered_by'] ?? 'Importación',
                     'status_id' => Setting::get('default-lead-status'),
                     'manage_status_id' => Setting::get('default-manage-lead-status'),
                     'form_answers'   => [
@@ -233,11 +234,21 @@ class LeadController extends BasicController
                     ],
                     'complete_form' => true,
                     'message' => 'Sin mensaje',
-                    'date' => now()->subHours(5)->format('Y-m-d'),
-                    'time' => now()->subHours(5)->format('H:i:s'),
                     'ip' => $request->ip(),
-                    'created_at' => now(),
-                    'updated_at' => now()
+                    'date' => isset($mapping['date']) && !empty($row[$mapping['date']])
+                        ? $mappingDate->format('Y-m-d')
+                        : now()->subHours(5)->format('Y-m-d'),
+                    'time' => isset($mapping['date']) && !empty($row[$mapping['date']])
+                        ? ($mappingDate->format('H:i:s') !== '00:00:00'
+                            ? $mappingDate->format('H:i:s')
+                            : '12:00:00')
+                        : now()->subHours(5)->format('H:i:s'),
+                    'created_at' => isset($mapping['date']) && !empty($row[$mapping['date']])
+                        ? $mappingDate
+                        : now(),
+                    'updated_at' => isset($mapping['date']) && !empty($row[$mapping['date']])
+                        ? $mappingDate
+                        : now(),
                 ];
 
                 // Build form answers array
