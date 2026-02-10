@@ -10,15 +10,14 @@ import Global from "../Utils/Global"
 import Tippy from "@tippyjs/react"
 import UsersByServicesByBusinessesRest from "../actions/Atalaya/UsersByServicesByBusinessesRest"
 import useWebSocket from "../Reutilizables/CustomHooks/useWebSocket"
-import MenuItemContainer from "./MenuItemContainer"
-import MenuItem from "./MenuItem"
+import DDMenuItem from "./DDMenuItem"
 
 const notificationsRest = new NotificationsRest();
 const usersByServicesByBusinessesRest = new UsersByServicesByBusinessesRest();
 
 const audio = new Audio('/assets/sounds/notification.wav');
 
-const NavBar = ({ can, session = {}, services, theme, setTheme, title = '', wsActive, setWsActive, whatsappStatus, businesses, APP_PROTOCOL, APP_DOMAIN }) => {
+const NavBar = ({ can, session = {}, services, theme, setTheme, title = '', wsActive, setWsActive, whatsappStatus, businesses, APP_PROTOCOL, APP_DOMAIN, pinned, setPinned }) => {
   const { color } = WhatsAppStatuses[whatsappStatus]
 
   const [notifications, setNotifications] = useState([]);
@@ -438,30 +437,18 @@ const NavBar = ({ can, session = {}, services, theme, setTheme, title = '', wsAc
                 </a>
                 <div className="collapse ms-3" id="users-roles">
                   {can('users', 'root', 'all', 'list') &&
-                    <a href="/users" className="dropdown-item notify-item">
-                      <i className="mdi mdi-account me-1"></i>
-                      <span>Usuarios</span>
-                    </a>
+                    <DDMenuItem icon='mdi mdi-account' href='/users' pinned={pinned} setPinned={setPinned}>Usuarios</DDMenuItem>
                   }
                   {can('roles', 'root', 'all', 'list') &&
-                    <a href="/roles" className="dropdown-item notify-item">
-                      <i className="mdi mdi-account-convert me-1"></i>
-                      <span>Roles</span>
-                    </a>
+                    <DDMenuItem icon='mdi mdi-account-convert' href='/roles' pinned={pinned} setPinned={setPinned}>Roles</DDMenuItem>
                   }
                 </div>
               </>
             }
 
-            <a href="/default-messages" className="dropdown-item notify-item">
-              <i className="mdi mdi-message-bulleted me-1"></i>
-              <span>Mensajes predeter...</span>
-            </a>
+            <DDMenuItem icon='mdi mdi-message-bulleted' href='/default-messages' pinned={pinned} setPinned={setPinned}>Mensajes predeter...</DDMenuItem>
 
-            <a href="/repository" className="dropdown-item notify-item">
-              <i className="mdi mdi-database me-1"></i>
-              <span>Repositorio</span>
-            </a>
+            <DDMenuItem icon='mdi mdi-database' href='/repository' pinned={pinned} setPinned={setPinned}>Repositorio</DDMenuItem>
 
             {
               can('apikeys', 'root', 'all', 'list') &&
@@ -472,14 +459,8 @@ const NavBar = ({ can, session = {}, services, theme, setTheme, title = '', wsAc
                   <i className="mdi mdi-chevron-down float-end"></i>
                 </a>
                 <div className="collapse ms-3" id="integrations">
-                  <a href="/webhooks" className="dropdown-item notify-item">
-                    <i className="mdi mdi-webhook me-1"></i>
-                    <span>Redes sociales</span>
-                  </a>
-                  <a href="/apikeys" className="dropdown-item notify-item">
-                    <i className="mdi mdi-form-textbox me-1"></i>
-                    <span>Formulario Externo</span>
-                  </a>
+                  <DDMenuItem icon='mdi mdi-webhook' href='/webhooks' pinned={pinned} setPinned={setPinned}>Redes sociales</DDMenuItem>
+                  <DDMenuItem icon='mdi mdi-form-textbox' href='/apikeys' pinned={pinned} setPinned={setPinned}>Formulario Externo</DDMenuItem>
                 </div>
               </>
             }
@@ -496,23 +477,14 @@ const NavBar = ({ can, session = {}, services, theme, setTheme, title = '', wsAc
                 </a>
                 <div className="collapse ms-3" id="maintenance">
                   {can('statuses', 'root', 'all', 'list') &&
-                    <a href="/statuses" className="dropdown-item notify-item">
-                      <i className="mdi mdi-format-list-checks me-1"></i>
-                      <span>Estados</span>
-                    </a>
+                    <DDMenuItem icon='mdi mdi-format-list-checks' href='/statuses' pinned={pinned} setPinned={setPinned}>Estados</DDMenuItem>
                   }
                   {can('types', 'root', 'all', 'list') &&
-                    <a href="/types" className="dropdown-item notify-item">
-                      <i className="mdi mdi-format-list-text me-1"></i>
-                      <span>Tipos</span>
-                    </a>
+                    <DDMenuItem icon='mdi mdi-format-list-text' href='/types' pinned={pinned} setPinned={setPinned}>Tipos</DDMenuItem>
                   }
                 </div>
                 {can('settings', 'root', 'all', 'list') &&
-                  <a href="/settings" className="dropdown-item notify-item">
-                    <i className="mdi mdi-cogs me-1"></i>
-                    <span>Configuraciones</span>
-                  </a>
+                  <DDMenuItem icon='mdi mdi-cogs' href='/settings' pinned={pinned} setPinned={setPinned}>Configuraciones</DDMenuItem>
                 }
               </>
             }

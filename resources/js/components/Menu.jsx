@@ -217,8 +217,8 @@ const Menu = ({ session, theme, can, whatsAppStatus, APP_PROTOCOL, APP_DOMAIN, l
           {can('projects', 'root', 'all', 'list') && <MenuItemContainer title='Proyectos' icon='mdi mdi-page-next'>
             <MenuItem pinned={pinned} setPinned={setPinned} href="/projects" icon='mdi mdi-lan-pending' pinLabel='Proyectos • En curso'>En curso</MenuItem>
             <MenuItem pinned={pinned} setPinned={setPinned} href="/projects/done" icon='mdi mdi-check' pinLabel='Proyectos • Entregados'>Entregados</MenuItem>
-            <MenuItem pinned={pinned} setPinned={setPinned} href="/projects/archived" icon='mdi mdi-archive'  pinLabel='Proyectos • Archivados'>Archivados</MenuItem>
-            <MenuItem pinned={pinned} setPinned={setPinned} href="/projects/taskboard" icon='mdi mdi-view-dashboard'  pinLabel='Proyectos • Cuadro de control'>Cuadro de control</MenuItem>
+            <MenuItem pinned={pinned} setPinned={setPinned} href="/projects/archived" icon='mdi mdi-archive' pinLabel='Proyectos • Archivados'>Archivados</MenuItem>
+            <MenuItem pinned={pinned} setPinned={setPinned} href="/projects/taskboard" icon='mdi mdi-view-dashboard' pinLabel='Proyectos • Cuadro de control'>Cuadro de control</MenuItem>
           </MenuItemContainer>
           }
           {/* {

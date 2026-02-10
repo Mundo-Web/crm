@@ -84,7 +84,7 @@ const Adminto = ({ session, children, notificationsCount, prefixes, title, showT
   return (<>
     <div id="wrapper">
       <Toaster />
-      <NavBar session={session} services={services} theme={theme} setTheme={setTheme} title={title} can={can} whatsappStatus={whatsappStatus} businesses={businesses} APP_DOMAIN={APP_DOMAIN} APP_PROTOCOL={APP_PROTOCOL} notificationsCount={notificationsCount} wsActive={wsActive} />
+      <NavBar session={session} services={services} theme={theme} setTheme={setTheme} title={title} can={can} whatsappStatus={whatsappStatus} businesses={businesses} APP_DOMAIN={APP_DOMAIN} APP_PROTOCOL={APP_PROTOCOL} notificationsCount={notificationsCount} wsActive={wsActive} pinned={pinned} setPinned={setPinned} />
       <Menu session={session} theme={theme} can={can} presets={presets} whatsappStatus={whatsappStatus} APP_DOMAIN={APP_DOMAIN} businesses={businesses} APP_PROTOCOL={APP_PROTOCOL} leadsCount={leadsCount} tasksCount={tasksCount} wsActive={wsActive} pinned={pinned} setPinned={setPinned} />
       <div className="content-page">
         <div className="content">
