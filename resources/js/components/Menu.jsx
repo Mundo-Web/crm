@@ -204,8 +204,8 @@ const Menu = ({ session, theme, can, whatsAppStatus, APP_PROTOCOL, APP_DOMAIN, l
           <MenuItem pinned={pinned} setPinned={setPinned} href="/chat" icon='mdi mdi-chat' badge={chatBadge || undefined}>Chat</MenuItem>
 
           <MenuItemContainer title='Personas' icon='mdi mdi-account-group'>
-            <MenuItem pinned={pinned} setPinned={setPinned} href="/leads" icon='mdi mdi-account' badge={leadsCount > 0 ? leadsCount : ''} pinLabel='Personas • Leads'>Leads</MenuItem>
-            {can('clients', 'all', 'list') && <MenuItem pinned={pinned} setPinned={setPinned} href="/clients" icon='mdi mdi-account-multiple' pinLabel='Personas • Clientes'>Clientes</MenuItem>}
+            <MenuItem pinned={pinned} setPinned={setPinned} href="/leads" icon='mdi mdi-account' badge={leadsCount > 0 ? leadsCount : ''}>Leads</MenuItem>
+            {can('clients', 'all', 'list') && <MenuItem pinned={pinned} setPinned={setPinned} href="/clients" icon='mdi mdi-account-multiple'>Clientes</MenuItem>}
             <MenuItem pinned={pinned} setPinned={setPinned} id='archived-item' href="/archived" icon='mdi mdi-archive' pinLabel='Personas • Archivados'>Archivados</MenuItem>
           </MenuItemContainer>
 
