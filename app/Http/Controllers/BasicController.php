@@ -83,12 +83,21 @@ class BasicController extends Controller
   public function reactView(Request $request)
   {
     $archivedLeadStatus = JSON::parseable(Setting::get('archived-lead-status') ?? '[]') ?? [];
+    $archivedLeadStatusDirect = JSON::parseable(Setting::get('archived-lead-status-direct') ?? '[]') ?? [];
     $archivedLeadStatusDays = Setting::get('archived-lead-status-days');
 
-    if ($archivedLeadStatus && $archivedLeadStatusDays) {
+    if ($archivedLeadStatus && count($archivedLeadStatus) > 0 && $archivedLeadStatusDays) {
       Client::where('business_id', Auth::user()->business_id)
+        ->whereNotNull('status')
         ->whereIn('manage_status_id', $archivedLeadStatus)
         ->where('updated_at', '<', Carbon::now()->subDays($archivedLeadStatusDays))
+        ->update(['status' => null]);
+    }
+
+    if ($archivedLeadStatusDirect && count($archivedLeadStatusDirect) > 0) {
+      Client::where('business_id', Auth::user()->business_id)
+        ->whereNotNull('status')
+        ->whereIn('manage_status_id', $archivedLeadStatusDirect)
         ->update(['status' => null]);
     }
 

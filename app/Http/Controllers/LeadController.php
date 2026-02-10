@@ -233,6 +233,7 @@ class LeadController extends BasicController
                         ]
                     ],
                     'complete_form' => true,
+                    'complete_registration' => true,
                     'message' => 'Sin mensaje',
                     'ip' => $request->ip(),
                     'date' => isset($mapping['date']) && !empty($row[$mapping['date']])
@@ -463,6 +464,16 @@ class LeadController extends BasicController
 
                 if ($leadJpa->manage_status_id == ($assignationStatus['manage'] ?? '')) StatusController::updateStatus4Lead($leadJpa, true);
                 if ($leadJpa->manage_status_id == ($revertionStatus['manage'] ?? '')) StatusController::updateStatus4Lead($leadJpa, false);
+            } catch (\Throwable $th) {
+            }
+
+            try {
+                $archivedLeadStatusDirect = JSON::parseable(Setting::get('archived-lead-status-direct') ?? '[]') ?? [];
+                if ($archivedLeadStatusDirect && count($archivedLeadStatusDirect) > 0) {
+                    if (in_array($leadJpa->manage_status_id, $archivedLeadStatusDirect)) {
+                        $leadJpa->status = null;
+                    }
+                }
             } catch (\Throwable $th) {
             }
 

@@ -151,11 +151,7 @@ const LeadTable = ({ gridRef, cardClass, otherGridRef, rest, can, defaultLeadSta
   useEffect(() => {
     if (defaultView != 'table' || !filterAssignation) return
     const grid = $(gridRef.current).dxDataGrid('instance');
-    if (selectedUsersId.length === 0) {
-      grid.clearFilter();
-    } else {
-      grid.filter(ArrayJoin(selectedUsersId.map(id => (['assigned_to', '=', id])), 'or'));
-    }
+    grid.filter(ArrayJoin(selectedUsersId.map(id => (['assigned_to', '=', id])), 'or'));
   }, [selectedUsersId, defaultView])
 
   return <Table cardClass={cardClass} gridRef={gridRef} title={<>
