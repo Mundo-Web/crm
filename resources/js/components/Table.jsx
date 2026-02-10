@@ -9,7 +9,7 @@ import 'react-date-range/dist/theme/default.css'
 import Tippy from '@tippyjs/react'
 import ArrayJoin from '../Utils/ArrayJoin'
 
-const Table = ({ title, filter, gridRef, rest, columns, toolBar, masterDetail, filterValue = [], defaultRows, selection, cardClass = '', className = '', allowedPageSizes, pageSize, exportable = false, customizeCell, reloadWith, height, cardStyle, keyExpr, onSelectionChanged, massiveActions }) => {
+const Table = ({ title, filter = [], gridRef, rest, columns, toolBar, masterDetail, filterValue = [], defaultRows, selection, cardClass = '', className = '', allowedPageSizes, pageSize, exportable = false, customizeCell, reloadWith, height, cardStyle, keyExpr, onSelectionChanged, massiveActions }) => {
   const html = renderToString(<div>{title}</div>)
   const text = $(html).text().trim().replace('-', '')
   const [range, setRange] = useState([{ startDate: new Date(), endDate: new Date(), key: 'selection', }])
