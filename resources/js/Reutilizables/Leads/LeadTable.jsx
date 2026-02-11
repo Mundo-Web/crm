@@ -474,7 +474,7 @@ const LeadTable = ({ gridRef, cardClass, otherGridRef, rest, can, defaultLeadSta
       },
       {
         dataField: 'source',
-        caption: 'Recurso',
+        caption: 'Recurso', // Landing
         dataType: 'string',
         visible: false
       },
