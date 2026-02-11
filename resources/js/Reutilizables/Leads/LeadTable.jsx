@@ -475,12 +475,14 @@ const LeadTable = ({ gridRef, cardClass, otherGridRef, rest, can, defaultLeadSta
       {
         dataField: 'source',
         caption: 'Recurso',
-        dataType: 'string'
+        dataType: 'string',
+        visible: false
       },
       {
         dataField: 'triggered_by',
         caption: 'Registrado en',
-        dataType: 'string'
+        dataType: 'string',
+        visible: false
       },
       {
         dataField: 'source_channel',
