@@ -33,7 +33,7 @@ const SortablePinnedButton = ({ item }) => {
       ref={setNodeRef}
       style={style}
       href={item.href}
-      className='d-block btn btn-light btn-sm d-flex align-items-center gap-1 rounded-pill'
+      className='d-block btn btn-light d-flex align-items-center gap-1 rounded-pill'
       {...attributes}
       {...listeners}
     >
