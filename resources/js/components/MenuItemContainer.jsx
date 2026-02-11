@@ -15,8 +15,8 @@ const MenuItemContainer = ({ title, icon, children }) => {
   return (
     <li>
       <a href={`#${id}`} data-bs-toggle="collapse" aria-expanded={isExpanded} >
-        <i className={`${icon} mdi-18px`}></i>
-        <span style={{fontSize: '16px'}}> {title} </span>
+        <i className={`${icon} mdi-24px`}></i>
+        <span style={{fontSize: '17px'}}> {title} </span>
         <span className="menu-arrow"></span>
       </a>
       <div className={`collapse ${isExpanded && 'show'}`} id={id} style={{paddingRight: '8px'}}>
