@@ -42,11 +42,11 @@ const MenuItem = ({ id, className = '', href, icon, children, badge, pinned, set
       style={{ position: 'relative' }}
     >
       <a id={id} href={href} className={`${location.pathname == href ? 'active badge-soft-blue' : ''} d-flex align-items-center gap-1`}>
-        <i className={`${icon} mdi-24px`}></i>
+          <i className={`${icon} mdi-24px`}></i>
+          <span style={{ fontSize: '16px' }}> {children} </span>
         {
-          badge && <span className="badge bg-info float-end text-truncate">{badge}</span>
+          badge && <span className="badge bg-info text-truncate">{badge}</span>
         }
-        <span style={{ fontSize: '17px' }}> {children} </span>
       </a>
       {showDropdown && (
         <div

@@ -62,6 +62,10 @@
             border-radius: 16px !important;
         }
 
+        .dx-widget{
+            font-size: 16px;
+        }
+
         .font-emoji {
             font-family: "Noto Color Emoji", sans-serif;
         }
