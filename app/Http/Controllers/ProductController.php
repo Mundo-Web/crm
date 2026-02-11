@@ -22,7 +22,7 @@ class ProductController extends BasicController
         if (!Auth::user()->is_owner) {
             $instance->where('status', true);
         }
-        $products = $instance->get();
+        $products = $instance->where('status', true)->get();
         $types = Type::ofProducts()
             ->where('status', true)
             ->get();
