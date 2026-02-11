@@ -469,12 +469,17 @@ const LeadTable = ({ gridRef, cardClass, otherGridRef, rest, can, defaultLeadSta
       },
       {
         dataField: 'origin',
-        caption: 'Medio',
+        caption: 'Red Social (Campaña)',
+        dataType: 'string'
+      },
+      {
+        dataField: 'source',
+        caption: 'Recurso',
         dataType: 'string'
       },
       {
         dataField: 'triggered_by',
-        caption: 'Disparado por',
+        caption: 'Registrado en',
         dataType: 'string'
       },
       {
