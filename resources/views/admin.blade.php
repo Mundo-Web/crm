@@ -58,6 +58,10 @@
             font-family: 'Nunito Sans', sans-serif;
         }
 
+        .card, .card-header {
+            border-radius: 12px !important;
+        }
+
         .font-emoji {
             font-family: "Noto Color Emoji", sans-serif;
         }
