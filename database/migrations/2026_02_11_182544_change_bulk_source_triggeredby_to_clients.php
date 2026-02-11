@@ -13,12 +13,15 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('clients', function (Blueprint $table) {
-            DB::table('clients')
-                ->where('triggered_by', 'like', '%Btn Whatsapp%')
-                ->update([
-                    'source' => 'Landing',
-                    'triggered_by' => 'Botón WhatsApp'
-                ]);
+            Schema::table('clients', function (Blueprint $table) {
+                DB::table('clients')
+                    ->where('triggered_by', 'like', '%Landing%')
+                    ->where('triggered_by', 'like', '%Formulario%')
+                    ->update([
+                        'source' => 'Landing',
+                        'triggered_by' => 'Formulario'
+                    ]);
+            });
         });
     }
 
