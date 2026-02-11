@@ -41,7 +41,7 @@ const MenuItem = ({ id, className = '', href, icon, children, badge, pinned, set
       onContextMenu={handleContextMenu}
       style={{ position: 'relative' }}
     >
-      <a id={id} href={href} className={location.pathname == href ? 'active badge-soft-blue' : ''}>
+      <a id={id} href={href} className={`${location.pathname == href ? 'active badge-soft-blue' : ''} d-flex align-items-center gap-1`}>
         <i className={`${icon} mdi-24px`}></i>
         {
           badge && <span className="badge bg-info float-end text-truncate">{badge}</span>

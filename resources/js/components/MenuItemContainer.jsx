@@ -14,7 +14,7 @@ const MenuItemContainer = ({ title, icon, children }) => {
 
   return (
     <li>
-      <a href={`#${id}`} data-bs-toggle="collapse" aria-expanded={isExpanded} >
+      <a href={`#${id}`} data-bs-toggle="collapse" aria-expanded={isExpanded} className='d-flex align-items-center gap-1'>
         <i className={`${icon} mdi-24px`}></i>
         <span style={{fontSize: '17px'}}> {title} </span>
         <span className="menu-arrow"></span>
