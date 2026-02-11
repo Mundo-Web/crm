@@ -41,12 +41,12 @@ const MenuItem = ({ id, className = '', href, icon, children, badge, pinned, set
       onContextMenu={handleContextMenu}
       style={{ position: 'relative' }}
     >
-      <a id={id} href={href} className={location.pathname == href ? 'active' : ''}>
+      <a id={id} href={href} className={location.pathname == href ? 'active badge-soft-blue' : ''}>
         <i className={`${icon} mdi-18px`}></i>
         {
           badge && <span className="badge bg-info float-end text-truncate">{badge}</span>
         }
-        <span style={{ fontSize: '16px' }}> {children} </span>
+        <span style={{ fontSize: '18px' }}> {children} </span>
       </a>
       {showDropdown && (
         <div

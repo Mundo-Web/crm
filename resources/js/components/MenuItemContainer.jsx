@@ -19,7 +19,7 @@ const MenuItemContainer = ({ title, icon, children }) => {
         <span style={{fontSize: '16px'}}> {title} </span>
         <span className="menu-arrow"></span>
       </a>
-      <div className={`collapse ${isExpanded && 'show'}`} id={id}>
+      <div className={`collapse ${isExpanded && 'show'}`} id={id} style={{paddingRight: '8px'}}>
         <ul className="nav-second-level">
           {children}
         </ul>

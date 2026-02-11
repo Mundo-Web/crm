@@ -58,8 +58,8 @@
             font-family: 'Nunito Sans', sans-serif;
         }
 
-        .card, .card-header {
-            border-radius: 12px !important;
+        .card, .card-header, .menuitem-active > a {
+            border-radius: 16px !important;
         }
 
         .font-emoji {
