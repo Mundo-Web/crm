@@ -1,12 +1,14 @@
 (function () {
     const pathsToTrack = @json($paths);
     const selectorsToTrack = @json($selectors);
+    const breakdownID = "{{ $breakdownId }}";
     const endpoint = "{{ config('app.url') }}/free/track";
 
     function sendTracking(payload) {
         fetch(endpoint, {
             method: "POST",
             headers: {
+                "X-Breakdown-ID": breakdownID,
                 "Content-Type": "application/json"
             },
             body: JSON.stringify(payload),

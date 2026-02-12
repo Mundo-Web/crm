@@ -26,6 +26,8 @@ class PixelController extends BasicController
         // Check if tracking cookie exists and corresponds to an existing breakdown
         $businessUUID = $request->apiKey;
         $trackingId = $request->cookie('atalaya-pixel-tracking');
+        $cookies = $request->cookies;
+        dump($cookies);
         $exists = false;
 
         if ($trackingId) {
