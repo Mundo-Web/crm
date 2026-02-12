@@ -27,7 +27,7 @@ class PixelController extends BasicController
         $businessUUID = $request->apiKey;
         $trackingId = $request->cookie('atalaya-pixel-tracking');
         $cookies = $request->cookies;
-        dump($cookies);
+        dump($request);
         $exists = false;
 
         if ($trackingId) {
