@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Atalaya\Business;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -23,6 +24,7 @@ class PixelController extends BasicController
     public function pixel(Request $request)
     {
         // Check if tracking cookie exists and corresponds to an existing breakdown
+        $businessUUID = $request->apiKey;
         $trackingId = $request->cookie('atalaya-pixel-tracking');
         $exists = false;
 
@@ -48,8 +50,15 @@ class PixelController extends BasicController
             $os = $agent->platform();
             $device = $agent->isMobile() ? 'mobile' : 'desktop';
 
+            // Find the business by the given UUID
+            $businessJpa = Business::where('uuid', $businessUUID)->first();
+            if (!$businessJpa) {
+                abort(401, 'Pixel no autorizado. El apiKey es inválido.');
+            }
+
             DB::table('breakdowns')->insert([
                 'id' => $trackingId,
+                'business_id' => $businessJpa->id,
                 'ip_address' => $request->ip(),
                 'browser' => $browser,
                 'os' => $os,

@@ -21,6 +21,8 @@ return new class extends Migration
             $table->string('device')->nullable();
             $table->string('utm_source', 255)->nullable();
 
+            $table->unsignedBigInteger('business_id');
+
             $table->timestamps();
         });
     }
