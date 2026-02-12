@@ -3,6 +3,7 @@
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\LeadController;
 use App\Http\Controllers\MessageController;
+use App\Http\Controllers\PixelController;
 use App\Http\Controllers\RemainingHistoryController;
 use Illuminate\Support\Facades\Route;
 
@@ -13,3 +14,6 @@ Route::post('/leads', [LeadController::class, 'external']);
 Route::post('/messages/{session_id}', [MessageController::class, 'byPhone']);
 Route::post('/messages', [MessageController::class, 'save']);
 Route::post('/messages/help', [MessageController::class, 'help']);
+
+Route::get('/pixel/{apiKey}', [PixelController::class, 'pixel']);
+Route::post('/track', [PixelController::class, 'track']);

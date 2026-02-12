@@ -12,6 +12,7 @@ use App\Http\Controllers\KPILeadsController;
 use App\Http\Controllers\KPIProjectsController;
 use App\Http\Controllers\LeadController;
 use App\Http\Controllers\MessageController;
+use App\Http\Controllers\PixelController;
 use App\Http\Controllers\PlanController;
 use App\Http\Controllers\ProcessController;
 use App\Http\Controllers\ProductController;
@@ -93,6 +94,7 @@ Route::middleware(['auth', 'firstTime', 'hasPlan'])->group(function () {
     Route::get('/repository', [RepositoryController::class, 'reactView'])->name('Repository.jsx');
     Route::get('/statuses', [StatusController::class, 'reactView'])->name('Statuses.jsx');
     Route::get('/apikeys', [ApikeyController::class, 'reactView'])->name('Apikeys.jsx');
+    Route::get('/pixels', [PixelController::class, 'reactView'])->name('Pixels.jsx');
     Route::get('/webhooks', [WebhookController::class, 'reactView'])->name('Webhooks.jsx');
     Route::get('/types', [TypeController::class, 'reactView'])->name('Types.jsx');
     Route::get('/settings', [SettingController::class, 'reactView'])->name('Settings.jsx');

@@ -461,6 +461,7 @@ const NavBar = ({ can, session = {}, services, theme, setTheme, title = '', wsAc
                 <div className="collapse ms-3" id="integrations">
                   <DDMenuItem icon='mdi mdi-webhook' href='/webhooks' pinned={pinned} setPinned={setPinned}>Redes sociales</DDMenuItem>
                   <DDMenuItem icon='mdi mdi-form-textbox' href='/apikeys' pinned={pinned} setPinned={setPinned}>Formulario Externo</DDMenuItem>
+                  <DDMenuItem icon='mdi mdi-image-filter-center-focus-strong' href='/pixels' pinned={pinned} setPinned={setPinned}>Atalaya Pixel</DDMenuItem>
                 </div>
               </>
             }
