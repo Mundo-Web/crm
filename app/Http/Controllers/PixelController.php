@@ -63,11 +63,11 @@ class PixelController extends BasicController
             ]);
         }
 
-        return response(view('utils.track')->with([
+        return view('utils.track')->with([
             'paths' => [],
             'selectors' => [],
             'breakdownId' => $trackingId
-        ]));
+        ]);
     }
 
     public function track(Request $request)
