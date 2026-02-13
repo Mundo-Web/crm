@@ -7,7 +7,7 @@ import { Clipboard } from 'sode-extend-react'
 import Swal from 'sweetalert2'
 import Global from './Utils/Global.js'
 
-const PixelIntegration = ({ apikey }) => {
+const PixelIntegration = ({ apikey, breadkowns }) => {
 
   const scriptRef = useRef()
 
@@ -87,6 +87,11 @@ const PixelIntegration = ({ apikey }) => {
             <div className="mb-3">
               <h5>Ejemplo de URL con UTM:</h5>
               <pre><code>{`https://tusitio.com/?utm_source=facebook`}</code></pre>
+            </div>
+
+            <div className="mb-3">
+              <h5>Conteo de visitas:</h5>
+              <p className='my-0'>{breadkowns} {breadkowns == 1 ? 'visita': 'visitas'}</p>
             </div>
 
             {/* <div className="mb-3">

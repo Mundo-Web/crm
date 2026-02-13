@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Atalaya\Business;
+use App\Models\Breakdown;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -16,8 +17,10 @@ class PixelController extends BasicController
 
     public function setReactViewProperties(Request $request)
     {
+        $breakdownsCount = Breakdown::where('business_id', Auth::user()->business_id)->count();
         return [
-            'apikey' => Auth::user()->business_uuid
+            'apikey' => Auth::user()->business_uuid,
+            'breadkowns' => $breakdownsCount
         ];
     }
 
