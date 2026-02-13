@@ -33,34 +33,7 @@ const PixelIntegration = ({ apikey }) => {
 
   const pixelScript = `<!-- Atalaya Tracking Pixel -->
 <script>
-(function() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const utmSource = urlParams.get('utm_source') || '';
-
-    const getCookie = (name) => {
-        const value = '; ' + document.cookie;
-        const parts = value.split('; ' + name + '=');
-        return parts.length === 2 ? parts.pop().split(';').shift() : null;
-    };
-
-    const xBreakdownId = getCookie('X-Breakdown-ID');
-
-    const queryParams = new URLSearchParams();
-    if (utmSource) queryParams.append('utm_source', utmSource);
-    if (xBreakdownId) queryParams.append('x-breakdown-id', xBreakdownId);
-
-    const queryString = queryParams.toString();
-
-    const srcUrl = \`https://${Global.APP_CORRELATIVE}.${Global.APP_DOMAIN}/free/pixel/${apikey}\${queryString ? '?' + queryString : ''}\`;
-
-    const script = document.createElement('script');
-    script.type = 'text/javascript';
-    script.async = true;
-    script.src = srcUrl;
-
-    const firstScript = document.getElementsByTagName('script')[0];
-    firstScript.parentNode.insertBefore(script, firstScript);
-})();
+  (function(){const e=new URLSearchParams(window.location.search),t=e.get("utm_source")||"",o=e=>{const t="; "+document.cookie,o=t.split("; "+e+"=");return 2===o.length?o.pop().split(";").shift():null},n=o("X-Breakdown-ID"),r=new URLSearchParams;t&&r.append("utm_source",t),n&&r.append("x-breakdown-id",n);const c=r.toString(),s=\`https://crm.atalaya.pe/free/pixel/dbb494f4-54d2-11ef-bfda-26a0a2e74226\${c?"?"+c:""}\`,a=document.createElement("script");a.type="text/javascript",a.async=!0,a.src=s;const i=document.getElementsByTagName("script")[0];i.parentNode.insertBefore(a,i)})();
 </script>`
   return (<>
     <div className="row">
