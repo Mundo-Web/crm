@@ -4,6 +4,9 @@
     const breakdownID = "{{ $breakdownId }}";
     const endpoint = "{{ config('app.url') }}/free/track";
 
+    // Set session cookie x-Breakdown-ID
+    document.cookie = `X-Breakdown-ID=${breakdownID}; path=/`;
+
     function sendTracking(payload) {
         fetch(endpoint, {
             method: "POST",

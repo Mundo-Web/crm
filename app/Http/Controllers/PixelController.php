@@ -25,9 +25,9 @@ class PixelController extends BasicController
     {
         // Check if tracking cookie exists and corresponds to an existing breakdown
         $businessUUID = $request->apiKey;
-        $trackingId = $request->cookie('atalaya-pixel-tracking');
-        $cookies = $request->cookies;
-        dump($request);
+        $trackingId = $request->query('x-breakdown-id');
+        $utmSource = $request->query('utm_source');
+
         $exists = false;
 
         if ($trackingId) {
@@ -36,14 +36,6 @@ class PixelController extends BasicController
 
         if (!$exists) {
             $trackingId = (string) Uuid::uuid1();
-
-            $referer = $request->headers->get('referer');
-            $parsedReferer = parse_url($referer);
-            $utmSource = null;
-            if (isset($parsedReferer['query'])) {
-                parse_str($parsedReferer['query'], $queryParams);
-                $utmSource = $queryParams['utm_source'] ?? null;
-            }
 
             $agent = new Agent();
             $agent->setUserAgent($request->userAgent());
@@ -74,8 +66,8 @@ class PixelController extends BasicController
         return response(view('utils.track')->with([
             'paths' => [],
             'selectors' => [],
-            'apiKey' => $request->apiKey
-        ]))->cookie('atalaya-pixel-tracking', $trackingId);
+            'breakdownId' => $trackingId
+        ]));
     }
 
     public function track(Request $request)

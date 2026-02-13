@@ -33,16 +33,35 @@ const PixelIntegration = ({ apikey }) => {
 
   const pixelScript = `<!-- Atalaya Tracking Pixel -->
 <script>
-(function(){
-  var a=document.createElement("script");
-  a.type="text/javascript";
-  a.async=true;
-  a.src="https://${Global.APP_CORRELATIVE}.${Global.APP_DOMAIN}/free/pixel/${apikey}";
-  var b=document.getElementsByTagName("script")[0];
-  b.parentNode.insertBefore(a,b);
+(function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const utmSource = urlParams.get('utm_source') || '';
+
+    const getCookie = (name) => {
+        const value = '; ' + document.cookie;
+        const parts = value.split('; ' + name + '=');
+        return parts.length === 2 ? parts.pop().split(';').shift() : null;
+    };
+
+    const xBreakdownId = getCookie('X-Breakdown-ID');
+
+    const queryParams = new URLSearchParams();
+    if (utmSource) queryParams.append('utm_source', utmSource);
+    if (xBreakdownId) queryParams.append('x-breakdown-id', xBreakdownId);
+
+    const queryString = queryParams.toString();
+
+    const srcUrl = \`https://${Global.APP_CORRELATIVE}.${Global.APP_DOMAIN}/free/pixel/${apikey}\${queryString ? '?' + queryString : ''}\`;
+
+    const script = document.createElement('script');
+    script.type = 'text/javascript';
+    script.async = true;
+    script.src = srcUrl;
+
+    const firstScript = document.getElementsByTagName('script')[0];
+    firstScript.parentNode.insertBefore(script, firstScript);
 })();
 </script>`
-
   return (<>
     <div className="row">
       <div className="col-lg-4 col-md-6 col-sm-12">
