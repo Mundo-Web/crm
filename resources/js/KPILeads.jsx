@@ -13,6 +13,11 @@ import { FetchParams, GET } from 'sode-extend-react';
 import Swal from 'sweetalert2';
 import { TrafficSourceAnalysis } from './Reutilizables/KPSLeads/TrafficSourceAnalysis';
 import { DirectCampaignPerformance } from './Reutilizables/KPSLeads/DirectCampaignPerformance';
+import { FunnelChart } from './Reutilizables/KPSLeads/FunnelChart';
+import { ChannelDistribution } from './Reutilizables/KPSLeads/ChannelDistribution';
+
+// Lista de 10 colores aleatorios
+const colors = ['#71b6f9', '#f1556c', '#1abc9c', '#4a81d4', '#f7b84b', '#5b6be8', '#34c38f', '#50a5f1', '#ffbb78', '#aec7e8'];
 
 const KPILeads = ({ months = [], currentMonth, currentYear }) => {
   const [selectedMonth, setSelectedMonth] = useState(`${currentYear}-${currentMonth}`)
@@ -32,6 +37,8 @@ const KPILeads = ({ months = [], currentMonth, currentYear }) => {
 
   const [leadSources, setLeadSources] = useState({})
   const [originCounts, setOriginCounts] = useState([])
+  const [breakdowns, setBreakdowns] = useState(0)
+  const [funnelCounts, setFunnelCounts] = useState({})
 
   const [topUsers, setTopUsers] = useState([])
 
@@ -73,6 +80,9 @@ const KPILeads = ({ months = [], currentMonth, currentYear }) => {
 
         setLeadSources(summary.leadSources ?? {})
         setOriginCounts(summary.originCounts ?? [])
+        setFunnelCounts(summary.funnelCounts ?? {})
+
+        setBreakdowns(summary.breakdownCounts ?? 0)
 
         setTopUsers(summary.usersAssignation ?? [])
       });
@@ -150,6 +160,8 @@ const KPILeads = ({ months = [], currentMonth, currentYear }) => {
   }, [null])
 
   const totalLeadSources = leadSources.crm_count + leadSources.whatsapp_count + leadSources.integration_count
+
+  console.log(funnelCounts)
 
   return (
     <>
@@ -355,6 +367,18 @@ const KPILeads = ({ months = [], currentMonth, currentYear }) => {
           </div>
         );
       })()}
+
+      <div className="row g-4 mb-4">
+        <div className="col-lg-8">
+          <FunnelChart data={{ impressions: breakdowns, contacted: funnelCounts.managing, salesClosed: funnelCounts.clients }} extraData={Object.keys(funnelCounts)
+            .filter(funnel => funnel != 'clients' && funnel != 'managing')
+            .map((funnel, idx) => ({ stage: funnel, count: funnelCounts[funnel], color: colors[idx % colors.length] }))
+          } />
+        </div>
+        <div className="col-lg-4">
+          <ChannelDistribution data={originCounts} />
+        </div>
+      </div>
 
       <div className="row mb-3">
         <div className="col-lg-6">

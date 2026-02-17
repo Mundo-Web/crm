@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Breakdown;
 use App\Models\Client;
 use App\Models\Setting;
 use App\Models\Status;
@@ -162,9 +163,37 @@ class KPILeadsController extends BasicController
                     DB::raw('COUNT(CASE WHEN status_id IN (' . implode(',', array_map(fn($id) => '"' . $id . '"', $leadStatusesIds)) . ') AND status_id <> "' . $defaultLeadStatus . '" THEN 1 END) as managing')
                 ])
                 ->where('business_id', Auth::user()->business_id)
+                ->whereNotNull('origin')
+                ->where('origin', '<>', '')
                 ->groupBy('origin')
                 ->orderBy('total', 'desc')
                 ->get();
+
+            $breakdownCounts = Breakdown::whereYear('created_at', $year)
+                ->whereMonth('created_at', $month)
+                ->where('business_id', Auth::user()->business_id)
+                ->count();
+            $funnelRaw = Client::byMonth($year, $month)
+                ->select([
+                    'origin',
+                    DB::raw('COUNT(*) as total'),
+                    DB::raw('COUNT(CASE WHEN status_id IN (' . implode(',', array_map(fn($id) => '"' . $id . '"', $clientStatusesIds)) . ') THEN 1 END) as clients'),
+                    DB::raw('COUNT(CASE WHEN status_id IN (' . implode(',', array_map(fn($id) => '"' . $id . '"', $leadStatusesIds)) . ') AND status_id <> "' . $defaultLeadStatus . '" THEN 1 END) as managing')
+                ])
+                ->where('business_id', Auth::user()->business_id)
+                ->where('lead_origin', 'integration')
+                ->whereNotNull('origin')
+                ->where('origin', '<>', '')
+                ->groupBy('origin')
+                ->orderBy('total', 'desc')
+                ->get();
+
+            $funnelCounts = [];
+            foreach ($funnelRaw as $row) {
+                $funnelCounts[$row->origin] = $row->total;
+            }
+            $funnelCounts['managing'] = $funnelRaw->sum('managing');
+            $funnelCounts['clients']  = $funnelRaw->sum('clients');
 
             $originLandingCampaignCounts = Client::byMonth($year, $month)
                 ->select([
@@ -173,6 +202,8 @@ class KPILeadsController extends BasicController
                     DB::raw('COUNT(CASE WHEN lead_origin = "campaign" THEN 1 END) as campaign')
                 ])
                 ->where('business_id', Auth::user()->business_id)
+                ->whereNotNull('origin')
+                ->where('origin', '<>', '')
                 ->groupBy('origin')
                 ->get();
 
@@ -225,7 +256,9 @@ class KPILeadsController extends BasicController
                 'leadSources' => $leadSources,
                 'originCounts' => $originCounts,
                 'originLandingCampaignCounts' => $originLandingCampaignCounts,
-                'usersAssignation' => $usersAssignation
+                'usersAssignation' => $usersAssignation,
+                'breakdownCounts' => $breakdownCounts,
+                'funnelCounts' => $funnelCounts
             ];
             $response->data = $groupedByManageStatus;
         });
