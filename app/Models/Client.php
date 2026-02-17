@@ -67,6 +67,7 @@ class Client extends Model
         'campaign_id',
         'last_message',
         'last_message_microtime',
+        'lead_origin'
     ];
 
     protected $casts = [
