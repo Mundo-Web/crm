@@ -197,7 +197,7 @@ class KPILeadsController extends BasicController
 
             $originLandingCampaignCounts = Client::byMonth($year, $month)
                 ->select([
-                    'origin',
+                    'origin as name',
                     DB::raw('COUNT(CASE WHEN lead_origin = "integration" THEN 1 END) as landing'),
                     DB::raw('COUNT(CASE WHEN campaign_id IS NOT NULL THEN 1 END) as direct')
                 ])
