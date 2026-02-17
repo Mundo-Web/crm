@@ -199,7 +199,7 @@ class KPILeadsController extends BasicController
                 ->select([
                     'origin as name',
                     DB::raw('COUNT(CASE WHEN lead_origin = "integration" THEN 1 END) as landing'),
-                    DB::raw('COUNT(CASE WHEN campaign_id IS NOT NULL THEN 1 END) as direct')
+                    DB::raw('COUNT(CASE WHEN clients.campaign_id IS NOT NULL THEN 1 END) as direct')
                 ])
                 ->where('business_id', Auth::user()->business_id)
                 ->whereNotNull('origin')
