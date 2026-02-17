@@ -487,7 +487,8 @@ const LeadTable = ({ gridRef, cardClass, otherGridRef, rest, can, defaultLeadSta
       {
         dataField: 'source_channel',
         caption: 'Donde nos vio?',
-        dataType: 'string'
+        dataType: 'string',
+        visible: false
       },
       {
         dataField: 'campaign.source',
