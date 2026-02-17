@@ -175,36 +175,36 @@ class KPILeadsController extends BasicController
                 ->count();
             $funnelRaw = Client::byMonth($year, $month)
                 ->select([
-                    'origin',
+                    'triggered_by',
                     DB::raw('COUNT(*) as total'),
                     DB::raw('COUNT(CASE WHEN status_id IN (' . implode(',', array_map(fn($id) => '"' . $id . '"', $clientStatusesIds)) . ') THEN 1 END) as clients'),
                     DB::raw('COUNT(CASE WHEN status_id IN (' . implode(',', array_map(fn($id) => '"' . $id . '"', $leadStatusesIds)) . ') AND status_id <> "' . $defaultLeadStatus . '" THEN 1 END) as managing')
                 ])
                 ->where('business_id', Auth::user()->business_id)
                 ->where('lead_origin', 'integration')
-                ->whereNotNull('origin')
-                ->where('origin', '<>', '')
-                ->groupBy('origin')
+                ->whereNotNull('triggered_by')
+                ->where('triggered_by', '<>', '')
+                ->groupBy('triggered_by')
                 ->orderBy('total', 'desc')
                 ->get();
 
             $funnelCounts = [];
             foreach ($funnelRaw as $row) {
-                $funnelCounts[$row->origin] = $row->total;
+                $funnelCounts[$row->triggered_by] = $row->total;
             }
             $funnelCounts['managing'] = $funnelRaw->sum('managing');
             $funnelCounts['clients']  = $funnelRaw->sum('clients');
 
             $originLandingCampaignCounts = Client::byMonth($year, $month)
                 ->select([
-                    'triggered_by as name',
+                    'origin as name',
                     DB::raw('COUNT(CASE WHEN lead_origin = "integration" THEN 1 END) as landing'),
                     DB::raw('COUNT(CASE WHEN campaign_id IS NOT NULL THEN 1 END) as direct')
                 ])
                 ->where('business_id', Auth::user()->business_id)
-                ->whereNotNull('triggered_by')
-                ->where('triggered_by', '<>', '')
-                ->groupBy('triggered_by')
+                ->whereNotNull('origin')
+                ->where('origin', '<>', '')
+                ->groupBy('origin')
                 ->get();
 
             $convertedLeadStatus = Setting::get('converted-lead-status');
