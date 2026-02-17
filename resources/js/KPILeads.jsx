@@ -39,6 +39,7 @@ const KPILeads = ({ months = [], currentMonth, currentYear }) => {
   const [originCounts, setOriginCounts] = useState([])
   const [breakdowns, setBreakdowns] = useState(0)
   const [funnelCounts, setFunnelCounts] = useState({})
+  const [originLandingCampaignCounts, setOriginLandingCampaignCounts] = useState([])
 
   const [topUsers, setTopUsers] = useState([])
 
@@ -81,6 +82,7 @@ const KPILeads = ({ months = [], currentMonth, currentYear }) => {
         setLeadSources(summary.leadSources ?? {})
         setOriginCounts(summary.originCounts ?? [])
         setFunnelCounts(summary.funnelCounts ?? {})
+        setOriginLandingCampaignCounts(summary.originLandingCampaignCounts ?? [])
 
         setBreakdowns(summary.breakdownCounts ?? 0)
 
@@ -159,10 +161,6 @@ const KPILeads = ({ months = [], currentMonth, currentYear }) => {
     }
   }, [null])
 
-  const totalLeadSources = leadSources.crm_count + leadSources.whatsapp_count + leadSources.integration_count
-
-  console.log(funnelCounts)
-
   return (
     <>
 
@@ -221,16 +219,8 @@ const KPILeads = ({ months = [], currentMonth, currentYear }) => {
       </div>
       {/* Dummy data for kpiData */}
       {(() => {
-        const kpiData = {
-          totalLeads: 1250,
-          newLeads: 320,
-          contactedLeads: 890,
-          salesClosed: 180,
-          conversionRate: 14.4
-        };
         const formatNumber = n => n.toLocaleString('es-PE');
         const formatPercentage = n => {
-          console.log(n)
           return `${n.toFixed(1)}%`
         };
 
@@ -382,7 +372,7 @@ const KPILeads = ({ months = [], currentMonth, currentYear }) => {
 
       <div className="row mb-3">
         <div className="col-lg-6">
-          <TrafficSourceAnalysis />
+          <TrafficSourceAnalysis data={originLandingCampaignCounts} />
         </div>
         <div className="col-lg-6">
           <DirectCampaignPerformance originCounts={originCounts} />

@@ -295,7 +295,7 @@ class LeadController extends BasicController
                         ? $mappingDate
                         : now(),
                     'status' => true,
-                    'lead_origin' => 'import'
+                    'lead_origin' => $campaignId ? 'campaign' : 'import'
                 ];
 
                 // Build form answers array

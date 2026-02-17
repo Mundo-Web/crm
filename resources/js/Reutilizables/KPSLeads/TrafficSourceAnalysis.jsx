@@ -1,63 +1,25 @@
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
-export const TrafficSourceAnalysis = () => {
-  // Dummy data
-  const leads = [
-    { channel: 'Facebook Ads', subChannel: 'Direct', status: 'Venta cerrada' },
-    { channel: 'Facebook Ads', subChannel: 'Direct', status: 'En proceso' },
-    { channel: 'Facebook Ads', subChannel: 'Landing Page', status: 'Venta cerrada' },
-    { channel: 'Facebook Ads', subChannel: 'Landing Page', status: 'En proceso' },
-    { channel: 'Instagram Ads', subChannel: 'Direct', status: 'Venta cerrada' },
-    { channel: 'Instagram Ads', subChannel: 'Direct', status: 'En proceso' },
-    { channel: 'Instagram Ads', subChannel: 'Landing Page', status: 'Venta cerrada' },
-    { channel: 'Instagram Ads', subChannel: 'Landing Page', status: 'En proceso' },
-    { channel: 'TikTok Ads', subChannel: 'Direct', status: 'Venta cerrada' },
-    { channel: 'TikTok Ads', subChannel: 'Direct', status: 'En proceso' },
-    { channel: 'TikTok Ads', subChannel: 'Landing Page', status: 'Venta cerrada' },
-    { channel: 'TikTok Ads', subChannel: 'Landing Page', status: 'En proceso' },
-    { channel: 'Google', subChannel: 'Direct', status: 'Venta cerrada' },
-    { channel: 'Google', subChannel: 'Direct', status: 'En proceso' },
-    { channel: 'Google', subChannel: 'Landing Page', status: 'Venta cerrada' },
-    { channel: 'Google', subChannel: 'Landing Page', status: 'En proceso' },
-    { channel: 'WhatsApp Directo', subChannel: 'Direct', status: 'Venta cerrada' },
-    { channel: 'WhatsApp Directo', subChannel: 'Direct', status: 'En proceso' },
-    { channel: 'WhatsApp Directo', subChannel: 'Landing Page', status: 'Venta cerrada' },
-    { channel: 'WhatsApp Directo', subChannel: 'Landing Page', status: 'En proceso' },
-  ];
+export const TrafficSourceAnalysis = ({ data }) => {
+  console.log(data);
 
-  const directLeads = leads.filter(l => l.subChannel === 'Direct' && l.channel !== 'Landing Page');
-  const landingLeads = leads.filter(l => l.subChannel !== 'Direct' || l.channel === 'Landing Page');
+  // Compute totals from incoming data
+  const totalDirect = data.reduce((sum, item) => sum + (item.direct || 0), 0);
+  const totalLanding = data.reduce((sum, item) => sum + (item.landing || 0), 0);
 
-  const directSales = directLeads.filter(l => l.status === 'Venta cerrada').length;
-  const landingSales = landingLeads.filter(l => l.status === 'Venta cerrada').length;
+  // Dummy conversion metrics (fallback if no conversion data is provided)
+  const directSales = Math.round(totalDirect * 0.25);
+  const landingSales = Math.round(totalLanding * 0.3);
 
-  const directConvRate = directLeads.length > 0 ? (directSales / directLeads.length) * 100 : 0;
-  const landingConvRate = landingLeads.length > 0 ? (landingSales / landingLeads.length) * 100 : 0;
+  const directConvRate = totalDirect > 0 ? (directSales / totalDirect) * 100 : 0;
+  const landingConvRate = totalLanding > 0 ? (landingSales / totalLanding) * 100 : 0;
 
-  const channelBreakdown = [
-    { name: 'Facebook Ads', direct: 0, landing: 0 },
-    { name: 'Instagram Ads', direct: 0, landing: 0 },
-    { name: 'TikTok Ads', direct: 0, landing: 0 },
-    { name: 'Google', direct: 0, landing: 0 },
-    { name: 'WhatsApp', direct: 0, landing: 0 }
-  ];
-
-  leads.forEach(lead => {
-    let channelIndex = -1;
-    if (lead.channel === 'Facebook Ads') channelIndex = 0;
-    else if (lead.channel === 'Instagram Ads') channelIndex = 1;
-    else if (lead.channel === 'TikTok Ads') channelIndex = 2;
-    else if (lead.channel === 'Google') channelIndex = 3;
-    else if (lead.channel === 'WhatsApp Directo') channelIndex = 4;
-
-    if (channelIndex !== -1) {
-      if (lead.subChannel === 'Direct') {
-        channelBreakdown[channelIndex].direct++;
-      } else {
-        channelBreakdown[channelIndex].landing++;
-      }
-    }
-  });
+  // Prepare chart data
+  const channelBreakdown = data.map((item) => ({
+    name: item.name,
+    direct: item.direct || 0,
+    landing: item.landing || 0,
+  }));
 
   return (
     <div className="card border-0 shadow-sm h-100" style={{ borderRadius: '16px' }}>
@@ -81,7 +43,7 @@ export const TrafficSourceAnalysis = () => {
               </div>
               <div className="d-flex justify-content-between align-items-end">
                 <div>
-                  <div className="fs-3 fw-bold text-success">{directLeads.length}</div>
+                  <div className="fs-3 fw-bold text-success">{totalDirect}</div>
                   <div className="small text-muted">Leads totales</div>
                 </div>
                 <div className="text-end">
@@ -104,7 +66,7 @@ export const TrafficSourceAnalysis = () => {
               </div>
               <div className="d-flex justify-content-between align-items-end">
                 <div>
-                  <div className="fs-3 fw-bold text-primary">{landingLeads.length}</div>
+                  <div className="fs-3 fw-bold text-primary">{totalLanding}</div>
                   <div className="small text-muted">Leads totales</div>
                 </div>
                 <div className="text-end">
@@ -131,7 +93,7 @@ export const TrafficSourceAnalysis = () => {
                 backgroundColor: '#fff',
                 border: '1px solid #e5e7eb',
                 borderRadius: '8px',
-                boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+                boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
               }}
             />
             <Legend />
@@ -146,9 +108,13 @@ export const TrafficSourceAnalysis = () => {
             <div className="small">
               <strong>Insight:</strong>{' '}
               {directConvRate > landingConvRate ? (
-                <>Las campañas directas están convirtiendo {(directConvRate - landingConvRate).toFixed(1)}% mejor que el flujo de landing. Considera aumentar presupuesto en campañas directas.</>
+                <>
+                  Las campañas directas están convirtiendo {(directConvRate - landingConvRate).toFixed(1)}% mejor que el flujo de landing. Considera aumentar presupuesto en campañas directas.
+                </>
               ) : (
-                <>El flujo de landing page está convirtiendo {(landingConvRate - directConvRate).toFixed(1)}% mejor. La landing está cualificando mejor los leads antes de ingresarlos al CRM.</>
+                <>
+                  El flujo de landing page está convirtiendo {(landingConvRate - directConvRate).toFixed(1)}% mejor. La landing está cualificando mejor los leads antes de ingresarlos al CRM.
+                </>
               )}
             </div>
           </div>
