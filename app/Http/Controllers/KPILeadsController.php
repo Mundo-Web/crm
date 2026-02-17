@@ -107,6 +107,9 @@ class KPILeadsController extends BasicController
                 ->whereNull('clients.status')
                 ->join('client_has_products AS chp', 'chp.client_id', 'clients.id')
                 ->sum('chp.price');
+            $pendingCount = Client::byMonth($year, $month)
+                ->where('status_id', $defaultLeadStatus)
+                ->count();
             $managingCount = Client::byMonth($year, $month)
                 ->whereIn('status_id', $leadStatusesIds)
                 ->where('status_id', '<>', $defaultLeadStatus)
@@ -153,12 +156,24 @@ class KPILeadsController extends BasicController
             $originCounts = Client::byMonth($year, $month)
                 ->select([
                     'origin',
-                    DB::raw('COUNT(*) as count')
+                    DB::raw('COUNT(*) as total'),
+                    DB::raw('COUNT(CASE WHEN status_id = "' . $defaultLeadStatus . '" THEN 1 END) as pending'),
+                    DB::raw('COUNT(CASE WHEN status_id IN (' . implode(',', array_map(fn($id) => '"' . $id . '"', $clientStatusesIds)) . ') THEN 1 END) as clients'),
+                    DB::raw('COUNT(CASE WHEN status_id IN (' . implode(',', array_map(fn($id) => '"' . $id . '"', $leadStatusesIds)) . ') AND status_id <> "' . $defaultLeadStatus . '" THEN 1 END) as managing')
                 ])
                 ->where('business_id', Auth::user()->business_id)
-                ->whereNotIn('origin', ['WhatsApp', 'CRM Atalaya'])
                 ->groupBy('origin')
-                ->orderBy('count', 'desc')
+                ->orderBy('total', 'desc')
+                ->get();
+
+            $originLandingCampaignCounts = Client::byMonth($year, $month)
+                ->select([
+                    'origin',
+                    DB::raw('COUNT(CASE WHEN lead_origin = "integration" THEN 1 END) as integration'),
+                    DB::raw('COUNT(CASE WHEN lead_origin = "campaign" THEN 1 END) as campaign')
+                ])
+                ->where('business_id', Auth::user()->business_id)
+                ->groupBy('origin')
                 ->get();
 
             $convertedLeadStatus = Setting::get('converted-lead-status');
@@ -204,10 +219,12 @@ class KPILeadsController extends BasicController
                 'clientsSum' => $clientsSum,
                 'archivedCount' => $archivedCount,
                 'archivedSum' => $archivedSum,
+                'pendingCount' => $pendingCount,
                 'managingCount' => $managingCount,
                 'managingSum' => $managingSum,
                 'leadSources' => $leadSources,
                 'originCounts' => $originCounts,
+                'originLandingCampaignCounts' => $originLandingCampaignCounts,
                 'usersAssignation' => $usersAssignation
             ];
             $response->data = $groupedByManageStatus;

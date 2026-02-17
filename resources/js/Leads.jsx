@@ -54,6 +54,7 @@ const productsByClients = new ProductsByClients()
 const gmailRest = new GmailRest()
 
 import driver_fn from '../json/driver.js'
+import ImportModal from './Reutilizables/Leads/ImportModal.jsx'
 
 const driverObj = driver({
   showProgress: true,
@@ -684,19 +685,64 @@ const Leads = (properties) => {
     if (!file) return;
     const validTypes = ['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
       'application/vnd.ms-excel',
-      'text/csv'];
+      'text/csv',
+      'application/xml',
+      'text/xml'];
     if (!validTypes.includes(file.type)) {
-      Swal.fire('Formato inválido', 'Solo se permiten archivos .xlsx, .xls o .csv', 'warning');
+      Swal.fire('Formato inválido', 'Solo se permiten archivos .xlsx, .xls, .csv o .xml', 'warning');
       return;
     }
-    setExcelFile(file);
-
     const reader = new FileReader();
     reader.onload = async (e) => {
-      const data = new Uint8Array(e.target.result);
-      // Use ExcelJS instead of XLSX
+      const data = e.target.result;
       const workbook = new ExcelJS.Workbook();
-      await workbook.xlsx.load(data);
+
+      const text = new TextDecoder().decode(data);
+
+      // If it's XML (Facebook Meta download), treat it as plain text and parse manually
+      if (file.type === 'application/xml' || file.type === 'text/xml' || text.startsWith('<?xml')) {
+        const parser = new DOMParser();
+        const xmlDoc = parser.parseFromString(text, 'application/xml');
+
+        // Convert XML table to worksheet
+        const rows = Array.from(xmlDoc.querySelectorAll('Row'));
+        const worksheet = workbook.addWorksheet('Sheet1');
+        rows.forEach((row, rIdx) => {
+          const cells = Array.from(row.querySelectorAll('Cell'));
+          cells.forEach((cell, cIdx) => {
+            worksheet.getCell(rIdx + 1, cIdx + 1).value = cell.textContent;
+          });
+        });
+      } else if (file.type === 'text/csv') {
+        // Handle CSV: parse manually and fill worksheet
+        const text = new TextDecoder().decode(data);
+        const lines = text.split(/\r?\n/).filter(l => l.trim());
+        const worksheet = workbook.addWorksheet('Sheet1');
+        lines.forEach((line, rIdx) => {
+          const cells = line.split(',').map(c => c.trim());
+          cells.forEach((cell, cIdx) => {
+            worksheet.getCell(rIdx + 1, cIdx + 1).value = cell;
+          });
+        });
+      } else {
+        // Excel (.xlsx or .xls) – use ExcelJS binary loader
+        try {
+          await workbook.xlsx.load(data);
+        } catch (err) {
+          // If it fails, try legacy XLS read (ExcelJS does not support .xls, so we alert)
+          Swal.fire('Formato no soportado', 'No se pudo leer el archivo Excel. Asegúrate de que sea .xlsx o .csv', 'error');
+          return;
+        }
+      }
+
+      // Convert workbook to final Excel file (xlsx)
+      const excelBuffer = await workbook.xlsx.writeBuffer();
+      const finalExcelFile = new File([excelBuffer], 'converted.xlsx', {
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+      });
+
+      setExcelFile(finalExcelFile);
+
       const worksheet = workbook.worksheets[0];
       const headers = [];
       worksheet.getRow(1).eachCell((cell) => {
@@ -704,11 +750,11 @@ const Leads = (properties) => {
       });
       setExcelFields(headers);
       // Count only rows with at least one non-empty cell (excluding header row)
-      let rowCount = worksheet.rowCount
+      let rowCount = worksheet.rowCount;
       setRowsCount(rowCount - 1);
+      $(importModalRef.current).modal('show');
     };
     reader.readAsArrayBuffer(file);
-    $(importModalRef.current).modal('show')
   }
 
   const handleImportSubmit = async (e) => {
@@ -749,12 +795,20 @@ const Leads = (properties) => {
 
     excelFields.forEach(col => {
       const lower = col.toLowerCase();
-      if (!mapping.name && (lower.includes('name') || lower.includes('nombre')) && col.trim().split(/\s+/).length <= 2) {
-        mapping.name = col;
+      if (!mapping.name) {
+        if (lower === 'full_name' || lower === 'full name') {
+          mapping.name = col;               // exact match wins
+        } else if (!mapping.name && (lower.includes('name') || lower.includes('nombre')) && col.trim().split(/\s+/).length <= 2 && !lower.includes('campaign')) {
+          mapping.name = col;               // fallback if no exact full_name
+        }
+      } else if (!mapping.source && (lower.includes('platform') || lower.includes('plataforma')) && col.trim().split(/\s+/).length <= 2) {
+        mapping.source = col;
       } else if (!mapping.email && (lower.includes('email') || lower.includes('correo')) && col.trim().split(/\s+/).length <= 2) {
         mapping.email = col;
       } else if (!mapping.phone && (lower.includes('phone') || lower.includes('telefono') || lower.includes('celular')) && col.trim().split(/\s+/).length <= 2) {
         mapping.phone = col;
+      } else if (!mapping.triggered_by && lower.includes('form_name')) {
+        mapping.triggered_by = col;
       } else if (!mapping.date && (lower.includes('date') || lower.includes('fecha') || lower.includes('creacion') || lower.includes('creado') || lower.includes('created') || lower.includes('fecha de registro') || lower.includes('fecha registro') || lower.includes('fecha de creacion') || lower.includes('fecha creacion')) && col.trim().split(/\s+/).length <= 3) {
         mapping.date = col;
       } else if (col.includes('?') && col.split(/\s+/).length >= 4) {
@@ -1375,243 +1429,10 @@ const Leads = (properties) => {
       waPhone={waPhone}
     />
 
-    <Modal modalRef={importModalRef} title='Importar leads' onClose={() => {
+    <ImportModal modalRef={importModalRef} onClose={() => {
       setExcelFile(null)
       setExcelFields([])
-    }} onSubmit={handleImportSubmit} loading={importSaving} btnSubmitText='Importar'>
-      <div className="row">
-        {/* Campos primarios a la izquierda */}
-        <div className="col-6">
-          <label className="form-label text-muted small fw-semibold mb-2">Campos primarios</label>
-          <div className="mb-2">
-            <label className="form-label small">Fecha creación</label>
-            <div className="dropdown">
-              <button
-                className="btn btn-sm btn-white dropdown-toggle w-100 text-start border text-truncate"
-                type="button"
-                data-bs-toggle="dropdown"
-                aria-expanded="false"
-              >
-                {leadMapping.date || 'Seleccionar columna'}
-              </button>
-              <ul className="dropdown-menu w-100">
-                {excelFields?.map((field, idx) => (
-                  <li key={idx}>
-                    <button
-                      className="dropdown-item small text-truncate"
-                      type="button"
-                      onClick={() => setLeadMapping(prev => ({ ...prev, date: field }))}
-                    >
-                      {field}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-          {/* Nombre */}
-          <div className="mb-2">
-            <label className="form-label small">Nombre</label>
-            <div className="dropdown">
-              <button
-                className="btn btn-sm btn-white dropdown-toggle w-100 text-start border text-truncate"
-                type="button"
-                data-bs-toggle="dropdown"
-                aria-expanded="false"
-              >
-                {leadMapping.name || 'Seleccionar columna'}
-              </button>
-              <ul className="dropdown-menu w-100">
-                {excelFields?.map((field, idx) => (
-                  <li key={idx}>
-                    <button
-                      className="dropdown-item small text-truncate"
-                      type="button"
-                      onClick={() => setLeadMapping(prev => ({ ...prev, name: field }))}
-                    >
-                      {field}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-
-          {/* Correo */}
-          <div className="mb-2">
-            <label className="form-label small">Correo</label>
-            <div className="dropdown">
-              <button
-                className="btn btn-sm btn-white dropdown-toggle w-100 text-start border text-truncate"
-                type="button"
-                data-bs-toggle="dropdown"
-                aria-expanded="false"
-              >
-                {leadMapping.email || 'Seleccionar columna'}
-              </button>
-              <ul className="dropdown-menu w-100">
-                {excelFields?.map((field, idx) => (
-                  <li key={idx}>
-                    <button
-                      className="dropdown-item small text-truncate"
-                      type="button"
-                      onClick={() => setLeadMapping(prev => ({ ...prev, email: field }))}
-                    >
-                      {field}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-
-          {/* Teléfono */}
-          <div className="mb-2">
-            <label className="form-label small">Teléfono</label>
-            <div className="dropdown">
-              <button
-                className="btn btn-sm btn-white dropdown-toggle w-100 text-start border text-truncate"
-                type="button"
-                data-bs-toggle="dropdown"
-                aria-expanded="false"
-              >
-                {leadMapping.phone || 'Seleccionar columna'}
-              </button>
-              <ul className="dropdown-menu w-100">
-                {excelFields?.map((field, idx) => (
-                  <li key={idx}>
-                    <button
-                      className="dropdown-item small text-truncate"
-                      type="button"
-                      onClick={() => setLeadMapping(prev => ({ ...prev, phone: field }))}
-                    >
-                      {field}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-
-          {/* Formulario */}
-          <div className="mb-2">
-            <label className="form-label small">Formulario (opcional)</label>
-            <div className="dropdown">
-              <button
-                className="btn btn-sm btn-white dropdown-toggle w-100 text-start border text-wrap"
-                type="button"
-                data-bs-toggle="dropdown"
-                aria-expanded="false"
-              >
-                {leadMapping.form?.length > 0 ? leadMapping.form.join(', ') : 'Seleccionar columna(s)'}
-              </button>
-              <ul className="dropdown-menu w-100">
-                {excelFields?.map((field, idx) => {
-                  const isSelected = leadMapping.form?.includes(field);
-                  return (
-                    <li key={idx}>
-                      <button
-                        className="dropdown-item small d-flex justify-content-between align-items-center w-full"
-                        type="button"
-                        onClick={() => {
-                          setLeadMapping(prev => {
-                            const current = prev.form || [];
-                            const next = isSelected
-                              ? current.filter(f => f !== field)
-                              : [...current, field];
-                            return { ...prev, form: next };
-                          });
-                        }}
-                      >
-                        <span className='d-inline-block text-truncate'>{field}</span>
-                        {isSelected && <i className="mdi mdi-check" />}
-                      </button>
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>
-          </div>
-        </div>
-
-        {/* Vista previa del mapeo a la derecha */}
-        <div className="col-6">
-          <div className="mb-2">
-            <label className="form-label small">
-              Medio de importación
-            </label>
-            <div className="dropdown">
-              <button
-                className="btn btn-sm btn-white dropdown-toggle w-100 text-start border"
-                type="button"
-                data-bs-toggle="dropdown"
-                aria-expanded="false"
-              >
-                {leadMapping.source || 'Seleccionar medio'}
-              </button>
-              {/* Hidden input synchronized with dropdown selection for native required validation */}
-              {/* <input
-                type="text"
-                value={leadMapping.source || ''}
-                required
-                onInvalid={(e) => e.target.setCustomValidity('Selecciona una opción')}
-                onInput={(e) => e.target.setCustomValidity('')}
-                style={{ position: 'absolute', bottom: 0, left: '50%', transform: 'translateX(-50%)', width: 0, height: 0, opacity: 0, pointerEvents: 'none' }}
-              /> */}
-              <ul className="dropdown-menu w-100">
-                {['Facebook', 'Instagram', 'TikTok', 'Otros'].map((network) => (
-                  <li key={network}>
-                    <button
-                      className="dropdown-item small"
-                      type="button"
-                      onClick={() => setLeadMapping(prev => ({ ...prev, source: network }))}
-                    >
-                      {network}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-          <div className="mb-2">
-            <label className="form-label small">
-              Disparado por
-            </label>
-            <input
-              type="text"
-              className="form-control form-control-sm"
-              placeholder="Ej. Formulario"
-              value={leadMapping.triggered_by || ''}
-              required
-              onChange={(e) =>
-                setLeadMapping(prev => ({ ...prev, triggered_by: e.target.value }))
-              }
-            />
-          </div>
-          <div className="p-2 bg-light rounded">
-            <label className="form-label small">Así se importarán los leads:</label>
-            <ul className="list-unstyled mb-0 small">
-              <li><b>Nombre:</b> {leadMapping.name || '—'}</li>
-              <li><b>Correo:</b> {leadMapping.email || '—'}</li>
-              <li><b>Teléfono:</b> {leadMapping.phone || '—'}</li>
-              <li>
-                <b>Formulario:</b>
-                {
-                  leadMapping.form?.length > 0
-                    ? <ol className="mb-0 ps-2">
-                      {leadMapping.form.map((f, idx) => <li key={idx}>{f}</li>)}
-                    </ol>
-                    : <span className='ms-1'>—</span>
-                }
-              </li>
-            </ul>
-          </div>
-          {/* <div className="mt-2 text-muted small">
-            Se importarán {rowsCount} filas
-          </div> */}
-        </div>
-      </div>
-    </Modal>
+    }} onSubmit={handleImportSubmit} disabled={importSaving} fields={excelFields} mapping={leadMapping} setMapping={setLeadMapping} />
   </Adminto>)
 };
 

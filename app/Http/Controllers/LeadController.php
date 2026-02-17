@@ -6,6 +6,7 @@ use App\Jobs\SaveNotification;
 use App\Jobs\SendNewLeadNotification;
 use App\Models\Atalaya\Business;
 use App\Models\Atalaya\BusinessSign;
+use App\Models\Campaign;
 use App\Models\Client;
 use App\Models\ClientNote;
 use App\Models\DefaultMessage;
@@ -205,6 +206,36 @@ class LeadController extends BasicController
             }
 
             $business_id = Auth::user()->business_id;
+
+            // Group unique campaign_id/campaign_name pairs and build campaigns map
+            $campaignMap = [];
+            foreach ($cleanRows as $row) {
+                $adId = $row['campaign_id'] ?? null;
+                $adName = $row['campaign_name'] ?? null;
+                if ($adId !== null && trim($adId) !== '') {
+                    $key = $adId;
+                    if (!isset($campaignMap[$key])) {
+                        $campaignMap[$key] = [
+                            'id' => Uuid::uuid1()->toString(),
+                            'code' => $adId,
+                            'title' => $adName,
+                            'source' => match (strtolower($row[$mapping['source']] ?? '')) {
+                                'fb' => 'facebook',
+                                'ig' => 'instagram',
+                                default => strtolower($row[$mapping['source']] ?? 'unknown'),
+                            },
+                            'protected' => true,
+                            'business_id' => $business_id
+                        ];
+                    }
+                }
+            }
+
+            // Bulk insert campaigns if any
+            if (!empty($campaignMap)) {
+                Campaign::insert(array_values($campaignMap));
+            }
+
             // Map rows to desired format using mapping
             $mappedRows = [];
             foreach ($cleanRows as $row) {
@@ -213,6 +244,14 @@ class LeadController extends BasicController
                     $phone = '51' . $phone;
                 }
                 $mappingDate = Carbon::parse($row[$mapping['date']]);
+
+                // Determine campaign_id
+                $campaignId = null;
+                $adId = $row['campaign_id'] ?? null;
+                if ($adId !== null && trim($adId) !== '' && isset($campaignMap[$adId])) {
+                    $campaignId = $campaignMap[$adId]['id'];
+                }
+
                 $mapped = [
                     'id'     => Uuid::uuid1()->toString(),
                     'business_id' => $business_id,
@@ -220,11 +259,16 @@ class LeadController extends BasicController
                     'contact_name'   => $row[$mapping['name']] ?? null,
                     'contact_email'  => $row[$mapping['email']] ?? null,
                     'contact_phone' => $phone ?: null,
-                    'source' => $mapping['source'],
-                    'origin' => $mapping['source'],
-                    'triggered_by' => $mapping['triggered_by'] ?? 'Importación',
+                    'source' => 'Importación',
+                    'origin' => match (strtolower($row[$mapping['source']] ?? '')) {
+                        'fb' => 'Facebook',
+                        'ig' => 'Instagram',
+                        default => $row[$mapping['source']] ?? null,
+                    },
+                    'triggered_by' => $row[$mapping['triggered_by']] ?? 'Importación',
                     'status_id' => Setting::get('default-lead-status'),
                     'manage_status_id' => Setting::get('default-manage-lead-status'),
+                    'campaign_id' => $campaignId,
                     'form_answers'   => [
                         [
                             'title'     => 'Formulario de meta',
@@ -250,7 +294,8 @@ class LeadController extends BasicController
                     'updated_at' => isset($mapping['date']) && !empty($row[$mapping['date']])
                         ? $mappingDate
                         : now(),
-                    'status' => true
+                    'status' => true,
+                    'lead_origin' => 'import'
                 ];
 
                 // Build form answers array
@@ -587,6 +632,7 @@ class LeadController extends BasicController
             $validatedData['status_id'] = Setting::get('default-lead-status', $businessJpa->id);
             $validatedData['manage_status_id'] = Setting::get('default-manage-lead-status', $businessJpa->id);
             $validatedData['complete_registration'] = true;
+            $validatedData['lead_origin'] = 'integration';
 
             if ($validatedData['origin'] == 'WhatsApp') {
                 $leadJpa = Client::updateOrCreate([

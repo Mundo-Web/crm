@@ -9,8 +9,10 @@ import Number2Currency from './Utils/Number2Currency';
 import Global from './Utils/Global';
 import '../css/kpileads.css'
 import Tippy from '@tippyjs/react';
-import { GET } from 'sode-extend-react';
+import { FetchParams, GET } from 'sode-extend-react';
 import Swal from 'sweetalert2';
+import { TrafficSourceAnalysis } from './Reutilizables/KPSLeads/TrafficSourceAnalysis';
+import { DirectCampaignPerformance } from './Reutilizables/KPSLeads/DirectCampaignPerformance';
 
 const KPILeads = ({ months = [], currentMonth, currentYear }) => {
   const [selectedMonth, setSelectedMonth] = useState(`${currentYear}-${currentMonth}`)
@@ -18,6 +20,7 @@ const KPILeads = ({ months = [], currentMonth, currentYear }) => {
   const [groupedByManageStatus, setGroupedByManageStatus] = useState([])
 
   const [totalCount, setTotalCount] = useState(0)
+  const [pendingCount, setPendingCount] = useState(0)
   const [clientsCount, setClientsCount] = useState(0)
   const [archivedCount, setArchivedCount] = useState(0)
   const [managingCount, setManagingCount] = useState(0)
@@ -48,7 +51,7 @@ const KPILeads = ({ months = [], currentMonth, currentYear }) => {
     </div>))
   }
 
-  useEffect(() => {
+  const fetchGraph = (selectedMonth) => {
     setLeadSources({})
     setOriginCounts([])
 
@@ -58,6 +61,7 @@ const KPILeads = ({ months = [], currentMonth, currentYear }) => {
         setGrouped(summary.grouped ?? [])
 
         setTotalCount(summary.totalCount ?? 0)
+        setPendingCount(summary.pendingCount ?? 0)
         setClientsCount(summary.clientsCount ?? 0)
         setArchivedCount(summary.archivedCount ?? 0)
         setManagingCount(summary.managingCount ?? 0)
@@ -72,6 +76,10 @@ const KPILeads = ({ months = [], currentMonth, currentYear }) => {
 
         setTopUsers(summary.usersAssignation ?? [])
       });
+  }
+
+  useEffect(() => {
+    fetchGraph(selectedMonth)
   }, [selectedMonth])
 
   useEffect(() => {
@@ -147,26 +155,222 @@ const KPILeads = ({ months = [], currentMonth, currentYear }) => {
     <>
 
       <div className="row">
-        <div className='col-xl-3 col-lg-4 col-md-6 col-sm-8 col-12 mb-2'>
-          <SelectFormGroup minimumResultsForSearch={-1} templateResult={monthTemplate} templateSelection={monthTemplate} onChange={e => setSelectedMonth(e.target.value)}>
-            {
-              months.map((row, index) => {
-                const month = moment({
-                  month: row.month - 1,
-                  year: row.year
-                })
-                return <option key={index} value={row.id} data-option={JSON.stringify(row)}>{month.format('MMMM YYYY').toTitleCase()}</option>
-              })
-            }
-          </SelectFormGroup>
+        <div className='col-xxl-2 col-xl-3 col-lg-4 col-md-6 col-sm-8 col-12 mb-0'>
+          <div className="d-flex gap-2">
+            <div className="dropdown flex-grow-1">
+              <button
+                className="btn btn-light bg-white dropdown-toggle w-100 text-start rounded-pill"
+                type="button"
+                id="monthDropdown"
+                data-bs-toggle="dropdown"
+                aria-expanded="false"
+              >
+                {(() => {
+                  const selected = months.find(m => m.id === selectedMonth);
+                  if (!selected) return 'Seleccione un mes';
+                  const month = moment({ month: selected.month - 1, year: selected.year });
+                  return month.format('MMMM YYYY').toTitleCase();
+                })()}
+              </button>
+              <ul className="dropdown-menu w-100" aria-labelledby="monthDropdown">
+                {months.map((row, index) => {
+                  const month = moment({ month: row.month - 1, year: row.year });
+                  return (
+                    <li key={index}>
+                      <a
+                        className="dropdown-item"
+                        href="#"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setSelectedMonth(row.id);
+                        }}
+                      >
+                        <b className='d-block'>{month.format('MMMM YYYY').toTitleCase()}</b>
+                        <small>
+                          <i className='me-1 fa fa-users'></i>
+                          {row.quantity} entradas
+                        </small>
+                      </a>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+            <button
+              className="btn btn-light rounded-pill"
+              type="button"
+              onClick={() => fetchGraph(selectedMonth)}
+              title="Refrescar"
+            >
+              <i className="mdi mdi-refresh"></i>
+            </button>
+          </div>
         </div>
       </div>
-      <div className="row">
+      {/* Dummy data for kpiData */}
+      {(() => {
+        const kpiData = {
+          totalLeads: 1250,
+          newLeads: 320,
+          contactedLeads: 890,
+          salesClosed: 180,
+          conversionRate: 14.4
+        };
+        const formatNumber = n => n.toLocaleString('es-PE');
+        const formatPercentage = n => {
+          console.log(n)
+          return `${n.toFixed(1)}%`
+        };
+
+        return (
+          <div className="row g-3 mb-3 mt-0">
+            <div className="col-md-6 col-xl">
+              <div className="card border-0 shadow-sm h-100" style={{ borderRadius: '16px' }}>
+                <div className="card-body">
+                  <div className="d-flex justify-content-between align-items-start">
+                    <div className="flex-grow-1">
+                      <p className="text-muted mb-1 small text-uppercase fw-semibold">Total Leads</p>
+                      <h2 className="mb-0 fw-bold">{formatNumber(totalCount)}</h2>
+                      {/* <div className="mt-2">
+                        <span className="badge bg-success bg-opacity-10 text-success">
+                          <i className="mdi mdi-arrow-up me-1"></i>
+                          12.5%
+                        </span>
+                      </div> */}
+                    </div>
+                    <div
+                      className="rounded-circle d-flex align-items-center justify-content-center"
+                      style={{
+                        width: '56px',
+                        height: '56px',
+                        backgroundColor: '#6366F115'
+                      }}
+                    >
+                      <i className="mdi mdi-account-multiple fs-4" style={{ color: '#6366F1' }}></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="col-md-6 col-xl">
+              <div className="card border-0 shadow-sm h-100" style={{ borderRadius: '16px' }}>
+                <div className="card-body">
+                  <div className="d-flex justify-content-between align-items-start">
+                    <div className="flex-grow-1">
+                      <p className="text-muted mb-1 small text-uppercase fw-semibold">Leads Nuevos</p>
+                      <h2 className="mb-0 fw-bold">{formatNumber(pendingCount)}</h2>
+                      {/* <div className="mt-2">
+                        <span className="badge bg-success bg-opacity-10 text-success">
+                          <i className="mdi mdi-arrow-up me-1"></i>
+                          8.3%
+                        </span>
+                      </div> */}
+                    </div>
+                    <div
+                      className="rounded-circle d-flex align-items-center justify-content-center"
+                      style={{
+                        width: '56px',
+                        height: '56px',
+                        backgroundColor: '#3B82F615'
+                      }}
+                    >
+                      <i className="mdi mdi-account-plus fs-4" style={{ color: '#3B82F6' }}></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="col-md-6 col-xl">
+              <div className="card border-0 shadow-sm h-100" style={{ borderRadius: '16px' }}>
+                <div className="card-body">
+                  <div className="d-flex justify-content-between align-items-start">
+                    <div className="flex-grow-1">
+                      <p className="text-muted mb-1 small text-uppercase fw-semibold">Leads Contactados</p>
+                      <h2 className="mb-0 fw-bold">{formatNumber(managingCount)}</h2>
+                    </div>
+                    <div
+                      className="rounded-circle d-flex align-items-center justify-content-center"
+                      style={{
+                        width: '56px',
+                        height: '56px',
+                        backgroundColor: '#F59E0B15'
+                      }}
+                    >
+                      <i className="mdi mdi-phone fs-4" style={{ color: '#F59E0B' }}></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="col-md-6 col-xl">
+              <div className="card border-0 shadow-sm h-100" style={{ borderRadius: '16px' }}>
+                <div className="card-body">
+                  <div className="d-flex justify-content-between align-items-start">
+                    <div className="flex-grow-1">
+                      <p className="text-muted mb-1 small text-uppercase fw-semibold">Ventas Cerradas</p>
+                      <h2 className="mb-0 fw-bold">{formatNumber(clientsCount)}</h2>
+                      {/* <div className="mt-2">
+                        <span className="badge bg-success bg-opacity-10 text-success">
+                          <i className="mdi mdi-arrow-up me-1"></i>
+                          15.7%
+                        </span>
+                      </div> */}
+                    </div>
+                    <div
+                      className="rounded-circle d-flex align-items-center justify-content-center"
+                      style={{
+                        width: '56px',
+                        height: '56px',
+                        backgroundColor: '#10B98115'
+                      }}
+                    >
+                      <i className="mdi mdi-trophy fs-4" style={{ color: '#10B981' }}></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="col-md-6 col-xl">
+              <div className="card border-0 shadow-sm h-100" style={{ borderRadius: '16px' }}>
+                <div className="card-body">
+                  <div className="d-flex justify-content-between align-items-start">
+                    <div className="flex-grow-1">
+                      <p className="text-muted mb-1 small text-uppercase fw-semibold">Tasa de Conversión</p>
+                      <h2 className="mb-0 fw-bold">{formatPercentage((clientsCount / totalCount * 100) || 0)}</h2>
+                    </div>
+                    <div
+                      className="rounded-circle d-flex align-items-center justify-content-center"
+                      style={{
+                        width: '56px',
+                        height: '56px',
+                        backgroundColor: '#8B5CF615'
+                      }}
+                    >
+                      <i className="mdi mdi-percent fs-4" style={{ color: '#8B5CF6' }}></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
+      <div className="row mb-3">
+        <div className="col-lg-6">
+          <TrafficSourceAnalysis />
+        </div>
+        <div className="col-lg-6">
+          <DirectCampaignPerformance originCounts={originCounts} />
+        </div>
+      </div>
+
+      {/* <div className="row">
         <div className="col-12">
           <h4 className='mt-0 mb-2'>Vista general de leads</h4>
         </div>
-      </div>
-      <div className="row">
+      </div> */}
+      {/* <div className="row">
         <div className="col-md-4">
           <div className="card card-body">
             <div style={{ height: '250px' }}>
@@ -282,7 +486,7 @@ const KPILeads = ({ months = [], currentMonth, currentYear }) => {
             </div>
           </div>
         </div>
-      </div>
+      </div> */}
 
       <div className='row'>
         <div className="col-xl-3 col-lg-4 col-sm-6 col-xs-12">

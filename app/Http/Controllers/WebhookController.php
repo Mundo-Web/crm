@@ -181,6 +181,7 @@ class WebhookController extends BasicController
 
             if ($campaignJpa) {
                 $clientJpa->campaign_id = $campaignJpa->id;
+                $clientJpa->lead_origin = 'campaign';
                 $clientJpa->save();
             }
 

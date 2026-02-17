@@ -510,12 +510,12 @@ const LeadTable = ({ gridRef, cardClass, otherGridRef, rest, can, defaultLeadSta
           const campaignLink = data.campaign.link;
           container.html(renderToString(
             campaignLink
-              ? <a className="text-truncate d-block text-decoration-none" style={{ maxWidth: '100%', color: 'inherit' }} href={campaignLink} target="_blank" rel="noopener noreferrer">
-                <code style={{ color: '#ff8acc' }}>{data.campaign.code}</code>
+              ? <a className="text-truncate d-flex align-items-center text-decoration-none" style={{ maxWidth: '100%', color: 'inherit' }} href={campaignLink} target="_blank" rel="noopener noreferrer">
+                <code style={{ color: '#ff8acc', maxWidth: '40px' }} className="d-inline-block text-truncate">{data.campaign.code}</code>
                 <small className="ms-1">{data.campaign.title}</small>
               </a>
-              : <div className="text-truncate" style={{ maxWidth: '100%' }}>
-                <code>{data.campaign.code}</code>
+              : <div className="text-truncate d-flex align-items-center" style={{ maxWidth: '100%' }}>
+                <code style={{ maxWidth: '40px' }} className="d-inline-block text-truncate">{data.campaign.code}</code>
                 <small className="ms-1">{data.campaign.title}</small>
               </div>
           ))

@@ -20,10 +20,12 @@ class Campaign extends Model
         'link',
         'notes',
         'status',
-        'business_id'
+        'business_id',
+        'protected'
     ];
 
     protected $casts = [
-        'status' => 'boolean'
+        'status' => 'boolean',
+        'protected' => 'boolean',
     ];
 }

@@ -86,7 +86,7 @@ const PixelIntegration = ({ apikey, breadkowns }) => {
 
             <div className="mb-3">
               <h5>Ejemplo de URL con UTM:</h5>
-              <pre><code>{`https://tusitio.com/?utm_source=facebook`}</code></pre>
+              <pre><code>{`https://tusitio.com/?utm_source=fb`}</code></pre>
             </div>
 
             <div className="mb-3">
