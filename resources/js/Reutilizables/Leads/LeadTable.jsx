@@ -444,7 +444,7 @@ const LeadTable = ({ gridRef, cardClass, otherGridRef, rest, can, defaultLeadSta
       },
       {
         dataField: 'manage_status.name',
-        caption: 'Estado del lead',
+        caption: 'Etiqueta',
         dataType: 'string',
         width: 180,
         cellTemplate: (container, { data }) => {
