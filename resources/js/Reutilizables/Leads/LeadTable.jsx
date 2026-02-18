@@ -495,6 +495,7 @@ const LeadTable = ({ gridRef, cardClass, otherGridRef, rest, can, defaultLeadSta
         caption: 'RS Campaña',
         dataType: 'string',
         width: 100,
+        visible: false,
         lookup: {
           dataSource: sourceOptions,
           valueExpr: 'id',
