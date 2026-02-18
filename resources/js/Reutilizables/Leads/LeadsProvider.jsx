@@ -6,7 +6,7 @@ import ArrayJoin from '../../Utils/ArrayJoin';
 import useCrossTabSelectedUsers from '../CustomHooks/useCrossTabSelectedUsers';
 
 export const LeadsContext = createContext();
-export const LeadsProvider = ({ statuses, children }) => {
+export const LeadsProvider = ({ statuses, months, currentMonth, currentYear, children }) => {
 
     const [statusesRest, setStatusesRest] = useState({})
     const [leadsCount, setLeadsCount] = useState({})
@@ -15,6 +15,7 @@ export const LeadsProvider = ({ statuses, children }) => {
     const [defaultView, setDefaultView] = useState(Local.get('default-view') ?? 'kanban')
     const [lastLoadedDate, setLastLoadedDate] = useState(new Date())
     const [leads, setLeads] = useState([]);
+    const [selectedMonth, setSelectedMonth] = useState(`${currentYear}-${currentMonth}`)
 
     const getLeads = () => {
         statuses.map(({ id }) => id).forEach(async (statusId) => {
@@ -29,6 +30,11 @@ export const LeadsProvider = ({ statuses, children }) => {
             if (selectedUsersId.length > 0) {
                 filter.push(ArrayJoin(selectedUsersId.map(id => ['assigned_to', '=', id]), 'or'))
             }
+            // Add selectedMonth filter (yyyy-mm)
+            filter.push(['created_at', '>=', `${selectedMonth}-01`]);
+            const nextMonth = new Date(selectedMonth + '-01');
+            nextMonth.setMonth(nextMonth.getMonth() + 1);
+            filter.push(['created_at', '<', nextMonth.toISOString().slice(0, 10)]);
             const response = await leadsRest.paginate({
                 filter: ArrayJoin(filter, 'and'),
                 sort: [{ selector: "created_at", desc: true }],
@@ -63,6 +69,11 @@ export const LeadsProvider = ({ statuses, children }) => {
         if (selectedUsersId.length > 0) {
             filter.push(ArrayJoin(selectedUsersId.map(id => ['assigned_to', '=', id]), 'or'))
         }
+        // Add selectedMonth filter (yyyy-mm)
+        filter.push(['created_at', '>=', `${selectedMonth}-01`]);
+        const nextMonth = new Date(selectedMonth + '-01');
+        nextMonth.setMonth(nextMonth.getMonth() + 1);
+        filter.push(['created_at', '<', nextMonth.toISOString().slice(0, 10)]);
 
         const newLeads = await leadsRest.paginate({
             filter: ArrayJoin(filter, 'and'),
@@ -116,6 +127,11 @@ export const LeadsProvider = ({ statuses, children }) => {
         if (selectedUsersId.length > 0) {
             filter.push(ArrayJoin(selectedUsersId.map(id => ['assigned_to', '=', id]), 'or'))
         }
+        // Add selectedMonth filter (yyyy-mm)
+        filter.push(['created_at', '>=', `${selectedMonth}-01`]);
+        const nextMonth = new Date(selectedMonth + '-01');
+        nextMonth.setMonth(nextMonth.getMonth() + 1);
+        filter.push(['created_at', '<', nextMonth.toISOString().slice(0, 10)]);
 
         const response = await leadsRest.paginate({
             filter: ArrayJoin(filter, 'and'),
@@ -145,7 +161,7 @@ export const LeadsProvider = ({ statuses, children }) => {
         if (defaultView != 'kanban') return
         const interval = setInterval(() => { refreshLeads(); }, 10000);
         return () => clearInterval(interval);
-    }, [lastLoadedDate, defaultView, selectedUsersId])
+    }, [lastLoadedDate, defaultView, selectedUsersId, selectedMonth])
 
     return (
         <LeadsContext.Provider
@@ -160,7 +176,10 @@ export const LeadsProvider = ({ statuses, children }) => {
                 leadsCount,
                 statusesLoading,
                 selectedUsersId,
-                setSelectedUsersId
+                setSelectedUsersId,
+                months,
+                selectedMonth,
+                setSelectedMonth,
             }}
         >
             {children}

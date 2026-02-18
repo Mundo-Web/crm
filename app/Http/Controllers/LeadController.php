@@ -93,6 +93,43 @@ class LeadController extends BasicController
             }
         }
 
+        $currentMonth = date('m');
+        $currentYear = date('Y');
+
+        $months = Client::select([
+            DB::raw("DATE_FORMAT(clients.created_at, '%Y-%m') as id"),
+            DB::raw('YEAR(clients.created_at) AS year'),
+            DB::raw('MONTH(clients.created_at) AS month'),
+            DB::raw('count(clients.id) AS quantity')
+        ])
+            ->where('clients.business_id', Auth::user()->business_id)
+            ->groupBy(
+                DB::raw('YEAR(clients.created_at)'),
+                DB::raw('MONTH(clients.created_at)'),
+                DB::raw("DATE_FORMAT(clients.created_at, '%Y-%m')")
+            )
+            ->orderBy(DB::raw('YEAR(clients.created_at)'), 'desc')
+            ->orderBy(DB::raw('MONTH(clients.created_at)'), 'desc')
+            ->get()->toArray();
+
+        $found = false;
+        foreach ($months as $month) {
+            if ($month['id'] == ("{$currentYear}-{$currentMonth}")) {
+                $found = true;
+                break;
+            }
+        }
+
+        // Si no se encontró, agregar un nuevo item
+        if (!$found) {
+            array_unshift($months, [
+                'id' => "{$currentYear}-{$currentMonth}",
+                'year' => $currentYear,
+                'month' => $currentMonth,
+                'quantity' => 0
+            ]);
+        }
+
         return [
             'lead' => $request->lead,
             'manageStatuses' => $manageStatuses,
@@ -107,6 +144,9 @@ class LeadController extends BasicController
             'signs' => $signs,
             'users' => $usersJpa,
             'hasForms' => $hasForms,
+            'months' => $months,
+            'currentMonth' => $currentMonth,
+            'currentYear' => $currentYear
         ];
     }
 

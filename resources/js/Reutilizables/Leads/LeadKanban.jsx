@@ -1,4 +1,4 @@
-import { useContext, useEffect, useRef } from "react"
+import { useContext, useEffect, useRef, useState } from "react"
 import Correlative from "../../Utils/Correlative"
 import LaravelSession from "../../Utils/LaravelSession";
 import LeadsRest from "../../actions/LeadsRest";
@@ -12,7 +12,7 @@ const leadsRest = new LeadsRest()
 
 const LeadKanban = ({ statuses, leads, onLeadClicked, onOpenModal, onMakeLeadClient, onArchiveClicked, onDeleteClicked, onAttendClient, users }) => {
 
-  const { setLeads, getLeads, defaultView, refreshLeads, getMoreLeads, leadsCount, statusesLoading, selectedUsersId, setSelectedUsersId } = useContext(LeadsContext)
+  const { setLeads, getLeads, defaultView, refreshLeads, getMoreLeads, leadsCount, statusesLoading, selectedUsersId, setSelectedUsersId, months, selectedMonth, setSelectedMonth } = useContext(LeadsContext)
   const loadingRefs = useRef({});
 
   useEffect(() => {
@@ -62,53 +62,97 @@ const LeadKanban = ({ statuses, leads, onLeadClicked, onOpenModal, onMakeLeadCli
     if (defaultView != 'kanban') return
     setLeads([])
     getLeads()
-  }, [selectedUsersId, defaultView])
+  }, [selectedUsersId, defaultView, selectedMonth])
 
   return <>
-    <div className="d-flex w-100 gap-0 mt-2 align-items-center mb-2">
-      {users.map(user => (
-        <Tippy
-          key={user.id}
-          content={`${user.name} ${user.lastname}`}
+    <div className="d-flex align-items-center justify-content-between my-2">
+      <div className="d-flex w-100 gap-0 align-items-center">
+        {users.map(user => (
+          <Tippy
+            key={user.id}
+            content={`${user.name} ${user.lastname}`}
+          >
+            <div
+              onClick={() => {
+                const newSelectedUsers = [...selectedUsersId];
+                const userServiceId = user.service_user.id;
+
+                const index = newSelectedUsers.indexOf(userServiceId);
+                if (index > -1) {
+                  newSelectedUsers.splice(index, 1);
+                } else {
+                  newSelectedUsers.push(userServiceId);
+                }
+
+                setSelectedUsersId(newSelectedUsers);
+              }}
+              className={`rounded-pill ${selectedUsersId.includes(user.service_user.id) ? 'bg-purple' : ''}`}
+              style={{ cursor: 'pointer', padding: '2px', marginRight: '2px' }}
+            >
+              <img
+                className='avatar-xs rounded-circle'
+                src={`//${Global.APP_DOMAIN}/api/profile/thumbnail/${user.relative_id}`}
+                onError={(e) => { e.target.src = `//${Global.APP_DOMAIN}/assets/img/user-404.svg`; }}
+                alt={user.name}
+                style={{ objectFit: 'cover', objectPosition: 'center' }}
+              />
+            </div>
+          </Tippy>
+        ))}
+        {
+          selectedUsersId.length > 0 &&
+          <Tippy content="Limpiar filtros">
+            <button
+              className="btn btn-xs btn-soft-danger ms-1 rounded-pill"
+              onClick={() => setSelectedUsersId([])}
+            >
+              <i className="mdi mdi-trash-can-outline"></i>
+            </button>
+          </Tippy>
+        }
+      </div>
+      <div className="dropdown flex-grow-1">
+        <button
+          className="btn btn-light bg-white dropdown-toggle w-100 text-start rounded-pill"
+          type="button"
+          id="monthDropdown"
+          data-bs-toggle="dropdown"
+          aria-expanded="false"
         >
-          <div
-            onClick={() => {
-              const newSelectedUsers = [...selectedUsersId];
-              const userServiceId = user.service_user.id;
-
-              const index = newSelectedUsers.indexOf(userServiceId);
-              if (index > -1) {
-                newSelectedUsers.splice(index, 1);
-              } else {
-                newSelectedUsers.push(userServiceId);
-              }
-
-              setSelectedUsersId(newSelectedUsers);
-            }}
-            className={`rounded-pill ${selectedUsersId.includes(user.service_user.id) ? 'bg-purple' : ''}`}
-            style={{ cursor: 'pointer', padding: '2px', marginRight: '2px' }}
-          >
-            <img
-              className='avatar-xs rounded-circle'
-              src={`//${Global.APP_DOMAIN}/api/profile/thumbnail/${user.relative_id}`}
-              onError={(e) => { e.target.src = `//${Global.APP_DOMAIN}/assets/img/user-404.svg`; }}
-              alt={user.name}
-              style={{ objectFit: 'cover', objectPosition: 'center' }}
-            />
-          </div>
-        </Tippy>
-      ))}
-      {
-        selectedUsersId.length > 0 &&
-        <Tippy content="Limpiar filtros">
-          <button
-            className="btn btn-xs btn-soft-danger ms-1 rounded-pill"
-            onClick={() => setSelectedUsersId([])}
-          >
-            <i className="mdi mdi-trash-can-outline"></i>
-          </button>
-        </Tippy>
-      }
+          {(() => {
+            const selected = months.find(m => m.id === selectedMonth);
+            if (!selected) return 'Seleccione un mes';
+            const month = moment({ month: selected.month - 1, year: selected.year });
+            return month.format('MMMM YYYY').toTitleCase();
+          })()}
+        </button>
+        <ul className="dropdown-menu w-100 end-0" aria-labelledby="monthDropdown" style={{
+          maxHeight: '360px',
+          overflowY: 'auto'
+        }}>
+          {months.map((row, index) => {
+            const month = moment({ month: row.month - 1, year: row.year });
+            return (
+              <li key={index}>
+                <a
+                  className="dropdown-item"
+                  href="#"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setSelectedMonth(row.id);
+                  }}
+                >
+                  <b className='d-block'>{month.format('MMMM YYYY').toTitleCase()}</b>
+                  <small>
+                    <i className='me-1 fa fa-users'></i>
+                    {row.quantity} entradas
+                  </small>
+                </a>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
     </div>
     <div className="d-flex gap-1 mb-3" style={{ overflowX: 'auto', minHeight: 'calc(100vh - 236px)' }}>
       {
@@ -194,26 +238,26 @@ const LeadKanban = ({ statuses, leads, onLeadClicked, onOpenModal, onMakeLeadCli
                                   <li className="list-inline-item">
                                     {
                                       !lead.assigned_to &&
-                                        // ? <TippyButton className='btn btn-xs btn-soft-dark rounded-pill' title="Atender lead"
-                                        //   onClick={() => onAttendClient(lead.id, true)}>
-                                        //   <i className='fas fa-hands-helping'></i>
-                                        // </TippyButton>
-                                        // : (
-                                        //   lead.assigned_to == LaravelSession.service_user.id
-                                        //     ? <TippyButton className='btn btn-xs btn-soft-danger' title="Dejar de atender"
-                                        //       onClick={() => onAttendClient(lead.id, false)}>
-                                        //       <i className='fas fa-hands-wash'></i>
-                                        //     </TippyButton>
-                                        //     : 
-                                            <Tippy content={`Atendido por ${lead?.assigned?.fullname}`}>
-                                              <a href="" data-bs-toggle="tooltip" data-bs-placement="top"
-                                                title="Username">
-                                                <img src={`//${Global.APP_DOMAIN}/api/profile/${lead?.assigned?.relative_id}`} alt="img"
-                                                onError={(e) => { e.target.src = `//${Global.APP_DOMAIN}/assets/img/user-404.svg`; }}
-                                                  className="avatar-xs rounded-circle" />
-                                              </a>
-                                            </Tippy>
-                                        // )
+                                      // ? <TippyButton className='btn btn-xs btn-soft-dark rounded-pill' title="Atender lead"
+                                      //   onClick={() => onAttendClient(lead.id, true)}>
+                                      //   <i className='fas fa-hands-helping'></i>
+                                      // </TippyButton>
+                                      // : (
+                                      //   lead.assigned_to == LaravelSession.service_user.id
+                                      //     ? <TippyButton className='btn btn-xs btn-soft-danger' title="Dejar de atender"
+                                      //       onClick={() => onAttendClient(lead.id, false)}>
+                                      //       <i className='fas fa-hands-wash'></i>
+                                      //     </TippyButton>
+                                      //     : 
+                                      <Tippy content={`Atendido por ${lead?.assigned?.fullname}`}>
+                                        <a href="" data-bs-toggle="tooltip" data-bs-placement="top"
+                                          title="Username">
+                                          <img src={`//${Global.APP_DOMAIN}/api/profile/${lead?.assigned?.relative_id}`} alt="img"
+                                            onError={(e) => { e.target.src = `//${Global.APP_DOMAIN}/assets/img/user-404.svg`; }}
+                                            className="avatar-xs rounded-circle" />
+                                        </a>
+                                      </Tippy>
+                                      // )
                                     }
                                   </li>
                                   <li className="list-inline-item">

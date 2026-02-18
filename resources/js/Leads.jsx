@@ -1437,7 +1437,11 @@ const Leads = (properties) => {
 };
 
 CreateReactScript((el, properties) => {
-  createRoot(el).render(<LeadsProvider statuses={properties.statuses}>
+  createRoot(el).render(<LeadsProvider
+    statuses={properties.statuses}
+    months={properties.months}
+    currentMonth={properties.currentMonth}
+    currentYear={properties.currentYear}>
     <Leads {...properties} />
   </LeadsProvider>);
 })
