@@ -14,7 +14,7 @@ const Table = ({ title, filter = [], gridRef, rest, columns, toolBar, masterDeta
   const text = $(html).text().trim().replace('-', '')
   const [range, setRange] = useState([{ startDate: new Date(), endDate: new Date(), key: 'selection', }])
   const [dateFilter, setDateFilter] = useState([]);
-  const [dateFilterType, setDateFilterType] = useState('created_at')
+  const [dateFilterType, setDateFilterType] = useState('updated_at')
   const [filtering, setFiltering] = useState(false)
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false)
   const [selectionCount, setSelectionCount] = useState(0)
