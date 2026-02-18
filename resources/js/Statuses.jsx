@@ -32,6 +32,7 @@ const Statuses = ({ statuses: statusesFromDB, tables }) => {
 
   const [isEditing, setIsEditing] = useState(false)
   const [require, setRequire] = useState(false)
+  const [pipeline, setPipeline] = useState(false)
 
   const onModalOpen = (data) => {
     if (data?.id) setIsEditing(true)

@@ -14,7 +14,7 @@ export const FunnelChart = ({ data = {}, extraData = [] }) => {
 
   const funnelData = [
     { stage: 'Impresiones', count: data.impressions ?? dummyData.impressions, color: '#3B82F6' },
-...extraData,
+    ...extraData,
     { stage: 'Contacto realizado', count: data.contacted ?? dummyData.contacted, color: '#F59E0B' },
     { stage: 'Venta cerrada', count: data.salesClosed ?? dummyData.salesClosed, color: '#10B981' }
   ];
@@ -23,6 +23,9 @@ export const FunnelChart = ({ data = {}, extraData = [] }) => {
     if (previous === 0) return 0;
     return ((1 - current / previous) * 100).toFixed(1);
   };
+
+  // Calculate the sum of counts from extraData
+  const extraDataSum = extraData.reduce((sum, item) => sum + (item.count || 0), 0);
 
   return (
     <div className="card border-0 shadow-sm" style={{ borderRadius: '16px' }}>
@@ -56,18 +59,52 @@ export const FunnelChart = ({ data = {}, extraData = [] }) => {
         <div className="mt-4">
           <h6 className="text-muted small mb-3">TASAS DE CAÍDA</h6>
           <div className="row g-2">
-            {funnelData.map((stage, index) => {
-              if (index === 0) return null;
-              const dropRate = calculateDropRate(stage.count, funnelData[index - 1].count);
-              return (
-                <div key={stage.stage} className="col-md-4">
-                  <div className="p-2 bg-light rounded">
-                    <div className="small text-muted">{funnelData[index - 1].stage} → {stage.stage}</div>
-                    <div className="fw-semibold text-danger">-{dropRate}%</div>
+            {/* Drop rate from Impressions to extraData sum */}
+            <div className="col-md-4">
+              <div className="p-2 bg-light rounded">
+                <div className="small text-muted">Impresiones → Interesado</div>
+                <div className="fw-semibold text-danger">
+                  -{calculateDropRate(extraDataSum, data.impressions ?? dummyData.impressions)}%
+                </div>
+              </div>
+            </div>
+
+            {/* Drop rate from Impressions to each extraData element */}
+            {extraData.map((item, index) => (
+              <div className="col-md-4" key={index}>
+                <div className="p-2 bg-light rounded">
+                  <div className="small text-muted">Impresiones → {item.stage}</div>
+                  <div className="fw-semibold text-danger">
+                    -{calculateDropRate(item.count, data.impressions ?? dummyData.impressions)}%
                   </div>
                 </div>
-              );
-            })}
+              </div>
+            ))}
+            {/* Drop rate from Interesado (extraData sum) to Contacto realizado */}
+            <div className="col-md-4">
+              <div className="p-2 bg-light rounded">
+                <div className="small text-muted">Interesado → Contacto realizado</div>
+                <div className="fw-semibold text-danger">
+                  -{calculateDropRate(
+                    data.contacted ?? dummyData.contacted,
+                    extraDataSum
+                  )}%
+                </div>
+              </div>
+            </div>
+
+            {/* Drop rate from Contacto realizado to Venta cerrada */}
+            <div className="col-md-4">
+              <div className="p-2 bg-light rounded">
+                <div className="small text-muted">Contacto realizado → Venta cerrada</div>
+                <div className="fw-semibold text-danger">
+                  -{calculateDropRate(
+                    data.salesClosed ?? dummyData.salesClosed,
+                    data.contacted ?? dummyData.contacted
+                  )}%
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
