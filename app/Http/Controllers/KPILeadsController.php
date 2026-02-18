@@ -222,8 +222,7 @@ class KPILeadsController extends BasicController
                 ->whereNotNull('origin')
                 ->where('origin', '<>', '')
                 ->groupBy('origin')
-                ->havingRaw('COUNT(CASE WHEN lead_origin = "integration" THEN 1 END) > 0')
-                ->havingRaw('COUNT(CASE WHEN campaign_id IS NOT NULL THEN 1 END) > 0')
+                ->havingRaw('COUNT(CASE WHEN lead_origin = "integration" THEN 1 END) > 0 OR COUNT(CASE WHEN campaign_id IS NOT NULL THEN 1 END) > 0')
                 ->get();
 
             $convertedLeadStatus = Setting::get('converted-lead-status');

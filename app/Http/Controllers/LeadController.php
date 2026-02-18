@@ -207,33 +207,51 @@ class LeadController extends BasicController
 
             $business_id = Auth::user()->business_id;
 
-            // Group unique campaign_id/campaign_name pairs and build campaigns map
-            $campaignMap = [];
+            // Build a map of campaign_code => existing campaign id
+            $existingCampaigns = Campaign::where('business_id', $business_id)
+                ->whereIn('code', array_unique(array_filter(array_column($cleanRows, 'campaign_id'))))
+                ->pluck('id', 'code');
+
+            // Collect new campaigns to insert
+            $campaignsToInsert = [];
             foreach ($cleanRows as $row) {
-                $adId = $row['campaign_id'] ?? null;
-                $adName = $row['campaign_name'] ?? null;
-                if ($adId !== null && trim($adId) !== '') {
-                    $key = $adId;
-                    if (!isset($campaignMap[$key])) {
-                        $campaignMap[$key] = [
-                            'id' => Uuid::uuid1()->toString(),
-                            'code' => $adId,
-                            'title' => $adName,
-                            'source' => match (strtolower($row[$mapping['source']] ?? '')) {
-                                'fb' => 'facebook',
-                                'ig' => 'instagram',
-                                default => strtolower($row[$mapping['source']] ?? 'unknown'),
-                            },
-                            'protected' => true,
-                            'business_id' => $business_id
-                        ];
-                    }
+                $adId = trim($row['campaign_id'] ?? '');
+                if ($adId === '' || isset($existingCampaigns[$adId])) {
+                    continue;
+                }
+
+                $source = strtolower($row[$mapping['source']] ?? '');
+                $campaignsToInsert[$adId] = [
+                    'id'          => Uuid::uuid1()->toString(),
+                    'code'        => $adId,
+                    'title'       => $row['campaign_name'] ?? null,
+                    'source'      => match ($source) {
+                        'fb' => 'facebook',
+                        'ig' => 'instagram',
+                        default => $source ?: 'unknown',
+                    },
+                    'protected'   => true,
+                    'business_id' => $business_id,
+                ];
+            }
+
+            // Bulk insert new campaigns
+            if (!empty($campaignsToInsert)) {
+                Campaign::insert(array_values($campaignsToInsert));
+                // Merge newly inserted campaigns into existing map
+                foreach ($campaignsToInsert as $code => $campaign) {
+                    $existingCampaigns[$code] = $campaign['id'];
                 }
             }
 
-            // Bulk insert campaigns if any
-            if (!empty($campaignMap)) {
-                Campaign::insert(array_values($campaignMap));
+            // Build final campaignMap for later use (code => full campaign data)
+            $campaignMap = [];
+            foreach ($existingCampaigns as $code => $id) {
+                $campaignMap[$code] = [
+                    'id'    => $id,
+                    'code'  => $code,
+                    // title, source, protected, business_id are not strictly needed downstream
+                ];
             }
 
             // Map rows to desired format using mapping
