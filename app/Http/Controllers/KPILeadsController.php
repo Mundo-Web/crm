@@ -165,6 +165,8 @@ class KPILeadsController extends BasicController
                 ->where('business_id', Auth::user()->business_id)
                 ->whereNotNull('origin')
                 ->where('origin', '<>', '')
+                ->whereNotNull('campaign_id')
+                ->where('campaign_id', '<>', '')
                 ->groupBy('origin')
                 ->orderBy('total', 'desc')
                 ->get();
@@ -205,6 +207,8 @@ class KPILeadsController extends BasicController
                 ->whereNotNull('origin')
                 ->where('origin', '<>', '')
                 ->groupBy('origin')
+                ->havingRaw('COUNT(CASE WHEN lead_origin = "integration" THEN 1 END) > 0')
+                ->havingRaw('COUNT(CASE WHEN campaign_id IS NOT NULL THEN 1 END) > 0')
                 ->get();
 
             $convertedLeadStatus = Setting::get('converted-lead-status');
