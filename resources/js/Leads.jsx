@@ -962,7 +962,7 @@ const Leads = (properties) => {
               </div>
             </div>
             <div>
-              <b className='d-block'>Estado del lead</b>
+              <b className='d-block'>Etiqueta</b>
               <div className="btn-group mb-0" style={{ width: '100%' }}>
                 <button className="btn btn-light btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style={{ color: '#ffffff', backgroundColor: leadLoaded?.manage_status?.color || '#6c757d' }}>
                   {leadLoaded?.manage_status?.name || 'Sin estado'} <i className="mdi mdi-chevron-down"></i>
@@ -1181,7 +1181,7 @@ const Leads = (properties) => {
                           </div>
 
                           <div className="col-sm-12 col-md-12 col-lg-6 mb-2">
-                            <label className="form-label">Estado del lead</label>
+                            <label className="form-label">Etiqueta</label>
                             <div className="dropdown">
                               <button
                                 className="btn btn-white btn-sm dropdown-toggle w-100 text-start"

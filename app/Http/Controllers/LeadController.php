@@ -43,7 +43,7 @@ class LeadController extends BasicController
     public function setReactViewProperties(Request $request)
     {
         $statuses = Status::select()
-            ->where('table_id', 'e05a43e5-b3a6-46ce-8d1f-381a73498f33')
+            ->whereIn('table_id', ['e05a43e5-b3a6-46ce-8d1f-381a73498f33', 'a8367789-666e-4929-aacb-7cbc2fbf74de'])
             ->where('business_id', Auth::user()->business_id)
             ->where('status', true)
             ->get();
@@ -178,7 +178,7 @@ class LeadController extends BasicController
             ->leftJoin('statuses AS manage_status', 'manage_status.id', 'manage_status_id')
             ->leftJoin('users AS assigned', 'assigned.id', 'clients.assigned_to')
             ->leftJoin('campaigns AS campaign', 'campaign.id', 'clients.campaign_id')
-            ->where('status.table_id', 'e05a43e5-b3a6-46ce-8d1f-381a73498f33')
+            ->whereIn('status.table_id', ['e05a43e5-b3a6-46ce-8d1f-381a73498f33', 'a8367789-666e-4929-aacb-7cbc2fbf74de'])
             ->where('clients.status', true)
             ->where('clients.business_id', Auth::user()->business_id);
 

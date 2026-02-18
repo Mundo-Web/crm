@@ -156,7 +156,16 @@ const LeadKanban = ({ statuses, leads, onLeadClicked, onOpenModal, onMakeLeadCli
     </div>
     <div className="d-flex gap-1 mb-3" style={{ overflowX: 'auto', minHeight: 'calc(100vh - 236px)' }}>
       {
-        statuses.filter(({ pipeline }) => pipeline).sort((a, b) => a.order - b.order).map((status, i) => {
+        statuses
+          .filter(({ pipeline }) => pipeline)
+          .sort((a, b) => {
+            // Always send the status with table_id 'a8367789-666e-4929-aacb-7cbc2fbf74de' to the end
+            if (a.table_id === 'a8367789-666e-4929-aacb-7cbc2fbf74de') return 1;
+            if (b.table_id === 'a8367789-666e-4929-aacb-7cbc2fbf74de') return -1;
+            // Otherwise, sort by order
+            return a.order - b.order;
+          })
+          .map((status, i) => {
           const correlative = Correlative(status.name)
           const leadsCountHere = leadsCount[status.id] ?? 0
           return (<div key={`status-${i}`} style={{ minWidth: '270px', maxWidth: '270px' }}>

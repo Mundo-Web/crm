@@ -39,7 +39,7 @@ const Statuses = ({ statuses: statusesFromDB, tables }) => {
     if (data?.id) setIsEditing(true)
     else setIsEditing(false)
 
-    setShowPipeline(data?.table?.id == 'e05a43e5-b3a6-46ce-8d1f-381a73498f33')
+    setShowPipeline(data?.table?.id == 'e05a43e5-b3a6-46ce-8d1f-381a73498f33' || data?.table?.id == 'a8367789-666e-4929-aacb-7cbc2fbf74de')
     setPipeline(data?.pipeline ?? false)
     idRef.current.value = data?.id || null
     SetSelectValue(tableRef.current, data?.table?.id, data?.table?.name)

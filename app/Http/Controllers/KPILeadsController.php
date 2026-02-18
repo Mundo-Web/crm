@@ -96,6 +96,7 @@ class KPILeadsController extends BasicController
                 ->sum('chp.price');
             $clientsCount = Client::byMonth($year, $month)
                 ->whereIn('status_id', $clientStatusesIds)
+                ->whereNotNull('status')
                 ->count();
             $clientsSum = Client::byMonth($year, $month)
                 ->whereIn('status_id', $clientStatusesIds)
