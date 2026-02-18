@@ -16,7 +16,7 @@ const LeadKanban = ({ statuses, leads, onLeadClicked, onOpenModal, onMakeLeadCli
   const loadingRefs = useRef({});
 
   useEffect(() => {
-    const ids = statuses.map(x => `#status-${Correlative(x.name)}`).join(', ');
+    const ids = statuses.filter(({ pipeline }) => pipeline).map(x => `#status-${Correlative(x.name)}`).join(', ');
     $(ids).sortable({
       connectWith: '.taskList',
       placeholder: 'task-placeholder',
@@ -156,7 +156,7 @@ const LeadKanban = ({ statuses, leads, onLeadClicked, onOpenModal, onMakeLeadCli
     </div>
     <div className="d-flex gap-1 mb-3" style={{ overflowX: 'auto', minHeight: 'calc(100vh - 236px)' }}>
       {
-        statuses.sort((a, b) => a.order - b.order).map((status, i) => {
+        statuses.filter(({ pipeline }) => pipeline).sort((a, b) => a.order - b.order).map((status, i) => {
           const correlative = Correlative(status.name)
           const leadsCountHere = leadsCount[status.id] ?? 0
           return (<div key={`status-${i}`} style={{ minWidth: '270px', maxWidth: '270px' }}>

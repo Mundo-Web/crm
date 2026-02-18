@@ -33,11 +33,14 @@ const Statuses = ({ statuses: statusesFromDB, tables }) => {
   const [isEditing, setIsEditing] = useState(false)
   const [require, setRequire] = useState(false)
   const [pipeline, setPipeline] = useState(false)
+  const [showPipeline, setShowPipeline] = useState(false)
 
   const onModalOpen = (data) => {
     if (data?.id) setIsEditing(true)
     else setIsEditing(false)
 
+    setShowPipeline(data?.table?.id == 'e05a43e5-b3a6-46ce-8d1f-381a73498f33')
+    setPipeline(data?.pipeline ?? false)
     idRef.current.value = data?.id || null
     SetSelectValue(tableRef.current, data?.table?.id, data?.table?.name)
     if (data?.table?.id) {
@@ -65,7 +68,8 @@ const Statuses = ({ statuses: statusesFromDB, tables }) => {
       order: orderRef.current.value,
       description: descriptionRef.current.value,
       require: require,
-      action_required: require ? 'product' : null
+      action_required: require ? 'product' : null,
+      pipeline: pipeline
     }
 
     const result = await statusesRest.save(request)
@@ -202,9 +206,9 @@ const Statuses = ({ statuses: statusesFromDB, tables }) => {
         }
       ]} /> */}
     <div className="container">
-      <div className='text-center'>
+      {/* <div className='text-center'>
         <button className="btn btn-primary mb-4 rounded-pill" onClick={() => onModalOpen()}>Nuevo Estado</button>
-      </div>
+      </div> */}
 
       <div className="row align-items-start justify-content-center">
         {tables.map((table, index) => (
@@ -216,7 +220,7 @@ const Statuses = ({ statuses: statusesFromDB, tables }) => {
                   <button className='btn btn-xs btn-primary rounded-pill' onClick={() => onModalOpen({ table })}>Nuevo estado</button>
                 </div>
               </div>
-              <div className="card-body d-flex align-items-start justify-content-center gap-2" style={{ flexWrap: 'wrap', minHeight: '200px' }}>
+              <div className="card-body d-flex align-items-start justify-content-center gap-2" style={{ flexWrap: 'wrap', minHeight: '200px', maxHeight: '300px', overflowY: 'auto' }}>
                 {statuses.filter(status => status.table_id === table.id).sort((a, b) => a.order - b.order).map((status, index) => (
                   <div key={index} className="btn-group dropup col-auto">
                     <span type="button" className="btn btn-sm btn-white d-flex gap-2 align-items-center" style={{ cursor: 'default' }}>
@@ -259,6 +263,9 @@ const Statuses = ({ statuses: statusesFromDB, tables }) => {
         <TextareaFormGroup eRef={descriptionRef} label='Descripcion' col='col-12' />
         <div className="col-12">
           <CheckboxFormGroup eRef={requireRef} label='¿Requerir producto?' id='require' title='Obliga al usuario a escoger un producto antes de cambiar a este estado' checked={require} setChecked={setRequire} />
+        </div>
+        <div className="col-12 mt-2" hidden={!showPipeline}>
+          <CheckboxFormGroup eRef={requireRef} label='¿Mostrar en Pipeline?' id='pipeline' title='Si está activo, este estado aparecerá en el pipeline de leads; si no, permanecerá oculto' checked={pipeline} setChecked={setPipeline} />
         </div>
       </div>
     </Modal>

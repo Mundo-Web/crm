@@ -18,7 +18,7 @@ export const LeadsProvider = ({ statuses, months, currentMonth, currentYear, chi
     const [selectedMonth, setSelectedMonth] = useState(`${currentYear}-${currentMonth}`)
 
     const getLeads = () => {
-        statuses.map(({ id }) => id).forEach(async (statusId) => {
+        statuses.filter(({ pipeline }) => pipeline).map(({ id }) => id).forEach(async (statusId) => {
             let leadsRest = statusesRest[statusId]
             if (!leadsRest) {
                 leadsRest = new LeadsRest()

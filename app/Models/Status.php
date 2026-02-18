@@ -28,11 +28,13 @@ class Status extends Model
         'order',
         'business_id',
         'require',
-        'action_required'
+        'action_required',
+        'pipeline'
     ];
 
     protected $casts = [
         'require' => 'boolean',
+        'pipeline' => 'boolean',
     ];
 
     protected $hidden = [
