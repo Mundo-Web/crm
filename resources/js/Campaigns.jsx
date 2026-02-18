@@ -136,6 +136,7 @@ const Campaigns = ({ can }) => {
         {
           caption: 'Acciones',
           cellTemplate: (container, { data }) => {
+            if (data.protected) return
             can('campaigns', 'root', 'all', 'update') && container.append(DxButton({
               className: 'btn btn-xs btn-soft-primary',
               title: 'Editar',
@@ -172,7 +173,7 @@ const Campaigns = ({ can }) => {
 };
 
 CreateReactScript((el, properties) => {
-  if (!properties.can('campaigns', 'root', 'all', 'list')) return location.href = '/';
+  // if (!properties.can('campaigns', 'root', 'all', 'list')) return location.href = '/';
   createRoot(el).render(
     <Adminto {...properties} title='Campañas' showTitle={false}>
       <Campaigns {...properties} />
