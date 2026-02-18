@@ -137,13 +137,15 @@ const Campaigns = ({ can }) => {
           caption: 'Acciones',
           cellTemplate: (container, { data }) => {
             if (data.protected) return
-            can('campaigns', 'root', 'all', 'update') && container.append(DxButton({
+            // can('campaigns', 'root', 'all', 'update') && 
+            container.append(DxButton({
               className: 'btn btn-xs btn-soft-primary',
               title: 'Editar',
               icon: 'fa fa-pen',
               onClick: () => onModalOpen(data)
             }))
-            can('campaigns', 'root', 'all', 'delete') && container.append(DxButton({
+            // can('campaigns', 'root', 'all', 'delete') &&
+            container.append(DxButton({
               className: 'btn btn-xs btn-soft-danger',
               title: 'Eliminar',
               icon: 'fa fa-trash-alt',
