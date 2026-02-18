@@ -165,6 +165,21 @@ class KPILeadsController extends BasicController
                 ->where('business_id', Auth::user()->business_id)
                 ->whereNotNull('origin')
                 ->where('origin', '<>', '')
+                ->groupBy('origin')
+                ->orderBy('total', 'desc')
+                ->get();
+
+            $originCampaignCounts = Client::byMonth($year, $month)
+                ->select([
+                    'origin',
+                    DB::raw('COUNT(*) as total'),
+                    DB::raw('COUNT(CASE WHEN status_id = "' . $defaultLeadStatus . '" THEN 1 END) as pending'),
+                    DB::raw('COUNT(CASE WHEN status_id IN (' . implode(',', array_map(fn($id) => '"' . $id . '"', $clientStatusesIds)) . ') THEN 1 END) as clients'),
+                    DB::raw('COUNT(CASE WHEN status_id IN (' . implode(',', array_map(fn($id) => '"' . $id . '"', $leadStatusesIds)) . ') AND status_id <> "' . $defaultLeadStatus . '" THEN 1 END) as managing')
+                ])
+                ->where('business_id', Auth::user()->business_id)
+                ->whereNotNull('origin')
+                ->where('origin', '<>', '')
                 ->whereNotNull('campaign_id')
                 ->where('campaign_id', '<>', '')
                 ->groupBy('origin')
@@ -259,6 +274,7 @@ class KPILeadsController extends BasicController
                 'managingSum' => $managingSum,
                 'leadSources' => $leadSources,
                 'originCounts' => $originCounts,
+                'originCampaignCounts' => $originCampaignCounts,
                 'originLandingCampaignCounts' => $originLandingCampaignCounts,
                 'usersAssignation' => $usersAssignation,
                 'breakdownCounts' => $breakdownCounts,

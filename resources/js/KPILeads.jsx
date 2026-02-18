@@ -37,6 +37,7 @@ const KPILeads = ({ months = [], currentMonth, currentYear }) => {
 
   const [leadSources, setLeadSources] = useState({})
   const [originCounts, setOriginCounts] = useState([])
+  const [originCampaignCounts, setOriginCampaignCounts] = useState([])
   const [breakdowns, setBreakdowns] = useState(0)
   const [funnelCounts, setFunnelCounts] = useState({})
   const [originLandingCampaignCounts, setOriginLandingCampaignCounts] = useState([])
@@ -81,6 +82,7 @@ const KPILeads = ({ months = [], currentMonth, currentYear }) => {
 
         setLeadSources(summary.leadSources ?? {})
         setOriginCounts(summary.originCounts ?? [])
+        setOriginCampaignCounts(summary.originCampaignCounts ?? []);
         setFunnelCounts(summary.funnelCounts ?? {})
         setOriginLandingCampaignCounts(summary.originLandingCampaignCounts ?? [])
 
@@ -375,7 +377,7 @@ const KPILeads = ({ months = [], currentMonth, currentYear }) => {
           <TrafficSourceAnalysis data={originLandingCampaignCounts} />
         </div>
         <div className="col-lg-6">
-          <DirectCampaignPerformance originCounts={originCounts} />
+          <DirectCampaignPerformance originCounts={originCampaignCounts} />
         </div>
       </div>
 
