@@ -216,7 +216,11 @@ const Statuses = ({ statuses: statusesFromDB, tables }) => {
             <div className="card">
               <div className="card-header">
                 <div className='d-flex align-items-center justify-content-between'>
-                  <h5 className="my-0 text-capitalize">Estados de {table.name}</h5>
+                  {
+                    table.id == '9c27e649-574a-47eb-82af-851c5d425434'
+                      ? <h5 className="my-0 text-capitalize">{table.name}</h5>
+                      : <h5 className="my-0 text-capitalize">Estados de {table.name}</h5>
+                  }
                   <button className='btn btn-xs btn-primary rounded-pill' onClick={() => onModalOpen({ table })}>Nuevo estado</button>
                 </div>
               </div>
