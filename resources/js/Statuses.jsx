@@ -55,7 +55,7 @@ const Statuses = ({ statuses: statusesFromDB, tables }) => {
     }
     nameRef.current.value = data?.name || null
     colorRef.current.value = data?.color || '#343a40'
-    orderRef.current.value = data?.order || ''
+    orderRef.current.value = data?.order || '0'
     descriptionRef.current.value = data?.description || null
     setRequire(data?.require || false)
 
