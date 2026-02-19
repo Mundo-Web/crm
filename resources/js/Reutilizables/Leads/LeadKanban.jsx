@@ -15,28 +15,28 @@ const LeadKanban = ({ statuses, leads, onLeadClicked, onOpenModal, onMakeLeadCli
   const { setLeads, getLeads, defaultView, refreshLeads, getMoreLeads, leadsCount, statusesLoading, selectedUsersId, setSelectedUsersId, months, selectedMonth, setSelectedMonth } = useContext(LeadsContext)
   const loadingRefs = useRef({});
 
-  useEffect(() => {
-    const ids = statuses.filter(({ pipeline }) => pipeline).map(x => `#status-${Correlative(x.name)}`).join(', ');
-    $(ids).sortable({
-      connectWith: '.taskList',
-      placeholder: 'task-placeholder',
-      forcePlaceholderSize: true,
-      receive: async function ({ target }, { item }) {
-        const ul = target;
-        const li = item.get(0);
-        const items = $(ul).sortable('toArray');
-        if (!items.includes(li.id)) return;
-        const result = await leadsRest.leadStatus({ status: ul.getAttribute('data-id'), lead: li.id });
-        if (!result) return;
-        await refreshLeads();
-      },
-      update: function (event, ui) {
-        if (this === ui.item.parent()[0]) {
-          return;
-        }
-      }
-    }).disableSelection();
-  }, [defaultView, leads])
+  // useEffect(() => {
+  //   const ids = statuses.filter(({ pipeline }) => pipeline).map(x => `#status-${Correlative(x.name)}`).join(', ');
+  //   $(ids).sortable({
+  //     connectWith: '.taskList',
+  //     placeholder: 'task-placeholder',
+  //     forcePlaceholderSize: true,
+  //     receive: async function ({ target }, { item }) {
+  //       const ul = target;
+  //       const li = item.get(0);
+  //       const items = $(ul).sortable('toArray');
+  //       if (!items.includes(li.id)) return;
+  //       const result = await leadsRest.leadStatus({ status: ul.getAttribute('data-id'), lead: li.id });
+  //       if (!result) return;
+  //       await refreshLeads();
+  //     },
+  //     update: function (event, ui) {
+  //       if (this === ui.item.parent()[0]) {
+  //         return;
+  //       }
+  //     }
+  //   }).disableSelection();
+  // }, [defaultView, leads])
 
   const handleScroll = async (event, statusId) => {
     const { scrollTop, scrollHeight, clientHeight } = event.target;
@@ -203,7 +203,7 @@ const LeadKanban = ({ statuses, leads, onLeadClicked, onOpenModal, onMakeLeadCli
                             transition={{ duration: 0.3, delay: i * 0.1 }}
                             id={`${lead.id}`}
                             key={`lead-${i}`}
-                            style={{ cursor: 'move' }}
+                            // style={{ cursor: 'move' }}
                             className={`p-2 ${lead.assigned_to == LaravelSession.service_user.id ? 'border border-primary' : ''}`}
                           >
                             <div className="kanban-box">

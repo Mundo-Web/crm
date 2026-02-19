@@ -29,12 +29,15 @@ class Status extends Model
         'business_id',
         'require',
         'action_required',
-        'pipeline'
+        'pipeline',
+        'children',
+        'parent'
     ];
 
     protected $casts = [
         'require' => 'boolean',
         'pipeline' => 'boolean',
+        'children' => 'array'
     ];
 
     protected $hidden = [

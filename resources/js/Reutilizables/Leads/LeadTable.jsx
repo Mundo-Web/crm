@@ -425,21 +425,24 @@ const LeadTable = ({ gridRef, cardClass, otherGridRef, rest, can, defaultLeadSta
         cellTemplate: (container, { data }) => {
           // container.addClass('p-0')
           container.attr('style', 'overflow: visible')
-          ReactAppend(container, <StatusDropdown
-            items={statuses}
-            defaultValue={data.status}
-            base={{
-              table_id: 'e05a43e5-b3a6-46ce-8d1f-381a73498f33'
-            }}
-            onItemClick={(status) => onClientStatusClicked(data.id, status.id)}
-            canCreate={can('statuses', 'all', 'create')}
-            canUpdate={can('statuses', 'all', 'update')}
-            canDelete={can('statuses', 'all', 'delete')}
-            onDropdownClose={(hasChanges, items) => {
-              if (!hasChanges) return
-              setStatuses(items)
-            }}
-          />)
+          // ReactAppend(container, <StatusDropdown
+          //   items={statuses}
+          //   defaultValue={data.status}
+          //   base={{
+          //     table_id: 'e05a43e5-b3a6-46ce-8d1f-381a73498f33'
+          //   }}
+          //   onItemClick={(status) => onClientStatusClicked(data.id, status.id)}
+          //   canCreate={can('statuses', 'all', 'create')}
+          //   canUpdate={can('statuses', 'all', 'update')}
+          //   canDelete={can('statuses', 'all', 'delete')}
+          //   onDropdownClose={(hasChanges, items) => {
+          //     if (!hasChanges) return
+          //     setStatuses(items)
+          //   }}
+          // />)
+          ReactAppend(container, <span className="btn rounded-pill" style={{ border: 'none', borderRadius: '25px', padding: '2px 12px', color: data.status.color, fontWeight: 'bolder', backgroundColor: `${data.status.color}22`, cursor: 'default' }}>
+            {data.status.name}
+          </span>)
         }
       },
       {
@@ -450,21 +453,24 @@ const LeadTable = ({ gridRef, cardClass, otherGridRef, rest, can, defaultLeadSta
         cellTemplate: (container, { data }) => {
           // container.addClass('p-0')
           container.attr('style', 'overflow: visible')
-          ReactAppend(container, <StatusDropdown
-            items={manageStatuses}
-            defaultValue={data.manage_status}
-            base={{
-              table_id: '9c27e649-574a-47eb-82af-851c5d425434'
-            }}
-            onItemClick={(status) => onManageStatusChange(data, status)}
-            canCreate={can('statuses', 'all', 'create')}
-            canUpdate={can('statuses', 'all', 'update')}
-            canDelete={can('statuses', 'all', 'delete')}
-            onDropdownClose={(hasChanges, items) => {
-              if (!hasChanges) return
-              setManageStatuses(items)
-            }}
-          />)
+          // ReactAppend(container, <StatusDropdown
+          //   items={manageStatuses}
+          //   defaultValue={data.manage_status}
+          //   base={{
+          //     table_id: '9c27e649-574a-47eb-82af-851c5d425434'
+          //   }}
+          //   onItemClick={(status) => onManageStatusChange(data, status)}
+          //   canCreate={can('statuses', 'all', 'create')}
+          //   canUpdate={can('statuses', 'all', 'update')}
+          //   canDelete={can('statuses', 'all', 'delete')}
+          //   onDropdownClose={(hasChanges, items) => {
+          //     if (!hasChanges) return
+          //     setManageStatuses(items)
+          //   }}
+          // />)
+          ReactAppend(container, <span className="btn rounded-pill" style={{ border: 'none', borderRadius: '25px', padding: '2px 12px', color: data.manage_status.color, fontWeight: 'bolder', backgroundColor: `${data.manage_status.color}22`, cursor: 'default' }}>
+            {data.manage_status?.name || 'Sin etiqueta'}
+          </span>)
         }
       },
       {

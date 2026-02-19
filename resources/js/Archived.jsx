@@ -117,7 +117,7 @@ const Archived = ({ projectStatuses, finishedProjectStatus, archived, can, sessi
           onClick: () => $(gridRef.current).dxDataGrid('instance').refresh()
         }))
       }}
-      pageSize={25}
+      pageSize={10}
       columns={[
         {
           dataField: 'contact_name',

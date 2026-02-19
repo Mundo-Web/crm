@@ -11,6 +11,7 @@ import SelectAPIFormGroup from './components/form/SelectAPIFormGroup.jsx'
 import TextareaFormGroup from './components/form/TextareaFormGroup.jsx'
 import Swal from 'sweetalert2'
 import CheckboxFormGroup from './components/form/CheckboxFormGroup.jsx'
+import SelectFormGroup from './components/form/SelectFormGroup.jsx'
 
 const statusesRest = new StatusesRest()
 
@@ -29,20 +30,24 @@ const Statuses = ({ statuses: statusesFromDB, tables }) => {
   const orderRef = useRef()
   const descriptionRef = useRef()
   const requireRef = useRef()
+  const childrenRef = useRef()
 
   const [isEditing, setIsEditing] = useState(false)
   const [require, setRequire] = useState(false)
   const [pipeline, setPipeline] = useState(false)
   const [showPipeline, setShowPipeline] = useState(false)
+  const [showChildren, setShowChildren] = useState(true)
 
   const onModalOpen = (data) => {
     if (data?.id) setIsEditing(true)
     else setIsEditing(false)
 
     setShowPipeline(data?.table?.id == 'e05a43e5-b3a6-46ce-8d1f-381a73498f33' || data?.table?.id == 'a8367789-666e-4929-aacb-7cbc2fbf74de')
+    setShowChildren(data?.table?.id == 'e05a43e5-b3a6-46ce-8d1f-381a73498f33')
     setPipeline(data?.pipeline ?? false)
     idRef.current.value = data?.id || null
     SetSelectValue(tableRef.current, data?.table?.id, data?.table?.name)
+    $(childrenRef.current).val(data?.children ?? []).trigger('change')
     if (data?.table?.id) {
       $(tableRef.current).parents('.form-group').hide();
     } else {
@@ -69,7 +74,8 @@ const Statuses = ({ statuses: statusesFromDB, tables }) => {
       description: descriptionRef.current.value,
       require: require,
       action_required: require ? 'product' : null,
-      pipeline: pipeline
+      pipeline: pipeline,
+      children: $(childrenRef.current).val()
     }
 
     const result = await statusesRest.save(request)
@@ -219,8 +225,8 @@ const Statuses = ({ statuses: statusesFromDB, tables }) => {
                   {/* {
                     table.id == '9c27e649-574a-47eb-82af-851c5d425434'
                       ? */}
-                       <h5 className="my-0 text-capitalize">{table.name}</h5>
-                      {/* : <h5 className="my-0 text-capitalize">Estados de {table.name}</h5>
+                  <h5 className="my-0 text-capitalize">{table.name}</h5>
+                  {/* : <h5 className="my-0 text-capitalize">Estados de {table.name}</h5>
                   } */}
                   <button className='btn btn-xs btn-primary rounded-pill' onClick={() => onModalOpen({ table })}>Nuevo estado</button>
                 </div>
@@ -266,11 +272,21 @@ const Statuses = ({ statuses: statusesFromDB, tables }) => {
         <InputFormGroup eRef={colorRef} type='color' label='Color' col='col-6' required />
         <InputFormGroup eRef={orderRef} type='number' label='Orden' col='col-6' required />
         <TextareaFormGroup eRef={descriptionRef} label='Descripcion' col='col-12' />
-        <div className="col-12">
+        <div className="col-12 mb-2">
           <CheckboxFormGroup eRef={requireRef} label='¿Requerir producto?' id='require' title='Obliga al usuario a escoger un producto antes de cambiar a este estado' checked={require} setChecked={setRequire} />
         </div>
-        <div className="col-12 mt-2" hidden={!showPipeline}>
+        <div className="col-12 mb-2" hidden={!showPipeline}>
           <CheckboxFormGroup eRef={requireRef} label='¿Mostrar en Pipeline?' id='pipeline' title='Si está activo, este estado aparecerá en el pipeline de leads; si no, permanecerá oculto' checked={pipeline} setChecked={setPipeline} />
+        </div>
+        <div className='col-12 ' hidden={!showChildren}>
+          <SelectFormGroup eRef={childrenRef} label='Estados hijos' dropdownParent='#status-crud-container' multiple>
+            {
+              statuses.filter(({ table_id }) => table_id == '9c27e649-574a-47eb-82af-851c5d425434')
+                .map(status => {
+                  return <option key={status.id} value={status.id}>{status.name}</option>
+                })
+            }
+          </SelectFormGroup>
         </div>
       </div>
     </Modal>

@@ -7,7 +7,6 @@ const Modal = ({ modalRef, title = 'Modal', btnAcceptClass = '', isStatic = fals
   useEffect(() => {
     modalRef.current.addEventListener('hidden.bs.modal', () => {
       onClose()
-      console.log('Modal cerrado:', modalId)
     });
   }, [null])
 

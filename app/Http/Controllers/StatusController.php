@@ -16,6 +16,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use SoDe\Extend\Fetch;
 use SoDe\Extend\JSON;
+use SoDe\Extend\Response;
 use SoDe\Extend\Text;
 
 class StatusController extends BasicController
@@ -131,5 +132,20 @@ class StatusController extends BasicController
     {
         $jpa->table = $jpa->table()->first();
         return $jpa;
+    }
+
+    public function massive(Request $request)
+    {
+        $response = Response::simpleTryCatch(function () use ($request) {
+            $statuses = $request->all();
+            foreach ($statuses as $item) {
+                $updateData = array_filter($item, function ($key) {
+                    return $key !== 'id';
+                }, ARRAY_FILTER_USE_KEY);
+                Status::where('id', $item['id'])->where('business_id', Auth::user()->business_id)->update($updateData);
+            }
+            return ['message' => 'Statuses updated successfully'];
+        });
+        return response($response->toArray(), $response->status);
     }
 }

@@ -13,8 +13,10 @@ import { Editor } from '@tinymce/tinymce-react'
 import TextareaFormGroup from './components/form/TextareaFormGroup.jsx'
 import FlowContainer from './Reutilizables/Settings/FlowContainer.jsx'
 import InputFormGroup from './components/form/InputFormGroup.jsx'
+import StatusesRest from './actions/StatusesRest.js'
 
 const settingsRest = new SettingsRest()
+const statusesRest = new StatusesRest()
 
 const Settings = ({ can, constants, statuses }) => {
   const modalRef = useRef()
@@ -35,6 +37,14 @@ const Settings = ({ can, constants, statuses }) => {
   const [specification, setSpecification] = useState()
   const [activeTab, setActiveTab] = useState(window.location.hash.slice(1) || 'general')
   const [canvasOpen, setCanvasOpen] = useState(false)
+  const [labelsAutomation, setLabelsAutomation] = useState(() =>
+    statuses
+      .filter(s => s.table_id === '9c27e649-574a-47eb-82af-851c5d425434')
+      .reduce((acc, s) => {
+        acc[s.id] = s.parent
+        return acc
+      }, {})
+  )
 
   const onModalOpen = (e, name, title, type, sp = '') => {
     const constant = getConstant(name)
@@ -99,6 +109,7 @@ const Settings = ({ can, constants, statuses }) => {
   const manageStatusRef = useRef()
   const taskStatusRef = useRef()
   const leadStatusModal = useRef()
+  const labelAutomationModalRef = useRef()
 
   const onAsignationStatusClicked = () => {
     const constant = getConstant('assignation-lead-status')
@@ -124,6 +135,25 @@ const Settings = ({ can, constants, statuses }) => {
     $(taskStatusRef.current).val(value?.task).trigger('change')
 
     $(leadStatusModal.current).modal('show')
+  }
+
+  const onLabelAutomationClicked = () => {
+    $(labelAutomationModalRef.current).modal('show')
+  }
+
+  const onLabelAutomationSubmit = async (e) => {
+    console.log(e)
+    e.preventDefault()
+
+    const result = await statusesRest.saveParent(Object.keys(labelsAutomation).map(statusId => ({
+      id: statusId,
+      parent: labelsAutomation[statusId]
+    })))
+
+    if (!result) return
+
+    $(modalRef.current).modal('hide')
+    location.reload()
   }
 
   const onArchivedLeadStatusSubmit = async (e) => {
@@ -343,6 +373,10 @@ const Settings = ({ can, constants, statuses }) => {
                             <button type="submit" className="btn btn-sm btn-primary">Guardar</button>
                           </div>
                         </form>
+                        <div className="card card-body border p-2" onClick={onLabelAutomationClicked}>
+                          <h5 className="card-title mb-1">Automatización de etiquetas</h5>
+                          <p className="card-text mb-0">Automatiza la selección de etiquetas para elegir estados que asignen el usuario al cliente directamente.</p>
+                        </div>
                       </div>
                       <div className="col-md-4 col-sm-6 col-xs-12">
                         <div className="card card-body border p-2" onClick={onAsignationStatusClicked}>
@@ -563,6 +597,72 @@ const Settings = ({ can, constants, statuses }) => {
               content_style: 'body { font-family:Helvetica,Arial,sans-serif; font-size:14px }'
             }} />
         </div>
+      </div>
+    </Modal>
+    <Modal modalRef={labelAutomationModalRef} title='Automatización de etiquetas' onSubmit={onLabelAutomationSubmit} bodyClass='p-0'>
+      <div className='p-2'>
+        <p className="text-muted my-0">Selecciona qué estado de gestión se aplicará automáticamente cuando el usuario cambie la etiqueta del lead.</p>
+      </div>
+      <div className="table-responsive" bis_skin_checked="1">
+        <table className="table mb-0">
+          <thead className="table-light">
+            <tr>
+              <th>Etiqueta</th>
+              <th>Estado de gestión</th>
+            </tr>
+          </thead>
+          <tbody>
+            {
+              statuses
+                .filter(({ table_id }) => table_id == '9c27e649-574a-47eb-82af-851c5d425434')
+                .map(status => {
+                  const selected = statuses.find(s => s.id === labelsAutomation[status.id])
+                  return <tr key={status.id}>
+                    <td scope='row'>
+                      <i className='mdi mdi-circle me-1' style={{ color: status.color }}></i>
+                      {status.name}
+                    </td>
+                    <td className='p-0' valign='middle'>
+                      <div className="dropdown">
+                        <button
+                          className="btn btn-sm btn-light dropdown-toggle"
+                          type="button"
+                          data-bs-toggle="dropdown"
+                          aria-expanded="false"
+                        >
+                          <i className={selected ? 'mdi mdi-circle me-1' : 'mdi mdi-diameter-variant me-1'} style={{ color: selected?.color ?? 'unset' }}></i>
+                          {selected ? selected.name : 'Sin acción'}
+                        </button>
+                        <ul className="dropdown-menu">
+                          <li>
+                            <button className="dropdown-item" onClick={(e) => setLabelsAutomation(old => ({ ...old, [status.id]: null }))}
+                              type='button'>
+                              <i className='mdi mdi-diameter-variant me-1'></i>
+                              Sin acción
+                            </button>
+                          </li>
+                          {statuses
+                            .filter(({ table_id }) => table_id === 'e05a43e5-b3a6-46ce-8d1f-381a73498f33')
+                            .map((st) => (
+                              <li key={st.id}>
+                                <button
+                                  className="dropdown-item"
+                                  onClick={(e) => setLabelsAutomation(old => ({ ...old, [status.id]: st.id }))}
+                                  type='button'
+                                >
+                                  <i className='mdi mdi-circle me-1' style={{ color: st.color }}></i>
+                                  {st.name}
+                                </button>
+                              </li>
+                            ))}
+                        </ul>
+                      </div>
+                    </td>
+                  </tr>
+                })
+            }
+          </tbody>
+        </table>
       </div>
     </Modal>
   </>

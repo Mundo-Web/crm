@@ -138,6 +138,7 @@ Route::middleware('auth')->group(function () {
 
     // Statuses routes
     Route::post('/statuses', [StatusController::class, 'save']);
+    Route::post('/statuses/massive', [StatusController::class, 'massive']);
     Route::post('/statuses/paginate', [StatusController::class, 'paginate']);
     Route::patch('/statuses/status', [StatusController::class, 'status']);
     Route::delete('/statuses/{id}', [StatusController::class, 'delete']);

@@ -951,7 +951,7 @@ const Leads = (properties) => {
             <div>
               <b className='d-block'>Estado de gestión</b>
               <div className='btn-group mb-0' style={{ width: '100%' }}>
-                <button className="btn btn-light btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style={{ color: '#ffffff', backgroundColor: leadLoaded?.status?.color || '#6c757d' }}>
+                <button className="btn btn-light btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style={{ color: '#ffffff', backgroundColor: leadLoaded?.status?.color || '#6c757d' }} disabled>
                   {leadLoaded?.status?.name || 'Sin estado'} <i className="mdi mdi-chevron-down"></i>
                 </button>
                 <div className="dropdown-menu">
@@ -964,7 +964,7 @@ const Leads = (properties) => {
             <div>
               <b className='d-block'>Etiqueta</b>
               <div className="btn-group mb-0" style={{ width: '100%' }}>
-                <button className="btn btn-light btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style={{ color: '#ffffff', backgroundColor: leadLoaded?.manage_status?.color || '#6c757d' }}>
+                <button className="btn btn-light btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style={{ color: '#ffffff', backgroundColor: leadLoaded?.manage_status?.color || '#6c757d' }} disabled>
                   {leadLoaded?.manage_status?.name || 'Sin estado'} <i className="mdi mdi-chevron-down"></i>
                 </button>
                 <div className="dropdown-menu">
@@ -1194,18 +1194,30 @@ const Leads = (properties) => {
                                 <i className="mdi mdi-chevron-down float-end" />
                               </button>
                               <ul className="dropdown-menu w-100">
-                                {manageStatuses.sort((a, b) => a.order - b.order).map((status) => (
-                                  <li key={status.id}>
-                                    <button
-                                      className="dropdown-item"
-                                      type="button"
-                                      onClick={() => setProcessManageStatus(status.id)}
-                                    >
-                                      <i className="mdi mdi-circle me-1" style={{ color: status.color }} />
-                                      {status.name}
-                                    </button>
-                                  </li>
-                                ))}
+                                {manageStatuses
+                                  .filter(status => {
+                                    const parent = statuses.find(s => s.id === processStatus);
+                                    if (!Array.isArray(parent?.children) || parent.children.length === 0) return true;
+                                    return parent.children.includes(status.id);
+                                  })
+                                  .sort((a, b) => a.order - b.order)
+                                  .map((status) => (
+                                    <li key={status.id}>
+                                      <button
+                                        className="dropdown-item"
+                                        type="button"
+                                        onClick={() => {
+                                          setProcessManageStatus(status.id)
+                                          if (status.parent && statuses.some(s => s.id === status.parent)) {
+                                            setProcessStatus(status.parent);
+                                          }
+                                        }}
+                                      >
+                                        <i className="mdi mdi-circle me-1" style={{ color: status.color }} />
+                                        {status.name}
+                                      </button>
+                                    </li>
+                                  ))}
                               </ul>
                             </div>
                           </div>
