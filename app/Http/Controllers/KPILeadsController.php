@@ -230,14 +230,12 @@ class KPILeadsController extends BasicController
 
             $totalArchivedCounts = Client::byMonth($year, $month)
                 ->select([
-                    'origin as name',
+                    DB::raw('IFNULL(origin, "Otros") as name'),
                     DB::raw('COUNT(*) as incoming'),
                     DB::raw('COUNT(CASE WHEN clients.status IS NULL THEN 1 END) as archived')
                 ])
                 ->where('business_id', Auth::user()->business_id)
-                ->whereNotNull('origin')
-                ->where('origin', '<>', '')
-                ->groupBy('origin')
+                ->groupBy(DB::raw('IFNULL(origin, "Otros")'))
                 ->orderBy('incoming', 'desc')
                 ->get();
 
