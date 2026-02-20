@@ -258,7 +258,7 @@ const Leads = (properties) => {
     })
     let title = ''
     let isTask = false
-    let processManageStatus2save = processManageStatus
+    let processStatus2save = processStatus
 
     const lead = structuredClone(leadLoaded)
 
@@ -311,7 +311,7 @@ const Leads = (properties) => {
             }
             return
           };
-          processManageStatus2save = defaultClientStatus
+          processStatus2save = defaultClientStatus
         }
         title = `Nota de ${session.service_user.fullname}`
         break
@@ -340,7 +340,7 @@ const Leads = (properties) => {
       process: processRef.current.value,
       // status_id: $(statusRef.current).is(':visible') ? statusRef.current.value : undefined,
       // manage_status_id: $(manageStatusRef.current).is(':visible') ? manageStatusRef.current.value : undefined,
-      status_id: $(statusRef.current).is(':visible') ? processManageStatus2save : undefined,
+      status_id: $(statusRef.current).is(':visible') ? processStatus2save : undefined,
       manage_status_id: $(manageStatusRef.current).is(':visible') ? processManageStatus : undefined,
       name: title,
       description: !isTask ? content : undefined,
