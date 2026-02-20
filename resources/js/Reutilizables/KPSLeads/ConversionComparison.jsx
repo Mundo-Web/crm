@@ -58,12 +58,21 @@ export const ConversionComparison = ({ data: dataDB }) => {
         Otros: 'mdi-help-circle-outline'
     };
 
+    // Función auxiliar para encontrar clave por inclusión
+    const findKeyByInclusion = (label) => {
+        const lowerLabel = label.toLowerCase();
+        if (lowerLabel.includes('formulario')) return 'Formulario';
+        if (lowerLabel.includes('whatsapp')) return 'Boton whatsapp';
+        if (lowerLabel.includes('contacto')) return 'contacto';
+        return 'Otros';
+    };
+
     return (
         <div className="card border-0 shadow-sm h-100" style={{ borderRadius: '16px' }}>
             <div className="card-body">
                 <h5 className="card-title mb-4">
                     <i className="mdi mdi-chart-bar me-2 text-primary"></i>
-                    Análisis de Impresiones
+                    Análisis de Impresiones - Landing
                 </h5>
 
                 <ResponsiveContainer width="100%" height={250}>
@@ -79,36 +88,42 @@ export const ConversionComparison = ({ data: dataDB }) => {
                             }}
                         />
                         <Legend />
-                        {Object.entries(channels).map(([key]) => (
-                            <Bar
-                                key={key}
-                                dataKey={key}
-                                fill={channelColors[key] || channelColors.Otros}
-                                radius={[8, 8, 0, 0]}
-                            />
-                        ))}
+                        {Object.entries(channels).map(([key]) => {
+                            const matchKey = findKeyByInclusion(key);
+                            return (
+                                <Bar
+                                    key={key}
+                                    dataKey={key}
+                                    fill={channelColors[matchKey] || channelColors.Otros}
+                                    radius={[8, 8, 0, 0]}
+                                />
+                            );
+                        })}
                     </BarChart>
                 </ResponsiveContainer>
 
                 <div className="row g-3 mt-3">
-                    {Object.entries(channels).map(([key, value]) => (
-                        <div className="col-6" key={key}>
-                            <div className="p-3 border rounded bg-light">
-                                <div className="d-flex align-items-center mb-2">
-                                    <i className={`${channelIcons[key] || channelIcons.Otros} fs-4 me-2`} style={{ color: channelColors[key] || channelColors.Otros }}></i>
-                                    <span className="fw-semibold">{key}</span>
-                                </div>
-                                <div className="h4 mb-1">{conversionRates[key].toFixed(1)}%</div>
-                                <div className="small text-muted">Tasa de conversión</div>
-                                <div className="mt-2 small">
-                                    <span className="badge" style={{ backgroundColor: channelColors[key] || channelColors.Otros }}>
-                                        {value.sales} ventas
-                                    </span>
-                                    <span className="ms-2 text-muted">de {value.total} leads</span>
+                    {Object.entries(channels).map(([key, value]) => {
+                        const matchKey = findKeyByInclusion(key);
+                        return (
+                            <div className="col-6" key={key}>
+                                <div className="p-3 border rounded bg-light">
+                                    <div className="d-flex align-items-center mb-2">
+                                        <i className={`${channelIcons[matchKey] || channelIcons.Otros} fs-4 me-2`} style={{ color: channelColors[matchKey] || channelColors.Otros }}></i>
+                                        <span className="fw-semibold">{key}</span>
+                                    </div>
+                                    <div className="h4 mb-1">{conversionRates[key].toFixed(1)}%</div>
+                                    <div className="small text-muted">Tasa de conversión</div>
+                                    <div className="mt-2 small">
+                                        <span className="badge" style={{ backgroundColor: channelColors[matchKey] || channelColors.Otros }}>
+                                            {value.sales} ventas
+                                        </span>
+                                        <span className="ms-2 text-muted">de {value.total} leads</span>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    ))}
+                        );
+                    })}
                 </div>
 
                 {bestChannel.rate > 0 && (

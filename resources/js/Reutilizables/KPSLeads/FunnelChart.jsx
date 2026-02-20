@@ -32,7 +32,7 @@ export const FunnelChart = ({ data = {}, extraData = [] }) => {
       <div className="card-body">
         <h5 className="card-title mb-3">
           <i className="mdi mdi-filter-variant me-2 text-primary"></i>
-          Funnel de Conversión
+          Funnel de Conversión - Landing
         </h5>
 
         <ResponsiveContainer width="100%" height={300}>
