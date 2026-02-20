@@ -258,7 +258,63 @@ const Leads = (properties) => {
     })
     let title = ''
     let isTask = false
+    let processManageStatus2save = processManageStatus
+
+    const lead = structuredClone(leadLoaded)
+
     switch (type) {
+      case '8e895346-3d87-4a87-897a-4192b917c211':
+        if (convertedLeadStatus && defaultClientStatus && processManageStatus == convertedLeadStatus) {
+          const wasModalOpen = $(modalRef.current).hasClass('show');
+          if (wasModalOpen) {
+            $(modalRef.current).modal('hide');
+          }
+
+          const { value: formValues } = await Swal.fire({
+            title: '¿Convertir lead en cliente?',
+            width: 360,
+            html: `<div class="row g-2">
+                <div class="col-12">
+                  <label class="form-label fw-semibold text-muted d-flex align-items-center" for="swal-dni" style="font-size: 12px">
+                    <i class="mdi mdi-card-account-details me-2"></i>DNI o RUC
+                  </label>
+                  <input id="swal-dni" class="form-control" placeholder="Ingrese el número de documento">
+                </div>
+                <div class="col-12">
+                  <label class="form-label fw-semibold text-muted d-flex align-items-center" for="swal-fullname" style="font-size: 12px">
+                    <i class="mdi mdi-account-edit me-2"></i>Nombre completo
+                  </label>
+                  <input id="swal-fullname" class="form-control" placeholder="Ingrese el nombre completo del cliente">
+                </div>
+              </div>`,
+            focusConfirm: false,
+            showCancelButton: true,
+            confirmButtonText: 'Sí, continuar',
+            cancelButtonText: 'Cancelar',
+            preConfirm: () => {
+              const dni = document.getElementById('swal-dni').value.trim();
+              const fullname = document.getElementById('swal-fullname').value.trim();
+              if (!dni || !fullname) {
+                Swal.showValidationMessage('Por favor complete ambos campos');
+                return false;
+              }
+              return { dni, fullname };
+            }
+          });
+          $(modalRef.current).modal('show')
+          await new Promise(resolve => setTimeout(resolve, 250));
+          if (!formValues) {
+            if (wasModalOpen) {
+              setLeadLoaded(lead)
+              history.pushState(null, null, `/leads/${lead.id}`)
+              setNotes([])
+            }
+            return
+          };
+          processManageStatus2save = defaultClientStatus
+        }
+        title = `Nota de ${session.service_user.fullname}`
+        break
       case 'ed37659f-f9dc-49c1-9d0e-6a2effe9bd54':
         title = `${session.service_user.fullname} → ${leadLoaded.contact_name}`
         break
@@ -284,7 +340,7 @@ const Leads = (properties) => {
       process: processRef.current.value,
       // status_id: $(statusRef.current).is(':visible') ? statusRef.current.value : undefined,
       // manage_status_id: $(manageStatusRef.current).is(':visible') ? manageStatusRef.current.value : undefined,
-      status_id: $(statusRef.current).is(':visible') ? processStatus : undefined,
+      status_id: $(statusRef.current).is(':visible') ? processManageStatus2save : undefined,
       manage_status_id: $(manageStatusRef.current).is(':visible') ? processManageStatus : undefined,
       name: title,
       description: !isTask ? content : undefined,
