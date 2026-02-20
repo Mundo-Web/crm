@@ -176,6 +176,23 @@ const Archived = ({ projectStatuses, finishedProjectStatus, archived, can, sessi
           }
         },
         {
+          dataField: 'origin',
+          caption: 'Red Social (Campaña)',
+          dataType: 'string'
+        },
+        {
+          dataField: 'source',
+          caption: 'Orígen',
+          dataType: 'string',
+          // visible: false
+        },
+        {
+          dataField: 'triggered_by',
+          caption: 'Registrado en',
+          dataType: 'string',
+          // visible: false
+        },
+        {
           dataField: 'created_at',
           caption: 'Fecha creacion',
           dataType: 'date',
