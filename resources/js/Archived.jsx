@@ -140,6 +140,29 @@ const Archived = ({ projectStatuses, finishedProjectStatus, archived, can, sessi
           caption: 'Telefono'
         },
         {
+          dataField: 'created_at',
+          caption: 'Fecha creacion',
+          dataType: 'date',
+          cellTemplate: (container, { data }) => {
+            container.html(renderToString(<>
+              <i className="mdi mdi-calendar-blank text-blue me-1"></i>
+              {moment(data.created_at.replace('Z', '+05:00')).format('lll')}
+            </>))
+          },
+          sortOrder: 'desc',
+        },
+        {
+          dataField: 'updated_at',
+          caption: 'Fecha actualización',
+          dataType: 'date',
+          cellTemplate: (container, { data }) => {
+            container.html(renderToString(<>
+              <i className="mdi mdi-calendar-blank text-blue me-1"></i>
+              {moment(data.updated_at.replace('Z', '+05:00')).format('lll')}
+            </>))
+          },
+        },
+        {
           caption: 'Acciones',
           width: 235,
           cellTemplate: (container, { data }) => {
