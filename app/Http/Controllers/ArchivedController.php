@@ -33,9 +33,9 @@ class ArchivedController extends BasicController
     {
         return $model::select('clients.*')
             // ->withCount(['notes', 'tasks', 'pendingTasks', 'projects'])
-            // ->with(['status', 'assigned', 'manageStatus'])
-            // ->join('statuses AS status', 'status.id', 'status_id')
-            // ->leftJoin('statuses AS manage_status', 'status.id', 'manage_status_id')
+            ->with(['status', 'assigned', 'manageStatus'])
+            ->leftJoin('statuses AS status', 'status.id', 'status_id')
+            ->leftJoin('statuses AS manage_status', 'status.id', 'manage_status_id')
             ->whereNull('clients.status')
             ->where('clients.business_id', Auth::user()->business_id);
     }

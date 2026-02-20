@@ -117,7 +117,7 @@ const Archived = ({ projectStatuses, finishedProjectStatus, archived, can, sessi
           onClick: () => $(gridRef.current).dxDataGrid('instance').refresh()
         }))
       }}
-      pageSize={10}
+      pageSize={25}
       columns={[
         {
           dataField: 'contact_name',
@@ -133,11 +133,47 @@ const Archived = ({ projectStatuses, finishedProjectStatus, archived, can, sessi
         },
         {
           dataField: 'contact_email',
-          caption: 'Correo'
+          caption: 'Correo',
+          cellTemplate: (container, { data }) => {
+            container.html(renderToString(<>
+              <i className="mdi mdi-email-outline text-blue me-1"></i>
+              {data.contact_email}
+            </>))
+          }
         },
         {
           dataField: 'contact_phone',
-          caption: 'Telefono'
+          caption: 'Telefono',
+          cellTemplate: (container, { data }) => {
+            container.html(renderToString(<>
+              <i className="mdi mdi-cellphone text-blue me-1"></i>
+              {data.contact_phone}
+            </>))
+          }
+        },
+        {
+          dataField: 'status.name',
+          caption: 'Estado de gestión',
+          dataType: 'string',
+          width: 180,
+          cellTemplate: (container, { data }) => {
+            container.attr('style', 'overflow: visible')
+            ReactAppend(container, <span className="btn rounded-pill" style={{ border: 'none', borderRadius: '25px', padding: '2px 12px', color: data.status?.color, fontWeight: 'bolder', backgroundColor: `${data.status?.color}22`, cursor: 'default' }}>
+              {data.status?.name}
+            </span>)
+          }
+        },
+        {
+          dataField: 'manage_status.name',
+          caption: 'Etiqueta',
+          dataType: 'string',
+          width: 180,
+          cellTemplate: (container, { data }) => {
+            container.attr('style', 'overflow: visible')
+            ReactAppend(container, <span className="btn rounded-pill" style={{ border: 'none', borderRadius: '25px', padding: '2px 12px', color: data.manage_status?.color, fontWeight: 'bolder', backgroundColor: `${data.manage_status?.color}22`, cursor: 'default' }}>
+              {data.manage_status?.name || 'Sin etiqueta'}
+            </span>)
+          }
         },
         {
           dataField: 'created_at',
@@ -149,7 +185,6 @@ const Archived = ({ projectStatuses, finishedProjectStatus, archived, can, sessi
               {moment(data.created_at.replace('Z', '+05:00')).format('lll')}
             </>))
           },
-          sortOrder: 'desc',
         },
         {
           dataField: 'updated_at',
@@ -161,6 +196,7 @@ const Archived = ({ projectStatuses, finishedProjectStatus, archived, can, sessi
               {moment(data.updated_at.replace('Z', '+05:00')).format('lll')}
             </>))
           },
+          sortOrder: 'desc',
         },
         {
           caption: 'Acciones',
