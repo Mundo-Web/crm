@@ -127,16 +127,15 @@ class KPILeadsController extends BasicController
                     'status.id AS status_id',
                     'status.name AS status_name',
                     'status.color AS status_color',
-                    'manage_status.name AS manage_status_name',
-                    'manage_status.color AS manage_status_color',
                     DB::raw('count(clients.id) AS quantity')
                 ])
-                ->leftJoin('statuses AS manage_status', 'manage_status.id', 'clients.manage_status_id')
                 ->leftJoin('statuses AS status', 'status.id', 'clients.status_id')
-                ->whereIn('clients.status_id', $leadStatusesIds)
-                ->groupBy('manage_status_id', 'status_id')
+                ->whereNotNull('status.status')
+                ->whereNotNull('clients.status')
+                ->whereIn('clients.status_id', array_merge($leadStatusesIds, $clientStatusesIds))
+                ->groupBy('status_id')
+                ->orderBy('status.table_id', 'desc')
                 ->orderBy('status.order', 'asc')
-                ->orderBy('manage_status.order', 'asc')
                 ->get();
 
             $leadSources = Client::byMonth($year, $month)

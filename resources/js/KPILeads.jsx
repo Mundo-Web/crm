@@ -15,6 +15,9 @@ import { TrafficSourceAnalysis } from './Reutilizables/KPSLeads/TrafficSourceAna
 import { DirectCampaignPerformance } from './Reutilizables/KPSLeads/DirectCampaignPerformance';
 import { FunnelChart } from './Reutilizables/KPSLeads/FunnelChart';
 import { ChannelDistribution } from './Reutilizables/KPSLeads/ChannelDistribution';
+import { LandingAnalysis } from './Reutilizables/KPSLeads/LandingAnalysis';
+import { ConversionComparison } from './Reutilizables/KPSLeads/ConversionComparison';
+import { PipelineChart } from './Reutilizables/KPSLeads/PipelineChart';
 
 // Lista de 10 colores aleatorios
 const colors = ['#71b6f9', '#f1556c', '#1abc9c', '#4a81d4', '#f7b84b', '#5b6be8', '#34c38f', '#50a5f1', '#ffbb78', '#aec7e8'];
@@ -378,6 +381,19 @@ const KPILeads = ({ months = [], currentMonth, currentYear }) => {
         </div>
         <div className="col-lg-6">
           <DirectCampaignPerformance originCounts={originCampaignCounts} />
+        </div>
+      </div>
+
+      <div className="row g-4 mb-4">
+        <div className="col-lg-5">
+          <ConversionComparison data={Object.keys(funnelCounts)
+            .filter(funnel => funnel != 'clients' && funnel != 'managing').map(funnel => ({
+              label: funnel,
+              count: funnelCounts[funnel]
+            }))} />
+        </div>
+        <div className="col-lg-7">
+          <PipelineChart data={groupedByManageStatus} />
         </div>
       </div>
 
