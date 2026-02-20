@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Mockery\Undefined;
+use SoDe\Extend\JSON;
 use SoDe\Extend\Response;
 
 class KPILeadsController extends BasicController
@@ -69,7 +70,8 @@ class KPILeadsController extends BasicController
             [$year, $month] = \explode('-', $request->month);
 
             $defaultLeadStatus = Setting::get('default-lead-status');
-            $asignationLeadStatus = Setting::get('assignation-lead-status');
+            $asignationLeadStatus = JSON::parseable(Setting::get('assignation-lead-status')) ?? [];
+            dump($asignationLeadStatus['lead']);
 
             $leadStatuses = Status::forLeads()->get();
             $clientStatuses = Status::forClients()->get();
@@ -196,7 +198,7 @@ class KPILeadsController extends BasicController
                     'triggered_by',
                     DB::raw('COUNT(*) as total'),
                     DB::raw('COUNT(CASE WHEN status_id IN (' . implode(',', array_map(fn($id) => '"' . $id . '"', $clientStatusesIds)) . ') THEN 1 END) as clients'),
-                    DB::raw('COUNT(CASE WHEN status_id IN (' . implode(',', array_map(fn($id) => '"' . $id . '"', array_merge($leadStatusesIds, $clientStatusesIds))) . ') AND status_id <> "' . $defaultLeadStatus . '" THEN 1 END) as managing')
+                    DB::raw('COUNT(CASE WHEN status_id IN (' . implode(',', array_map(fn($id) => '"' . $id . '"', array_merge($leadStatusesIds, $clientStatusesIds))) . ') AND status_id <> "' . $defaultLeadStatus . '" AND status_id <> "' . ($asignationLeadStatus['lead'] ?? '') . '" THEN 1 END) as managing')
                 ])
                 ->where('business_id', Auth::user()->business_id)
                 ->where('lead_origin', 'integration')
