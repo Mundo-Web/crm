@@ -161,7 +161,7 @@ class KPILeadsController extends BasicController
                     DB::raw('COUNT(*) as total'),
                     DB::raw('COUNT(CASE WHEN status_id = "' . $defaultLeadStatus . '" THEN 1 END) as pending'),
                     DB::raw('COUNT(CASE WHEN status_id IN (' . implode(',', array_map(fn($id) => '"' . $id . '"', $clientStatusesIds)) . ') THEN 1 END) as clients'),
-                    DB::raw('COUNT(CASE WHEN status_id IN (' . implode(',', array_map(fn($id) => '"' . $id . '"', $leadStatusesIds)) . ') AND status_id <> "' . $defaultLeadStatus . '" AND status_id <> "' . $asignationLeadStatus . '" THEN 1 END) as managing')
+                    DB::raw('COUNT(CASE WHEN status_id IN (' . implode(',', array_map(fn($id) => '"' . $id . '"', $leadStatusesIds)) . ') AND status_id <> "' . $defaultLeadStatus . '" THEN 1 END) as managing')
                 ])
                 ->where('business_id', Auth::user()->business_id)
                 ->whereNotNull('origin')
