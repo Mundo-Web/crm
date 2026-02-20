@@ -17,7 +17,7 @@ export const ArchivedAnalysis = ({ data }) => {
   const channelBreakdown = data.map((item) => ({
     name: item.name,
     incoming: item.incoming || 0,
-    jarchived: item.archived || 0,
+    archived: item.archived || 0,
   }));
 
   return (
@@ -96,8 +96,8 @@ export const ArchivedAnalysis = ({ data }) => {
               }}
             />
             <Legend />
-            <Bar dataKey="incoming" name="Leads Entrantes" fill="#10B981" radius={[4, 4, 0, 0]} />
-            <Bar dataKey="jarchived" name="Archivados" fill="#6366F1" radius={[4, 4, 0, 0]} />
+            <Bar dataKey="incoming" name="Leads Entrantes" fill="#0d6efd" radius={[4, 4, 0, 0]} />
+            <Bar dataKey="archived" name="Archivados" fill="#6c757d" radius={[4, 4, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
 
