@@ -200,6 +200,7 @@ class KPILeadsController extends BasicController
                 ->where('business_id', Auth::user()->business_id)
                 ->where('lead_origin', 'integration')
                 ->whereNotNull('triggered_by')
+                ->whereNotNull('clients.status')
                 ->where('triggered_by', '<>', '')
                 ->groupBy('triggered_by')
                 ->orderBy('total', 'desc')
