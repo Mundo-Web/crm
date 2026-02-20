@@ -71,7 +71,6 @@ class KPILeadsController extends BasicController
 
             $defaultLeadStatus = Setting::get('default-lead-status');
             $asignationLeadStatus = JSON::parseable(Setting::get('assignation-lead-status')) ?? [];
-            dump($asignationLeadStatus['lead']);
 
             $leadStatuses = Status::forLeads()->get();
             $clientStatuses = Status::forClients()->get();
