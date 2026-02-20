@@ -228,6 +228,19 @@ class KPILeadsController extends BasicController
                 ->havingRaw('COUNT(CASE WHEN lead_origin = "integration" THEN 1 END) > 0 OR COUNT(CASE WHEN campaign_id IS NOT NULL THEN 1 END) > 0')
                 ->get();
 
+            $totalArchivedCounts = Client::byMonth($year, $month)
+                ->select([
+                    'origin as name',
+                    DB::raw('COUNT(*) as incoming'),
+                    DB::raw('COUNT(CASE WHEN clients.status IS NULL THEN 1 END) as archived')
+                ])
+                ->where('business_id', Auth::user()->business_id)
+                ->whereNotNull('origin')
+                ->where('origin', '<>', '')
+                ->groupBy('origin')
+                ->orderBy('incoming', 'desc')
+                ->get();
+
             $convertedLeadStatus = Setting::get('converted-lead-status');
 
             $columns = [
@@ -280,7 +293,8 @@ class KPILeadsController extends BasicController
                 'originLandingCampaignCounts' => $originLandingCampaignCounts,
                 'usersAssignation' => $usersAssignation,
                 'breakdownCounts' => $breakdownCounts,
-                'funnelCounts' => $funnelCounts
+                'funnelCounts' => $funnelCounts,
+                'totalArchivedCounts' => $totalArchivedCounts
             ];
             $response->data = $groupedByManageStatus;
         });

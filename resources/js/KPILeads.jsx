@@ -18,6 +18,7 @@ import { ChannelDistribution } from './Reutilizables/KPSLeads/ChannelDistributio
 import { LandingAnalysis } from './Reutilizables/KPSLeads/LandingAnalysis';
 import { ConversionComparison } from './Reutilizables/KPSLeads/ConversionComparison';
 import { PipelineChart } from './Reutilizables/KPSLeads/PipelineChart';
+import { ArchivedAnalysis } from './Reutilizables/KPSLeads/ArchivedAnalysis';
 
 // Lista de 10 colores aleatorios
 const colors = ['#71b6f9', '#f1556c', '#1abc9c', '#4a81d4', '#f7b84b', '#5b6be8', '#34c38f', '#50a5f1', '#ffbb78', '#aec7e8'];
@@ -44,6 +45,7 @@ const KPILeads = ({ months = [], currentMonth, currentYear }) => {
   const [breakdowns, setBreakdowns] = useState(0)
   const [funnelCounts, setFunnelCounts] = useState({})
   const [originLandingCampaignCounts, setOriginLandingCampaignCounts] = useState([])
+  const [totalArchivedCounts, setTotalArchivedCounts] = useState([])
 
   const [topUsers, setTopUsers] = useState([])
 
@@ -88,6 +90,7 @@ const KPILeads = ({ months = [], currentMonth, currentYear }) => {
         setOriginCampaignCounts(summary.originCampaignCounts ?? []);
         setFunnelCounts(summary.funnelCounts ?? {})
         setOriginLandingCampaignCounts(summary.originLandingCampaignCounts ?? [])
+        setTotalArchivedCounts(summary.totalArchivedCounts ?? [])
 
         setBreakdowns(summary.breakdownCounts ?? 0)
 
@@ -375,11 +378,14 @@ const KPILeads = ({ months = [], currentMonth, currentYear }) => {
         </div>
       </div>
 
-      <div className="row mb-3">
+      <div className="row mb-3 g-3">
         <div className="col-lg-6">
           <TrafficSourceAnalysis data={originLandingCampaignCounts} />
         </div>
         <div className="col-lg-6">
+          <ArchivedAnalysis data={totalArchivedCounts} />
+        </div>
+        <div className="col-12">
           <DirectCampaignPerformance originCounts={originCampaignCounts} />
         </div>
       </div>
