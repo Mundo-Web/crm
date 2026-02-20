@@ -131,7 +131,7 @@ class KPILeadsController extends BasicController
                 ])
                 ->leftJoin('statuses AS status', 'status.id', 'clients.status_id')
                 ->whereNotNull('status.status')
-                ->whereNotNull('clients.status')
+                // ->whereNotNull('clients.status')
                 ->whereIn('clients.status_id', array_merge($leadStatusesIds, $clientStatusesIds))
                 ->groupBy('status_id')
                 ->orderBy('status.table_id', 'desc')
