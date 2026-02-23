@@ -117,6 +117,8 @@ class MetaController extends Controller
         $response = Response::simpleTryCatch(function () use ($request, $origin, $business_uuid) {
             $data = $request->all();
 
+            dump($data);
+
             if (!in_array($origin, ['messenger', 'instagram', 'whatsapp'])) throw new Exception('Error, origen no permitido');
 
             $entry = $data['entry'][0] ?? [];
@@ -166,6 +168,8 @@ class MetaController extends Controller
                     break;
                 case 'instagram':
                     $profileData = MetaController::getInstagramProfile($userId, $integrationJpa->meta_access_token, true);
+                case 'whatsapp':
+                    $profileData = MetaController::getWhatsAppProfile($userId, $integrationJpa->meta_access_token);
                 default:
                     $profileData = MetaController::getFacebookProfile($userId, $integrationJpa->meta_access_token, true);
                     break;
