@@ -41,7 +41,8 @@ export const LeadsProvider = ({ statuses, months, currentMonth, currentYear, chi
                 skip: 0,
                 take: 10,
                 sort: [{ selector: "created_at", desc: true }],
-                requireTotalCount: true
+                requireTotalCount: true,
+                includeClients: true,
             });
             setStatusesLoading(old => ({ ...old, [statusId]: false }))
             setLeadsCount(old => ({ ...old, [statusId]: response.totalCount }))
@@ -79,6 +80,7 @@ export const LeadsProvider = ({ statuses, months, currentMonth, currentYear, chi
             filter: ArrayJoin(filter, 'and'),
             requireTotalCount: true,
             isLoadingAll: true,
+            includeClients: true,
             sort: [{ selector: "created_at", desc: true }],
         });
 
@@ -137,7 +139,8 @@ export const LeadsProvider = ({ statuses, months, currentMonth, currentYear, chi
             filter: ArrayJoin(filter, 'and'),
             sort: [{ selector: "created_at", desc: true }],
             take: 10,
-            requireTotalCount: true
+            requireTotalCount: true,
+            includeClients: true,
         });
         setStatusesLoading(old => ({ ...old, [statusId]: false }))
 

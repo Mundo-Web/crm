@@ -62,6 +62,10 @@ class ClientNoteController extends BasicController
             $clientJpa = Client::find($jpa->client_id);
             if ($jpa->status_id) $clientJpa->status_id = $jpa->status_id;
             if ($jpa->manage_status_id) $clientJpa->manage_status_id = $jpa->manage_status_id;
+            if ($request->client_data) {
+                $clientJpa->ruc = $request->client_data['dni'];
+                $clientJpa->tradename = $request->client_data['fullname'];
+            }
             $clientJpa->save();
         }
 
@@ -122,7 +126,7 @@ class ClientNoteController extends BasicController
         $newJpa = ClientNote::where('id', $jpa->id)
             ->with(['type', 'user', 'tasks', 'tasks.assigned', 'status', 'manageStatus'])
             ->first();
-            
+
         return $newJpa;
     }
 }

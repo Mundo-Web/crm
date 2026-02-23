@@ -232,7 +232,6 @@ const Clients = ({ projectStatuses, finishedProjectStatus, clientStatuses, produ
               <i className='fas fa-shapes'></i> {data.projects_count}
             </TippyButton>)
           },
-          sortOrder: 'desc'
         } : null,
         {
           dataField: 'ruc',
@@ -252,10 +251,10 @@ const Clients = ({ projectStatuses, finishedProjectStatus, clientStatuses, produ
             container.on('click', () => onDetailLoaded(data))
             ReactAppend(container, <div className='d-flex align-items-center'>
               {data.assigned_to && <Tippy content={`Atendido por ${data.assigned.name} ${data.assigned.lastname}`}>
-                <img className='avatar-xs rounded-circle me-1' 
-                src={`//${Global.APP_DOMAIN}/api/profile/thumbnail/${data.assigned.relative_id}`} 
-                onError={(e) => { e.target.src = `//${Global.APP_DOMAIN}/assets/img/user-404.svg`; }}
-                alt={data.assigned.name} />
+                <img className='avatar-xs rounded-circle me-1'
+                  src={`//${Global.APP_DOMAIN}/api/profile/thumbnail/${data.assigned.relative_id}`}
+                  onError={(e) => { e.target.src = `//${Global.APP_DOMAIN}/assets/img/user-404.svg`; }}
+                  alt={data.assigned.name} />
               </Tippy>}
               <div>{data.tradename || <i className='text-muted'>- Sin nombre -</i>}</div>
             </div>)
@@ -314,6 +313,29 @@ const Clients = ({ projectStatuses, finishedProjectStatus, clientStatuses, produ
         //     </Dropdown>)
         //   }
         // } : null,
+        {
+          dataField: 'created_at',
+          caption: 'Fecha creacion',
+          dataType: 'date',
+          cellTemplate: (container, { data }) => {
+            container.html(renderToString(<>
+              <i className="mdi mdi-calendar-blank text-blue me-1"></i>
+              {moment(data.created_at.replace('Z', '+05:00')).format('lll')}
+            </>))
+          },
+        },
+        {
+          dataField: 'updated_at',
+          caption: 'Fecha actualización',
+          dataType: 'date',
+          cellTemplate: (container, { data }) => {
+            container.html(renderToString(<>
+              <i className="mdi mdi-calendar-blank text-blue me-1"></i>
+              {moment(data.updated_at.replace('Z', '+05:00')).format('lll')}
+            </>))
+          },
+          sortOrder: 'desc',
+        },
         can('clients', 'root', 'all', 'list', 'update', 'changestatus', 'delete') ? {
           caption: 'Acciones',
           width: 235,

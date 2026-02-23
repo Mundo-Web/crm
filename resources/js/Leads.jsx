@@ -260,7 +260,9 @@ const Leads = (properties) => {
     let isTask = false
     let processStatus2save = processStatus
 
-    const lead = structuredClone(leadLoaded)
+    const lead = structuredClone({ ...leadLoaded })
+
+    let clientData = null
 
     switch (type) {
       case '8e895346-3d87-4a87-897a-4192b917c211':
@@ -268,6 +270,7 @@ const Leads = (properties) => {
           const wasModalOpen = $(modalRef.current).hasClass('show');
           if (wasModalOpen) {
             $(modalRef.current).modal('hide');
+            setLeadLoaded(null)
           }
 
           const { value: formValues } = await Swal.fire({
@@ -303,14 +306,15 @@ const Leads = (properties) => {
           });
           $(modalRef.current).modal('show')
           await new Promise(resolve => setTimeout(resolve, 250));
+          setLeadLoaded(lead)
           if (!formValues) {
             if (wasModalOpen) {
-              setLeadLoaded(lead)
               history.pushState(null, null, `/leads/${lead.id}`)
               setNotes([])
             }
             return
           };
+          clientData = formValues
           processStatus2save = defaultClientStatus
         }
         title = `Nota de ${session.service_user.fullname}`
@@ -346,6 +350,7 @@ const Leads = (properties) => {
       description: !isTask ? content : undefined,
       raw: !isTask ? text : undefined,
       client_id: leadLoaded.id,
+      client_data: clientData,
       tasks: isTask ? [{
         name: taskTitleRef.current.value,
         type: taskTypeRef.current.value,
