@@ -36,7 +36,10 @@ class ArchivedController extends BasicController
             ->with(['status', 'assigned', 'manageStatus'])
             ->leftJoin('statuses AS status', 'status.id', 'status_id')
             ->leftJoin('statuses AS manage_status', 'status.id', 'manage_status_id')
-            ->whereNull('clients.status')
+            ->where(function ($q) {
+                $q->whereNull('clients.status')
+                  ->orWhere('clients.status', false);
+            })
             ->where('clients.business_id', Auth::user()->business_id);
     }
 
