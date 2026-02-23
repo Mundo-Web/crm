@@ -15,31 +15,34 @@ const integrationsRest = new IntegrationsRest()
 
 const icons = {
   'messenger': (
-    <img src="/assets/img/messenger.svg" alt="Messenger" style={{height: '200px', width: 'auto'}} />
+    <img src="/assets/img/messenger.svg" alt="Messenger" style={{ height: '200px', width: 'auto' }} />
   ),
   'instagram': (
-    <img src="/assets/img/instagram.svg" alt="Instagram" style={{height: '200px', width: 'auto'}} />
+    <img src="/assets/img/instagram.svg" alt="Instagram" style={{ height: '200px', width: 'auto' }} />
   ),
-  'whatsapp': (
-    <img src="/assets/img/whatsapp.svg" alt="WhatsApp" style={{height: '200px', width: 'auto'}} />
+  'whatsapp Cloud API': (
+    <img src="/assets/img/whatsapp.svg" alt="WhatsApp" style={{ height: '200px', width: 'auto' }} />
+  ),
+  'whatsapp (Experimental)': (
+    <img src="/assets/img/whatsapp.svg" alt="WhatsApp" style={{ height: '200px', width: 'auto' }} />
   ),
   'tiktok': (
-    <img src="/assets/img/tiktok.svg" alt="TikTok" style={{height: '200px', width: 'auto', opacity: 0.5}} />
+    <img src="/assets/img/tiktok.svg" alt="TikTok" style={{ height: '200px', width: 'auto', opacity: 0.5 }} />
   ),
   'gmail': (
-    <img src="/assets/img/gmail.svg" alt="Gmail" style={{height: '200px', width: 'auto'}} />
+    <img src="/assets/img/gmail.svg" alt="Gmail" style={{ height: '200px', width: 'auto' }} />
   ),
   'google-calendar': (
-    <img src="/assets/img/calendar.svg" alt="Google Calendar" style={{height: '200px', width: 'auto', opacity: 0.5}} />
+    <img src="/assets/img/calendar.svg" alt="Google Calendar" style={{ height: '200px', width: 'auto', opacity: 0.5 }} />
   ),
   'formularios': (
-    <img src="/assets/img/website.svg" alt="Formularios" style={{height: '200px', width: 'auto'}} />
+    <img src="/assets/img/website.svg" alt="Formularios" style={{ height: '200px', width: 'auto' }} />
   )
 }
 
 const ServiceCard = ({ service, icon, description, integration, onIntegrate, onUnlink }) => {
   const isComingSoon = service === 'tiktok' || service === 'google-calendar';
-  
+
   return (
     <div className="col-xxl-3 col-xl-4 col-lg-6 col-md-6 " >
       <div className="card">
@@ -288,7 +291,7 @@ const IntegrationWizardModal = ({ service, setService, apikey, auth_token, onClo
       hasImages: false, // Indicador para formularios (sin imágenes pero sin inputs)
       steps: [
         'Dirigirse a la seccion de  <a href="/apikeys">Formulario Externo</a>',
-      
+
       ],
       authSteps: [
         'Conecta tu formulario con Atalaya',
@@ -358,14 +361,14 @@ const IntegrationWizardModal = ({ service, setService, apikey, auth_token, onClo
   return <Modal modalRef={modalRef} title={
     <div className="d-flex align-items-center">
       <div className="me-3">
-        <div 
+        <div
           className="avatar-md rounded-circle d-flex align-items-center justify-content-center"
           style={{ backgroundColor: `${config.color}15`, border: `2px solid ${config.color}` }}
         >
-         {icons[service] && React.cloneElement(icons[service], { 
-                style: { height: '30px', width: 'auto', opacity: 0.8 },
-                className: ''
-              })}
+          {icons[service] && React.cloneElement(icons[service], {
+            style: { height: '30px', width: 'auto', opacity: 0.8 },
+            className: ''
+          })}
         </div>
       </div>
       <div>
@@ -383,45 +386,45 @@ const IntegrationWizardModal = ({ service, setService, apikey, auth_token, onClo
           border: '1px solid var(--bs-border-color)'
         }}>
           <li className="nav-item">
-            <a href="#account-2" data-bs-toggle="tab" data-toggle="tab" 
-               className={`nav-link rounded-start border-0 pt-3 pb-3 ${step == 1 && 'active'}`} 
-               onClick={() => setStep(1)}
-               style={{ 
-                 backgroundColor: step == 1 ? config.color : 'transparent', 
-                 color: step == 1 ? 'white' : 'var(--bs-gray-600)',
-                 fontWeight: step == 1 ? '600' : '500',
-                 transition: 'all 0.3s ease'
-               }}>
+            <a href="#account-2" data-bs-toggle="tab" data-toggle="tab"
+              className={`nav-link rounded-start border-0 pt-3 pb-3 ${step == 1 && 'active'}`}
+              onClick={() => setStep(1)}
+              style={{
+                backgroundColor: step == 1 ? config.color : 'transparent',
+                color: step == 1 ? 'white' : 'var(--bs-gray-600)',
+                fontWeight: step == 1 ? '600' : '500',
+                transition: 'all 0.3s ease'
+              }}>
               <i className="mdi mdi-cog me-2"></i>
               <span className="d-none d-sm-inline">Configuración</span>
             </a>
           </li>
           <li className="nav-item">
-            <a href="#profile-tab-2" data-bs-toggle="tab" data-toggle="tab" 
-               className={`nav-link border-0 pt-3 pb-3 ${step == 2 && 'active'}`} 
-               onClick={() => setStep(2)}
-               style={{ 
-                 backgroundColor: step == 2 ? config.color : 'transparent', 
-                 color: step == 2 ? 'white' : 'var(--bs-gray-600)',
-                 fontWeight: step == 2 ? '600' : '500',
-                 transition: 'all 0.3s ease'
-               }}>
+            <a href="#profile-tab-2" data-bs-toggle="tab" data-toggle="tab"
+              className={`nav-link border-0 pt-3 pb-3 ${step == 2 && 'active'}`}
+              onClick={() => setStep(2)}
+              style={{
+                backgroundColor: step == 2 ? config.color : 'transparent',
+                color: step == 2 ? 'white' : 'var(--bs-gray-600)',
+                fontWeight: step == 2 ? '600' : '500',
+                transition: 'all 0.3s ease'
+              }}>
               <i className="mdi mdi-key me-2"></i>
               <span className="d-none d-sm-inline">Autenticación</span>
             </a>
           </li>
           <li className="nav-item">
-            <a href="#finish-2" data-bs-toggle="tab" data-toggle="tab" 
-               className={`nav-link rounded-end border-0 pt-3 pb-3 ${step == 3 && 'active'} ${(service === 'whatsapp' || service === 'gmail') ? '' : 'disabled'}`} 
-               disabled={service !== 'whatsapp' && service !== 'gmail'}
-               onClick={() => (service === 'whatsapp' || service === 'gmail') && setStep(3)}
-               style={{ 
-                 backgroundColor: step == 3 ? config.color : 'transparent', 
-                 color: step == 3 ? 'white' : 'var(--bs-gray-500)',
-                 fontWeight: step == 3 ? '600' : '500',
-                 transition: 'all 0.3s ease',
-                 cursor: (service === 'whatsapp' || service === 'gmail') ? 'pointer' : 'not-allowed'
-               }}>
+            <a href="#finish-2" data-bs-toggle="tab" data-toggle="tab"
+              className={`nav-link rounded-end border-0 pt-3 pb-3 ${step == 3 && 'active'} ${(service === 'whatsapp' || service === 'gmail') ? '' : 'disabled'}`}
+              disabled={service !== 'whatsapp' && service !== 'gmail'}
+              onClick={() => (service === 'whatsapp' || service === 'gmail') && setStep(3)}
+              style={{
+                backgroundColor: step == 3 ? config.color : 'transparent',
+                color: step == 3 ? 'white' : 'var(--bs-gray-500)',
+                fontWeight: step == 3 ? '600' : '500',
+                transition: 'all 0.3s ease',
+                cursor: (service === 'whatsapp' || service === 'gmail') ? 'pointer' : 'not-allowed'
+              }}>
               <i className="mdi mdi-check-circle me-2"></i>
               <span className="d-none d-sm-inline">Completado</span>
             </a>
@@ -432,20 +435,20 @@ const IntegrationWizardModal = ({ service, setService, apikey, auth_token, onClo
       <div className="tab-content b-0 mb-0 pt-0">
 
         <div className={`tab-pane ${step == 1 && 'active'}`} id="account-2">
-         
+
           {service === 'formularios' ? (
             // Contenido especial para formularios - Solo mostrar el step
             <div className="">
-              <div className="alert border-0 rounded-3" style={{ 
+              <div className="alert border-0 rounded-3" style={{
                 backgroundColor: `${config.color}10`,
                 borderLeft: `4px solid ${config.color}`
               }}>
                 <h6 className="alert-heading d-flex align-items-center mb-3">
-                  <div 
+                  <div
                     className="rounded-circle d-flex align-items-center justify-content-center me-2"
-                    style={{ 
-                      width: '32px', 
-                      height: '32px', 
+                    style={{
+                      width: '32px',
+                      height: '32px',
                       backgroundColor: config.color,
                       color: 'white'
                     }}
@@ -466,8 +469,8 @@ const IntegrationWizardModal = ({ service, setService, apikey, auth_token, onClo
               </div>
 
               <div className="text-center mt-4">
-                <button 
-                  type='button' 
+                <button
+                  type='button'
                   className="btn px-4"
                   style={{ backgroundColor: config.color, borderColor: config.color, color: 'white' }}
                   onClick={() => setService(null)}
@@ -480,16 +483,16 @@ const IntegrationWizardModal = ({ service, setService, apikey, auth_token, onClo
           ) : (
             // Contenido normal para otros servicios
             <>
-              <div className="alert border-0 rounded-3" style={{ 
+              <div className="alert border-0 rounded-3" style={{
                 backgroundColor: `${config.color}10`,
                 borderLeft: `4px solid ${config.color}`
               }}>
                 <h6 className="alert-heading d-flex align-items-center mb-3">
-                  <div 
+                  <div
                     className="rounded-circle d-flex align-items-center justify-content-center me-2"
-                    style={{ 
-                      width: '32px', 
-                      height: '32px', 
+                    style={{
+                      width: '32px',
+                      height: '32px',
                       backgroundColor: config.color,
                       color: 'white'
                     }}
@@ -507,8 +510,8 @@ const IntegrationWizardModal = ({ service, setService, apikey, auth_token, onClo
                           <div className="d-flex flex-column">
                             <span dangerouslySetInnerHTML={{ __html: step.text }} className="mb-2" />
                             <div className="border rounded-3 overflow-hidden" style={{ maxWidth: '100%' }}>
-                              <img 
-                                src={step.image} 
+                              <img
+                                src={step.image}
                                 alt={`Paso ${index + 1} - WhatsApp`}
                                 className="img-fluid"
                                 style={{ width: '100%', height: 'auto' }}
@@ -517,8 +520,8 @@ const IntegrationWizardModal = ({ service, setService, apikey, auth_token, onClo
                                   e.target.nextSibling.style.display = 'block';
                                 }}
                               />
-                              <div 
-                                className="text-center p-3 text-muted" 
+                              <div
+                                className="text-center p-3 text-muted"
                                 style={{ display: 'none' }}
                               >
                                 <i className="mdi mdi-image-off-outline fs-4 mb-2"></i>
@@ -530,22 +533,22 @@ const IntegrationWizardModal = ({ service, setService, apikey, auth_token, onClo
                         </li>
                       );
                     }
-                    
+
                     // Para otros servicios (texto normal)
                     let processedStep = step;
                     if (typeof step === 'string' && (step.includes('Panel de Desarrolladores') || step.includes('Console'))) {
-                      processedStep = step.replace(/Panel de Desarrolladores|Console/g, (match) => 
+                      processedStep = step.replace(/Panel de Desarrolladores|Console/g, (match) =>
                         `<a href="${config.developer_url}" target="_blank" style="color: ${config.color}; font-weight: 500; text-decoration: underline;">${match}</a>`
                       );
                     }
-                    
+
                     return (
                       <li key={index} className="mb-2">
                         <span dangerouslySetInnerHTML={{ __html: processedStep }} />
                         {typeof step === 'string' && step.includes('permisos') && (
                           <div className="mt-1">
-                            <code className="small px-2 py-1 rounded" style={{ 
-                              backgroundColor: 'var(--bs-gray-100)', 
+                            <code className="small px-2 py-1 rounded" style={{
+                              backgroundColor: 'var(--bs-gray-100)',
                               color: 'var(--bs-gray-800)',
                               fontSize: '0.75rem'
                             }}>
@@ -559,14 +562,14 @@ const IntegrationWizardModal = ({ service, setService, apikey, auth_token, onClo
                 </ol>
                 {service !== 'whatsapp' || service !== 'gmail' && config.developer_url !== '#' && (
                   <div className="mt-3 pt-3 border-top" style={{ borderColor: `${config.color}30` }}>
-                    <a 
-                      href={config.developer_url} 
-                      target="_blank" 
+                    <a
+                      href={config.developer_url}
+                      target="_blank"
                       className="btn btn-sm"
-                      style={{ 
-                        backgroundColor: config.color, 
-                        borderColor: config.color, 
-                        color: 'white' 
+                      style={{
+                        backgroundColor: config.color,
+                        borderColor: config.color,
+                        color: 'white'
                       }}
                     >
                       <i className="mdi mdi-open-in-new me-1"></i>
@@ -599,8 +602,8 @@ const IntegrationWizardModal = ({ service, setService, apikey, auth_token, onClo
                       <button
                         type='button'
                         className="btn border-2"
-                        style={{ 
-                          borderColor: config.color, 
+                        style={{
+                          borderColor: config.color,
                           color: config.color,
                           backgroundColor: 'var(--bs-body-bg)'
                         }}
@@ -630,8 +633,8 @@ const IntegrationWizardModal = ({ service, setService, apikey, auth_token, onClo
                       <button
                         type='button'
                         className="btn border-2"
-                        style={{ 
-                          borderColor: config.color, 
+                        style={{
+                          borderColor: config.color,
                           color: config.color,
                           backgroundColor: 'var(--bs-body-bg)'
                         }}
@@ -648,18 +651,18 @@ const IntegrationWizardModal = ({ service, setService, apikey, auth_token, onClo
         </div>
 
         <div className={`tab-pane ${step == 2 && 'active'}`} id="profile-tab-2">
-        
 
-          <div className="alert border-0 rounded-3" style={{ 
+
+          <div className="alert border-0 rounded-3" style={{
             backgroundColor: `${config.color}10`,
             borderLeft: `4px solid ${config.color}`
           }}>
             <h6 className="alert-heading d-flex align-items-center mb-3">
-              <div 
+              <div
                 className="rounded-circle d-flex align-items-center justify-content-center me-2"
-                style={{ 
-                  width: '32px', 
-                  height: '32px', 
+                style={{
+                  width: '32px',
+                  height: '32px',
                   backgroundColor: config.color,
                   color: 'white'
                 }}
@@ -677,8 +680,8 @@ const IntegrationWizardModal = ({ service, setService, apikey, auth_token, onClo
                       <div className="d-flex flex-column">
                         <span dangerouslySetInnerHTML={{ __html: step.text }} className="mb-2" />
                         <div className="border rounded-3 overflow-hidden" style={{ maxWidth: '100%' }}>
-                          <img 
-                            src={step.image} 
+                          <img
+                            src={step.image}
                             alt={`Autenticación paso ${index + 1} - WhatsApp`}
                             className="img-fluid"
                             style={{ width: '100%', height: 'auto' }}
@@ -687,8 +690,8 @@ const IntegrationWizardModal = ({ service, setService, apikey, auth_token, onClo
                               e.target.nextSibling.style.display = 'block';
                             }}
                           />
-                          <div 
-                            className="text-center p-3 text-muted" 
+                          <div
+                            className="text-center p-3 text-muted"
                             style={{ display: 'none' }}
                           >
                             <i className="mdi mdi-image-off-outline fs-4 mb-2"></i>
@@ -700,15 +703,15 @@ const IntegrationWizardModal = ({ service, setService, apikey, auth_token, onClo
                     </li>
                   );
                 }
-                
+
                 // Para otros servicios (texto normal)
                 let processedStep = step;
                 if (typeof step === 'string' && (step.includes('Panel de Desarrolladores') || step.includes('Console'))) {
-                  processedStep = step.replace(/Panel de Desarrolladores|Console/g, (match) => 
+                  processedStep = step.replace(/Panel de Desarrolladores|Console/g, (match) =>
                     `<a href="${config.developer_url}" target="_blank" style="color: ${config.color}; font-weight: 500; text-decoration: underline;">${match}</a>`
                   );
                 }
-                
+
                 return (
                   <li key={index} className="mb-2">
                     <span dangerouslySetInnerHTML={{ __html: processedStep }} />
@@ -734,7 +737,7 @@ const IntegrationWizardModal = ({ service, setService, apikey, auth_token, onClo
                     onChange={e => setAccountId(e.target.value)}
                     placeholder="Ej: 123456789"
                     disabled={!!accountVerified}
-                    style={{ 
+                    style={{
                       borderColor: accountVerified ? '#28a745' : 'var(--bs-border-color)',
                       backgroundColor: accountVerified ? '#d4edda' : 'var(--bs-body-bg)',
                       color: 'var(--bs-body-color)'
@@ -753,7 +756,7 @@ const IntegrationWizardModal = ({ service, setService, apikey, auth_token, onClo
                     onChange={e => setAccessToken(e.target.value)}
                     placeholder="Pega aquí tu Access Token"
                     disabled={!!accountVerified}
-                    style={{ 
+                    style={{
                       borderColor: accountVerified ? '#28a745' : 'var(--bs-border-color)',
                       backgroundColor: accountVerified ? '#d4edda' : 'var(--bs-body-bg)',
                       color: 'var(--bs-body-color)'
@@ -766,49 +769,49 @@ const IntegrationWizardModal = ({ service, setService, apikey, auth_token, onClo
                 {
                   accountVerified
                     ? <div className="alert alert-success border-0 rounded-3">
-                        <div className="d-flex align-items-center">
-                          <img
-                            className="avatar-md rounded-circle me-3 border"
-                            src={accountVerified.picture?.data?.url || accountVerified.profile_pic || '/assets/img/default-avatar.png'}
-                            alt={accountVerified.name}
-                            onError={e => e.target.src = `//${Global.APP_DOMAIN}/api/logo/thumbnail/null`}
-                          />
-                          <div className="flex-grow-1">
-                            <h6 className="mb-1">{accountVerified.name}</h6>
-                            <small className="text-muted">
-                              @{accountVerified.username || accountVerified.id}
-                            </small>
-                          </div>
-                          <div className="text-success">
-                            <i className="mdi mdi-check-circle fs-4"></i>
-                          </div>
+                      <div className="d-flex align-items-center">
+                        <img
+                          className="avatar-md rounded-circle me-3 border"
+                          src={accountVerified.picture?.data?.url || accountVerified.profile_pic || '/assets/img/default-avatar.png'}
+                          alt={accountVerified.name}
+                          onError={e => e.target.src = `//${Global.APP_DOMAIN}/api/logo/thumbnail/null`}
+                        />
+                        <div className="flex-grow-1">
+                          <h6 className="mb-1">{accountVerified.name}</h6>
+                          <small className="text-muted">
+                            @{accountVerified.username || accountVerified.id}
+                          </small>
                         </div>
-                        <div className="mt-3 pt-3 border-top">
-                          <i className="mdi mdi-check-circle me-1"></i>
-                          <small>Cuenta verificada exitosamente y lista para integrar</small>
+                        <div className="text-success">
+                          <i className="mdi mdi-check-circle fs-4"></i>
                         </div>
                       </div>
+                      <div className="mt-3 pt-3 border-top">
+                        <i className="mdi mdi-check-circle me-1"></i>
+                        <small>Cuenta verificada exitosamente y lista para integrar</small>
+                      </div>
+                    </div>
                     : <div className="text-center">
-                        <button
-                          type='button'
-                          className="btn btn-lg px-4 py-2"
-                          style={{ backgroundColor: config.color, borderColor: config.color, color: 'white' }}
-                          onClick={onVerifyClicked}
-                          disabled={verifying || !accountId || !accessToken}
-                        >
-                          {verifying ? (
-                            <>
-                              <i className="mdi mdi-loading mdi-spin me-2"></i>
-                              Verificando cuenta...
-                            </>
-                          ) : (
-                            <>
-                              <i className="mdi mdi-check-circle me-2"></i>
-                              Verificar cuenta
-                            </>
-                          )}
-                        </button>
-                      </div>
+                      <button
+                        type='button'
+                        className="btn btn-lg px-4 py-2"
+                        style={{ backgroundColor: config.color, borderColor: config.color, color: 'white' }}
+                        onClick={onVerifyClicked}
+                        disabled={verifying || !accountId || !accessToken}
+                      >
+                        {verifying ? (
+                          <>
+                            <i className="mdi mdi-loading mdi-spin me-2"></i>
+                            Verificando cuenta...
+                          </>
+                        ) : (
+                          <>
+                            <i className="mdi mdi-check-circle me-2"></i>
+                            Verificar cuenta
+                          </>
+                        )}
+                      </button>
+                    </div>
                 }
               </div>
             </>
@@ -820,7 +823,7 @@ const IntegrationWizardModal = ({ service, setService, apikey, auth_token, onClo
           {(service === 'whatsapp' || service === 'gmail' || service === 'formularios') && config.completedStep ? (
             <div className="text-center">
               <div className="mb-4">
-                <div 
+                <div
                   className="avatar-xl rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3"
                   style={{ backgroundColor: `${config.color}15`, border: `3px solid ${config.color}` }}
                 >
@@ -829,16 +832,16 @@ const IntegrationWizardModal = ({ service, setService, apikey, auth_token, onClo
                 <h3 className="text-success">¡{config.name} Configurado!</h3>
               </div>
 
-              <div className="alert border-0 rounded-3" style={{ 
+              <div className="alert border-0 rounded-3" style={{
                 backgroundColor: `${config.color}10`,
                 borderLeft: `4px solid ${config.color}`
               }}>
                 <h6 className="alert-heading d-flex align-items-center mb-3">
-                  <div 
+                  <div
                     className="rounded-circle d-flex align-items-center justify-content-center me-2"
-                    style={{ 
-                      width: '32px', 
-                      height: '32px', 
+                    style={{
+                      width: '32px',
+                      height: '32px',
                       backgroundColor: config.color,
                       color: 'white'
                     }}
@@ -851,8 +854,8 @@ const IntegrationWizardModal = ({ service, setService, apikey, auth_token, onClo
                   <span dangerouslySetInnerHTML={{ __html: config.completedStep.text }} className="mb-3" />
                   {config.completedStep.image && (
                     <div className="border rounded-3 overflow-hidden" style={{ maxWidth: '100%' }}>
-                      <img 
-                        src={config.completedStep.image} 
+                      <img
+                        src={config.completedStep.image}
                         alt={`${config.name} configurado exitosamente`}
                         className="img-fluid"
                         style={{ width: '100%', height: 'auto' }}
@@ -861,8 +864,8 @@ const IntegrationWizardModal = ({ service, setService, apikey, auth_token, onClo
                           e.target.nextSibling.style.display = 'block';
                         }}
                       />
-                      <div 
-                        className="text-center p-3 text-muted" 
+                      <div
+                        className="text-center p-3 text-muted"
                         style={{ display: 'none' }}
                       >
                         <i className="mdi mdi-image-off-outline fs-4 mb-2"></i>
@@ -882,7 +885,7 @@ const IntegrationWizardModal = ({ service, setService, apikey, auth_token, onClo
             /* Contenido normal para otros servicios */
             <div className="text-center">
               <div className="mb-4">
-                <div 
+                <div
                   className="avatar-xl rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3"
                   style={{ backgroundColor: `${config.color}15`, border: `3px solid ${config.color}` }}
                 >
@@ -905,7 +908,7 @@ const IntegrationWizardModal = ({ service, setService, apikey, auth_token, onClo
               </div>
 
               <p className="text-muted">
-                Tu {config.account_type} está ahora conectada con {Global.APP_NAME}. 
+                Tu {config.account_type} está ahora conectada con {Global.APP_NAME}.
                 Todas las interacciones se sincronizarán automáticamente.
               </p>
             </div>
@@ -918,8 +921,8 @@ const IntegrationWizardModal = ({ service, setService, apikey, auth_token, onClo
             <>
               <div>
                 {step > 1 && (
-                  <button 
-                    type='button' 
+                  <button
+                    type='button'
                     className="btn btn-outline-secondary px-4"
                     onClick={() => setStep(old => --old)}
                   >
@@ -928,15 +931,15 @@ const IntegrationWizardModal = ({ service, setService, apikey, auth_token, onClo
                   </button>
                 )}
               </div>
-              
+
               <div className="text-center flex-grow-1">
                 <small className="text-muted">Paso {step} de 3</small>
               </div>
 
               <div>
                 {step == 1 && (
-                  <button 
-                    type='button' 
+                  <button
+                    type='button'
                     className="btn px-4"
                     style={{ backgroundColor: config.color, borderColor: config.color, color: 'white' }}
                     onClick={() => setStep(old => ++old)}
@@ -948,8 +951,8 @@ const IntegrationWizardModal = ({ service, setService, apikey, auth_token, onClo
                 {step == 2 && (
                   /* Para WhatsApp, Gmail y Formularios, permite ir directamente al paso 3 */
                   (service === 'whatsapp' || service === 'gmail' || service === 'formularios') ? (
-                    <button 
-                      type='button' 
+                    <button
+                      type='button'
                       className="btn px-4"
                       style={{ backgroundColor: config.color, borderColor: config.color, color: 'white' }}
                       onClick={() => setStep(3)}
@@ -960,8 +963,8 @@ const IntegrationWizardModal = ({ service, setService, apikey, auth_token, onClo
                   ) : (
                     /* Para otros servicios, mantener lógica original */
                     accountVerified ? (
-                      <button 
-                        type='button' 
+                      <button
+                        type='button'
                         className="btn px-4"
                         style={{ backgroundColor: config.color, borderColor: config.color, color: 'white' }}
                         onClick={() => onIntegrateClicked()}
@@ -991,8 +994,8 @@ const IntegrationWizardModal = ({ service, setService, apikey, auth_token, onClo
                 )}
                 {/* Botón para cerrar en paso 3 para WhatsApp, Gmail y Formularios */}
                 {step == 3 && (service === 'whatsapp' || service === 'gmail' || service === 'formularios') && (
-                  <button 
-                    type='button' 
+                  <button
+                    type='button'
                     className="btn px-4"
                     style={{ backgroundColor: config.color, borderColor: config.color, color: 'white' }}
                     onClick={() => setService(null)}

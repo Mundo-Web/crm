@@ -77,30 +77,37 @@ class UserController extends BasicController
     public function assignRole(Request $request)
     {
         $response = Response::simpleTryCatch(function (Response $res) use ($request) {
-            $roleJpa = Role::select()
-                ->where('id', $request->role)
+            // Validar que todos los roles existan y pertenezcan a la empresa
+            $rolesJpa = Role::whereIn('id', $request->roles)
                 ->where('business_id', Auth::user()->business_id)
-                ->first();
-            if (!$roleJpa) throw new Exception('Solo puedes asignar roles que pertenezcan a tu empresa. ¿Que intentas hacer?');
+                ->get();
+            if ($rolesJpa->count() !== count($request->roles)) {
+                throw new Exception('Solo puedes asignar roles que pertenezcan a tu empresa. ¿Qué intentas hacer?');
+            }
 
             $userJpa = User::select()
                 ->where('user_id', $request->user)
                 ->where('business_id', Auth::user()->business_id)
                 ->first();
 
-            if (!$userJpa) throw new Exception('Es problable que el usuario no pertenezca a tu empresa o no haya iniciado sesión en ' . env('APP_NAME'));
+            if (!$userJpa) throw new Exception('Es probable que el usuario no pertenezca a tu empresa o no haya iniciado sesión en ' . env('APP_NAME'));
 
+            // Eliminar todos los roles actuales del usuario en esta empresa
             ModelHasRoles::where([
                 'model_type' => User::class,
                 'model_id' => $userJpa->id,
                 'business_id' => Auth::user()->business_id
             ])->delete();
-            ModelHasRoles::create([
-                'model_type' => User::class,
-                'model_id' => $userJpa->id,
-                'role_id' => $roleJpa->id,
-                'business_id' => Auth::user()->business_id
-            ]);
+
+            // Asignar los nuevos roles
+            foreach ($request->roles as $roleId) {
+                ModelHasRoles::create([
+                    'model_type' => User::class,
+                    'model_id' => $userJpa->id,
+                    'role_id' => $roleId,
+                    'business_id' => Auth::user()->business_id
+                ]);
+            }
         });
         return response($response->toArray(), $response->status);
     }

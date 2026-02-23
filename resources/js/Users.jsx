@@ -133,7 +133,7 @@ const Users = (properties) => {
             </>
         }
       </Modal>
-        <InvitationsModal modalRef={invitationModalRef} invitations={invitations} setInvitations={setInvitations} match={match} />
+      <InvitationsModal modalRef={invitationModalRef} invitations={invitations} setInvitations={setInvitations} match={match} />
     </Adminto>
   </>
   )
