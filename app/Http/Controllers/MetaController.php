@@ -34,7 +34,7 @@ class MetaController extends Controller
             return $igData;
         }
 
-        $igMeRest = new Fetch(env('INSTAGRAM_GRAPH_URL') . "/me?fields,id,name,username&access_token={$accessToken}");
+        $igMeRest = new Fetch(env('INSTAGRAM_GRAPH_URL') . "/me?fields=id,name,username&access_token={$accessToken}");
         $igRest = new Fetch(env('INSTAGRAM_GRAPH_URL') . "/{$id}?fields=id,name,username&access_token={$accessToken}");
 
         $igMeData = $igMeRest->json();
@@ -56,7 +56,7 @@ class MetaController extends Controller
             return $fbData;
         }
 
-        $fbMeRest = new Fetch(env('FACEBOOK_GRAPH_URL') . "/me?fields,id,name,username,picture&access_token={$accessToken}");
+        $fbMeRest = new Fetch(env('FACEBOOK_GRAPH_URL') . "/me?fields=id,name,username,picture&access_token={$accessToken}");
         $fbRest = new Fetch(env('FACEBOOK_GRAPH_URL') . "/{$id}?fields=id,name,username,picture&access_token={$accessToken}");
 
         $fbMeData = $fbMeRest->json();
@@ -66,6 +66,20 @@ class MetaController extends Controller
         if ($fbMeData['id'] != $fbData['id']) throw new Exception('Error, el token de acceso no pertenece al negocio');
 
         return $fbData;
+    }
+    public static function getWhatsAppProfile(string $wabaId, string $accessToken)
+    {
+        $rest = new Fetch(
+            env('FACEBOOK_GRAPH_URL') . "/{$wabaId}?fields=id,name,currency&access_token={$accessToken}"
+        );
+
+        $data = $rest->json();
+
+        if (isset($data['error'])) {
+            throw new Exception($data['error']['message'] ?? 'Error, token inválido o sin permisos');
+        }
+
+        return $data;
     }
     public function verify(Request $request, string $origin, string $business_uuid)
     {
@@ -103,7 +117,6 @@ class MetaController extends Controller
         $response = Response::simpleTryCatch(function () use ($request, $origin, $business_uuid) {
             $data = $request->all();
 
-            dump($data);
             if (!in_array($origin, ['messenger', 'instagram', 'whatsapp'])) throw new Exception('Error, origen no permitido');
 
             $entry = $data['entry'][0] ?? [];

@@ -30,6 +30,8 @@ class IntegrationController extends BasicController
             $metaBusiness = MetaController::getFacebookProfile($request->accountId, $request->accessToken);
         } else if ($request->service == 'instagram') {
             $metaBusiness = MetaController::getInstagramProfile($request->accountId, $request->accessToken);
+        } else if ($request->service == 'whatsapp') {
+            $metaBusiness = MetaController::getWhatsAppProfile($request->accountId, $request->accessToken);
         }
 
         $metaBusinessProfile = null;
@@ -85,6 +87,8 @@ class IntegrationController extends BasicController
                 $profile = MetaController::getFacebookProfile($request->accountId, $request->accessToken);
             } else if ($request->service == 'instagram') {
                 $profile = MetaController::getInstagramProfile($request->accountId, $request->accessToken);
+            } else if ($request->service == 'whatsapp') {
+                $profile = MetaController::getWhatsAppProfile($request->accountId, $request->accessToken);
             } else {
                 throw new Exception('Invalid service type');
             }

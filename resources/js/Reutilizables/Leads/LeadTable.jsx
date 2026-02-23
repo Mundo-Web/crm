@@ -440,8 +440,8 @@ const LeadTable = ({ gridRef, cardClass, otherGridRef, rest, can, defaultLeadSta
           //     setStatuses(items)
           //   }}
           // />)
-          ReactAppend(container, <span className="btn rounded-pill" style={{ border: 'none', borderRadius: '25px', padding: '2px 12px', color: data.status.color, fontWeight: 'bolder', backgroundColor: `${data.status.color}22`, cursor: 'default' }}>
-            {data.status.name}
+          ReactAppend(container, <span className="btn rounded-pill" style={{ border: 'none', borderRadius: '25px', padding: '2px 12px', color: data.status?.color, fontWeight: 'bolder', backgroundColor: `${data.status?.color}22`, cursor: 'default' }}>
+            {data.status?.name}
           </span>)
         }
       },
@@ -468,7 +468,7 @@ const LeadTable = ({ gridRef, cardClass, otherGridRef, rest, can, defaultLeadSta
           //     setManageStatuses(items)
           //   }}
           // />)
-          ReactAppend(container, <span className="btn rounded-pill" style={{ border: 'none', borderRadius: '25px', padding: '2px 12px', color: data.manage_status.color, fontWeight: 'bolder', backgroundColor: `${data.manage_status.color}22`, cursor: 'default' }}>
+          ReactAppend(container, <span className="btn rounded-pill" style={{ border: 'none', borderRadius: '25px', padding: '2px 12px', color: data.manage_status?.color, fontWeight: 'bolder', backgroundColor: `${data.manage_status?.color}22`, cursor: 'default' }}>
             {data.manage_status?.name || 'Sin etiqueta'}
           </span>)
         }

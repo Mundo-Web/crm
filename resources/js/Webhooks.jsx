@@ -20,10 +20,10 @@ const icons = {
   'instagram': (
     <img src="/assets/img/instagram.svg" alt="Instagram" style={{ height: '200px', width: 'auto' }} />
   ),
-  'whatsapp Cloud API': (
-    <img src="/assets/img/whatsapp.svg" alt="WhatsApp" style={{ height: '200px', width: 'auto' }} />
+  'whatsapp': (
+    <img src="/assets/img/wa-business.svg" alt="WhatsApp" style={{ height: '200px', width: 'auto' }} />
   ),
-  'whatsapp (Experimental)': (
+  'whatsappevo': (
     <img src="/assets/img/whatsapp.svg" alt="WhatsApp" style={{ height: '200px', width: 'auto' }} />
   ),
   'tiktok': (
@@ -175,6 +175,29 @@ const IntegrationWizardModal = ({ service, setService, apikey, auth_token, onClo
       color: '#25D366',
       icon: 'mdi-whatsapp',
       developer_url: 'https://developers.facebook.com/apps',
+      product_name: 'WhatsApp',
+      account_type: 'Cuenta de WhatsApp',
+      permissions: 'messages',
+      steps: [
+        'Abrir el <strong>Panel de Desarrolladores</strong> de Meta',
+        'Crear una nueva aplicación o <em>seleccionar una existente</em>',
+        'Agregar el producto <code>"WhatsApp"</code> a tu aplicación',
+        'Configurar webhook con la URL proporcionada',
+        'Generar token de página con <span style="color: #25D366; font-weight: 600;">permisos de mensajería</span>'
+      ],
+      authSteps: [
+        'Ve a la configuración de tu aplicación en <strong>Meta for Developers</strong>',
+        'Navega a <code>"WhatsApp"</code> → <em>"Settings"</em> en el menú lateral',
+        'Selecciona la <span style="color: #25D366; font-weight: 600;">cuenta de WhatsApp</span> que deseas conectar',
+        'Genera un <strong>WhatsApp Access Token</strong> con permisos de mensajería',
+        'Copia el <code>Phone Number ID</code> y el <code>Access Token</code> generados'
+      ]
+    },
+    whatsappevo: {
+      name: 'WhatsApp',
+      color: '#25D366',
+      icon: 'mdi-whatsappevo',
+      developer_url: 'https://developers.facebook.com/apps',
       product_name: 'WhatsApp Business API',
       account_type: 'cuenta de WhatsApp Business',
       permissions: 'whatsapp_business_messaging',
@@ -182,26 +205,26 @@ const IntegrationWizardModal = ({ service, setService, apikey, auth_token, onClo
       steps: [
         {
           text: 'Dirigirse a la parte superior del Panel Administrativo',
-          image: '/assets/img/whatsapp/paso1.png'
+          image: '/assets/img/whatsappevo/paso1.png'
         },
         {
           text: 'Seleccionar la opción de configuración de WhatsApp',
-          image: '/assets/img/whatsapp/paso2.png'
+          image: '/assets/img/whatsappevo/paso2.png'
         }
       ],
       authSteps: [
         {
           text: 'Configurar la integración con el webhook',
-          image: '/assets/img/whatsapp/paso3.png'
+          image: '/assets/img/whatsappevo/paso3.png'
         },
         {
           text: 'Verificar la conexión y activar el servicio',
-          image: '/assets/img/whatsapp/paso4.png'
+          image: '/assets/img/whatsappevo/paso4.png'
         }
       ],
       completedStep: {
         text: 'WhatsApp configurado exitosamente y listo para usar',
-        image: '/assets/img/whatsapp/paso5.jpg'
+        image: '/assets/img/whatsappevo/paso5.jpg'
       }
     },
     tiktok: {
@@ -415,15 +438,15 @@ const IntegrationWizardModal = ({ service, setService, apikey, auth_token, onClo
           </li>
           <li className="nav-item">
             <a href="#finish-2" data-bs-toggle="tab" data-toggle="tab"
-              className={`nav-link rounded-end border-0 pt-3 pb-3 ${step == 3 && 'active'} ${(service === 'whatsapp' || service === 'gmail') ? '' : 'disabled'}`}
-              disabled={service !== 'whatsapp' && service !== 'gmail'}
-              onClick={() => (service === 'whatsapp' || service === 'gmail') && setStep(3)}
+              className={`nav-link rounded-end border-0 pt-3 pb-3 ${step == 3 && 'active'} ${(service === 'whatsappevo' || service === 'gmail') ? '' : 'disabled'}`}
+              disabled={service !== 'whatsappevo' && service !== 'gmail'}
+              onClick={() => (service === 'whatsappevo' || service === 'gmail') && setStep(3)}
               style={{
                 backgroundColor: step == 3 ? config.color : 'transparent',
                 color: step == 3 ? 'white' : 'var(--bs-gray-500)',
                 fontWeight: step == 3 ? '600' : '500',
                 transition: 'all 0.3s ease',
-                cursor: (service === 'whatsapp' || service === 'gmail') ? 'pointer' : 'not-allowed'
+                cursor: (service === 'whatsappevo' || service === 'gmail') ? 'pointer' : 'not-allowed'
               }}>
               <i className="mdi mdi-check-circle me-2"></i>
               <span className="d-none d-sm-inline">Completado</span>
@@ -560,7 +583,7 @@ const IntegrationWizardModal = ({ service, setService, apikey, auth_token, onClo
                     );
                   })}
                 </ol>
-                {service !== 'whatsapp' || service !== 'gmail' && config.developer_url !== '#' && (
+                {service !== 'whatsappevo' || service !== 'gmail' && config.developer_url !== '#' && (
                   <div className="mt-3 pt-3 border-top" style={{ borderColor: `${config.color}30` }}>
                     <a
                       href={config.developer_url}
@@ -580,7 +603,7 @@ const IntegrationWizardModal = ({ service, setService, apikey, auth_token, onClo
               </div>
 
               {/* Solo mostrar inputs si NO es WhatsApp, Gmail o Formularios */}
-              {service !== 'whatsapp' && service !== 'gmail' && service !== 'formularios' && (
+              {service !== 'whatsappevo' && service !== 'gmail' && service !== 'formularios' && (
                 <div className="row g-3">
                   <div className="col-12">
                     <label className='form-label fw-semibold d-flex align-items-center'>
@@ -722,7 +745,7 @@ const IntegrationWizardModal = ({ service, setService, apikey, auth_token, onClo
           </div>
 
           {/* Solo mostrar inputs si NO es WhatsApp, Gmail o Formularios */}
-          {service !== 'whatsapp' && service !== 'gmail' && service !== 'formularios' && (
+          {service !== 'whatsappevo' && service !== 'gmail' && service !== 'formularios' && (
             <>
               <div className="row g-3">
                 <div className="col-12">
@@ -820,7 +843,7 @@ const IntegrationWizardModal = ({ service, setService, apikey, auth_token, onClo
 
         <div className={`tab-pane ${step == 3 && 'active'}`} id="finish-2">
           {/* Contenido personalizado para WhatsApp, Gmail y Formularios */}
-          {(service === 'whatsapp' || service === 'gmail' || service === 'formularios') && config.completedStep ? (
+          {(service === 'whatsappevo' || service === 'gmail' || service === 'formularios') && config.completedStep ? (
             <div className="text-center">
               <div className="mb-4">
                 <div
@@ -950,7 +973,7 @@ const IntegrationWizardModal = ({ service, setService, apikey, auth_token, onClo
                 )}
                 {step == 2 && (
                   /* Para WhatsApp, Gmail y Formularios, permite ir directamente al paso 3 */
-                  (service === 'whatsapp' || service === 'gmail' || service === 'formularios') ? (
+                  (service === 'whatsappevo' || service === 'gmail' || service === 'formularios') ? (
                     <button
                       type='button'
                       className="btn px-4"
@@ -993,7 +1016,7 @@ const IntegrationWizardModal = ({ service, setService, apikey, auth_token, onClo
                   )
                 )}
                 {/* Botón para cerrar en paso 3 para WhatsApp, Gmail y Formularios */}
-                {step == 3 && (service === 'whatsapp' || service === 'gmail' || service === 'formularios') && (
+                {step == 3 && (service === 'whatsappevo' || service === 'gmail' || service === 'formularios') && (
                   <button
                     type='button'
                     className="btn px-4"
@@ -1021,7 +1044,7 @@ const Webhooks = ({ apikey, auth_token, integrations: integrationsDB }) => {
   const serviceDescriptions = {
     messenger: 'Integra tu página de Facebook para recibir y responder mensajes directamente desde Atalaya.',
     instagram: 'Conecta tu cuenta de Instagram para gestionar mensajes directos y comentarios desde Atalaya.',
-    whatsapp: 'Conecta tu cuenta de WhatsApp Business para gestionar mensajes desde Atalaya.',
+    whatsappevo: 'Conecta tu cuenta de WhatsApp Business para gestionar mensajes desde Atalaya.',
     tiktok: 'Integra tu cuenta de TikTok para gestionar comentarios y mensajes desde Atalaya.',
     gmail: 'Conecta tu cuenta de Gmail para gestionar correos electrónicos desde Atalaya.',
     'google-calendar': 'Integra Google Calendar para gestionar citas y eventos desde Atalaya.',
