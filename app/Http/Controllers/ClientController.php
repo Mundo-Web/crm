@@ -78,7 +78,7 @@ class ClientController extends BasicController
         return $model::select('clients.*')
             ->withCount(['notes', 'tasks', 'pendingTasks', 'projects'])
             ->with(['status', 'assigned', 'manageStatus'])
-            ->join('statuses AS status', 'status.id', 'status_id')
+            ->leftJoin('statuses AS status', 'status.id', 'status_id')
             ->leftJoin('statuses AS manage_status', 'status.id', 'manage_status_id')
             ->where('status.table_id', 'a8367789-666e-4929-aacb-7cbc2fbf74de')
             ->where('clients.status', true)

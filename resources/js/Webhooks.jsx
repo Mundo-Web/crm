@@ -118,6 +118,7 @@ const IntegrationWizardModal = ({ service, setService, apikey, auth_token, onClo
   const [step, setStep] = useState(1)
   const [accessToken, setAccessToken] = useState('')
   const [accountId, setAccountId] = useState('')
+  const [phoneId, setPhoneId] = useState('')
   const [accountVerified, setAccountVerified] = useState(null)
   const [verifying, setVerifying] = useState(false);
   const [integrating, setIntegrating] = useState(false);
@@ -351,7 +352,12 @@ const IntegrationWizardModal = ({ service, setService, apikey, auth_token, onClo
 
   const onIntegrateClicked = async () => {
     setIntegrating(true)
-    const result = await integrationsRest.save({ service, accountId, accessToken })
+    const result = await integrationsRest.save({
+      service,
+      phoneId,
+      accountId,
+      accessToken
+    })
     setIntegrating(false)
     if (!result) return
     onSuccess(result)
@@ -767,6 +773,27 @@ const IntegrationWizardModal = ({ service, setService, apikey, auth_token, onClo
                     }}
                   />
                 </div>
+                {
+                  service === 'whatsapp' && <div className="col-12">
+                    <label className='form-label fw-semibold d-flex align-items-center'>
+                      <i className="mdi mdi-account me-2" style={{ color: config.color }}></i>
+                      ID de número de teléfono:
+                    </label>
+                    <input
+                      type="text"
+                      className="form-control border-2"
+                      value={phoneId}
+                      onChange={e => setPhoneId(e.target.value)}
+                      placeholder="Ej: 123456789"
+                      disabled={!!accountVerified}
+                      style={{
+                        borderColor: accountVerified ? '#28a745' : 'var(--bs-border-color)',
+                        backgroundColor: accountVerified ? '#d4edda' : 'var(--bs-body-bg)',
+                        color: 'var(--bs-body-color)'
+                      }}
+                    />
+                  </div>
+                }
                 <div className="col-12">
                   <label className='form-label fw-semibold d-flex align-items-center'>
                     <i className="mdi mdi-key-variant me-2" style={{ color: config.color }}></i>

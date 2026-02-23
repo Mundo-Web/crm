@@ -56,6 +56,7 @@ class IntegrationController extends BasicController
         $integration = [
             'meta_service' => $request->service,
             'meta_business_id' => $metaBusiness['id'],
+            'meta_number_id' => $request->service  === 'whatsapp' ? $request->phoneId : null,
             'meta_business_name' => $metaBusiness['name'] . (isset($metaBusiness['username']) ? ' (@' . $metaBusiness['username'] . ')' : ''),
             'meta_business_profile' => $metaBusinessProfile,
             'meta_access_token' => $request->accessToken,

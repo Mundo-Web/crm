@@ -67,17 +67,12 @@ class MetaController extends Controller
 
         return $fbData;
     }
-    public static function getWhatsAppProfile(string $wabaId, string $accessToken)
+    public static function getWhatsAppProfile(string $id, string $accessToken)
     {
-        $rest = new Fetch(
-            env('FACEBOOK_GRAPH_URL') . "/{$wabaId}?fields=id,name,currency&access_token={$accessToken}"
-        );
-
+        $rest = new Fetch(env('FACEBOOK_GRAPH_URL') . "/{$id}?fields=id,name,currency,owner_business_info&access_token={$accessToken}");
         $data = $rest->json();
 
-        if (isset($data['error'])) {
-            throw new Exception($data['error']['message'] ?? 'Error, token inválido o sin permisos');
-        }
+        if (isset($data['error'])) throw new Exception($data['error']['message'] ?? 'Error, token inválido o sin permisos');
 
         return $data;
     }
@@ -117,14 +112,23 @@ class MetaController extends Controller
         $response = Response::simpleTryCatch(function () use ($request, $origin, $business_uuid) {
             $data = $request->all();
 
-            dump($data);
-
             if (!in_array($origin, ['messenger', 'instagram', 'whatsapp'])) throw new Exception('Error, origen no permitido');
 
             $entry = $data['entry'][0] ?? [];
             $messaging = $entry['messaging'][0] ?? [];
 
-            $inOut = $entry['id'] == $messaging['sender']['id'] ? 'out' : 'in';
+            if ($origin == 'whatsapp') {
+                if (!isset($entry['changes'][0]['value']['messages'][0])) return;
+                $message = $entry['changes'][0]['value']['messages'][0];
+                $inOut = 'in';
+                $waId = $message['from'];
+                $messageContent = $message['text']['body'];
+            } else {
+                $inOut = $entry['id'] == $messaging['sender']['id'] ? 'out' : 'in';
+                $waId = $inOut == 'in' ? $messaging['sender']['id'] : $messaging['recipient']['id'];
+                $messageContent = $messaging['message']['text'];
+            }
+
 
             $businessJpa = Business::query()
                 ->where('uuid', $business_uuid)
@@ -132,10 +136,11 @@ class MetaController extends Controller
                 ->first();
             if (!$businessJpa) throw new Exception('Error, negocio no encontrado o inactivo');
 
+
             $messageJpa = Message::create([
-                'wa_id' => $inOut == 'in' ? $messaging['sender']['id'] : $messaging['recipient']['id'],
+                'wa_id' => $waId,
                 'role' => $inOut == 'in' ? 'Human' : 'AI',
-                'message' => $messaging['message']['text'],
+                'message' => $messageContent,
                 'microtime' => (int) (microtime(true) * 1_000_000),
                 'business_id' => $businessJpa->id
             ]);
@@ -165,13 +170,22 @@ class MetaController extends Controller
             switch ($origin) {
                 case 'messenger':
                     $profileData = MetaController::getFacebookProfile($userId, $integrationJpa->meta_access_token, true);
+                    $profileData['fullname'] = $profileData['first_name'] . ' ' . $profileData['last_name'];
                     break;
                 case 'instagram':
                     $profileData = MetaController::getInstagramProfile($userId, $integrationJpa->meta_access_token, true);
+                    $profileData['fullname'] = $profileData['first_name'] . ' ' . $profileData['last_name'];
+                    break;
                 case 'whatsapp':
-                    $profileData = MetaController::getWhatsAppProfile($userId, $integrationJpa->meta_access_token);
+                    // $profileData = MetaController::getWhatsAppProfile($userId, $integrationJpa->meta_access_token);
+                    $profileData = [
+                        'id' => $entry['changes'][0]['value']['contacts'][0]['wa_id'],
+                        'fullname' => $entry['changes'][0]['value']['contacts'][0]['profile']['name'],
+                    ];
+                    break;
                 default:
                     $profileData = MetaController::getFacebookProfile($userId, $integrationJpa->meta_access_token, true);
+                    $profileData['fullname'] = $profileData['first_name'] . ' ' . $profileData['last_name'];
                     break;
             }
 
@@ -190,8 +204,8 @@ class MetaController extends Controller
                 'business_id' => $businessJpa->id,
             ], [
                 'message' => $messaging['message']['text'] ?? 'Sin mensaje',
-                'contact_name' => $profileData['first_name'] . ' ' . $profileData['last_name'],
-                'name' => $profileData['first_name'] . ' ' . $profileData['last_name'],
+                'contact_name' => $profileData['fullname'],
+                'name' => $profileData['fullname'],
                 'source' => 'Externo',
                 'date' => Trace::getDate('date'),
                 'time' => Trace::getDate('time'),
@@ -230,7 +244,7 @@ class MetaController extends Controller
                 'status' => 'Pendiente',
                 'asignable' => true
             ]);
-        });
+        }, fn($res, $th) => dump($th));
         return response($response->toArray(), 200);
     }
 
