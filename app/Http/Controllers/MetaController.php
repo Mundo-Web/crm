@@ -609,7 +609,7 @@ class MetaController extends Controller
                         'source_channel' => $function['args']['fuenteCliente'],
                         'complete_registration' => true
                     ];
-                    if ($origin !== 'evoapi') {
+                    if ($origin !== 'whatsapp') {
                         $data2Save['contact_phone'] = $function['args']['telefonoCliente'];
                     }
 
