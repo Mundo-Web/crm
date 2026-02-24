@@ -457,6 +457,7 @@ class WhatsAppController extends Controller
                 'message' => Text::html2wa($message),
                 'microtime' => (int) (microtime(true) * 1_000_000),
                 'business_id' => Auth::user()->business_id,
+                'seen' => true
             ]);
         });
         return response($response->toArray(), $response->status);
