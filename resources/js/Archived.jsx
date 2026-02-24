@@ -117,6 +117,7 @@ const Archived = ({ projectStatuses, finishedProjectStatus, archived, can, sessi
           onClick: () => $(gridRef.current).dxDataGrid('instance').refresh()
         }))
       }}
+      exportable
       pageSize={25}
       columns={[
         {

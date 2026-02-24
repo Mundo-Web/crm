@@ -26,7 +26,9 @@ class PermissionSeeder extends Seeder
                 Permission::updateOrCreate([
                     'name' => $row[1]
                 ], [
-                    'description' => $row[2]
+                    'model_name' => $row[2],
+                    'beauty' => $row[3],
+                    'description' => $row[4]
                 ]);
             }
         }, 'storage/app/utils/Permissions.xlsx');

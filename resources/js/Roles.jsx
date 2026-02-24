@@ -194,10 +194,10 @@ const Roles = ({ permissions, can }) => {
       {/* <Accordion id='permissions'> */}
       <div id="permissions" className='row'>
         {permissions.map((children, i) => {
-          const origin = children[0].origin
+          const model_name = children[0].model_name
           return <div className="col-lg-4 col-md-6 col-sm-12">
-            <AccordionCard key={`accordion-${i}`} id={`permission-${origin}`} title={origin} parent='permissions' className='d-flex gap-2 flex-wrap flex-row' isOpened>
-              {children.map(({ id, name, description }) => <CheckboxFormGroup key={`permission-${id}`} className='mb-0' id={`permission-ck-${id}`} label={name.replace(`${origin}.`, '')} name={name} value={id} title={description} style={{ width: 'max-content' }} rounded />)}
+            <AccordionCard key={`accordion-${i}`} id={`permission-${origin}`} title={model_name} parent='permissions' className='d-flex gap-2 flex-wrap flex-row' isOpened>
+              {children.map(({ id, name, beauty, description }) => <CheckboxFormGroup key={`permission-${id}`} className='mb-0' id={`permission-ck-${id}`} label={beauty} name={name} value={id} title={description} style={{ width: 'max-content' }} rounded />)}
             </AccordionCard>
           </div>
         })}
