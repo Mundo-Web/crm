@@ -227,7 +227,7 @@ class MetaController extends Controller
             $hasApikey = Setting::get('gemini-api-key', $businessJpa->id);
 
             if ($hasApikey && !$clientJpa->complete_registration) {
-                MetaAssistantJob::dispatchAfterResponse($clientJpa, $messageJpa);
+                MetaAssistantJob::dispatchAfterResponse($clientJpa, $messageJpa, $origin);
             }
 
             if ($alreadyExists) return;
