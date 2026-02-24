@@ -292,7 +292,7 @@ class WhatsAppController extends Controller
     {
         $response = Response::simpleTryCatch(function () use ($request) {
             $businessJpa = Business::with(['person'])->find(Auth::user()->business_id);
-            $clientJpa = Client::find($request->client_id);
+            $clientJpa = Client::with('integration')->find($request->client_id);
 
             $number = $clientJpa->contact_phone ?? null;
             if ($request->phone) $number = $request->phone;
@@ -300,6 +300,7 @@ class WhatsAppController extends Controller
 
             $message = $request->message;
 
+            // Handle file uploads
             if ($request->hasFile('audio')) {
                 $file = $request->file('audio');
                 $filename = 'audio-' . Crypto::short() . '.mp3';
@@ -319,192 +320,145 @@ class WhatsAppController extends Controller
 
             $isDummy = in_array($number, explode(',', env('WA_DUMMY')), true);
 
+            // Validate WhatsApp number via Meta Graph API
+            // if (!$isDummy) {
+            //     $integration = $clientJpa->integration;
+            //     if (!$integration || !$integration->meta_access_token) {
+            //         throw new Exception('No hay credenciales de Meta configuradas');
+            //     }
+
+            //     $checkPhoneRes = Http::withToken($integration->meta_access_token)
+            //         ->get(env('FACEBOOK_GRAPH_URL') . '/' . $integration->meta_account_id . '/phone_numbers', [
+            //             'filter' => 'whatsapp',
+            //         ]);
+
+            //     if (!$checkPhoneRes->ok()) {
+            //         throw new Exception('Error al validar número en WhatsApp');
+            //     }
+
+            //     $phones = $checkPhoneRes->json('data') ?? [];
+            //     $exists = collect($phones)->contains('display_phone_number', $number);
+            //     if (!$exists) {
+            //         throw new Exception('El número de WhatsApp no existe o no está registrado');
+            //     }
+            // }
+
+            // Send message via Meta Graph API
             if (!$isDummy) {
-                // Validate if number exists in WhatsApp
-                $validateNumberRes = new Fetch(env('EVOAPI_URL') . '/chat/whatsappNumbers/' . $businessJpa->person->document_number, [
-                    'method' => 'POST',
-                    'headers' => [
-                        'Content-Type' => 'application/json',
-                        'apikey' => $businessJpa->uuid
-                    ],
-                    'body' => ['numbers' => [$number]]
-                ]);
+                $integration = $clientJpa->integration;
+                $url = env('FACEBOOK_GRAPH_URL') . '/' . $integration->meta_number_id . '/messages';
 
-                $validationData = $validateNumberRes->json();
-                if (!$validateNumberRes->ok || empty($validationData) || !isset($validationData[0]['exists']) || !$validationData[0]['exists']) {
-                    throw new Exception('El número de WhatsApp no existe o no está registrado');
-                }
-            }
+                if (Text::startsWith($message, '/signature:')) {
+                    $mediaPath = str_replace('/signature:', '', $message);
+                    $res = Http::withToken($integration->meta_access_token)
+                        ->post($url, [
+                            'messaging_product' => 'whatsapp',
+                            'recipient_type' => 'individual',
+                            'to' => $number,
+                            'type' => 'image',
+                            'image' => [
+                                'link' => $mediaPath,
+                                'caption' => '',
+                            ],
+                        ]);
+                } else if (Text::startsWith($message, '/attachment:')) {
+                    [$attachment] = explode(Text::lineBreak(), $message);
+                    $caption = trim(str_replace($attachment, '', $message) ?: '');
+                    $attachment = str_replace('/attachment:', '', $attachment);
 
-            if (Text::startsWith($message, '/signature:')) {
-                if (!$isDummy) {
-                    $res = new Fetch(env('EVOAPI_URL') . '/message/sendMedia/' . $businessJpa->person->document_number, [
-                        'method' => 'POST',
-                        'headers' => [
-                            'Content-Type' => 'application/json',
-                            'apikey' => $businessJpa->uuid
-                        ],
-                        'body' => [
-                            'number' => $number,
-                            'mediatype' => 'image',
-                            'media' => str_replace('/signature:', '', $message),
-                            'fileName' => 'signature.png',
-                            'mimetype' => 'image/png'
-                        ]
-                    ]);
-                }
-                Message::create([
-                    'wa_id' => $number,
-                    'role' => 'User',
-                    'message' => $message,
-                    'microtime' => (int) (microtime(true) * 1_000_000),
-                    'business_id' => Auth::user()->business_id,
-                ]);
-            } else if (Text::startsWith($message, '/attachment:')) {
-                [$attachment] = explode(Text::lineBreak(), $message);
-                $message2send = Text::html2wa(trim(str_replace($attachment, '', $message) ?: ''));
-                $attachment = str_replace('/attachment:', '', $attachment);
+                    // Determine mime type
+                    $mimeType = 'application/octet-stream';
+                    $head = Http::head($attachment);
+                    if ($head->ok()) {
+                        $mimeType = $head->header('Content-Type') ?? $mimeType;
+                    }
 
-                $filename = explode('/', $attachment);
-                $filename = end($filename);
-
-                // First check the file type by making a HEAD request
-                $fileTypeCheck = new Fetch($attachment);
-
-                $mimeType = $fileTypeCheck->contentType ?? 'application/octet-stream';
-                $mediaType = 'document';
-
-                // Determine media type based on mime type
-                if (strpos($mimeType, 'image/') === 0) {
-                    $mediaType = 'image';
-                } else if (strpos($mimeType, 'video/') === 0) {
-                    $mediaType = 'video';
-                } else if (strpos($mimeType, 'audio/') === 0) {
-                    $mediaType = 'audio';
-                }
-
-                if (!$isDummy) {
-                    $res = new Fetch(env('EVOAPI_URL') . '/message/sendMedia/' . $businessJpa->person->document_number, [
-                        'method' => 'POST',
-                        'headers' => [
-                            'Content-Type' => 'application/json',
-                            'apikey' => $businessJpa->uuid
-                        ],
-                        'body' => [
-                            'number' => $number,
-                            'mediatype' => $mediaType,
-                            'caption' => $message2send,
-                            'media' => $attachment,
-                            'fileName' => $filename,
-                            'mimetype' => $mimeType
-                        ]
-                    ]);
-                }
-
-                Message::create([
-                    'wa_id' => $number,
-                    'role' => 'User',
-                    'message' => Text::html2wa($message),
-                    'microtime' => (int) (microtime(true) * 1_000_000),
-                    'business_id' => Auth::user()->business_id,
-                ]);
-            } else if (Text::startsWith($message, '/audio:')) {
-                if (!$isDummy) {
-                    $audio = str_replace('/audio:', env('APP_URL') . '/storage/images/whatsapp/', $message);
-                    $res = new Fetch(env('EVOAPI_URL') . '/message/sendWhatsAppAudio/' . $businessJpa->person->document_number, [
-                        'method' => 'POST',
-                        'headers' => [
-                            'Content-Type' => 'application/json',
-                            'apikey' => $businessJpa->uuid
-                        ],
-                        'body' => [
-                            'number' => $number,
-                            'audio' => $audio,
-                        ]
-                    ]);
-                }
-
-                Message::create([
-                    'wa_id' => $number,
-                    'role' => 'User',
-                    'message' => Text::html2wa($message),
-                    'microtime' => (int) (microtime(true) * 1_000_000),
-                    'business_id' => Auth::user()->business_id,
-                ]);
-            } else if (
-                Text::startsWith($message, '/image:') ||
-                Text::startsWith($message, '/document:')
-            ) {
-                // Split message to get file path and caption
-                [$fileTag] = explode(Text::lineBreak(), $message);
-                $caption = trim(str_replace($fileTag, '', $message) ?: '');
-
-                // Determine media type and file path
-                if (Text::startsWith($message, '/image:')) {
-                    $mediaType = 'image';
-                    $filePath = str_replace('/image:', env('APP_URL') . '/storage/images/whatsapp/', $fileTag);
-                    $mimeType = 'image/jpeg'; // adjust if you store mime type elsewhere
-                    $mask = $request->file('image')->getClientOriginalName() ?? null;
-                } else {
                     $mediaType = 'document';
-                    $filePath = str_replace('/document:', env('APP_URL') . '/storage/images/whatsapp/', $fileTag);
-                    $mimeType = $request->file('document')->getMimeType();
-                    $mask = $request->file('document')->getClientOriginalName() ?? null;
-                }
+                    if (strpos($mimeType, 'image/') === 0) {
+                        $mediaType = 'image';
+                    } else if (strpos($mimeType, 'video/') === 0) {
+                        $mediaType = 'video';
+                    } else if (strpos($mimeType, 'audio/') === 0) {
+                        $mediaType = 'audio';
+                    }
 
-                // Extract filename from path
-                $filename = basename($filePath);
-
-                if (!$isDummy) {
-                    $res = new Fetch(env('EVOAPI_URL') . '/message/sendMedia/' . $businessJpa->person->document_number, [
-                        'method' => 'POST',
-                        'headers' => [
-                            'Content-Type' => 'application/json',
-                            'apikey' => $businessJpa->uuid
+                    $payload = [
+                        'messaging_product' => 'whatsapp',
+                        'recipient_type' => 'individual',
+                        'to' => $number,
+                        'type' => $mediaType,
+                        $mediaType => [
+                            'link' => $attachment,
                         ],
-                        'body' => [
-                            'number' => $number,
-                            'mediatype' => $mediaType,
-                            'mimetype' => $mimeType,
-                            'caption' => Text::html2wa($caption),
-                            'media' => $filePath,
-                            'fileName' => $mask ?? $filename
-                        ]
-                    ]);
+                    ];
+                    if ($caption) {
+                        $payload[$mediaType]['caption'] = Text::html2wa($caption);
+                    }
+
+                    $res = Http::withToken($integration->meta_access_token)->post($url, $payload);
+                } else if (Text::startsWith($message, '/audio:')) {
+                    $audio = str_replace('/audio:', env('APP_URL') . '/storage/images/whatsapp/', $message);
+                    $res = Http::withToken($integration->meta_access_token)
+                        ->post($url, [
+                            'messaging_product' => 'whatsapp',
+                            'recipient_type' => 'individual',
+                            'to' => $number,
+                            'type' => 'audio',
+                            'audio' => ['link' => $audio],
+                        ]);
+                } else if (Text::startsWith($message, '/image:') || Text::startsWith($message, '/document:')) {
+                    [$fileTag] = explode(Text::lineBreak(), $message);
+                    $caption = trim(str_replace($fileTag, '', $message) ?: '');
+
+                    if (Text::startsWith($message, '/image:')) {
+                        $mediaType = 'image';
+                        $filePath = str_replace('/image:', env('APP_URL') . '/storage/images/whatsapp/', $fileTag);
+                        $mimeType = 'image/jpeg';
+                    } else {
+                        $mediaType = 'document';
+                        $filePath = str_replace('/document:', env('APP_URL') . '/storage/images/whatsapp/', $fileTag);
+                        $mimeType = $request->file('document')?->getMimeType() ?? 'application/octet-stream';
+                    }
+
+                    $payload = [
+                        'messaging_product' => 'whatsapp',
+                        'recipient_type' => 'individual',
+                        'to' => $number,
+                        'type' => $mediaType,
+                        $mediaType => [
+                            'link' => $filePath,
+                        ],
+                    ];
+                    if ($caption) {
+                        $payload[$mediaType]['caption'] = Text::html2wa($caption);
+                    }
+
+                    $res = Http::withToken($integration->meta_access_token)->post($url, $payload);
+                } else {
+                    $res = Http::withToken($integration->meta_access_token)
+                        ->post($url, [
+                            'messaging_product' => 'whatsapp',
+                            'recipient_type' => 'individual',
+                            'to' => $number,
+                            'type' => 'text',
+                            'text' => ['body' => Text::html2wa($request->message)],
+                        ]);
                 }
 
-                Message::create([
-                    'wa_id' => $number,
-                    'role' => 'User',
-                    'mask' => $filename ?? $filename,
-                    'message' => Text::html2wa($message) ?? '',
-                    'microtime' => (int) (microtime(true) * 1_000_000),
-                    'business_id' => Auth::user()->business_id,
-                ]);
-            } else {
-                if (!$isDummy) {
-                    $res = new Fetch(env('EVOAPI_URL') . '/message/sendText/' . $businessJpa->person->document_number, [
-                        'method' => 'POST',
-                        'headers' => [
-                            'Content-Type' => 'application/json',
-                            'apikey' => $businessJpa->uuid
-                        ],
-                        'body' => [
-                            'number' => $number,
-                            'text' => Text::html2wa($request->message)
-                        ]
-                    ]);
+                if (!$res->ok()) {
+                    throw new Exception('Ocurrió un error al enviar el mensaje: ' . $res->body());
                 }
-                Message::create([
-                    'wa_id' => $number,
-                    'role' => 'User',
-                    'message' => Text::html2wa($request->message),
-                    'microtime' => (int) (microtime(true) * 1_000_000),
-                    'business_id' => Auth::user()->business_id,
-                ]);
             }
-            if (!$isDummy && !$res?->ok) throw new Exception('Ocurrio un error al enviar el mensaje');
-        });
+
+            // Store message in DB
+            Message::create([
+                'wa_id' => $number,
+                'role' => 'User',
+                'message' => Text::html2wa($message),
+                'microtime' => (int) (microtime(true) * 1_000_000),
+                'business_id' => Auth::user()->business_id,
+            ]);
+        }, fn($res, $th) => dump($th->getMessage() . ' Ln.' . $th->getLine()));
         return response($response->toArray(), $response->status);
     }
 }

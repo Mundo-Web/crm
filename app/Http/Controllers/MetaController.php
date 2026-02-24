@@ -14,6 +14,7 @@ use App\Models\Task;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use SoDe\Extend\Fetch;
 use SoDe\Extend\File;
 use SoDe\Extend\JSON;
@@ -109,6 +110,7 @@ class MetaController extends Controller
 
     public function webhook(Request $request, string $origin, string $business_uuid)
     {
+        DB::beginTransaction();
         $response = Response::simpleTryCatch(function () use ($request, $origin, $business_uuid) {
             $data = $request->all();
 
@@ -165,26 +167,23 @@ class MetaController extends Controller
 
             if (!$integrationJpa->meta_access_token) return;
 
-            $userId = $messaging['sender']['id'];
-
             switch ($origin) {
                 case 'messenger':
-                    $profileData = MetaController::getFacebookProfile($userId, $integrationJpa->meta_access_token, true);
+                    $profileData = MetaController::getFacebookProfile($messaging['sender']['id'], $integrationJpa->meta_access_token, true);
                     $profileData['fullname'] = $profileData['first_name'] . ' ' . $profileData['last_name'];
                     break;
                 case 'instagram':
-                    $profileData = MetaController::getInstagramProfile($userId, $integrationJpa->meta_access_token, true);
+                    $profileData = MetaController::getInstagramProfile($messaging['sender']['id'], $integrationJpa->meta_access_token, true);
                     $profileData['fullname'] = $profileData['first_name'] . ' ' . $profileData['last_name'];
                     break;
                 case 'whatsapp':
-                    // $profileData = MetaController::getWhatsAppProfile($userId, $integrationJpa->meta_access_token);
                     $profileData = [
                         'id' => $entry['changes'][0]['value']['contacts'][0]['wa_id'],
                         'fullname' => $entry['changes'][0]['value']['contacts'][0]['profile']['name'],
                     ];
                     break;
                 default:
-                    $profileData = MetaController::getFacebookProfile($userId, $integrationJpa->meta_access_token, true);
+                    $profileData = MetaController::getFacebookProfile($messaging['sender']['id'], $integrationJpa->meta_access_token, true);
                     $profileData['fullname'] = $profileData['first_name'] . ' ' . $profileData['last_name'];
                     break;
             }
@@ -198,13 +197,10 @@ class MetaController extends Controller
 
             if ($alreadyExists && $alreadyExists->complete_registration) return;
 
-            $clientJpa = Client::updateOrCreate([
-                'integration_id' => $integrationJpa->id,
-                'integration_user_id' => $profileData['id'],
-                'business_id' => $businessJpa->id,
-            ], [
+            $preClient = [
                 'message' => $messaging['message']['text'] ?? 'Sin mensaje',
                 'contact_name' => $profileData['fullname'],
+                'contact_phone' => $origin == 'whatsapp' ? $profileData['id'] : null,
                 'name' => $profileData['fullname'],
                 'source' => 'Externo',
                 'date' => Trace::getDate('date'),
@@ -215,8 +211,20 @@ class MetaController extends Controller
                 'origin' => Text::toTitleCase($origin),
                 'triggered_by' => 'Gemini AI',
                 'status' => true,
-                'complete_registration' => false
-            ]);
+                'complete_registration' => false,
+
+            ];
+
+            if (!$alreadyExists) {
+                $preClient['last_message'] = $messageJpa->message;
+                $preClient['last_message_microtime'] = $messageJpa->microtime;
+            }
+
+            $clientJpa = Client::updateOrCreate([
+                'integration_id' => $integrationJpa->id,
+                'integration_user_id' => $profileData['id'],
+                'business_id' => $businessJpa->id,
+            ], $preClient);
 
             $hasApikey = Setting::get('gemini-api-key', $businessJpa->id);
 
@@ -244,7 +252,8 @@ class MetaController extends Controller
                 'status' => 'Pendiente',
                 'asignable' => true
             ]);
-        }, fn($res, $th) => dump($th));
+            DB::commit();
+        }, fn() => DB::rollBack());
         return response($response->toArray(), 200);
     }
 

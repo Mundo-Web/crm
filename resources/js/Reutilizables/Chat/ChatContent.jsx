@@ -330,8 +330,6 @@ const ChatContent = ({ leadId, setLeadId, theme, contactDetails, setContactDetai
 
   if (!contact && !contactLoading) return <ChatEmpty />
 
-  console.log(defaultMessages)
-
   return <>
     <ChatHeader contact={contact} contactDetails={contactDetails} setContactDetails={setContactDetails} loading={contactLoading} theme={theme} />
     <div className="card-body p-0 position-relative border" style={{

@@ -369,6 +369,7 @@ const IntegrationWizardModal = ({ service, setService, apikey, auth_token, onClo
       setStep(1)
       setAccountId('')
       setAccessToken('')
+      setPhoneId('')
       setAccountVerified(null)
       $(modalRef.current).modal('show')
     } else {
