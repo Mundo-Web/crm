@@ -178,6 +178,7 @@ class Client extends Model
     public function unSeenMessages()
     {
         return $this->hasMany(Message::class, 'wa_id', 'contact_phone')
+            ->where('business_id', $this->business_id)
             ->where('seen', false);
     }
 }
