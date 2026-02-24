@@ -251,7 +251,7 @@ const NavBar = ({ can, session = {}, services, theme, setTheme, title = '', wsAc
           </div>
         </li>
 
-        {can('whatsapp', 'root', 'all') && <li className="notification-list topbar-dropdown d-none d-lg-block">
+        {/* {can('whatsapp', 'root', 'all') && <li className="notification-list topbar-dropdown d-none d-lg-block">
           <a className="nav-link waves-effect waves-light" data-bs-toggle="modal" data-bs-target="#whatsapp-modal">
             <span className="position-relative">
               <i className="mdi mdi-whatsapp noti-icon"></i>
@@ -261,7 +261,7 @@ const NavBar = ({ can, session = {}, services, theme, setTheme, title = '', wsAc
 
             </span>
           </a>
-        </li>}
+        </li>} */}
 
         <li className="dropdown notification-list topbar-dropdown">
           <a className="nav-link dropdown-toggle waves-effect waves-light driver-js-notifications" data-bs-toggle="dropdown" href="#"
