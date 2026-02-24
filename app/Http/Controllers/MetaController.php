@@ -110,7 +110,6 @@ class MetaController extends Controller
 
     public function webhook(Request $request, string $origin, string $business_uuid)
     {
-        DB::beginTransaction();
         $response = Response::simpleTryCatch(function () use ($request, $origin, $business_uuid) {
             $data = $request->all();
 
@@ -252,8 +251,7 @@ class MetaController extends Controller
                 'status' => 'Pendiente',
                 'asignable' => true
             ]);
-            DB::commit();
-        }, fn() => DB::rollBack());
+        });
         return response($response->toArray(), 200);
     }
 
