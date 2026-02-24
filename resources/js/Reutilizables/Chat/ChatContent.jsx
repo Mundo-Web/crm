@@ -115,21 +115,21 @@ const ChatContent = ({ leadId, setLeadId, theme, contactDetails, setContactDetai
   }, [socket, contact, messages])
 
   // Infinite scroll handler
-  useEffect(() => {
-    if (messagesLoading) return
-    const el = containerRef.current
-    if (!el) return
+  // useEffect(() => {
+  //   if (messagesLoading) return
+  //   const el = containerRef.current
+  //   if (!el) return
 
-    const handleScroll = () => {
-      if (el.scrollTop === 0) {
-        userIsScrollingUp.current = true
-        loadMessages()
-      }
-    }
+  //   const handleScroll = () => {
+  //     if (el.scrollTop === 0) {
+  //       userIsScrollingUp.current = true
+  //       loadMessages()
+  //     }
+  //   }
 
-    el.addEventListener('scroll', handleScroll)
-    return () => el.removeEventListener('scroll', handleScroll)
-  }, [containerRef, messagesLoading])
+  //   el.addEventListener('scroll', handleScroll)
+  //   return () => el.removeEventListener('scroll', handleScroll)
+  // }, [containerRef, messagesLoading])
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -261,7 +261,7 @@ const ChatContent = ({ leadId, setLeadId, theme, contactDetails, setContactDetai
       ],
       sort: [{ selector: 'microtime', desc: true }],
       skip: 0,
-      take: 40
+      take: 60
     })
     setMessagesLoading(false)
     if (result.data?.length > 0) {
@@ -292,7 +292,7 @@ const ChatContent = ({ leadId, setLeadId, theme, contactDetails, setContactDetai
       ],
       sort: [{ selector: 'microtime', desc: true }],
       skip: 0,
-      take: 40
+      take: 60
     })
   }
 
