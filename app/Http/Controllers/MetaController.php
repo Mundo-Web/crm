@@ -211,7 +211,6 @@ class MetaController extends Controller
                 'triggered_by' => 'Gemini AI',
                 'status' => true,
                 'complete_registration' => false,
-
             ];
 
             if (!$alreadyExists) {
