@@ -458,7 +458,7 @@ class WhatsAppController extends Controller
                 'microtime' => (int) (microtime(true) * 1_000_000),
                 'business_id' => Auth::user()->business_id,
             ]);
-        }, fn($res, $th) => dump($th->getMessage() . ' Ln.' . $th->getLine()));
+        });
         return response($response->toArray(), $response->status);
     }
 }

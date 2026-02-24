@@ -362,15 +362,28 @@ class MetaController extends Controller
             $integrationJpa = Integration::find($clientJpa->integration_id);
 
             if ($integrationJpa && $integrationJpa->meta_access_token) {
-                $baseUrl = $integrationJpa->meta_service === 'instagram'
-                    ? env('INSTAGRAM_GRAPH_URL')
-                    : env('FACEBOOK_GRAPH_URL');
+                if ($integrationJpa->meta_service === 'whatsapp') {
+                    // WhatsApp Cloud API v22.0
+                    $messageEndpoint = env('FACEBOOK_GRAPH_URL') . "/{$integrationJpa->meta_number_id}/messages";
+                    $messageData = [
+                        'messaging_product' => 'whatsapp',
+                        'recipient_type' => 'individual',
+                        'to' => $clientJpa->contact_phone,
+                        'type' => 'text',
+                        'text' => ['body' => Text::html2wa($message)]
+                    ];
+                } else {
+                    // Messenger / Instagram
+                    $baseUrl = $integrationJpa->meta_service === 'instagram'
+                        ? env('INSTAGRAM_GRAPH_URL')
+                        : env('FACEBOOK_GRAPH_URL');
 
-                $messageEndpoint = "{$baseUrl}/me/messages";
-                $messageData = [
-                    'recipient' => ['id' => $clientJpa->integration_user_id],
-                    'message' => ['text' => Text::html2wa($message)]
-                ];
+                    $messageEndpoint = "{$baseUrl}/me/messages";
+                    $messageData = [
+                        'recipient' => ['id' => $clientJpa->integration_user_id],
+                        'message' => ['text' => Text::html2wa($message)]
+                    ];
+                }
 
                 new Fetch($messageEndpoint, [
                     'method' => 'POST',
