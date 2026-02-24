@@ -535,7 +535,7 @@ class MetaController extends Controller
                             "description" => "Fuente de referencia, muestralo como lista enumerada. Opciones válidas: Google, Facebook, Instagram, TikTok, Por un amigo, Otros (detalle exacto)."
                         ]
                     ];
-                    if ($origin !== 'evoapi') {
+                    if ($origin !== 'whatsapp') {
                         $properties['telefonoCliente'] = [
                             "type" => "string",
                             "description" => "Número de teléfono del cliente incluyendo el código de área."
