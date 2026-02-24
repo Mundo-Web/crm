@@ -206,6 +206,9 @@ const ChatContent = ({ leadId, setLeadId, theme, contactDetails, setContactDetai
     }
     setMessageText('')
     setIsSending(false)
+    
+    // Focus the input again so the user can type a new message
+    inputMessageRef.current?.focus()
   }
 
   const handleFileChange = (e) => {
