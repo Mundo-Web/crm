@@ -26,7 +26,7 @@ class MessageObserver
                 ->update(['seen' => true]);
         }
         try {
-            $clientJpa = Client::select('id', 'contact_name', 'contact_phone', 'last_message', 'last_message_microtime', 'assigned_to', 'status_id', 'manage_status_id')
+            $clientJpa = Client::select('id', 'contact_name', 'contact_phone', 'last_message', 'last_message_microtime', 'assigned_to', 'status_id', 'manage_status_id', 'business_id')
                 ->where('business_id', $message->business_id)
                 ->where('contact_phone', $message->wa_id)
                 ->orderBy('updated_at', 'DESC')
