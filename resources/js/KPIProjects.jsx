@@ -545,7 +545,7 @@ const KPIProjects = ({ can }) => {
 };
 
 CreateReactScript((el, properties) => {
-  if (!properties.can('dashboard', 'root', 'all', 'list')) return location.href = '/leads';
+  if (!properties.can('dashboard', 'projects')) return location.href = '/leads';
   createRoot(el).render(
     <Adminto {...properties} title={`Dashboard - ${moment().format('MMMM YYYY')}`}>
       <KPIProjects {...properties} />

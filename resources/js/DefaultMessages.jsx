@@ -18,7 +18,7 @@ import RepositoryDropzone from './Reutilizables/Repository/RepositoryDropzone.js
 
 const defaultMessagesRest = new DefaultMessagesRest()
 
-const DefaultMessages = ({ title, clientFields }) => {
+const DefaultMessages = ({ title, clientFields, can }) => {
   const gridRef = useRef()
   const modalRef = useRef()
   const repositoryModalRef = useRef()
@@ -125,7 +125,7 @@ const DefaultMessages = ({ title, clientFields }) => {
           icon: 'fas fa-undo-alt',
           onClick: () => $(gridRef.current).dxDataGrid('instance').refresh()
         }))
-        container.unshift(DxPanelButton({
+        can('default-messages', 'create') && container.unshift(DxPanelButton({
           className: 'btn btn-xs btn-soft-primary',
           text: 'Nuevo',
           title: 'Agregar registro',
@@ -169,11 +169,11 @@ const DefaultMessages = ({ title, clientFields }) => {
           width: '120px',
           cellTemplate: (container, { data }) => {
             container.attr('style', 'display: flex; gap: 4px; overflow: unset')
-            ReactAppend(container, <TippyButton className='btn btn-xs btn-soft-primary' title='Editar' onClick={() => onModalOpen(data)}>
+            can('default-messages', 'update') && ReactAppend(container, <TippyButton className='btn btn-xs btn-soft-primary' title='Editar' onClick={() => onModalOpen(data)}>
               <i className='fa fa-pen'></i>
             </TippyButton>)
 
-            ReactAppend(container, <TippyButton className='btn btn-xs btn-soft-danger' title='Eliminar' onClick={() => onDeleteClicked(data.id)}>
+            can('default-messages', 'delete') && ReactAppend(container, <TippyButton className='btn btn-xs btn-soft-danger' title='Eliminar' onClick={() => onDeleteClicked(data.id)}>
               <i className='fa fa-trash-alt'></i>
             </TippyButton>)
           },
@@ -265,7 +265,7 @@ const DefaultMessages = ({ title, clientFields }) => {
         multiple={messageType !== 'whatsapp'}
         selectedFiles={attachments}
         setSelectedFiles={setAttachments}
-        selectable />
+        selectable can={can}/>
     </Modal>
   </>
   )
@@ -273,6 +273,7 @@ const DefaultMessages = ({ title, clientFields }) => {
 
 CreateReactScript((el, properties) => {
   properties.title = 'Mensajes Predeterminados'
+  if (!properties.can('default-messages', 'list')) return location.href = '/';
   createRoot(el).render(
     <Adminto {...properties}>
       <DefaultMessages {...properties} />

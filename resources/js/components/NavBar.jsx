@@ -426,11 +426,11 @@ const NavBar = ({ can, session = {}, services, theme, setTheme, title = '', wsAc
                 </div>
               </>
             } */}
-            <div className="dropdown-divider"></div>
+            <div className="dropdown-divider" style={{ width: '200px' }}></div>
             {
               (can('users', 'root', 'all', 'list') || can('roles', 'root', 'all', 'list') || can('permissions', 'root', 'all', 'list')) &&
               <>
-                <a href="#users-roles" className="dropdown-item notify-item" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="users-roles">
+                <a href="#users-roles" className="dropdown-item notify-item text-nowrap" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="users-roles">
                   <i className="mdi mdi-account-lock me-1"></i>
                   <span>Usuarios y roles</span>
                   <i className="mdi mdi-chevron-down float-end"></i>
@@ -446,10 +446,14 @@ const NavBar = ({ can, session = {}, services, theme, setTheme, title = '', wsAc
               </>
             }
 
-            <DDMenuItem icon='mdi mdi-message-bulleted' href='/default-messages' pinned={pinned} setPinned={setPinned}>Mensajes predeter...</DDMenuItem>
-
-            <DDMenuItem icon='mdi mdi-database' href='/repository' pinned={pinned} setPinned={setPinned}>Repositorio</DDMenuItem>
-
+            {
+              can('default-messages', 'list') &&
+              <DDMenuItem icon='mdi mdi-message-bulleted' href='/default-messages' pinned={pinned} setPinned={setPinned}>Mensajes predeter...</DDMenuItem>
+            }
+            {
+              can('repository', 'list') &&
+              <DDMenuItem icon='mdi mdi-database' href='/repository' pinned={pinned} setPinned={setPinned}>Repositorio</DDMenuItem>
+            }
             {
               can('apikeys', 'root', 'all', 'list') &&
               <>
@@ -484,10 +488,10 @@ const NavBar = ({ can, session = {}, services, theme, setTheme, title = '', wsAc
                     <DDMenuItem icon='mdi mdi-format-list-text' href='/types' pinned={pinned} setPinned={setPinned}>Tipos</DDMenuItem>
                   }
                 </div>
-                {can('settings', 'root', 'all', 'list') &&
-                  <DDMenuItem icon='mdi mdi-cogs' href='/settings' pinned={pinned} setPinned={setPinned}>Configuraciones</DDMenuItem>
-                }
               </>
+            }
+            {can('settings', 'root', 'all', 'list') &&
+              <DDMenuItem icon='mdi mdi-cogs' href='/settings' pinned={pinned} setPinned={setPinned}>Configuraciones</DDMenuItem>
             }
             <div className="dropdown-divider"></div>
             <a href="#" className="dropdown-item notify-item" onClick={Logout}>

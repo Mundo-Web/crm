@@ -33,17 +33,18 @@ const formatFileSize = (bytes) => {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
 }
 
-const Repository = ({ files: filesDB }) => {
+const Repository = ({ files: filesDB , can}) => {
   return (
     <>
       <div className='repository-container'>
-        <RepositoryDropzone files={filesDB} />
+        <RepositoryDropzone files={filesDB} can={can}/>
       </div>
     </>
   )
 };
 
 CreateReactScript((el, properties) => {
+  if (!properties.can('repository', 'all', 'list')) return location.href = '/';
   createRoot(el).render(
     <Adminto {...properties} title='Repositorio'>
       <Repository {...properties} />

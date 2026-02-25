@@ -13,7 +13,7 @@ import Swal from "sweetalert2";
 
 const gmailRest = new GmailRest();
 
-const MailingModal = ({ data, inReplyTo, modalRef, onSend = () => { }, defaultMessages, signs = [] }) => {
+const MailingModal = ({ data, inReplyTo, modalRef, onSend = () => { }, defaultMessages, signs = [], can }) => {
   const ccRef = useRef();
   const bccRef = useRef();
   const subjectRef = useRef();
@@ -315,7 +315,8 @@ const MailingModal = ({ data, inReplyTo, modalRef, onSend = () => { }, defaultMe
           multiple
           selectedFiles={attachments}
           setSelectedFiles={setAttachments}
-          selectable />
+          selectable 
+          can={can}/>
       </Modal>
     </>
   );

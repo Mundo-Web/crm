@@ -9,7 +9,7 @@ import Swal from "sweetalert2"
 const usersRest = new UsersRest()
 const atalayaUsersRest = new AtalayaUsersRest()
 
-const UserCard = ({ roles, match, setUsers, ...user }) => {
+const UserCard = ({ roles, match, setUsers, can, ...user }) => {
     const [sending, setSending] = useState(false)
     const [selectedRoles, setSelectedRoles] = useState(
         (user.service_user?.roles || []).map(r => r.id)
@@ -66,8 +66,8 @@ const UserCard = ({ roles, match, setUsers, ...user }) => {
             ? userRoles[0].name
             : `${userRoles[0].name} + ${userRoles.length - 1} rol${userRoles.length - 1 > 1 ? 'es' : ''}`
         : user.is_owner
-        ? 'Owner'
-        : 'Sin rol'
+            ? 'Owner'
+            : 'Sin rol'
 
     return <div key={`user-${user.id}`} className="card mb-0" style={{ width: '360px' }}>
         <div className="card-body widget-user">
@@ -82,30 +82,33 @@ const UserCard = ({ roles, match, setUsers, ...user }) => {
                     </div>
                     <div className='d-flex gap-1 w-100'>
                         {user.is_owner ? (
-                            <div className="btn btn-white btn-sm text-truncate" style={{cursor: 'default'}}>
+                            <div className="btn btn-white btn-sm text-truncate" style={{ cursor: 'default' }}>
                                 <i className="mdi mdi-crown me-1 text-warning"></i>
                                 Owner
                             </div>
                         ) : (
                             <div className="btn-group flex-shrink-0" style={{ minWidth: 0 }}>
                                 <button className="btn btn-white btn-sm dropdown-toggle text-truncate" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                    {displayRoles} <i className="mdi mdi-chevron-down"></i>
+                                    {displayRoles} {can('users', 'update') && <i className="mdi mdi-chevron-down"></i>}
                                 </button>
-                                <div className="dropdown-menu" style={{ maxHeight: '240px', overflowY: 'auto' }}>
-                                    {roles.map((role) => (
-                                        <Tippy key={role.id} content={`${selectedRoles.includes(role.id) ? 'Quitar' : 'Asignar'} rol ${role.name}`}>
-                                            <a className="dropdown-item" href="#" onClick={(e) => { e.stopPropagation(); toggleRole(role.id); }}>
-                                                <i className={`mdi ${selectedRoles.includes(role.id) ? 'mdi-check text-success' : 'mdi-plus'} me-2`}></i>
-                                                {role.name}
-                                            </a>
-                                        </Tippy>
-                                    ))}
-                                    <div className="dropdown-divider"></div>
-                                    <a className="dropdown-item" href="#" onClick={(e) => { e.preventDefault(); onAssignRoleClicked(); }}>
-                                        <i className='mdi mdi-content-save me-2'></i>
-                                        Guardar cambios
-                                    </a>
-                                </div>
+                                {
+                                    can('users', 'update') &&
+                                    <div className="dropdown-menu" style={{ maxHeight: '240px', overflowY: 'auto' }}>
+                                        {roles.map((role) => (
+                                            <Tippy key={role.id} content={`${selectedRoles.includes(role.id) ? 'Quitar' : 'Asignar'} rol ${role.name}`}>
+                                                <a className="dropdown-item" href="#" onClick={(e) => { e.stopPropagation(); toggleRole(role.id); }}>
+                                                    <i className={`mdi ${selectedRoles.includes(role.id) ? 'mdi-check text-success' : 'mdi-plus'} me-2`}></i>
+                                                    {role.name}
+                                                </a>
+                                            </Tippy>
+                                        ))}
+                                        <div className="dropdown-divider"></div>
+                                        <a className="dropdown-item" href="#" onClick={(e) => { e.preventDefault(); onAssignRoleClicked(); }}>
+                                            <i className='mdi mdi-content-save me-2'></i>
+                                            Guardar cambios
+                                        </a>
+                                    </div>
+                                }
                             </div>
                         )}
                         <div className='d-flex gap-1 ms-auto'>

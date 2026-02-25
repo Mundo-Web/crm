@@ -29,7 +29,7 @@ const formatFileSize = (bytes) => {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
 }
 
-const RepositoryDropzone = ({ files: filesDB, height = 'calc(100vh - 240px)', selectable, multiple = true, selectedFiles = [], setSelectedFiles = () => { } }) => {
+const RepositoryDropzone = ({ files: filesDB, height = 'calc(100vh - 240px)', selectable, multiple = true, selectedFiles = [], setSelectedFiles = () => { }, can }) => {
   const modalRef = useRef()
 
   const fileInputRef = useRef()
@@ -187,33 +187,36 @@ const RepositoryDropzone = ({ files: filesDB, height = 'calc(100vh - 240px)', se
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
       >
-        <div className="mb-2">
-          <input
-            type="file"
-            ref={fileInputRef}
-            className="d-none"
-            multiple
-            onChange={handleFileInput}
-          />
-          <button
-            className="btn btn-sm btn-primary"
-            onClick={() => fileInputRef.current.click()}
-            disabled={uploading}
-            type='button'
-          >
-            {uploading ? (
-              <>
-                <i className="mdi mdi-loading mdi-spin me-1"></i>
-                Subiendo...
-              </>
-            ) : (
-              <>
-                <i className="mdi mdi-upload me-1"></i>
-                Subir archivos
-              </>
-            )}
-          </button>
-        </div>
+        {
+          can('repository', 'create') &&
+          <div className="mb-2">
+            <input
+              type="file"
+              ref={fileInputRef}
+              className="d-none"
+              multiple
+              onChange={handleFileInput}
+            />
+            <button
+              className="btn btn-sm btn-primary"
+              onClick={() => fileInputRef.current.click()}
+              disabled={uploading}
+              type='button'
+            >
+              {uploading ? (
+                <>
+                  <i className="mdi mdi-loading mdi-spin me-1"></i>
+                  Subiendo...
+                </>
+              ) : (
+                <>
+                  <i className="mdi mdi-upload me-1"></i>
+                  Subir archivos
+                </>
+              )}
+            </button>
+          </div>
+        }
 
         <div className="repository-dropzone" style={{ height, userSelect: 'none' }}>
           {isDragging ? (
@@ -270,12 +273,18 @@ const RepositoryDropzone = ({ files: filesDB, height = 'calc(100vh - 240px)', se
                           <Tippy content='Copiar enlace'>
                             <i className='mdi mdi-link cursor-pointer' onClick={() => onCopyLinkClicked(file)}></i>
                           </Tippy>
-                          <Tippy content='Cambiar nombre'>
-                            <i className='mdi mdi-pencil cursor-pointer' onClick={() => onModalOpen(file)}></i>
-                          </Tippy>
-                          <Tippy content='Eliminar'>
-                            <i className='mdi mdi-delete cursor-pointer text-danger' onClick={() => onDeleteClicked(file.id)}></i>
-                          </Tippy>
+                          {
+                            can('repository', 'update') &&
+                            <Tippy content='Cambiar nombre'>
+                              <i className='mdi mdi-pencil cursor-pointer' onClick={() => onModalOpen(file)}></i>
+                            </Tippy>
+                          }
+                          {
+                            can('repository', 'delete') &&
+                            <Tippy content='Eliminar'>
+                              <i className='mdi mdi-delete cursor-pointer text-danger' onClick={() => onDeleteClicked(file.id)}></i>
+                            </Tippy>
+                          }
                         </div>
                       }
                     </div>

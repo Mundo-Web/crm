@@ -642,6 +642,7 @@ const KPILeads = ({ months = [], currentMonth, currentYear }) => {
 };
 
 CreateReactScript((el, properties) => {
+  if (!properties.can('dashboard', 'leads')) return location.href = '/';
   createRoot(el).render(
     <Adminto {...properties} title={`KPI - Leads`}>
       <KPILeads {...properties} />

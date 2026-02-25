@@ -165,17 +165,17 @@ const Roles = ({ permissions, can }) => {
         {
           caption: 'Acciones',
           cellTemplate: (container, { data }) => {
-            container.attr('style', 'display: flex; gap: 4px; overflow: unset')
+            container.attr('style', 'display: flex; gap: 8px; height: 47px; overflow: visible; align-items: center')
 
-            ReactAppend(container, <TippyButton className='btn btn-xs btn-soft-primary' title='Editar' onClick={() => onModalOpen(data)}>
+            can('roles', 'all', 'update') && ReactAppend(container, <TippyButton className='btn btn-xs btn-soft-primary' title='Editar' onClick={() => onModalOpen(data)}>
               <i className='fa fa-pen'></i>
             </TippyButton>)
 
-            ReactAppend(container, <TippyButton className='btn btn-xs btn-soft-dark' title='Modificar permisos' onClick={() => onPermissionsModalOpen(data)} data-loading-text='<i class="fa fa-spinner fa-spin"></i>'>
+            can('roles', 'all', 'permissions') && ReactAppend(container, <TippyButton className='btn btn-xs btn-soft-dark' title='Modificar permisos' onClick={() => onPermissionsModalOpen(data)} data-loading-text='<i class="fa fa-spinner fa-spin"></i>'>
               <i className='fas fa-th-list'></i>
             </TippyButton>)
 
-            ReactAppend(container, <TippyButton className='btn btn-xs btn-soft-danger' title='Eliminar' onClick={() => onDeleteClicked(data.id)}>
+            can('roles', 'all', 'delete') && ReactAppend(container, <TippyButton className='btn btn-xs btn-soft-danger' title='Eliminar' onClick={() => onDeleteClicked(data.id)}>
               <i className='fa fa-trash-alt'></i>
             </TippyButton>)
           },
@@ -209,6 +209,7 @@ const Roles = ({ permissions, can }) => {
 };
 
 CreateReactScript((el, properties) => {
+  if (!properties.can('roles', 'all', 'list')) return location.href = '/';
   createRoot(el).render(
     <Adminto {...properties} title='Roles'>
       <Roles {...properties} />

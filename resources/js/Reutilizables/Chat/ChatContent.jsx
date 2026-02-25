@@ -17,7 +17,7 @@ const whatsAppRest = new WhatsAppRest()
 const messagesRest = new MessagesRest()
 const leadsRest = new LeadsRest()
 
-const ChatContent = ({ leadId, setLeadId, theme, contactDetails, setContactDetails, defaultMessages }) => {
+const ChatContent = ({ leadId, setLeadId, theme, contactDetails, setContactDetails, defaultMessages, can }) => {
   const inputMessageRef = useRef()
   const fileInputRef = useRef()
   const audioRef = useRef()
@@ -471,247 +471,250 @@ const ChatContent = ({ leadId, setLeadId, theme, contactDetails, setContactDetai
                   )
                 })}
               </ul>
-              <form className="p-2 pt-0 conversation-input position-relative" onSubmit={onMessageSubmit}>
-                <label className={`row g-0 align-items-end p-1 ${theme == 'dark' ? 'bg-light' : 'bg-white'}`} htmlFor="message-input" style={{
-                  borderRadius: '24px'
-                }}>
-                  <div className="col-auto mt-0">
-                    <div className="dropup" ref={dropdownRef}>
-                      <button
-                        type="button"
-                        className="btn btn-light btn-sm dropdown-toggle"
-                        data-bs-toggle="dropdown"
-                        aria-expanded={isDropdownOpen}
-                        onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                        disabled={isSending || isRecording}
-                        title="Adjuntar archivo"
-                        style={{ borderRadius: '50%', width: '38px', height: '38px', padding: 0 }}
-                      >
-                        <i className={`mdi ${isDropdownOpen ? 'mdi-close' : 'mdi-plus'}`}></i>
-                      </button>
-                      <div ref={dropdownContainerRef} className="dropdown-menu mb-1">
-                        <button className="dropdown-item" href="#" onClick={(e) => {
-                          e.preventDefault()
-                          fileInputRef.current?.setAttribute('accept', '*')
-                          fileInputRef.current?.click()
-                        }}>
-                          <i className="mdi mdi-file-document me-2" style={{ color: '#7F66FF' }} />
-                          Documentos
+              {
+                can('chats', 'create') &&
+                <form className="p-2 pt-0 conversation-input position-relative" onSubmit={onMessageSubmit}>
+                  <label className={`row g-0 align-items-end p-1 ${theme == 'dark' ? 'bg-light' : 'bg-white'}`} htmlFor="message-input" style={{
+                    borderRadius: '24px'
+                  }}>
+                    <div className="col-auto mt-0">
+                      <div className="dropup" ref={dropdownRef}>
+                        <button
+                          type="button"
+                          className="btn btn-light btn-sm dropdown-toggle"
+                          data-bs-toggle="dropdown"
+                          aria-expanded={isDropdownOpen}
+                          onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                          disabled={isSending || isRecording}
+                          title="Adjuntar archivo"
+                          style={{ borderRadius: '50%', width: '38px', height: '38px', padding: 0 }}
+                        >
+                          <i className={`mdi ${isDropdownOpen ? 'mdi-close' : 'mdi-plus'}`}></i>
                         </button>
-                        <button className="dropdown-item" href="#" onClick={(e) => {
-                          e.preventDefault()
-                          fileInputRef.current?.setAttribute('accept', 'image/*,video/*')
-                          fileInputRef.current?.click()
-                        }}>
-                          <i className="mdi mdi-image me-2" style={{ color: '#007BFC' }} />
-                          Fotos y videos
-                        </button>
-                        <button className="dropdown-item" href="#" onClick={(e) => {
-                          e.preventDefault()
-                          setIsOpenCamera(true)
-                        }}>
-                          <i className="mdi mdi-camera me-2" style={{ color: '#FF2E74' }} />
-                          Cámara
-                        </button>
-                        <button className="dropdown-item" href="#" onClick={(e) => {
-                          e.preventDefault()
-                          fileInputRef.current?.setAttribute('accept', 'audio/*')
-                          fileInputRef.current?.click()
-                        }}>
-                          <i className="mdi mdi-headphones me-2" style={{ color: '#FB6533' }} />
-                          Audio
-                        </button>
-                      </div>
-                    </div>
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      className="d-none"
-                      onChange={handleFileChange}
-                    />
-                  </div>
-                  <div className="col mt-0">
-                    {isRecording ? (
-                      <div className="d-flex align-items-center justify-content-center bg-light rounded-pill" style={{ minHeight: '38px' }}>
-                        <span className="text-danger me-2">●</span> Grabando...
-                      </div>
-                    ) : audioBlob ? (
-                      <div className="d-flex align-items-center bg-light rounded-pill px-2" style={{ minHeight: '38px' }}>
-                        <audio ref={audioRef} src={audioUrl} className="me-2" controls controlsList="nodownload" style={{ height: '30px' }} />
-                      </div>
-                    ) : (
-                      <div className="dropup">
-                        <div className={`dropdown-menu mb-1 ${isDMOpen ? 'show' : ''}`}
-                          data-popper-placement="top-start"
-                          style={{
-                            position: 'absolute',
-                            inset: 'auto auto 0px 0px',
-                            margin: '0px',
-                            transform: 'translateY(-44px)',
-                            maxHeight: '200px',
-                            overflowY: 'auto'
+                        <div ref={dropdownContainerRef} className="dropdown-menu mb-1">
+                          <button className="dropdown-item" href="#" onClick={(e) => {
+                            e.preventDefault()
+                            fileInputRef.current?.setAttribute('accept', '*')
+                            fileInputRef.current?.click()
                           }}>
-                          {
-                            defaultMessages
-                              .filter(dm => `/${dm.name}`.toLowerCase().startsWith(messageText.toLowerCase()))
-                              .sort((a, b) => a.name.localeCompare(b.name))
-                              .map((message, idx) => {
-                                const content = $(`<div>${message.description}</div>`)
-                                content.find('.mention').each((_, element) => {
-                                  const mention = $(element)
-                                  const mentionId = mention.attr('data-id')
-                                  mention.removeClass('mention')
-                                  mention.text(contact?.[mentionId])
-                                })
-                                return <div key={idx} className="dropdown-item" type="button" style={{ width: '300px' }} onClick={async () => {
-                                  setIsDMOpen(false)
-                                  setMessageText('')
-                                  setIsSending(true)
-                                  if (message.attachments.length > 0) {
-                                    const attachment = message.attachments[0]
-                                    const attachmentURL = `${Global.APP_URL}/cloud/${attachment.file}`
-                                    await whatsAppRest.send(leadId, `/attachment:${attachmentURL}\n${content.html()}`)
-                                    setIsSending(false)
-                                    return
-                                  }
-                                  await whatsAppRest.send(leadId, content.html())
-                                  setIsSending(false)
-                                }}>
-                                  <span className="d-block text-truncate">/{message.name}</span>
-                                  <small className="d-block text-muted text-truncate">{content.text()}</small>
-                                </div>
-                              })
-                          }
-                        </div>
-                        <textarea
-                          ref={inputMessageRef}
-                          id="message-input"
-                          className="form-control w-100"
-                          placeholder="Ingrese su mensaje aquí"
-                          rows={1}
-                          style={{ minHeight: '38px', maxHeight: '188px', fieldSizing: 'content', resize: 'none', border: 'none', backgroundColor: 'transparent' }}
-                          disabled={isSending || !!audioBlob || !!cameraBlob || !!previewBlob}
-                          value={messageText}
-                          onChange={(e) => {
-                            const newValue = e.target.value
-                            if (String(newValue).trim().startsWith('/') && defaultMessages.some(({ name }) => (`/${name}`.toLowerCase()).startsWith(newValue.toLowerCase()))) {
-                              setIsDMOpen(true)
-                            } else {
-                              setIsDMOpen(false)
-                            }
-                            setMessageText(newValue)
-                          }}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter' && !e.shiftKey) {
-                              e.preventDefault()
-                              if (hasContent()) onMessageSubmit(e)
-                            }
-                          }}
-                        />
-                      </div>
-                    )}
-                  </div>
-                  <div className="col-auto mt-0">
-                    {(cameraBlob || previewBlob) && !isOpenCamera ? (
-                      <>
-                        <button
-                          type="button"
-                          className="btn btn-danger btn-sm me-1"
-                          onClick={() => {
-                            setCameraBlob(null)
-                            setPreviewBlob(null)
-                            setPreviewType(null)
-                            setPreviewName('')
-                          }}
-                          style={{ borderRadius: '50%', width: '38px', height: '38px', padding: 0 }}
-                          title="Descartar adjunto"
-                        >
-                          <i className="mdi mdi-delete"></i>
-                        </button>
-                        <button
-                          type="submit"
-                          className="btn btn-success btn-sm"
-                          disabled={isSending}
-                          style={{ borderRadius: '50%', width: '38px', height: '38px', padding: 0 }}
-                          title="Enviar adjunto"
-                        >
-                          <i className="mdi mdi-send"></i>
-                        </button>
-                      </>
-                    ) : audioBlob && !isRecording ? (
-                      <>
-                        <button
-                          type="button"
-                          className="btn btn-danger btn-sm me-1"
-                          onClick={discardAudio}
-                          style={{ borderRadius: '50%', width: '38px', height: '38px', padding: 0 }}
-                          title="Descartar audio"
-                        >
-                          <i className="mdi mdi-delete"></i>
-                        </button>
-                        <button
-                          type="submit"
-                          className="btn btn-success btn-sm"
-                          disabled={isSending}
-                          style={{ borderRadius: '50%', width: '38px', height: '38px', padding: 0 }}
-                          title="Enviar audio"
-                        >
-                          <i className="mdi mdi-send"></i>
-                        </button>
-                      </>
-                    ) : isRecording ? (
-                      <>
-                        <button
-                          type="button"
-                          className="btn btn-warning btn-sm me-1"
-                          onClick={stopRecording}
-                          style={{ borderRadius: '50%', width: '38px', height: '38px', padding: 0 }}
-                          title="Pausar grabación"
-                        >
-                          <i className="mdi mdi-pause"></i>
-                        </button>
-                        <button
-                          type="button"
-                          className="btn btn-danger btn-sm"
-                          onClick={discardAudio}
-                          style={{ borderRadius: '50%', width: '38px', height: '38px', padding: 0 }}
-                          title="Descartar grabación"
-                        >
-                          <i className="mdi mdi-delete"></i>
-                        </button>
-                      </>
-                    ) : (
-                      <>
-                        {messageText.trim() ? (
-                          <button
-                            type="submit"
-                            className="btn btn-primary btn-sm"
-                            disabled={isSending}
-                            style={{ borderRadius: '50%', width: '38px', height: '38px', padding: 0 }}
-                          >
-                            {isSending ? (
-                              <i className="mdi mdi-spin mdi-loading"></i>
-                            ) : (
-                              <i className="mdi mdi-send"></i>
-                            )}
+                            <i className="mdi mdi-file-document me-2" style={{ color: '#7F66FF' }} />
+                            Documentos
                           </button>
-                        ) : (
+                          <button className="dropdown-item" href="#" onClick={(e) => {
+                            e.preventDefault()
+                            fileInputRef.current?.setAttribute('accept', 'image/*,video/*')
+                            fileInputRef.current?.click()
+                          }}>
+                            <i className="mdi mdi-image me-2" style={{ color: '#007BFC' }} />
+                            Fotos y videos
+                          </button>
+                          <button className="dropdown-item" href="#" onClick={(e) => {
+                            e.preventDefault()
+                            setIsOpenCamera(true)
+                          }}>
+                            <i className="mdi mdi-camera me-2" style={{ color: '#FF2E74' }} />
+                            Cámara
+                          </button>
+                          <button className="dropdown-item" href="#" onClick={(e) => {
+                            e.preventDefault()
+                            fileInputRef.current?.setAttribute('accept', 'audio/*')
+                            fileInputRef.current?.click()
+                          }}>
+                            <i className="mdi mdi-headphones me-2" style={{ color: '#FB6533' }} />
+                            Audio
+                          </button>
+                        </div>
+                      </div>
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        className="d-none"
+                        onChange={handleFileChange}
+                      />
+                    </div>
+                    <div className="col mt-0">
+                      {isRecording ? (
+                        <div className="d-flex align-items-center justify-content-center bg-light rounded-pill" style={{ minHeight: '38px' }}>
+                          <span className="text-danger me-2">●</span> Grabando...
+                        </div>
+                      ) : audioBlob ? (
+                        <div className="d-flex align-items-center bg-light rounded-pill px-2" style={{ minHeight: '38px' }}>
+                          <audio ref={audioRef} src={audioUrl} className="me-2" controls controlsList="nodownload" style={{ height: '30px' }} />
+                        </div>
+                      ) : (
+                        <div className="dropup">
+                          <div className={`dropdown-menu mb-1 ${isDMOpen ? 'show' : ''}`}
+                            data-popper-placement="top-start"
+                            style={{
+                              position: 'absolute',
+                              inset: 'auto auto 0px 0px',
+                              margin: '0px',
+                              transform: 'translateY(-44px)',
+                              maxHeight: '200px',
+                              overflowY: 'auto'
+                            }}>
+                            {
+                              defaultMessages
+                                .filter(dm => `/${dm.name}`.toLowerCase().startsWith(messageText.toLowerCase()))
+                                .sort((a, b) => a.name.localeCompare(b.name))
+                                .map((message, idx) => {
+                                  const content = $(`<div>${message.description}</div>`)
+                                  content.find('.mention').each((_, element) => {
+                                    const mention = $(element)
+                                    const mentionId = mention.attr('data-id')
+                                    mention.removeClass('mention')
+                                    mention.text(contact?.[mentionId])
+                                  })
+                                  return <div key={idx} className="dropdown-item" type="button" style={{ width: '300px' }} onClick={async () => {
+                                    setIsDMOpen(false)
+                                    setMessageText('')
+                                    setIsSending(true)
+                                    if (message.attachments.length > 0) {
+                                      const attachment = message.attachments[0]
+                                      const attachmentURL = `${Global.APP_URL}/cloud/${attachment.file}`
+                                      await whatsAppRest.send(leadId, `/attachment:${attachmentURL}\n${content.html()}`)
+                                      setIsSending(false)
+                                      return
+                                    }
+                                    await whatsAppRest.send(leadId, content.html())
+                                    setIsSending(false)
+                                  }}>
+                                    <span className="d-block text-truncate">/{message.name}</span>
+                                    <small className="d-block text-muted text-truncate">{content.text()}</small>
+                                  </div>
+                                })
+                            }
+                          </div>
+                          <textarea
+                            ref={inputMessageRef}
+                            id="message-input"
+                            className="form-control w-100"
+                            placeholder="Ingrese su mensaje aquí"
+                            rows={1}
+                            style={{ minHeight: '38px', maxHeight: '188px', fieldSizing: 'content', resize: 'none', border: 'none', backgroundColor: 'transparent' }}
+                            disabled={isSending || !!audioBlob || !!cameraBlob || !!previewBlob}
+                            value={messageText}
+                            onChange={(e) => {
+                              const newValue = e.target.value
+                              if (String(newValue).trim().startsWith('/') && defaultMessages.some(({ name }) => (`/${name}`.toLowerCase()).startsWith(newValue.toLowerCase()))) {
+                                setIsDMOpen(true)
+                              } else {
+                                setIsDMOpen(false)
+                              }
+                              setMessageText(newValue)
+                            }}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' && !e.shiftKey) {
+                                e.preventDefault()
+                                if (hasContent()) onMessageSubmit(e)
+                              }
+                            }}
+                          />
+                        </div>
+                      )}
+                    </div>
+                    <div className="col-auto mt-0">
+                      {(cameraBlob || previewBlob) && !isOpenCamera ? (
+                        <>
                           <button
                             type="button"
-                            className="btn btn-outline-primary btn-sm"
-                            onClick={startRecording}
+                            className="btn btn-danger btn-sm me-1"
+                            onClick={() => {
+                              setCameraBlob(null)
+                              setPreviewBlob(null)
+                              setPreviewType(null)
+                              setPreviewName('')
+                            }}
+                            style={{ borderRadius: '50%', width: '38px', height: '38px', padding: 0 }}
+                            title="Descartar adjunto"
+                          >
+                            <i className="mdi mdi-delete"></i>
+                          </button>
+                          <button
+                            type="submit"
+                            className="btn btn-success btn-sm"
                             disabled={isSending}
                             style={{ borderRadius: '50%', width: '38px', height: '38px', padding: 0 }}
-                            title="Grabar audio"
+                            title="Enviar adjunto"
                           >
-                            <i className="mdi mdi-microphone"></i>
+                            <i className="mdi mdi-send"></i>
                           </button>
-                        )}
-                      </>
-                    )}
-                  </div>
-                </label>
-              </form>
+                        </>
+                      ) : audioBlob && !isRecording ? (
+                        <>
+                          <button
+                            type="button"
+                            className="btn btn-danger btn-sm me-1"
+                            onClick={discardAudio}
+                            style={{ borderRadius: '50%', width: '38px', height: '38px', padding: 0 }}
+                            title="Descartar audio"
+                          >
+                            <i className="mdi mdi-delete"></i>
+                          </button>
+                          <button
+                            type="submit"
+                            className="btn btn-success btn-sm"
+                            disabled={isSending}
+                            style={{ borderRadius: '50%', width: '38px', height: '38px', padding: 0 }}
+                            title="Enviar audio"
+                          >
+                            <i className="mdi mdi-send"></i>
+                          </button>
+                        </>
+                      ) : isRecording ? (
+                        <>
+                          <button
+                            type="button"
+                            className="btn btn-warning btn-sm me-1"
+                            onClick={stopRecording}
+                            style={{ borderRadius: '50%', width: '38px', height: '38px', padding: 0 }}
+                            title="Pausar grabación"
+                          >
+                            <i className="mdi mdi-pause"></i>
+                          </button>
+                          <button
+                            type="button"
+                            className="btn btn-danger btn-sm"
+                            onClick={discardAudio}
+                            style={{ borderRadius: '50%', width: '38px', height: '38px', padding: 0 }}
+                            title="Descartar grabación"
+                          >
+                            <i className="mdi mdi-delete"></i>
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          {messageText.trim() ? (
+                            <button
+                              type="submit"
+                              className="btn btn-primary btn-sm"
+                              disabled={isSending}
+                              style={{ borderRadius: '50%', width: '38px', height: '38px', padding: 0 }}
+                            >
+                              {isSending ? (
+                                <i className="mdi mdi-spin mdi-loading"></i>
+                              ) : (
+                                <i className="mdi mdi-send"></i>
+                              )}
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              className="btn btn-outline-primary btn-sm"
+                              onClick={startRecording}
+                              disabled={isSending}
+                              style={{ borderRadius: '50%', width: '38px', height: '38px', padding: 0 }}
+                              title="Grabar audio"
+                            >
+                              <i className="mdi mdi-microphone"></i>
+                            </button>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  </label>
+                </form>
+              }
             </section>
           </>
       }

@@ -70,20 +70,20 @@ const Tasks = () => {
   return <>
     <Table gridRef={gridRef} title='Tareas' rest={tasksRest}
       toolBar={(container) => {
-        container.unshift(DxPanelButton({
-          className: 'btn btn-xs btn-soft-dark',
-          text: 'Actualizar',
-          title: 'Refrescar tabla',
-          icon: 'fas fa-undo-alt',
-          onClick: () => $(gridRef.current).dxDataGrid('instance').refresh()
-        }))
-        container.unshift(DxPanelButton({
-          className: 'btn btn-xs btn-soft-primary',
-          text: 'Nuevo',
-          title: 'Agregar registro',
-          icon: 'fa fa-plus',
-          onClick: () => onOpenModal()
-        }))
+        // container.unshift(DxPanelButton({
+        //   className: 'btn btn-xs btn-soft-dark',
+        //   text: 'Actualizar',
+        //   title: 'Refrescar tabla',
+        //   icon: 'fas fa-undo-alt',
+        //   onClick: () => $(gridRef.current).dxDataGrid('instance').refresh()
+        // }))
+        // container.unshift(DxPanelButton({
+        //   className: 'btn btn-xs btn-soft-primary',
+        //   text: 'Nuevo',
+        //   title: 'Agregar registro',
+        //   icon: 'fa fa-plus',
+        //   onClick: () => onOpenModal()
+        // }))
       }}
       columns={[
         {

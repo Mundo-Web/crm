@@ -192,17 +192,30 @@ const Menu = ({ session, theme, can, whatsAppStatus, APP_PROTOCOL, APP_DOMAIN, l
 
         <ul id="side-menu">
           <li className="menu-title">Panel de navegacion</li>
-          <MenuItemContainer title='KPIs' icon='mdi mdi-chart-donut-variant'>
-            <MenuItem pinned={pinned} setPinned={setPinned} href="/home" icon='mdi mdi-account-multiple' pinLabel='KPIs • Leads'>Leads</MenuItem>
-            {can('dashboard', 'all', 'list') && <MenuItem pinned={pinned} setPinned={setPinned} href="/home/projects" icon='mdi mdi-page-next' pinLabel='KPIs • Proyectos'>Proyectos</MenuItem>}
-          </MenuItemContainer>
+          {
+            (can('dashboard', 'leads') || can('dashboard', 'all', 'projects')) &&
+            <MenuItemContainer title='KPIs' icon='mdi mdi-chart-donut-variant'>
+              {
+                can('dashboard', 'leads') &&
+                <MenuItem pinned={pinned} setPinned={setPinned} href="/home" icon='mdi mdi-account-multiple' pinLabel='KPIs • Leads'>Leads</MenuItem>
+              }
+              {
+                can('dashboard', 'projects') &&
+                <MenuItem pinned={pinned} setPinned={setPinned} href="/home/projects" icon='mdi mdi-page-next' pinLabel='KPIs • Proyectos'>Proyectos</MenuItem>
+              }
+            </MenuItemContainer>
+          }
 
-          {/* {can('dashboard', 'all', 'list') && <MenuItem pinned={pinned} setPinned={setPinned} href="/home" icon='mdi mdi-home'>Inicio</MenuItem>} */}
 
           {/* <MenuItem pinned={pinned} setPinned={setPinned} href="/calendar" icon='mdi mdi-calendar'>Calendario</MenuItem> */}
-          <MenuItem pinned={pinned} setPinned={setPinned} href="/tasks" icon='mdi mdi-format-list-checks' badge={tasksCount > 0 ? tasksCount : ''}>Tareas</MenuItem>
-          <MenuItem pinned={pinned} setPinned={setPinned} href="/chat" icon='mdi mdi-chat' badge={chatBadge || undefined}>Chat</MenuItem>
-
+          {
+            can('tasks', 'list') &&
+            <MenuItem pinned={pinned} setPinned={setPinned} href="/tasks" icon='mdi mdi-format-list-checks' badge={tasksCount > 0 ? tasksCount : ''}>Tareas</MenuItem>
+          }
+          {
+            can('chats', 'list') &&
+            <MenuItem pinned={pinned} setPinned={setPinned} href="/chat" icon='mdi mdi-chat' badge={chatBadge || undefined}>Chat</MenuItem>
+          }
           <MenuItemContainer title='Personas' icon='mdi mdi-account-group'>
             <MenuItem pinned={pinned} setPinned={setPinned} href="/leads" icon='mdi mdi-account' badge={leadsCount > 0 ? leadsCount : ''}>Leads</MenuItem>
             {can('clients', 'all', 'list') && <MenuItem pinned={pinned} setPinned={setPinned} href="/clients" icon='mdi mdi-account-multiple'>Clientes</MenuItem>}
@@ -210,10 +223,10 @@ const Menu = ({ session, theme, can, whatsAppStatus, APP_PROTOCOL, APP_DOMAIN, l
           </MenuItemContainer>
 
           {whatsAppStatus == 'ready' && <MenuItem pinned={pinned} setPinned={setPinned} href="/messages" icon='mdi mdi-forum'>Mensajes</MenuItem>}
-          <MenuItem pinned={pinned} setPinned={setPinned} href="/products" icon='mdi mdi-layers'>Productos</MenuItem>
+          {can('products', 'all', 'list') && <MenuItem pinned={pinned} setPinned={setPinned} href="/products" icon='mdi mdi-layers'>Productos</MenuItem>}
           {can('processes', 'root', 'all', 'list') && <MenuItem pinned={pinned} setPinned={setPinned} href="/processes" icon='mdi mdi-timeline-text'>Procesos</MenuItem>}
           {/* {can('campaigns', 'root', 'all', 'list') &&  */}
-          <MenuItem pinned={pinned} setPinned={setPinned} href="/campaigns" icon='mdi mdi-google-ads'>Campañas</MenuItem>
+          {can('campaigns', 'root', 'all', 'list') && <MenuItem pinned={pinned} setPinned={setPinned} href="/campaigns" icon='mdi mdi-google-ads'>Campañas</MenuItem>}
           {/* } */}
 
           {can('projects', 'root', 'all', 'list') && <MenuItemContainer title='Proyectos' icon='mdi mdi-page-next'>

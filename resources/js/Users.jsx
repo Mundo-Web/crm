@@ -13,13 +13,10 @@ import InvitationsModal from './Reutilizables/Users/InvitationsModal.jsx'
 const atalayaUsersRest = new AtalayaUsersRest()
 
 const Users = (properties) => {
-  const { users: usersInertia, invitations: invitationsInertia, roles, match } = properties
+  const { users: usersInertia, invitations: invitationsInertia, roles, match, can } = properties
 
   const [users, setUsers] = useState(usersInertia)
   const [invitations, setInvitations] = useState(invitationsInertia)
-
-
-  console.log(invitations)
 
   // Referencias de elementos
   const modalRef = useRef()
@@ -84,6 +81,9 @@ const Users = (properties) => {
           </button>
         </Tippy>
       }
+      {
+        can('users', 'create')
+      }
       <button className='btn btn-sm btn-primary' onClick={() => $(modalRef.current).modal('show')}>
         <i className='mdi mdi-account-plus me-1'></i>
         Invitar
@@ -92,7 +92,7 @@ const Users = (properties) => {
       <div className='d-flex flex-wrap align-items-center justify-content-center' style={{ minHeight: 'calc(100vh - 235px)', maxHeight: 'max-content' }}>
         <div className='d-flex flex-wrap align-items-center justify-content-center gap-2'>
           {
-            users.map((user, i) => <UserCard key={`user-${i}`} {...user} roles={roles} match={match} setUsers={setUsers} />)
+            users.map((user, i) => <UserCard key={`user-${i}`} {...user} roles={roles} match={match} setUsers={setUsers} can={properties.can} />)
           }
         </div>
       </div>
@@ -140,5 +140,6 @@ const Users = (properties) => {
 };
 
 CreateReactScript((el, properties) => {
+  if (!properties.can('users', 'all', 'list')) return location.href = '/';
   createRoot(el).render(<Users {...properties} />);
 })

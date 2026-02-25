@@ -46,7 +46,7 @@ const SortablePinnedButton = ({ item }) => {
 const Adminto = ({ session, children, notificationsCount, prefixes, title, showTitle = true, description, floatEnd, can, WA_URL, APP_URL, presets, businesses, services, APP_PROTOCOL, APP_DOMAIN, leadsCount, tasksCount, setWAPhone = () => { }, setThemeParent = () => { } }) => {
 
   const settings = Local.get('adminto_settings') ?? {}
-  const _pinned = Local.get('menu-pinned') ?? []
+  const _pinned = Local.get(`menu-pinned-${session.business_uuid}`) ?? []
   const [theme, setTheme] = useState(settings.theme ?? 'light')
   const [whatsappStatus, setWhatsAppStatus] = useState(null)
   const [pinned, setPinned] = useState(_pinned)
@@ -65,7 +65,7 @@ const Adminto = ({ session, children, notificationsCount, prefixes, title, showT
   }, [theme])
 
   useEffect(() => {
-    Local.set('menu-pinned', pinned)
+    Local.set(`menu-pinned-${session.business_uuid}`, pinned)
   }, [pinned])
 
   const handleDragEnd = (event) => {

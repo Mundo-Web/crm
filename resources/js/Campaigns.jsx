@@ -137,20 +137,20 @@ const Campaigns = ({ can }) => {
           caption: 'Acciones',
           cellTemplate: (container, { data }) => {
             if (data.protected) return
-            // can('campaigns', 'root', 'all', 'update') && 
-            container.append(DxButton({
-              className: 'btn btn-xs btn-soft-primary',
-              title: 'Editar',
-              icon: 'fa fa-pen',
-              onClick: () => onModalOpen(data)
-            }))
-            // can('campaigns', 'root', 'all', 'delete') &&
-            container.append(DxButton({
-              className: 'btn btn-xs btn-soft-danger',
-              title: 'Eliminar',
-              icon: 'fa fa-trash-alt',
-              onClick: () => onDeleteClicked(data.id)
-            }))
+            can('campaigns', 'root', 'all', 'update') &&
+              container.append(DxButton({
+                className: 'btn btn-xs btn-soft-primary',
+                title: 'Editar',
+                icon: 'fa fa-pen',
+                onClick: () => onModalOpen(data)
+              }))
+            can('campaigns', 'root', 'all', 'delete') &&
+              container.append(DxButton({
+                className: 'btn btn-xs btn-soft-danger',
+                title: 'Eliminar',
+                icon: 'fa fa-trash-alt',
+                onClick: () => onDeleteClicked(data.id)
+              }))
           },
           allowFiltering: false,
           allowExporting: false
@@ -175,7 +175,7 @@ const Campaigns = ({ can }) => {
 };
 
 CreateReactScript((el, properties) => {
-  // if (!properties.can('campaigns', 'root', 'all', 'list')) return location.href = '/';
+  if (!properties.can('campaigns', 'root', 'all', 'list')) return location.href = '/';
   createRoot(el).render(
     <Adminto {...properties} title='Campañas' showTitle={false}>
       <Campaigns {...properties} />

@@ -110,12 +110,15 @@ const Products = ({ products: productsFromDB = [], types: typesFromDB = [], can 
       <div className="col-12">
         <div className="card" >
           <div className="card-header">
-            <div className="float-end">
-              <button className='btn btn-success btn-sm' onClick={onModalOpen}>
-                <i className='fa fa-plus me-1'></i>
-                Agregar producto
-              </button>
-            </div>
+            {
+              can('products', 'create') &&
+              <div className="float-end">
+                <button className='btn btn-success btn-sm' onClick={onModalOpen}>
+                  <i className='fa fa-plus me-1'></i>
+                  Agregar producto
+                </button>
+              </div>
+            }
             <h4 className="header-title my-0">Lista de productos</h4>
           </div>
           <div className="card-body" style={{ height: 'calc(100vh - 160px)', overflowY: 'auto' }}>
@@ -158,16 +161,22 @@ const Products = ({ products: productsFromDB = [], types: typesFromDB = [], can 
                           <div className='flex-1 d-flex gap-1 align-items-center'>
                             {
                               product.status == null
-                                ? <Tippy content='Restaurar'>
+                                ? (can('products', 'delete') && <Tippy content='Restaurar'>
                                   <button className="btn btn-xs btn-soft-dark fas fa-trash-restore" onClick={() => onStatusChange({ id: product.id, status: false })}></button>
-                                </Tippy>
+                                </Tippy>)
                                 : <>
-                                  <Tippy content='Editar'>
-                                    <button className="btn btn-xs btn-soft-primary fa fa-pen" onClick={() => onModalOpen(product)}></button>
-                                  </Tippy>
-                                  <Tippy content='Eliminar'>
-                                    <button className="btn btn-xs btn-soft-danger fa fa-times" onClick={() => onDeleteClicked(product.id)}></button>
-                                  </Tippy>
+                                  {
+                                    can('products', 'update') &&
+                                    <Tippy content='Editar'>
+                                      <button className="btn btn-xs btn-soft-primary fa fa-pen" onClick={() => onModalOpen(product)}></button>
+                                    </Tippy>
+                                  }
+                                  {
+                                    can('products', 'delete') &&
+                                    <Tippy content='Eliminar'>
+                                      <button className="btn btn-xs btn-soft-danger fa fa-times" onClick={() => onDeleteClicked(product.id)}></button>
+                                    </Tippy>
+                                  }
                                 </>
                             }
                           </div>
@@ -206,6 +215,7 @@ const Products = ({ products: productsFromDB = [], types: typesFromDB = [], can 
 };
 
 CreateReactScript((el, properties) => {
+  if (!properties.can('products', 'list')) return location.href = '/';
   createRoot(el).render(
     <Adminto {...properties} title='Productos'>
       <Products {...properties} />

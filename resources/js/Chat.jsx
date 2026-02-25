@@ -332,7 +332,7 @@ const Chat = ({ users = [], defaultMessages = [], activeLeadId: activeLeadIdDB, 
             </div>
           ) : (
             <>
-              <ChatContent leadId={activeLeadId} setLeadId={setActiveLeadId} containerRef={messagesContainerRef} theme={theme} contactDetails={contactDetails} setContactDetails={setContactDetails} defaultMessages={defaultMessages} />
+              <ChatContent leadId={activeLeadId} setLeadId={setActiveLeadId} containerRef={messagesContainerRef} theme={theme} contactDetails={contactDetails} setContactDetails={setContactDetails} defaultMessages={defaultMessages} can={properties.can} />
             </>
           )}
         </div>
@@ -351,5 +351,6 @@ const Chat = ({ users = [], defaultMessages = [], activeLeadId: activeLeadIdDB, 
 };
 
 CreateReactScript((el, properties) => {
+  if (!properties.can('chats', 'list')) return location.href = '/';
   createRoot(el).render(<Chat {...properties} />);
 })
