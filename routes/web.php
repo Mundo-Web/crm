@@ -30,6 +30,7 @@ use App\Http\Controllers\TypeController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ViewController;
 use App\Http\Controllers\WebhookController;
+use App\Http\Controllers\WelcomeController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -58,15 +59,12 @@ Route::get(
         : redirect('//' . env('APP_DOMAIN') . '/join')
 )->name('login');
 
-Route::get('/', function (Request $request) {
-    return redirect('/login');
-});
-
 Route::middleware('auth')->group(function () {
     Route::get('/join', [AuthController::class, 'joinView'])->name('Join.jsx');
     Route::get('/plans', [PlanController::class, 'reactView'])->name('Plans.jsx');
 });
 Route::middleware(['auth', 'firstTime', 'hasPlan'])->group(function () {
+    Route::get('/', [WelcomeController::class, 'reactView'])->name('Welcome.jsx');
     Route::get('/home', [KPILeadsController::class, 'reactView'])->name('KPILeads.jsx');
     Route::get('/home/projects', [KPIProjectsController::class, 'reactView'])->name('KPIProjects.jsx');
     Route::get('/clients', [ClientController::class, 'reactView'])->name('Clients.jsx');

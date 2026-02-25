@@ -1,7 +1,7 @@
 {
-  "_Adminto-!~{00E}~.js": {
+  "_Adminto-!~{00F}~.js": {
     "file": "Adminto.css",
-    "src": "_Adminto-!~{00E}~.js"
+    "src": "_Adminto-!~{00F}~.js"
   },
   "_Adminto-ygyWRbAH.js": {
     "file": "assets/Adminto-ygyWRbAH.js",
@@ -182,9 +182,9 @@
       "_CreateReactScript-CdFATXLL.js"
     ]
   },
-  "_RepositoryDropzone-!~{017}~.js": {
+  "_RepositoryDropzone-!~{018}~.js": {
     "file": "RepositoryDropzone.css",
-    "src": "_RepositoryDropzone-!~{017}~.js"
+    "src": "_RepositoryDropzone-!~{018}~.js"
   },
   "_RepositoryDropzone-Bv2IFu79.js": {
     "file": "assets/RepositoryDropzone-Bv2IFu79.js",
@@ -270,13 +270,13 @@
       "_Adminto-ygyWRbAH.js"
     ]
   },
-  "_coming-soon-!~{01h}~.js": {
+  "_coming-soon-!~{01i}~.js": {
     "file": "coming-soon.css",
-    "src": "_coming-soon-!~{01h}~.js"
+    "src": "_coming-soon-!~{01i}~.js"
   },
-  "_default-!~{00S}~.js": {
+  "_default-!~{00T}~.js": {
     "file": "default.css",
-    "src": "_default-!~{00S}~.js"
+    "src": "_default-!~{00T}~.js"
   },
   "_default-CIFIzJWl.js": {
     "file": "assets/default-CIFIzJWl.js",
@@ -318,9 +318,9 @@
     "file": "assets/socials-DxbJIEf3.js",
     "name": "socials"
   },
-  "_sweetalert2.esm.all-!~{00G}~.js": {
+  "_sweetalert2.esm.all-!~{00H}~.js": {
     "file": "sweetalert2.esm.css",
-    "src": "_sweetalert2.esm.all-!~{00G}~.js"
+    "src": "_sweetalert2.esm.all-!~{00H}~.js"
   },
   "_sweetalert2.esm.all-BuvcKzCS.js": {
     "file": "assets/sweetalert2.esm.all-BuvcKzCS.js",
@@ -1136,6 +1136,18 @@
       "_sweetalert2.esm.all-BuvcKzCS.js",
       "_Modal-BJsTSCqc.js",
       "_Logout-Dfbya5P9.js"
+    ]
+  },
+  "resources/js/Welcome.jsx": {
+    "file": "assets/Welcome-hs0EMuJw.js",
+    "name": "Welcome",
+    "src": "resources/js/Welcome.jsx",
+    "isEntry": true,
+    "imports": [
+      "_CreateReactScript-CdFATXLL.js",
+      "_Adminto-ygyWRbAH.js",
+      "_Logout-Dfbya5P9.js",
+      "_sweetalert2.esm.all-BuvcKzCS.js"
     ]
   },
   "resources/js/components/svg/google.svg": {
