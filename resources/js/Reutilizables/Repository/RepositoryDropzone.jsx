@@ -29,7 +29,7 @@ const formatFileSize = (bytes) => {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
 }
 
-const RepositoryDropzone = ({ files: filesDB, height = 'calc(100vh - 240px)', selectable, multiple = true, selectedFiles = [], setSelectedFiles = () => { }, can }) => {
+const RepositoryDropzone = ({ files: filesDB, height = 'calc(100vh - 240px)', selectable, multiple = true, selectedFiles = [], setSelectedFiles = () => { }, can = () => { } }) => {
   const modalRef = useRef()
 
   const fileInputRef = useRef()
