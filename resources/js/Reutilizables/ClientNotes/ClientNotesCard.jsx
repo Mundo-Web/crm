@@ -14,7 +14,7 @@ const ClientNotesCard = ({ id, type, name, process, description, created_at, upd
         {name}
       </p>
       <p className="card-text">
-        <small className="text-muted">{moment(created_at).format('LLL')} {updated_at != created_at && <span>· <i>Editado</i></span>}</small>
+        <small className="text-muted">{moment(created_at).subtract(5, 'hours').format('LLL')} {updated_at != created_at && <span>· <i>Editado</i></span>}</small>
       </p>
     </div>
   }
@@ -76,7 +76,7 @@ const ClientNotesCard = ({ id, type, name, process, description, created_at, upd
         </div>
       }
       <p className="card-text">
-        <small className="text-muted">{moment(created_at).format('LLL')} {updated_at != created_at && <span>· <i>Editado</i></span>}</small>
+        <small className="text-muted">{moment(created_at).subtract(5, 'hours').format('LLL')} {updated_at != created_at && <span>· <i>Editado</i></span>}</small>
       </p>
     </div>
   </div>
