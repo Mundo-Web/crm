@@ -68,6 +68,25 @@ class MetaController extends Controller
 
         return $fbData;
     }
+    public static function getMetaProfile(string $id, string $accessToken, bool $external = false)
+    {
+        if ($external) {
+            $fbRest = new Fetch(env('FACEBOOK_GRAPH_URL') . "/{$id}?access_token={$accessToken}");
+            $fbData = $fbRest->json();
+
+            if (isset($fbData['error'])) throw new Exception('Error, token de acceso inválido');
+
+            return $fbData;
+        }
+
+        $fbRest = new Fetch(env('FACEBOOK_GRAPH_URL') . "/{$id}?fields=id,name,username,picture&access_token={$accessToken}");
+
+        $fbData = $fbRest->json();
+
+        if (isset($fbData['error'])) throw new Exception($fbData['error']['message'] ?? 'Error, token de acceso inválido');
+
+        return $fbData;
+    }
     public static function getWhatsAppProfile(string $id, string $accessToken)
     {
         $rest = new Fetch(env('FACEBOOK_GRAPH_URL') . "/{$id}?fields=id,name,currency,owner_business_info&access_token={$accessToken}");
@@ -115,9 +134,91 @@ class MetaController extends Controller
 
             if (!in_array($origin, ['messenger', 'instagram', 'whatsapp', 'forms'])) throw new Exception('Error, origen no permitido');
 
-            if ($origin === 'forms') dump($data);
-
             $entry = $data['entry'][0] ?? [];
+
+            $businessJpa = Business::query()
+                ->where('uuid', $business_uuid)
+                ->where('status', true)
+                ->first();
+            if (!$businessJpa) throw new Exception('Error, negocio no encontrado o inactivo');
+
+            $integrationJpa = Integration::query()
+                ->where('meta_service', $origin)
+                ->where('business_id', $businessJpa->id)
+                ->where('status', true)
+                ->first();
+
+            if ($origin === 'forms') {
+                $leadRes = new Fetch(env('FACEBOOK_GRAPH_URL') . '/' . $entry['changes'][0]['value']['leadgen_id'], [
+                    'headers' =>  [
+                        'Authorization' => 'Bearer ' . $integrationJpa->meta_access_token
+                    ]
+                ]);
+                $leadData = $leadRes->json();
+
+                // Parse lead data to extract form fields
+                $fieldData = [];
+                foreach ($leadData['field_data'] ?? [] as $field) {
+                    $fieldData[$field['name']] = $field['values'][0] ?? null;
+                }
+
+                // Create new client lead with parsed data
+                // Check if client already exists
+                $clientJpa = Client::query()
+                    ->where('integration_id', $integrationJpa->id)
+                    ->where('integration_user_id', $leadData['id'])
+                    ->where('business_id', $businessJpa->id)
+                    ->where('status', true)
+                    ->first();
+
+                if ($clientJpa) return;
+
+                // Create new client
+                $clientJpa = Client::create([
+                    'integration_id' => $integrationJpa->id,
+                    'integration_user_id' => $leadData['id'],
+                    'business_id' => $businessJpa->id,
+                    'name' => $fieldData['full_name'] ?? 'Sin nombre',
+                    'contact_name' => $fieldData['full_name'] ?? 'Sin nombre',
+                    'contact_phone' => Text::keep($fieldData['phone_number'] ?? '', '0123456789'),
+                    'contact_email' => $fieldData['email'] ?? null,
+                    'message' => 'Sin mensaje',
+                    'source' => 'Meta',
+                    'date' => Trace::getDate('date'),
+                    'time' => Trace::getDate('time'),
+                    'ip' => $request->ip(),
+                    'status_id' => Setting::get('default-lead-status', $businessJpa->id),
+                    'manage_status_id' => Setting::get('default-manage-lead-status', $businessJpa->id),
+                    'origin' => 'Facebook', // Aqui va facebook o instagram
+                    'triggered_by' => 'Facebook Lead Ads',
+                    'status' => true,
+                    'complete_registration' => true,
+                ]);
+
+                // Build form answers note, ignoring full_name, phone_number and email
+                $formString = '<b>Formulario Facebook Forms</b><br>';
+                $questionIndex = 1;
+                foreach ($leadData['field_data'] ?? [] as $field) {
+                    $fieldName = $field['name'] ?? '';
+                    // Skip ignored fields
+                    if (in_array($fieldName, ['full_name', 'phone_number', 'email'])) {
+                        continue;
+                    }
+                    $fieldValue = $field['values'][0] ?? '';
+                    $formString .= $questionIndex . '. ' . $fieldName . '<br>&emsp;' . $fieldValue . '<br>';
+                    $questionIndex++;
+                }
+
+                // Create note with form answers
+                ClientNote::create([
+                    'note_type_id' => '8e895346-3d87-4a87-897a-4192b917c211',
+                    'client_id' => $clientJpa->id,
+                    'name' => 'Formulario Facebook Forms',
+                    'description' => $formString,
+                ]);
+
+                return;
+            };
             $messaging = $entry['messaging'][0] ?? [];
 
             if ($origin == 'whatsapp') {
@@ -132,14 +233,6 @@ class MetaController extends Controller
                 $messageContent = $messaging['message']['text'];
             }
 
-
-            $businessJpa = Business::query()
-                ->where('uuid', $business_uuid)
-                ->where('status', true)
-                ->first();
-            if (!$businessJpa) throw new Exception('Error, negocio no encontrado o inactivo');
-
-
             $messageJpa = Message::create([
                 'wa_id' => $waId,
                 'role' => $inOut == 'in' ? 'Human' : 'AI',
@@ -149,12 +242,6 @@ class MetaController extends Controller
             ]);
 
             if ($inOut == 'out') return;
-
-            $integrationJpa = Integration::query()
-                ->where('meta_service', $origin)
-                ->where('business_id', $businessJpa->id)
-                ->where('status', true)
-                ->first();
 
             if (!$integrationJpa) {
                 $integrationJpa = Integration::updateOrCreate([
@@ -182,6 +269,10 @@ class MetaController extends Controller
                         'id' => $entry['changes'][0]['value']['contacts'][0]['wa_id'],
                         'fullname' => $entry['changes'][0]['value']['contacts'][0]['profile']['name'],
                     ];
+                    break;
+                case 'forms':
+                    $profileData = MetaController::getMetaProfile($messaging['sender']['id'], $integrationJpa->meta_access_token, true);
+                    $profileData['fullname'] = $profileData['first_name'] . ' ' . $profileData['last_name'];
                     break;
                 default:
                     $profileData = MetaController::getFacebookProfile($messaging['sender']['id'], $integrationJpa->meta_access_token, true);

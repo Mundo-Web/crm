@@ -14,6 +14,9 @@ import { toast } from 'sonner'
 const integrationsRest = new IntegrationsRest()
 
 const icons = {
+  'forms': (
+    <img src="/assets/img/meta.png" alt="Formularios de Meta" style={{ height: '200px', width: 'auto' }} />
+  ),
   'messenger': (
     <img src="/assets/img/messenger.svg" alt="Messenger" style={{ height: '200px', width: 'auto' }} />
   ),
@@ -23,9 +26,9 @@ const icons = {
   'whatsapp': (
     <img src="/assets/img/wa-business.svg" alt="WhatsApp" style={{ height: '200px', width: 'auto' }} />
   ),
-  'whatsappevo': (
-    <img src="/assets/img/whatsapp.svg" alt="WhatsApp" style={{ height: '200px', width: 'auto' }} />
-  ),
+  // 'whatsappevo': (
+  //   <img src="/assets/img/whatsapp.svg" alt="WhatsApp" style={{ height: '200px', width: 'auto' }} />
+  // ),
   'tiktok': (
     <img src="/assets/img/tiktok.svg" alt="TikTok" style={{ height: '200px', width: 'auto', opacity: 0.5 }} />
   ),
@@ -125,6 +128,29 @@ const IntegrationWizardModal = ({ service, setService, apikey, auth_token, onClo
 
   // Service-specific configurations
   const serviceConfig = {
+    forms: {
+      name: 'Formularios de Meta',
+      color: '#1877f2',
+      icon: 'mdi-forms',
+      developer_url: 'https://developers.facebook.com/apps',
+      product_name: 'Webhooks',
+      account_type: 'página',
+      permissions: 'leads_retrieval, ads_read, pages_read_engagement, business_management',
+      steps: [
+        'Abrir el <strong>Panel de Desarrolladores</strong> de Meta',
+        'Crear una nueva aplicación o <em>seleccionar una existente</em>',
+        'Agregar el producto <code>"Webhooks"</code> a tu aplicación',
+        'Configurar webhook con la URL proporcionada',
+        'Generar token de página con <span style="color: #0084FF; font-weight: 600;">permisos de leads</span>'
+      ],
+      authSteps: [
+        'Ve a la configuración de tu aplicación en <strong>Meta for Developers</strong>',
+        'Navega a <code>"Webhooks"</code> → <em>"Settings"</em> en el menú lateral',
+        'Selecciona la <span style="color: #0084FF; font-weight: 600;">página de Facebook</span> que deseas conectar',
+        'Genera un <strong>Page Access Token</strong> con permisos de leads',
+        'Copia el <code>Page ID</code> y el <code>Access Token</code> generados'
+      ]
+    },
     messenger: {
       name: 'Messenger',
       color: '#0084FF',
