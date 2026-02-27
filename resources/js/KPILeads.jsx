@@ -2,20 +2,17 @@ import React, { useEffect, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import Adminto from './components/Adminto'
 import CreateReactScript from './Utils/CreateReactScript'
-import SelectFormGroup from './components/form/SelectFormGroup';
 import { renderToString } from 'react-dom/server';
 import KPILeadsRest from './actions/KPILeadsRest';
-import Number2Currency from './Utils/Number2Currency';
 import Global from './Utils/Global';
 import '../css/kpileads.css'
 import Tippy from '@tippyjs/react';
-import { FetchParams, GET } from 'sode-extend-react';
+import { GET } from 'sode-extend-react';
 import Swal from 'sweetalert2';
 import { TrafficSourceAnalysis } from './Reutilizables/KPSLeads/TrafficSourceAnalysis';
 import { DirectCampaignPerformance } from './Reutilizables/KPSLeads/DirectCampaignPerformance';
 import { FunnelChart } from './Reutilizables/KPSLeads/FunnelChart';
 import { ChannelDistribution } from './Reutilizables/KPSLeads/ChannelDistribution';
-import { LandingAnalysis } from './Reutilizables/KPSLeads/LandingAnalysis';
 import { ConversionComparison } from './Reutilizables/KPSLeads/ConversionComparison';
 import { PipelineChart } from './Reutilizables/KPSLeads/PipelineChart';
 import { ArchivedAnalysis } from './Reutilizables/KPSLeads/ArchivedAnalysis';
@@ -526,7 +523,7 @@ const KPILeads = ({ months = [], currentMonth, currentYear }) => {
         </div>
       </div> */}
 
-      <div className='row'>
+      {/* <div className='row'>
         <div className="col-xl-3 col-lg-4 col-sm-6 col-xs-12">
           <div className="card">
             <div className="card-header bg-danger">
@@ -585,9 +582,6 @@ const KPILeads = ({ months = [], currentMonth, currentYear }) => {
                               </Tippy>
                             }
                           </div>
-                          {/* <small className='d-block'>{row.count} lead{row.count != 1 && 's'} atendido{row.count != 1 && 's'}</small>
-                          <small className='d-block'>{row.emails_sent} mail{row.emails_sent != 1 && 's'} enviado{row.emails_sent != 1 && 's'}</small>
-                          <small className='d-block'>{row.converted} lead{row.converted != 1 && 's'} convertido{row.converted != 1 && 's'}</small> */}
                         </p>
                       </div>
                     })
@@ -636,7 +630,7 @@ const KPILeads = ({ months = [], currentMonth, currentYear }) => {
             }
           </div>
         </div>
-      </div>
+      </div> */}
     </>
   );
 };
