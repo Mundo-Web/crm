@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Jobs\MetaAssistantJob;
 use App\Models\Atalaya\Business;
 use App\Models\Atalaya\ServicesByBusiness;
+use App\Models\Campaign;
 use App\Models\Client;
 use App\Models\ClientNote;
 use App\Models\Integration;
@@ -149,7 +150,7 @@ class MetaController extends Controller
                 ->first();
 
             if ($origin === 'forms') {
-                $leadRes = new Fetch(env('FACEBOOK_GRAPH_URL') . '/' . $entry['changes'][0]['value']['leadgen_id'], [
+                $leadRes = new Fetch(env('FACEBOOK_GRAPH_URL') . '/' . $entry['changes'][0]['value']['leadgen_id'] . '?fields=created_time,platform,ad_id,ad_name,campaign_id,campaign_name,form_id,field_data', [
                     'headers' =>  [
                         'Authorization' => 'Bearer ' . $integrationJpa->meta_access_token
                     ]
@@ -173,6 +174,18 @@ class MetaController extends Controller
 
                 if ($clientJpa) return;
 
+                $origins = [
+                    'ig' => 'Instagram',
+                    'fb' => 'Facebook'
+                ];
+                $campaignJpa = Campaign::updateOrCreate([
+                    'business_id' => $businessJpa->id,
+                    'code' => $leadData['campaign_id']
+                ], [
+                    'title' => $leadData['campaign_name'],
+                    'source' => strtolower($origins[$leadData['platform']] ?? $leadData['platform'])
+                ]);
+
                 // Create new client
                 $clientJpa = Client::create([
                     'integration_id' => $integrationJpa->id,
@@ -189,8 +202,9 @@ class MetaController extends Controller
                     'ip' => $request->ip(),
                     'status_id' => Setting::get('default-lead-status', $businessJpa->id),
                     'manage_status_id' => Setting::get('default-manage-lead-status', $businessJpa->id),
-                    'origin' => 'Facebook', // Aqui va facebook o instagram
-                    'triggered_by' => 'Facebook Lead Ads',
+                    'origin' => $origins[$leadData['platform']] ?? $leadData['platform'], // Aqui va facebook o instagram
+                    'triggered_by' => str_replace('_', ' ', $leadData['campaign_name']),
+                    'campaign_id' => $campaignJpa->id,
                     'status' => true,
                     'complete_registration' => true,
                 ]);
