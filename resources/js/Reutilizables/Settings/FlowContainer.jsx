@@ -2,10 +2,29 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import SettingsRest from '../../actions/SettingsRest';
 import areArraySame from '../../Utils/areArraySame';
 import Modal from '../../components/Modal';
+import HtmlContent from '../../Utils/HtmlContent';
 
 const settingsRest = new SettingsRest();
 
-const FlowContainer = ({ questions: questionsDB, isOpen, setIsOpen }) => {
+const getFileIcon = (type) => {
+    if (type.startsWith('image/')) return 'mdi-image'
+    if (type.startsWith('video/')) return 'mdi-video'
+    if (type.startsWith('audio/')) return 'mdi-music'
+    if (type.includes('pdf')) return 'mdi-file-pdf'
+    if (type.includes('word')) return 'mdi-file-word'
+    if (type.includes('sheet')) return 'mdi-file-excel'
+    return 'mdi-file'
+}
+
+const formatFileSize = (bytes) => {
+    if (bytes === 0) return '0 Bytes'
+    const k = 1024
+    const sizes = ['Bytes', 'KB', 'MB', 'GB']
+    const i = Math.floor(Math.log(bytes) / Math.log(k))
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
+}
+
+const FlowContainer = ({ questions: questionsDB, defaultMessages = [], files = [], isOpen, setIsOpen }) => {
     // questionsDB is now expected to be an array of items: [{id, title, type, ...}]
     const [items, setItems] = useState(questionsDB);
     const [savedItems, setSavedItems] = useState(questionsDB);
@@ -32,20 +51,6 @@ const FlowContainer = ({ questions: questionsDB, isOpen, setIsOpen }) => {
     // Form builder states
     const [formTitle, setFormTitle] = useState('');
     const [formQuestions, setFormQuestions] = useState([]);
-
-    // Preset messages list (mock)
-    const presetMessages = [
-        { id: 'kh2yw2oaypvi7uh', title: 'Bienvenida' },
-        { id: 'abc123', title: 'Despedida' },
-        { id: 'def456', title: 'Información de contacto' },
-    ];
-
-    // Repository files list (mock)
-    const repoFiles = [
-        { id: 'file1', title: 'Contrato.pdf' },
-        { id: 'file2', title: 'Manual.pdf' },
-        { id: 'file3', title: 'Políticas.pdf' },
-    ];
 
     // Products list (mock)
     const products = [
@@ -144,7 +149,7 @@ const FlowContainer = ({ questions: questionsDB, isOpen, setIsOpen }) => {
                 if (!modalData) return;
                 newItem = {
                     id: Date.now(),
-                    title: modalData.title,
+                    title: modalData.name,
                     type: 'default_message',
                     message_id: modalData.id
                 };
@@ -154,7 +159,7 @@ const FlowContainer = ({ questions: questionsDB, isOpen, setIsOpen }) => {
                 if (!modalData) return;
                 newItem = {
                     id: Date.now(),
-                    title: modalData.title,
+                    title: modalData.name,
                     type: 'repository',
                     file_id: modalData.id
                 };
@@ -567,7 +572,7 @@ const FlowContainer = ({ questions: questionsDB, isOpen, setIsOpen }) => {
             </div>
 
             {/* Modal */}
-            <Modal modalRef={modalRef} isOpen={modalOpen} onClose={closeModal} title={modalTitle} hideFooter>
+            <Modal modalRef={modalRef} isOpen={modalOpen} onClose={closeModal} title={modalTitle} hideFooter bodyClass='p-0' size='lg'>
                 {modalType === 'form' && (
                     <div>
                         <div className="mb-3">
@@ -597,7 +602,7 @@ const FlowContainer = ({ questions: questionsDB, isOpen, setIsOpen }) => {
                                             onChange={(e) => updateFormQuestion(qIdx, 'text', e.target.value)}
                                             placeholder="Texto de la pregunta"
                                         />
-                                        <button className="btn btn-xs btn-outline-danger" onClick={() => removeFormQuestion(qIdx)}>
+                                        <button className="btn btn-xs btn-outline-danger" onClick={() => removeFormQuestion(qIdx)} type='button'>
                                             <i className="mdi mdi-trash-can"></i>
                                         </button>
                                     </div>
@@ -625,12 +630,12 @@ const FlowContainer = ({ questions: questionsDB, isOpen, setIsOpen }) => {
                                                         const updated = [...formQuestions];
                                                         updated[qIdx].answers.splice(aIdx, 1);
                                                         setFormQuestions(updated);
-                                                    }}>
+                                                    }} type='button'>
                                                         <i className="mdi mdi-trash-can"></i>
                                                     </button>
                                                 </div>
                                             ))}
-                                            <button className="btn btn-xs btn-outline-primary" onClick={() => addFormQuestionAnswer(qIdx)}>
+                                            <button className="btn btn-xs btn-outline-primary" onClick={() => addFormQuestionAnswer(qIdx)} type='button'>
                                                 <i className="mdi mdi-plus me-1"></i>Agregar opción
                                             </button>
                                         </div>
@@ -646,24 +651,44 @@ const FlowContainer = ({ questions: questionsDB, isOpen, setIsOpen }) => {
                 )}
 
                 {modalType === 'message' && (
-                    <div>
+                    <div className='bg-light p-2'>
                         <div className="mb-3">
-                            <label className="form-label fw-semibold">Seleccione un mensaje predeterminado</label>
-                            {presetMessages.map((msg) => (
-                                <div key={msg.id} className="form-check">
-                                    <input
-                                        className="form-check-input"
-                                        type="radio"
-                                        name="presetMessage"
-                                        id={`msg-${msg.id}`}
-                                        checked={modalData?.id === msg.id}
-                                        onChange={() => setModalData(msg)}
-                                    />
-                                    <label className="form-check-label" htmlFor={`msg-${msg.id}`}>
-                                        {msg.title}
-                                    </label>
-                                </div>
-                            ))}
+                            <div className='row g-2'>
+                                {defaultMessages.map((msg) => {
+                                    const content = $(`<div>${msg.description}</div>`).text()
+                                    return (
+                                        <div key={msg.id} className="col-md-6 col-lg-4">
+                                            <label className="card card-body p-2 shadow-sm mb-0 h-100" htmlFor={`msg-${msg.id}`}>
+                                                <div className='d-flex align-items-start gap-1'>
+                                                    <input
+                                                        className="form-check-input flex-shrink-0"
+                                                        type="radio"
+                                                        name="presetMessage"
+                                                        id={`msg-${msg.id}`}
+                                                        checked={modalData?.id === msg.id}
+                                                        onChange={() => setModalData(msg)}
+                                                    />
+                                                    <div className='flex-grow-1'>
+                                                        <div className='fw-semibold' style={{
+                                                            overflow: 'hidden',
+                                                            display: '-webkit-box',
+                                                            WebkitBoxOrient: 'vertical',
+                                                            WebkitLineClamp: 1,
+                                                        }}>{msg.name}</div>
+                                                    </div>
+                                                </div>
+                                                <p className='small text-muted mb-0' style={{
+                                                    overflow: 'hidden',
+                                                    display: '-webkit-box',
+                                                    WebkitBoxOrient: 'vertical',
+                                                    WebkitLineClamp: 2,
+                                                    wordBreak: 'break-all'
+                                                }}>{content}</p>
+                                            </label>
+                                        </div>
+                                    )
+                                })}
+                            </div>
                         </div>
                         <div className="d-flex gap-2 justify-content-end">
                             <button className="btn btn-secondary" onClick={closeModal}>Cancelar</button>
@@ -673,24 +698,41 @@ const FlowContainer = ({ questions: questionsDB, isOpen, setIsOpen }) => {
                 )}
 
                 {modalType === 'file' && (
-                    <div>
+                    <div className='p-2 bg-light'>
                         <div className="mb-3">
-                            <label className="form-label fw-semibold">Seleccione un archivo del repositorio</label>
-                            {repoFiles.map((file) => (
-                                <div key={file.id} className="form-check">
-                                    <input
-                                        className="form-check-input"
-                                        type="radio"
-                                        name="repoFile"
-                                        id={`file-${file.id}`}
-                                        checked={modalData?.id === file.id}
-                                        onChange={() => setModalData(file)}
-                                    />
-                                    <label className="form-check-label" htmlFor={`file-${file.id}`}>
-                                        {file.title}
-                                    </label>
-                                </div>
-                            ))}
+                            <div className="row g-2">
+                                {files.map((file) => {
+                                    console.log(file)
+                                    return <div key={file.id} className="col-md-6 col-lg-4">
+                                        <label className="card card-body p-2 shadow-sm mb-0 h-100" htmlFor={`file-${file.id}`}>
+                                            <div className="d-flex align-items-start gap-2">
+                                                <input
+                                                    className="form-check-input flex-shrink-0 mt-1"
+                                                    type="radio"
+                                                    name="repoFile"
+                                                    id={`file-${file.id}`}
+                                                    checked={modalData?.id === file.id}
+                                                    onChange={() => setModalData(file)}
+                                                />
+                                                <div className="flex-grow-1">
+                                                    <div className="fw-semibold" style={{
+                                                        overflow: 'hidden',
+                                                        display: '-webkit-box',
+                                                        WebkitBoxOrient: 'vertical',
+                                                        WebkitLineClamp: 1
+                                                    }}>
+                                                        {file.name}
+                                                    </div>
+                                                    <div className="small text-muted">
+                                                        <i className={`mdi ${getFileIcon(file.file_mimetype)} me-1`}></i>
+                                                        {file.file_extension?.toUpperCase()} · {formatFileSize(file.file_size)}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </label>
+                                    </div>
+                                })}
+                            </div>
                         </div>
                         <div className="d-flex gap-2 justify-content-end">
                             <button className="btn btn-secondary" onClick={closeModal}>Cancelar</button>

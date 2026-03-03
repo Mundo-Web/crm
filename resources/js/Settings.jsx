@@ -18,7 +18,7 @@ import StatusesRest from './actions/StatusesRest.js'
 const settingsRest = new SettingsRest()
 const statusesRest = new StatusesRest()
 
-const Settings = ({ can, constants, statuses }) => {
+const Settings = ({ can, constants, statuses, defaultMessages = [], files = [] }) => {
   const modalRef = useRef()
 
   // Form elements ref
@@ -536,7 +536,7 @@ const Settings = ({ can, constants, statuses }) => {
             </div>
           </div>
         </div>
-        <FlowContainer questions={JSON.parse(questionsObj.value ?? '[]')} isOpen={canvasOpen} setIsOpen={setCanvasOpen} onModalOpen={onModalOpen} />
+        <FlowContainer questions={JSON.parse(questionsObj.value ?? '[]')} isOpen={canvasOpen} defaultMessages={defaultMessages} files={files} setIsOpen={setCanvasOpen} onModalOpen={onModalOpen} />
       </div>
     </div>
     <Modal modalRef={leadStatusModal} title='' onSubmit={onLeadStatusSubmit} size='sm'>

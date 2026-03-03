@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\DefaultMessage;
+use App\Models\Repository;
 use App\Models\Setting;
 use App\Models\Status;
 use Illuminate\Http\Request;
@@ -20,9 +22,16 @@ class SettingController extends BasicController
         $statuses = Status::where('business_id', Auth::user()->business_id)
             ->where('status', true)
             ->get();
+        $defaultMessages = DefaultMessage::query()
+            ->where('type', 'whatsapp')
+            ->where('business_id', Auth::user()->business_id)
+            ->get();
+        $files = Repository::where('business_id', Auth::user()->business_id)->get();
         return [
             'constants' => $constants,
-            'statuses' => $statuses
+            'statuses' => $statuses,
+            'defaultMessages' => $defaultMessages,
+            'files' => $files
         ];
     }
 
