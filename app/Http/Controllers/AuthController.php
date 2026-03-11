@@ -81,7 +81,7 @@ class AuthController extends Controller
       $serviceJpa = ServicesByBusiness::select('services_by_businesses.*')
         ->join('services', 'services.id', '=', 'services_by_businesses.service_id')
         ->join('businesses', 'businesses.id', '=', 'services_by_businesses.business_id')
-        ->where('services.correlative', env('APP_CORRELATIVE'))
+        ->where('services.correlative', config('app.correlative'))
         ->where('services_by_businesses.business_id', Auth::user()->business_id)
         ->where('businesses.created_by', Auth::user()->id)
         ->first();
@@ -185,7 +185,7 @@ class AuthController extends Controller
         ->join('services', 'services.id', 'services_by_businesses.service_id')
         ->join('businesses', 'businesses.id', 'services_by_businesses.business_id')
         ->where('user_id', Auth::user()->id)
-        ->where('services.correlative', env('APP_CORRELATIVE'))
+        ->where('services.correlative', config('app.correlative'))
         ->where('businesses.uuid', $business)
         ->first();
       if (!$ubsbb) throw new Exception('No tienes permisos para este servicio');
@@ -210,7 +210,7 @@ class AuthController extends Controller
 
     $service = ServicesByBusiness::query()
       ->join('services', 'services.id', '=', 'services_by_businesses.service_id')
-      ->where('services.correlative', env('APP_CORRELATIVE'))
+      ->where('services.correlative', config('app.correlative'))
       ->where('services_by_businesses.business_id', Auth::user()->business_id)
       ->first();
 

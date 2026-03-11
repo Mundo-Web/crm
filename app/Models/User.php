@@ -24,6 +24,7 @@ class User extends Authenticable
     use HasRoles;
     use HasPermissions;
 
+    protected $connection = 'mysql';
     protected $table = 'users';
 
     /**
@@ -96,7 +97,7 @@ class User extends Authenticable
             ->join('services_by_businesses', 'services_by_businesses.id', 'users_by_services_by_businesses.service_by_business_id')
             ->join('services', 'services.id', 'services_by_businesses.service_id')
             ->join('businesses', 'businesses.id', 'services_by_businesses.business_id')
-            ->where('services.correlative', env('APP_CORRELATIVE'))
+            ->where('services.correlative', config('app.correlative'))
             ->where('services_by_businesses.business_id', Auth::user()->business_id);
 
         if ($id !== null) {
@@ -106,17 +107,37 @@ class User extends Authenticable
         $usersJpa = $query->get();
 
         foreach ($usersJpa as $userJpa) {
-            $serviceUser = User::updateOrCreate([
-                'user_id' => $userJpa->id,
-                'business_id' => Auth::user()->business_id
-            ], [
-                'user_id' => $userJpa->id,
-                'business_id' => Auth::user()->business_id,
-                'name' => $userJpa->name,
-                'lastname' => $userJpa->lastname,
-                'fullname' => $userJpa->name . ' ' . $userJpa->lastname,
-                'email' => $userJpa->email,
-            ]);
+            $businessId = Auth::user()->business_id;
+            $uExists = DB::connection('mysql')->table('crm.users')
+                ->where('user_id', $userJpa->id)
+                ->where('business_id', $businessId)
+                ->exists();
+
+            $uData = [
+                'user_id'    => $userJpa->id,
+                'business_id' => $businessId,
+                'name'       => $userJpa->name,
+                'lastname'   => $userJpa->lastname,
+                'fullname'   => $userJpa->name . ' ' . $userJpa->lastname,
+                'email'      => $userJpa->email,
+                'updated_at' => now(),
+            ];
+
+            if ($uExists) {
+                DB::connection('mysql')->table('crm.users')
+                    ->where('user_id', $userJpa->id)
+                    ->where('business_id', $businessId)
+                    ->update($uData);
+            } else {
+                $uData['created_at'] = now();
+                DB::connection('mysql')->table('crm.users')->insert($uData);
+            }
+
+            $serviceUser = User::on('mysql')->from('crm.users')
+                ->where('user_id', $userJpa->id)
+                ->where('business_id', $businessId)
+                ->first();
+
             $serviceUser->getAllPermissions();
             $userJpa->service_user = $serviceUser;
         }

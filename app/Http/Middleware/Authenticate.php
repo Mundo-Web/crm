@@ -55,22 +55,41 @@ class Authenticate extends Middleware
         //     ->where('user_id', Auth::user()->id)
         //     ->first();
 
-        $serviceUser = User::updateOrCreate([
-            'user_id' => $hasPermission->id,
-            'business_id' => $hasPermission->business_id
-        ], [
-            'user_id' => $hasPermission->id,
-            'business_id' => $hasPermission->business_id,
-            'name' => $hasPermission->name,
-            'lastname' => $hasPermission->lastname,
-            'email' => $hasPermission->email,
-            'fullname' => $hasPermission->name . ' ' . $hasPermission->lastname,
-            'relative_id' => $hasPermission->relative_id,
-            // 'mailing_sign' => $signJpa->sign ?? null
-        ]);
+        $userExists = DB::connection('mysql')->table('crm.users')
+            ->where('user_id', $hasPermission->id)
+            ->where('business_id', $hasPermission->business_id)
+            ->exists();
 
-        $serviceUser->getAllPermissions();
-        Auth::user()->service_user = $serviceUser;
+        $userData = [
+            'user_id'    => $hasPermission->id,
+            'business_id' => $hasPermission->business_id,
+            'name'       => $hasPermission->name,
+            'lastname'   => $hasPermission->lastname,
+            'email'      => $hasPermission->email,
+            'fullname'   => $hasPermission->name . ' ' . $hasPermission->lastname,
+            'relative_id' => $hasPermission->relative_id,
+            'updated_at' => now(),
+        ];
+
+        if ($userExists) {
+            DB::connection('mysql')->table('crm.users')
+                ->where('user_id', $hasPermission->id)
+                ->where('business_id', $hasPermission->business_id)
+                ->update($userData);
+        } else {
+            $userData['created_at'] = now();
+            DB::connection('mysql')->table('crm.users')->insert($userData);
+        }
+
+        $serviceUser = User::on('mysql')->from('crm.users')
+            ->where('user_id', $hasPermission->id)
+            ->where('business_id', $hasPermission->business_id)
+            ->first();
+
+        if ($serviceUser) {
+            $serviceUser->getAllPermissions();
+            Auth::user()->service_user = $serviceUser;
+        }
 
         return $next($request);
     }

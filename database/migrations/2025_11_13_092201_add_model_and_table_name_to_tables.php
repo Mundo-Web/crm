@@ -28,41 +28,46 @@ return new class extends Migration
 
         // Actualizar registros con los nuevos campos
         Table::updateOrCreate(['id' => '1783c832-8dfb-4d30-810c-bc88345507bf'], [
+            'name' => 'Productos',
             'model_name' => 'App\Models\Product',
             'table_name' => 'products',
             'column_pivot' => 'status_id'
         ]);
 
         Table::updateOrCreate(['id' => '9c27e649-574a-47eb-82af-851c5d425434'], [
+            'name' => 'Gestión',
             'model_name' => 'App\Models\Client',
             'table_name' => 'clients',
             'column_pivot' => 'manage_status_id'
         ]);
 
         Table::updateOrCreate(['id' => 'a8367789-666e-4929-aacb-7cbc2fbf74de'], [
+            'name' => 'Clientes',
             'model_name' => 'App\Models\Client',
             'table_name' => 'clients',
             'column_pivot' => 'status_id'
         ]);
 
         Table::updateOrCreate(['id' => 'c81ad4fb-a895-4f4c-b4b3-5989a7a66a85'], [
+            'name' => 'Notas',
             'model_name' => 'App\Models\Note',
             'table_name' => 'client_notes',
             'column_pivot' => 'status_id'
         ]);
 
         Table::updateOrCreate(['id' => 'cd8bd48f-c73c-4a62-9935-024139f3be5f'], [
+            'name' => 'Proyectos',
             'model_name' => 'App\Models\Project',
             'table_name' => 'projects',
             'column_pivot' => 'status_id'
         ]);
 
         Table::updateOrCreate(['id' => 'e05a43e5-b3a6-46ce-8d1f-381a73498f33'], [
+            'name' => 'Leads (Pipelines)',
             'model_name' => 'App\Models\Client',
             'table_name' => 'clients',
             'column_pivot' => 'status_id'
         ]);
-        
     }
 
     /**
