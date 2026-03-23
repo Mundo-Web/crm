@@ -159,60 +159,20 @@ class MetaController extends Controller
                 'payload' => $data
             ]);
 
-            $wabaId = $data['entry'][0]['id'] ?? null;
-            $businessJpa = null;
-            $integrationJpa = null;
-
-            // Intento 1: Por ID de la cuenta de Meta (WABA ID / Page ID)
-            if ($wabaId && $wabaId != "0") {
-                $integrationJpa = Integration::where('meta_business_id', $wabaId)
-                    ->where('meta_service', $origin)
-                    ->where('status', true)
-                    ->first();
-                
-                if ($integrationJpa) {
-                    $businessJpa = $integrationJpa->business;
-                    if ($businessJpa) {
-                        Log::info("Negocio identificado por ID de Meta [{$wabaId}]: [{$businessJpa->name}] (ID: {$businessJpa->id})");
-                    }
-                }
-            }
-
-            // Intento 2 (Fallback): Por UUID de la URL (Pruebas y alta de nuevos negocios)
+            $businessJpa = Business::query()
+                ->where('uuid', $business_uuid)
+                ->where('status', true)
+                ->first();
             if (!$businessJpa) {
-                $businessJpa = Business::where('uuid', $business_uuid)->where('status', true)->first();
-                if ($businessJpa) {
-                    Log::info("Negocio identificado por UUID en URL [{$business_uuid}]: [{$businessJpa->name}] (ID: {$businessJpa->id})");
-                }
+                Log::error('Webhook error: business not found', ['uuid' => $business_uuid]);
+                throw new Exception('Error, negocio no encontrado o inactivo');
             }
 
-            if (!$businessJpa) {
-                Log::error("No se pudo identificar el negocio para la petición de Meta", ['waba_id' => $wabaId, 'uuid' => $business_uuid]);
-                return;
-            }
-
-            if (!$integrationJpa) {
-                $integrationJpa = Integration::where('meta_service', $origin)
-                    ->where('business_id', $businessJpa->id)
-                    ->where('status', true)
-                    ->first();
-            }
-
-            if (!$integrationJpa) {
-                Log::warning("No active [{$origin}] integration found for Business ID: {$businessJpa->id}. Creating one...");
-                $integrationJpa = Integration::create([
-                    'meta_service' => $origin,
-                    'meta_business_id' => $entry['id'] ?? 'Pending',
-                    'business_id' => $businessJpa->id,
-                    'status' => true
-                ]);
-            }
-
-            // Actualizar WABA ID si es distinto y es un ID real (no dummy '0')
-            if (isset($entry['id']) && $entry['id'] != "0" && $integrationJpa->meta_business_id != $entry['id']) {
-                Log::info("Updating WABA ID for Business {$businessJpa->id} from [{$integrationJpa->meta_business_id}] to [{$entry['id']}]");
-                $integrationJpa->update(['meta_business_id' => $entry['id']]);
-            }
+            $integrationJpa = Integration::query()
+                ->where('meta_service', $origin)
+                ->where('business_id', $businessJpa->id)
+                ->where('status', true)
+                ->first();
 
             if ($origin === 'forms') {
                 Log::info('Processing Meta Lead Form event');
