@@ -188,8 +188,8 @@ class MetaController extends Controller
                 ]);
             }
 
-            // Actualizar WABA ID si es distinto (para corregir IDs dummy)
-            if (isset($entry['id']) && $integrationJpa->meta_business_id != $entry['id']) {
+            // Actualizar WABA ID si es distinto y es un ID real (no dummy '0')
+            if (isset($entry['id']) && $entry['id'] != "0" && $integrationJpa->meta_business_id != $entry['id']) {
                 Log::info("Updating WABA ID for Business {$businessJpa->id} from [{$integrationJpa->meta_business_id}] to [{$entry['id']}]");
                 $integrationJpa->update(['meta_business_id' => $entry['id']]);
             }
