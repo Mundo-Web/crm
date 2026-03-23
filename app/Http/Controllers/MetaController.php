@@ -16,6 +16,7 @@ use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use SoDe\Extend\Fetch;
 use SoDe\Extend\File;
 use SoDe\Extend\JSON;
@@ -103,7 +104,16 @@ class MetaController extends Controller
             $challenge = $request->query('hub_challenge');
             $verify_token = $request->query('hub_verify_token');
 
-            if (!in_array($origin, ['messenger', 'instagram', 'whatsapp', 'forms'])) return response('Error, origen no permitido', 403);
+            Log::info('Meta webhook verification attempt', [
+                'origin' => $origin,
+                'business_uuid' => $business_uuid,
+                'verify_token' => $verify_token
+            ]);
+
+            if (!in_array($origin, ['messenger', 'instagram', 'whatsapp', 'forms'])) {
+                Log::warning('Webhook verification failed: invalid origin', ['origin' => $origin]);
+                return response('Error, origen no permitido', 403);
+            }
 
             $sbbJpa = ServicesByBusiness::query()
                 ->join('businesses', 'services_by_businesses.business_id', '=', 'businesses.id')
@@ -113,15 +123,21 @@ class MetaController extends Controller
                 ->where('businesses.status', true)
                 ->first();
 
-            if (!$sbbJpa) return response('Error, negocio no encontrado o inactivo', 403);
+            if (!$sbbJpa) {
+                Log::warning('Webhook verification failed: business not found or inactive', ['uuid' => $business_uuid]);
+                return response('Error, negocio no encontrado o inactivo', 403);
+            }
 
-            if (hash('sha256', $business_uuid) != $verify_token) return response('Error, token de validación incorrecto', 403);
+            $expected_token = hash('sha256', $business_uuid);
+            if ($expected_token != $verify_token) {
+                Log::warning('Webhook verification failed: token mismatch', [
+                    'expected' => $expected_token,
+                    'received' => $verify_token
+                ]);
+                return response('Error, token de validación incorrecto', 403);
+            }
 
-            // Integration::updateOrCreate([
-            //     'meta_service' => $origin,
-            //     'business_id' => $sbbJpa->business_id,
-            // ]);
-
+            Log::info('Webhook verification successful', ['origin' => $origin]);
             return $challenge;
         });
 
@@ -137,11 +153,20 @@ class MetaController extends Controller
 
             $entry = $data['entry'][0] ?? [];
 
+            Log::info('Meta webhook received', [
+                'origin' => $origin,
+                'business_uuid' => $business_uuid,
+                'payload' => $data
+            ]);
+
             $businessJpa = Business::query()
                 ->where('uuid', $business_uuid)
                 ->where('status', true)
                 ->first();
-            if (!$businessJpa) throw new Exception('Error, negocio no encontrado o inactivo');
+            if (!$businessJpa) {
+                Log::error('Webhook error: business not found', ['uuid' => $business_uuid]);
+                throw new Exception('Error, negocio no encontrado o inactivo');
+            }
 
             $integrationJpa = Integration::query()
                 ->where('meta_service', $origin)
@@ -150,6 +175,7 @@ class MetaController extends Controller
                 ->first();
 
             if ($origin === 'forms') {
+                Log::info('Processing Meta Lead Form event');
                 $leadRes = new Fetch(env('FACEBOOK_GRAPH_URL') . '/' . $entry['changes'][0]['value']['leadgen_id'] . '?fields=created_time,platform,ad_id,ad_name,campaign_id,campaign_name,form_id,field_data', [
                     'headers' =>  [
                         'Authorization' => 'Bearer ' . $integrationJpa->meta_access_token
@@ -172,7 +198,10 @@ class MetaController extends Controller
                     ->where('status', true)
                     ->first();
 
-                if ($clientJpa) return;
+                if ($clientJpa) {
+                    Log::info('Lead already exists, skipping', ['lead_id' => $leadData['id']]);
+                    return;
+                }
 
                 $origins = [
                     'ig' => 'Instagram',
@@ -230,22 +259,32 @@ class MetaController extends Controller
                     'name' => 'Formulario Facebook Forms',
                     'description' => $formString,
                 ]);
+                Log::info('Lead created and note added');
 
                 return;
             };
             $messaging = $entry['messaging'][0] ?? [];
 
             if ($origin == 'whatsapp') {
-                if (!isset($entry['changes'][0]['value']['messages'][0])) return;
+                if (!isset($entry['changes'][0]['value']['messages'][0])) {
+                    Log::info('Whatsapp event without messages, skipping');
+                    return;
+                }
                 $message = $entry['changes'][0]['value']['messages'][0];
                 $inOut = 'in';
                 $waId = $message['from'];
-                $messageContent = $message['text']['body'];
+                $messageContent = $message['text']['body'] ?? '';
             } else {
                 $inOut = $entry['id'] == $messaging['sender']['id'] ? 'out' : 'in';
                 $waId = $inOut == 'in' ? $messaging['sender']['id'] : $messaging['recipient']['id'];
-                $messageContent = $messaging['message']['text'];
+                $messageContent = $messaging['message']['text'] ?? '';
             }
+
+            Log::info('Identifying event', [
+                'inOut' => $inOut,
+                'waId' => $waId,
+                'messageContent' => $messageContent
+            ]);
 
             $messageJpa = Message::create([
                 'wa_id' => $waId,
@@ -255,7 +294,10 @@ class MetaController extends Controller
                 'business_id' => $businessJpa->id
             ]);
 
-            if ($inOut == 'out') return;
+            if ($inOut == 'out') {
+                Log::info('Outgoing message recorded, processing finished');
+                return;
+            }
 
             if (!$integrationJpa) {
                 $integrationJpa = Integration::updateOrCreate([
