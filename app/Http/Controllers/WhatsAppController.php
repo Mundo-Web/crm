@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Atalaya\Business;
 use App\Models\Client;
 use App\Models\Message;
+use App\Models\Integration;
+use Illuminate\Support\Facades\Log;
 use Exception;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
@@ -291,12 +293,34 @@ class WhatsAppController extends Controller
     public function send(Request $request)
     {
         $response = Response::simpleTryCatch(function () use ($request) {
-            $businessJpa = Business::with(['person'])->find(Auth::user()->business_id);
+
+            Log::info('WhatsApp send started', [
+                'client_id' => $request->client_id,
+                'phone' => $request->phone,
+                'message_length' => strlen($request->message),
+                'user_id' => Auth::user()->id,
+                'business_id' => Auth::user()->business_id,
+            ]);
+
             $clientJpa = Client::with('integration')->find($request->client_id);
+            $businessJpa = Business::with(['person'])->find(Auth::user()->business_id);
+
+            if (!$clientJpa) {
+                Log::warning('Client not found', ['client_id' => $request->client_id]);
+                throw new Exception('Cliente no encontrado');
+            }
 
             $number = $clientJpa->contact_phone ?? null;
             if ($request->phone) $number = $request->phone;
-            if (!$number) throw new Exception('Número no encontrado');
+            if (!$number) {
+                Log::warning('WhatsApp number not found for client', ['client_id' => $request->client_id]);
+                throw new Exception('Número no encontrado');
+            }
+
+            Log::debug('Target number and client identified', [
+                'number' => $number,
+                'client_name' => $clientJpa->contact_name
+            ]);
 
             $message = $request->message;
 
@@ -345,8 +369,23 @@ class WhatsAppController extends Controller
 
             // Send message via Meta Graph API
             if (!$isDummy) {
-                $integration = $clientJpa->integration;
+                $integration = $clientJpa->integration ?? Integration::where('business_id', Auth::user()->business_id)
+                    ->where('meta_service', 'whatsapp')
+                    ->where('status', true)
+                    ->first();
+
+                if (!$integration) {
+                    Log::error('Meta integration not found', ['business_id' => Auth::user()->business_id]);
+                    throw new Exception('No hay credenciales de Meta configuradas');
+                }
+
                 $url = env('FACEBOOK_GRAPH_URL') . '/' . $integration->meta_number_id . '/messages';
+
+                Log::info('Preparing Meta request', [
+                    'url' => $url,
+                    'is_custom_integration' => !!$clientJpa->integration,
+                    'integration_id' => $integration->id
+                ]);
 
                 if (Text::startsWith($message, '/signature:')) {
                     $mediaPath = str_replace('/signature:', '', $message);
@@ -446,10 +485,18 @@ class WhatsAppController extends Controller
                 }
 
                 if (!$res->ok()) {
+                    Log::error('Meta API response error', [
+                        'status' => $res->status(),
+                        'body' => $res->json(),
+                        'number' => $number
+                    ]);
                     throw new Exception('Ocurrió un error al enviar el mensaje: ' . $res->body());
                 }
+
+                Log::info('Meta message sent successfully', ['number' => $number]);
             }
 
+            Log::debug('Storing message in database');
             // Store message in DB
             Message::create([
                 'wa_id' => $number,
@@ -459,6 +506,7 @@ class WhatsAppController extends Controller
                 'business_id' => Auth::user()->business_id,
                 'seen' => true
             ]);
+            Log::info('Message stored in database');
         });
         return response($response->toArray(), $response->status);
     }
