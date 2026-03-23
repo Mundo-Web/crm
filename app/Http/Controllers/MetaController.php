@@ -168,11 +168,31 @@ class MetaController extends Controller
                 throw new Exception('Error, negocio no encontrado o inactivo');
             }
 
-            $integrationJpa = Integration::query()
-                ->where('meta_service', $origin)
+            Log::info("Meta webhook received for Business: [{$businessJpa->name}] (ID: {$businessJpa->id})", [
+                'origin' => $origin,
+                'payload' => $data
+            ]);
+
+            $integrationJpa = Integration::where('meta_service', $origin)
                 ->where('business_id', $businessJpa->id)
                 ->where('status', true)
                 ->first();
+
+            if (!$integrationJpa) {
+                Log::warning("No active [{$origin}] integration found for Business ID: {$businessJpa->id}. Creating one...");
+                $integrationJpa = Integration::create([
+                    'meta_service' => $origin,
+                    'meta_business_id' => $entry['id'] ?? 'Pending',
+                    'business_id' => $businessJpa->id,
+                    'status' => true
+                ]);
+            }
+
+            // Actualizar WABA ID si es distinto (para corregir IDs dummy)
+            if (isset($entry['id']) && $integrationJpa->meta_business_id != $entry['id']) {
+                Log::info("Updating WABA ID for Business {$businessJpa->id} from [{$integrationJpa->meta_business_id}] to [{$entry['id']}]");
+                $integrationJpa->update(['meta_business_id' => $entry['id']]);
+            }
 
             if ($origin === 'forms') {
                 Log::info('Processing Meta Lead Form event');
