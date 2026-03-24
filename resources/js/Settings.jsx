@@ -35,6 +35,7 @@ const Settings = ({
     const finishedProjectStatusRef = useRef();
     const convertedLeadStatusRef = useRef();
     const newLeadStatusRef = useRef();
+    const defaultLeadStatusRef = useRef();
     const archivedLeadStatusRef = useRef();
     const archivedLeadStatusDaysRef = useRef();
     const archivedLeadStatusDirectRef = useRef();
@@ -252,12 +253,22 @@ const Settings = ({
         await settingsRest.save(request);
     };
 
+    const onDefaultLeadStatusChange = async (e) => {
+        const request = {
+            name: "default-lead-status",
+            value: e.target.value,
+        };
+        await settingsRest.save(request);
+    };
+
     const archivedLeadStatus = getConstant("archived-lead-status");
     const archivedLeadStatusDays = getConstant("archived-lead-status-days");
     const archivedLeadStatusDirect = getConstant("archived-lead-status-direct");
 
     const finishedProjectStatus = getConstant("finished-project-status");
     const convertedLeadStatus = getConstant("converted-lead-status");
+    const newLeadStatus = getConstant("default-manage-lead-status");
+    const defaultLeadStatus = getConstant("default-lead-status");
 
     useEffect(() => {
         window.location.hash = activeTab;
@@ -278,7 +289,10 @@ const Settings = ({
             .val(convertedLeadStatus.value)
             .select2();
         $(newLeadStatusRef.current)
-            .val(JSON.parse(newLeadStatus.value))
+            .val(newLeadStatus.value)
+            .select2();
+        $(defaultLeadStatusRef.current)
+            .val(defaultLeadStatus.value)
             .select2();
     }, [null]);
 
@@ -512,23 +526,21 @@ const Settings = ({
                                             </h4>
                                             <div className="row">
                                                 <div className="col-md-4 col-sm-6 col-xs-12">
-                                                    <form
+                                                    <div
                                                         className="card card-body border p-2"
-                                                        onSubmit={
-                                                            onArchivedLeadStatusSubmit
-                                                        }
                                                         style={{
                                                             cursor: "default",
                                                         }}
                                                     >
                                                         <h5 className="card-title mb-1">
                                                             Estado para Entrada
-                                                            de Leads
+                                                            de Leads [Gestión]
                                                         </h5>
                                                         <p className="card-text">
-                                                            ¿Qué estado define
-                                                            mejor a un lead que
-                                                            entra al sistema?
+                                                            ¿Qué estado de
+                                                            gestión define mejor
+                                                            a un lead que entra
+                                                            al sistema?
                                                         </p>
                                                         <SelectFormGroup
                                                             eRef={
@@ -568,7 +580,65 @@ const Settings = ({
                                                                     },
                                                                 )}
                                                         </SelectFormGroup>
-                                                    </form>
+                                                    </div>
+                                                </div>
+
+                                                <div className="col-md-4 col-sm-6 col-xs-12">
+                                                    <div
+                                                        className="card card-body border p-2"
+                                                        style={{
+                                                            cursor: "default",
+                                                        }}
+                                                    >
+                                                        <h5 className="card-title mb-1">
+                                                            Estado para Entrada
+                                                            de Leads [Lead]
+                                                        </h5>
+                                                        <p className="card-text">
+                                                            ¿Qué estado de lead
+                                                            define mejor a un
+                                                            lead que entra al
+                                                            sistema?
+                                                        </p>
+                                                        <SelectFormGroup
+                                                            eRef={
+                                                                defaultLeadStatusRef
+                                                            }
+                                                            label="Escoge un estado"
+                                                            noMargin
+                                                            onChange={
+                                                                onDefaultLeadStatusChange
+                                                            }
+                                                        >
+                                                            {statuses
+                                                                .filter(
+                                                                    (item) =>
+                                                                        item.table_id ==
+                                                                        "e05a43e5-b3a6-46ce-8d1f-381a73498f33",
+                                                                )
+                                                                .map(
+                                                                    (
+                                                                        status,
+                                                                        index,
+                                                                    ) => {
+                                                                        return (
+                                                                            <option
+                                                                                key={
+                                                                                    index
+                                                                                }
+                                                                                value={
+                                                                                    status.id
+                                                                                }
+                                                                            >
+                                                                                {
+                                                                                    status.name
+                                                                                }
+                                                                            </option>
+                                                                        );
+                                                                    },
+                                                                )}
+                                                        </SelectFormGroup>
+                                                    </div>
                                                 </div>
 
                                                 <div className="col-md-4 col-sm-6 col-xs-12">
