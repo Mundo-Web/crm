@@ -1,71 +1,93 @@
-import React, { useEffect, useState } from 'react'
-import Logout from '../actions/Logout'
-import MenuItem from './MenuItem'
-import MenuItemContainer from './MenuItemContainer'
-import Tippy from '@tippyjs/react'
-import 'tippy.js/dist/tippy.css';
-import BusinessCard from '../Reutilizables/Business/BusinessCard'
-import useWebSocket from '../Reutilizables/CustomHooks/useWebSocket'
-import MessagesRest from '../actions/MessagesRest'
-import useCrossTabSelectedUsers from '../Reutilizables/CustomHooks/useCrossTabSelectedUsers'
-import LaravelSession from '../Utils/LaravelSession'
-import Global from '../Utils/Global'
+import React, { useEffect, useState } from "react";
+import Logout from "../actions/Logout";
+import MenuItem from "./MenuItem";
+import MenuItemContainer from "./MenuItemContainer";
+import Tippy from "@tippyjs/react";
+import "tippy.js/dist/tippy.css";
+import BusinessCard from "../Reutilizables/Business/BusinessCard";
+import useWebSocket from "../Reutilizables/CustomHooks/useWebSocket";
+import MessagesRest from "../actions/MessagesRest";
+import useCrossTabSelectedUsers from "../Reutilizables/CustomHooks/useCrossTabSelectedUsers";
+import LaravelSession from "../Utils/LaravelSession";
+import Global from "../Utils/Global";
 
-const audio = new Audio('/assets/sounds/message.mp3');
+const audio = new Audio("/assets/sounds/message.mp3");
 
-const messagesRest = new MessagesRest()
+const messagesRest = new MessagesRest();
 
-const Menu = ({ session, theme, can, whatsAppStatus, APP_PROTOCOL, APP_DOMAIN, leadsCount, tasksCount, businesses, wsActive, pinned, setPinned }) => {
+const Menu = ({
+    session,
+    theme,
+    can,
+    whatsAppStatus,
+    APP_PROTOCOL,
+    APP_DOMAIN,
+    leadsCount,
+    tasksCount,
+    businesses,
+    wsActive,
+    pinned,
+    setPinned,
+}) => {
+    const [chatBadge, setChatBadge] = useState(0);
+    const [selectedUsers] = useCrossTabSelectedUsers(
+        LaravelSession.business_id,
+        [LaravelSession.service_user.id],
+    );
+    const { socket } = useWebSocket();
 
-  const [chatBadge, setChatBadge] = useState(0)
-  const [selectedUsers] = useCrossTabSelectedUsers(LaravelSession.business_id, [LaravelSession.service_user.id])
-  const { socket } = useWebSocket()
-
-  let mainRole = {}
-  if (session.is_owner) {
-    mainRole = {
-      name: 'Owner',
-      description: 'Persona que crea la empresa'
+    let mainRole = {};
+    if (session.is_owner) {
+        mainRole = {
+            name: "Owner",
+            description: "Persona que crea la empresa",
+        };
+    } else {
+        mainRole = session.service_user.roles[0] ?? {
+            name: "Sin rol",
+            description: "El usuario aún no tiene un rol asignado",
+        };
     }
-  } else {
-    mainRole = session.service_user.roles[0] ?? {
-      name: 'Sin rol',
-      description: 'El usuario aún no tiene un rol asignado'
-    }
-  }
 
-  const currentBusiness = businesses.find(({ id }) => session.business_id == id)
-  const otherBusinesses = businesses.filter(({ id }) => session.business_id != id)
+    const currentBusiness = businesses.find(
+        ({ id }) => session.business_id == id,
+    );
+    const otherBusinesses = businesses.filter(
+        ({ id }) => session.business_id != id,
+    );
 
-  const idBirthday = moment(session.birthdate).format('MM-DD') == moment().format('MM-DD')
+    const idBirthday =
+        moment(session.birthdate).format("MM-DD") == moment().format("MM-DD");
 
-  const updateChatBadge = async () => {
-    const result = await messagesRest.countUnSeenMessages(selectedUsers)
-    if (result === null) return
-    setChatBadge(result)
-  }
-  useEffect(() => {
-    socket.on('client.updated.menu', (client) => {
-      if (
-        (selectedUsers.length === 0) ||
-        (selectedUsers.length > 0 && selectedUsers.includes(client.assigned_to))
-      ) {
-        client.notify && audio.play()
-      }
-      updateChatBadge()
-    })
-    return () => {
-      socket.off('client.updated.menu')
-    }
-  }, [socket, selectedUsers])
+    const updateChatBadge = async () => {
+        const result = await messagesRest.countUnSeenMessages(selectedUsers);
+        if (result === null) return;
+        setChatBadge(result);
+    };
+    useEffect(() => {
+        socket.on("client.updated.menu", (client) => {
+            if (
+                selectedUsers.length === 0 ||
+                (selectedUsers.length > 0 &&
+                    selectedUsers.includes(client.assigned_to))
+            ) {
+                client.notify && audio.play();
+            }
+            updateChatBadge();
+        });
+        return () => {
+            socket.off("client.updated.menu");
+        };
+    }, [socket, selectedUsers]);
 
-  useEffect(() => {
-    updateChatBadge()
-  }, [selectedUsers])
+    useEffect(() => {
+        updateChatBadge();
+    }, [selectedUsers]);
 
-  return (<div className="left-side-menu py-0">
-    <div className="h-100 pt-3 driver-js-menu" data-simplebar >
-      {/* <div className="user-box text-center">
+    return (
+        <div className="left-side-menu py-0">
+            <div className="h-100 pt-3 driver-js-menu" data-simplebar>
+                {/* <div className="user-box text-center">
         <img src={`//${APP_DOMAIN}/api/profile/thumbnail/${session.relative_id}?v=${new Date(session.updated_at).getTime()}`} alt={session.name} title={session.name}
           className="rounded-circle img-thumbnail avatar-md" style={{ backgroundColor: 'unset', borderColor: '#98a6ad', objectFit: 'cover', objectPosition: 'center' }} />
         <div className="dropdown">
@@ -103,140 +125,333 @@ const Menu = ({ session, theme, can, whatsAppStatus, APP_PROTOCOL, APP_DOMAIN, l
           <p className="text-muted left-user-info" >{mainRole.name}</p>
         </Tippy>
       </div> */}
-      <div className="user-box w-100 mb-2" style={{ padding: '0px 20px' }}>
-        <div className='position-relative' style={{ width: 'max-content', height: 'max-content' }}>
-          <img
-            src={`//${Global.APP_DOMAIN}/api/profile/thumbnail/${session.relative_id}?v=${new Date(session.updated_at).getTime()}`}
-            alt={session.name}
-            title={session.name}
-            onError={(e) => { e.target.src = `//${Global.APP_DOMAIN}/assets/img/user-404.svg`; }}
-            className="rounded-circle img-thumbnail avatar-md mb-2"
-            style={{
-              padding: 0,
-              backgroundColor: 'unset',
-              // borderColor: '#98a6ad',
-              objectFit: 'cover',
-              objectPosition: 'center'
-            }}
-          />
-          <span
-            className={`d-block ${wsActive ? 'bg-success' : 'bg-danger'} position-absolute rounded-circle`}
-            style={{ width: '12px', height: '12px', bottom: '16px', right: '0px' }}
-          />
-        </div>
-        <div className="d-flex justify-content-between align-items-center gap-1">
-          <div className="w-100" style={{ maxWidth: '70%' }}>
-            <span
-              className="user-name h4 mt-0 mb-0 d-block text-truncate"
-              style={{
-                fontFamily: "'Nunito Sans', sans-serif",
-                color: theme == 'dark' ? '#fff' : undefined
-              }}
-            >
-              {session.name.split(' ')[0]} {session.lastname.split(' ')[0]}
-              {idBirthday &&
-                <Tippy content={`Feliz cumpleaños ${session.name}`} arrow={true}>
-                  <i className='fas fa-birthday-cake text-danger ms-1'></i>
-                </Tippy>
-              }
-            </span>
-            <small className="text-muted text-truncate d-block">{session.email}</small>
-          </div>
-          <Tippy content={mainRole.description} arrow={true}>
-            <span className="badge bg-soft-primary text-primary rounded-pill">{mainRole.name}</span>
-          </Tippy>
-        </div>
-      </div>
+                <div
+                    className="user-box w-100 mb-2"
+                    style={{ padding: "0px 20px" }}
+                >
+                    <div
+                        className="position-relative"
+                        style={{ width: "max-content", height: "max-content" }}
+                    >
+                        <img
+                            src={`//${Global.APP_DOMAIN}/api/profile/thumbnail/${session.relative_id}?v=${new Date(session.updated_at).getTime()}`}
+                            alt={session.name}
+                            title={session.name}
+                            onError={(e) => {
+                                e.target.src = `//${Global.APP_DOMAIN}/assets/img/user-404.svg`;
+                            }}
+                            className="rounded-circle img-thumbnail avatar-md mb-2"
+                            style={{
+                                padding: 0,
+                                backgroundColor: "unset",
+                                // borderColor: '#98a6ad',
+                                objectFit: "cover",
+                                objectPosition: "center",
+                            }}
+                        />
+                        <span
+                            className={`d-block ${wsActive ? "bg-success" : "bg-danger"} position-absolute rounded-circle`}
+                            style={{
+                                width: "12px",
+                                height: "12px",
+                                bottom: "16px",
+                                right: "0px",
+                            }}
+                        />
+                    </div>
+                    <div className="d-flex justify-content-between align-items-center gap-1">
+                        <div className="w-100" style={{ maxWidth: "70%" }}>
+                            <span
+                                className="user-name h4 mt-0 mb-0 d-block text-truncate"
+                                style={{
+                                    fontFamily: "'Nunito Sans', sans-serif",
+                                    color: theme == "dark" ? "#fff" : undefined,
+                                }}
+                            >
+                                {session.name.split(" ")[0]}{" "}
+                                {session.lastname.split(" ")[0]}
+                                {idBirthday && (
+                                    <Tippy
+                                        content={`Feliz cumpleaños ${session.name}`}
+                                        arrow={true}
+                                    >
+                                        <i className="fas fa-birthday-cake text-danger ms-1"></i>
+                                    </Tippy>
+                                )}
+                            </span>
+                            <small className="text-muted text-truncate d-block">
+                                {session.email}
+                            </small>
+                        </div>
+                        <Tippy content={mainRole.description} arrow={true}>
+                            <span className="badge bg-soft-primary text-primary rounded-pill">
+                                {mainRole.name}
+                            </span>
+                        </Tippy>
+                    </div>
+                </div>
 
-      <div className={`px-2 py-1 text-center ${otherBusinesses.length > 0 ? 'd-block' : ''}`} style={{ position: 'relative' }}>
-        <span className="btn dropdown-toggle waves-effect waves-light d-flex align-items-center justify-content-between gap-1 mx-auto"
-          data-bs-toggle={otherBusinesses.length > 0 ? "dropdown" : undefined}
-          role="button" aria-haspopup="false" aria-expanded="false" style={{ borderColor: 'rgba(187, 187, 187, .25)', width: '200px', boxShadow: '0 0 8px rgba(187, 187, 187, .125)', borderRadius: '8px', cursor: otherBusinesses.length > 0 ? 'pointer' : 'default' }}>
-          <div className="d-flex align-items-start">
-            <img className="d-flex me-2 rounded-circle" src={`//${APP_DOMAIN}/api/logo/thumbnail/null`}
-              alt={currentBusiness.name} height="32" />
-            <div className="w-100 text-start">
-              <h5 className={`m-0 font-14 text-primary text-truncate`} style={{ width: '115px' }}>{currentBusiness.name}</h5>
-              <span className="font-12 mb-0">RUC: {currentBusiness.person.document_number}</span>
-            </div>
-          </div>
-          {
-            otherBusinesses.length > 0 &&
-            <i className="mdi mdi-chevron-down"></i>
-          }
-        </span>
-        {
-          otherBusinesses.length > 0 &&
-          <>
-            <div className="dropdown-menu dropdown-menu-center profile-dropdown w-full">
-              <div className="notification-list">
-                {
-                  otherBusinesses.sort((a, b) => {
-                    return a.id == session.business_id ? -1 : 1
-                  }).map((business, i) => {
-                    return <BusinessCard key={`business-${i}`} {...business} session={session} APP_PROTOCOL={APP_PROTOCOL} APP_DOMAIN={APP_DOMAIN} />
-                  })
-                }
-              </div>
-              <div className="dropdown-divider"></div>
-              <a href={`//${APP_DOMAIN}/businesses`} className="dropdown-item notify-item">
-                <i className="fe-arrow-up-right"></i>
-                <span>Otras empresas</span>
-              </a>
-            </div>
-          </>
-        }
-      </div>
+                <div
+                    className={`px-2 py-1 text-center ${otherBusinesses.length > 0 ? "d-block" : ""}`}
+                    style={{ position: "relative" }}
+                >
+                    <span
+                        className="btn dropdown-toggle waves-effect waves-light d-flex align-items-center justify-content-between gap-1 mx-auto"
+                        data-bs-toggle={
+                            otherBusinesses.length > 0 ? "dropdown" : undefined
+                        }
+                        role="button"
+                        aria-haspopup="false"
+                        aria-expanded="false"
+                        style={{
+                            borderColor: "rgba(187, 187, 187, .25)",
+                            width: "200px",
+                            boxShadow: "0 0 8px rgba(187, 187, 187, .125)",
+                            borderRadius: "8px",
+                            cursor:
+                                otherBusinesses.length > 0
+                                    ? "pointer"
+                                    : "default",
+                        }}
+                    >
+                        <div className="d-flex align-items-start">
+                            <img
+                                className="d-flex me-2 rounded-circle"
+                                src={`//${APP_DOMAIN}/api/logo/thumbnail/null`}
+                                alt={currentBusiness.name}
+                                height="32"
+                            />
+                            <div className="w-100 text-start">
+                                <h5
+                                    className={`m-0  text-primary text-truncate`}
+                                    style={{ width: "115px", fontSize: "18px" }}
+                                >
+                                    {currentBusiness.name}
+                                </h5>
+                                <span className="font-12 mb-0 hidden">
+                                    RUC:{" "}
+                                    {currentBusiness.person.document_number}
+                                </span>
+                            </div>
+                        </div>
+                        {otherBusinesses.length > 0 && (
+                            <i className="mdi mdi-chevron-down"></i>
+                        )}
+                    </span>
+                    {otherBusinesses.length > 0 && (
+                        <>
+                            <div className="dropdown-menu dropdown-menu-center profile-dropdown w-full">
+                                <div className="notification-list">
+                                    {otherBusinesses
+                                        .sort((a, b) => {
+                                            return a.id == session.business_id
+                                                ? -1
+                                                : 1;
+                                        })
+                                        .map((business, i) => {
+                                            return (
+                                                <BusinessCard
+                                                    key={`business-${i}`}
+                                                    {...business}
+                                                    session={session}
+                                                    APP_PROTOCOL={APP_PROTOCOL}
+                                                    APP_DOMAIN={APP_DOMAIN}
+                                                />
+                                            );
+                                        })}
+                                </div>
+                                <div className="dropdown-divider"></div>
+                                <a
+                                    href={`//${APP_DOMAIN}/businesses`}
+                                    className="dropdown-item notify-item"
+                                >
+                                    <i className="fe-arrow-up-right"></i>
+                                    <span>Otras empresas</span>
+                                </a>
+                            </div>
+                        </>
+                    )}
+                </div>
 
-      <div id="sidebar-menu" className='show'>
+                <div id="sidebar-menu" className="show">
+                    <ul id="side-menu">
+                        <li className="menu-title">Panel de navegacion</li>
+                        {(can("dashboard", "leads") ||
+                            can("dashboard", "all", "projects")) && (
+                            <MenuItemContainer
+                                title="KPIs"
+                                icon="mdi mdi-chart-donut-variant"
+                            >
+                                {can("dashboard", "leads") && (
+                                    <MenuItem
+                                        pinned={pinned}
+                                        setPinned={setPinned}
+                                        href="/home"
+                                        icon="mdi mdi-account-multiple"
+                                        pinLabel="KPIs • Leads"
+                                    >
+                                        Leads
+                                    </MenuItem>
+                                )}
+                                {can("dashboard", "projects") && (
+                                    <MenuItem
+                                        pinned={pinned}
+                                        setPinned={setPinned}
+                                        href="/home/projects"
+                                        icon="mdi mdi-page-next"
+                                        pinLabel="KPIs • Proyectos"
+                                    >
+                                        Proyectos
+                                    </MenuItem>
+                                )}
+                            </MenuItemContainer>
+                        )}
 
-        <ul id="side-menu">
-          <li className="menu-title">Panel de navegacion</li>
-          {
-            (can('dashboard', 'leads') || can('dashboard', 'all', 'projects')) &&
-            <MenuItemContainer title='KPIs' icon='mdi mdi-chart-donut-variant'>
-              {
-                can('dashboard', 'leads') &&
-                <MenuItem pinned={pinned} setPinned={setPinned} href="/home" icon='mdi mdi-account-multiple' pinLabel='KPIs • Leads'>Leads</MenuItem>
-              }
-              {
-                can('dashboard', 'projects') &&
-                <MenuItem pinned={pinned} setPinned={setPinned} href="/home/projects" icon='mdi mdi-page-next' pinLabel='KPIs • Proyectos'>Proyectos</MenuItem>
-              }
-            </MenuItemContainer>
-          }
+                        {/* <MenuItem pinned={pinned} setPinned={setPinned} href="/calendar" icon='mdi mdi-calendar'>Calendario</MenuItem> */}
+                        {can("tasks", "list") && (
+                            <MenuItem
+                                pinned={pinned}
+                                setPinned={setPinned}
+                                href="/tasks"
+                                icon="mdi mdi-format-list-checks"
+                                badge={tasksCount > 0 ? tasksCount : ""}
+                            >
+                                Tareas
+                            </MenuItem>
+                        )}
+                        {can("chats", "list") && (
+                            <MenuItem
+                                pinned={pinned}
+                                setPinned={setPinned}
+                                href="/chat"
+                                icon="mdi mdi-chat"
+                                badge={chatBadge || undefined}
+                            >
+                                Chat
+                            </MenuItem>
+                        )}
+                        <MenuItemContainer
+                            title="Personas"
+                            icon="mdi mdi-account-group"
+                        >
+                            <MenuItem
+                                pinned={pinned}
+                                setPinned={setPinned}
+                                href="/leads"
+                                icon="mdi mdi-account"
+                                badge={leadsCount > 0 ? leadsCount : ""}
+                            >
+                                Leads
+                            </MenuItem>
+                            {can("clients", "all", "list") && (
+                                <MenuItem
+                                    pinned={pinned}
+                                    setPinned={setPinned}
+                                    href="/clients"
+                                    icon="mdi mdi-account-multiple"
+                                >
+                                    Clientes
+                                </MenuItem>
+                            )}
+                            <MenuItem
+                                pinned={pinned}
+                                setPinned={setPinned}
+                                id="archived-item"
+                                href="/archived"
+                                icon="mdi mdi-archive"
+                                pinLabel="Personas • Archivados"
+                            >
+                                Archivados
+                            </MenuItem>
+                        </MenuItemContainer>
 
+                        {whatsAppStatus == "ready" && (
+                            <MenuItem
+                                pinned={pinned}
+                                setPinned={setPinned}
+                                href="/messages"
+                                icon="mdi mdi-forum"
+                            >
+                                Mensajes
+                            </MenuItem>
+                        )}
+                        {can("products", "all", "list") && (
+                            <MenuItem
+                                pinned={pinned}
+                                setPinned={setPinned}
+                                href="/products"
+                                icon="mdi mdi-layers"
+                            >
+                                Productos
+                            </MenuItem>
+                        )}
+                        {can("processes", "root", "all", "list") && (
+                            <MenuItem
+                                pinned={pinned}
+                                setPinned={setPinned}
+                                href="/processes"
+                                icon="mdi mdi-timeline-text"
+                            >
+                                Procesos
+                            </MenuItem>
+                        )}
+                        {/* {can('campaigns', 'root', 'all', 'list') &&  */}
+                        {can("campaigns", "root", "all", "list") && (
+                            <MenuItem
+                                pinned={pinned}
+                                setPinned={setPinned}
+                                href="/campaigns"
+                                icon="mdi mdi-google-ads"
+                            >
+                                Campañas
+                            </MenuItem>
+                        )}
+                        {/* } */}
 
-          {/* <MenuItem pinned={pinned} setPinned={setPinned} href="/calendar" icon='mdi mdi-calendar'>Calendario</MenuItem> */}
-          {
-            can('tasks', 'list') &&
-            <MenuItem pinned={pinned} setPinned={setPinned} href="/tasks" icon='mdi mdi-format-list-checks' badge={tasksCount > 0 ? tasksCount : ''}>Tareas</MenuItem>
-          }
-          {
-            can('chats', 'list') &&
-            <MenuItem pinned={pinned} setPinned={setPinned} href="/chat" icon='mdi mdi-chat' badge={chatBadge || undefined}>Chat</MenuItem>
-          }
-          <MenuItemContainer title='Personas' icon='mdi mdi-account-group'>
-            <MenuItem pinned={pinned} setPinned={setPinned} href="/leads" icon='mdi mdi-account' badge={leadsCount > 0 ? leadsCount : ''}>Leads</MenuItem>
-            {can('clients', 'all', 'list') && <MenuItem pinned={pinned} setPinned={setPinned} href="/clients" icon='mdi mdi-account-multiple'>Clientes</MenuItem>}
-            <MenuItem pinned={pinned} setPinned={setPinned} id='archived-item' href="/archived" icon='mdi mdi-archive' pinLabel='Personas • Archivados'>Archivados</MenuItem>
-          </MenuItemContainer>
-
-          {whatsAppStatus == 'ready' && <MenuItem pinned={pinned} setPinned={setPinned} href="/messages" icon='mdi mdi-forum'>Mensajes</MenuItem>}
-          {can('products', 'all', 'list') && <MenuItem pinned={pinned} setPinned={setPinned} href="/products" icon='mdi mdi-layers'>Productos</MenuItem>}
-          {can('processes', 'root', 'all', 'list') && <MenuItem pinned={pinned} setPinned={setPinned} href="/processes" icon='mdi mdi-timeline-text'>Procesos</MenuItem>}
-          {/* {can('campaigns', 'root', 'all', 'list') &&  */}
-          {can('campaigns', 'root', 'all', 'list') && <MenuItem pinned={pinned} setPinned={setPinned} href="/campaigns" icon='mdi mdi-google-ads'>Campañas</MenuItem>}
-          {/* } */}
-
-          {can('projects', 'root', 'all', 'list') && <MenuItemContainer title='Proyectos' icon='mdi mdi-page-next'>
-            <MenuItem pinned={pinned} setPinned={setPinned} href="/projects" icon='mdi mdi-lan-pending' pinLabel='Proyectos • En curso'>En curso</MenuItem>
-            <MenuItem pinned={pinned} setPinned={setPinned} href="/projects/done" icon='mdi mdi-check' pinLabel='Proyectos • Entregados'>Entregados</MenuItem>
-            <MenuItem pinned={pinned} setPinned={setPinned} href="/projects/archived" icon='mdi mdi-archive' pinLabel='Proyectos • Archivados'>Archivados</MenuItem>
-            <MenuItem pinned={pinned} setPinned={setPinned} href="/projects/taskboard" icon='mdi mdi-view-dashboard' pinLabel='Proyectos • Cuadro de control'>Cuadro de control</MenuItem>
-          </MenuItemContainer>
-          }
-          {/* {
+                        {can("projects", "root", "all", "list") && (
+                            <MenuItemContainer
+                                title="Proyectos"
+                                icon="mdi mdi-page-next"
+                            >
+                                <MenuItem
+                                    pinned={pinned}
+                                    setPinned={setPinned}
+                                    href="/projects"
+                                    icon="mdi mdi-lan-pending"
+                                    pinLabel="Proyectos • En curso"
+                                >
+                                    En curso
+                                </MenuItem>
+                                <MenuItem
+                                    pinned={pinned}
+                                    setPinned={setPinned}
+                                    href="/projects/done"
+                                    icon="mdi mdi-check"
+                                    pinLabel="Proyectos • Entregados"
+                                >
+                                    Entregados
+                                </MenuItem>
+                                <MenuItem
+                                    pinned={pinned}
+                                    setPinned={setPinned}
+                                    href="/projects/archived"
+                                    icon="mdi mdi-archive"
+                                    pinLabel="Proyectos • Archivados"
+                                >
+                                    Archivados
+                                </MenuItem>
+                                <MenuItem
+                                    pinned={pinned}
+                                    setPinned={setPinned}
+                                    href="/projects/taskboard"
+                                    icon="mdi mdi-view-dashboard"
+                                    pinLabel="Proyectos • Cuadro de control"
+                                >
+                                    Cuadro de control
+                                </MenuItem>
+                            </MenuItemContainer>
+                        )}
+                        {/* {
             (can('users', 'root', 'all', 'list') || can('roles', 'root', 'all', 'list') || can('permissions', 'root', 'all', 'list')) &&
             <MenuItemContainer title='Usuarios y roles' icon='mdi mdi-account-lock'>
               {
@@ -280,15 +495,13 @@ const Menu = ({ session, theme, can, whatsAppStatus, APP_PROTOCOL, APP_DOMAIN, l
               }
             </>
           } */}
-        </ul>
+                    </ul>
+                </div>
 
-      </div>
+                <div className="clearfix"></div>
+            </div>
+        </div>
+    );
+};
 
-
-      <div className="clearfix"></div>
-
-    </div>
-  </div>)
-}
-
-export default Menu
+export default Menu;
