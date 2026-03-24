@@ -288,12 +288,8 @@ const Settings = ({
         $(convertedLeadStatusRef.current)
             .val(convertedLeadStatus.value)
             .select2();
-        $(newLeadStatusRef.current)
-            .val(newLeadStatus.value)
-            .select2();
-        $(defaultLeadStatusRef.current)
-            .val(defaultLeadStatus.value)
-            .select2();
+        $(newLeadStatusRef.current).val(newLeadStatus.value).select2();
+        $(defaultLeadStatusRef.current).val(defaultLeadStatus.value).select2();
     }, [null]);
 
     const questionsObj = getConstant("gemini-extra-questions");
@@ -533,14 +529,13 @@ const Settings = ({
                                                         }}
                                                     >
                                                         <h5 className="card-title mb-1">
-                                                            Estado para Entrada
-                                                            de Leads [Gestión]
+                                                            Etiqueta de Lead
+                                                            Nuevo
                                                         </h5>
                                                         <p className="card-text">
-                                                            ¿Qué estado de
-                                                            gestión define mejor
-                                                            a un lead que entra
-                                                            al sistema?
+                                                            ¿Qué etiqueta se le
+                                                            asignara a un lead
+                                                            nuevo?
                                                         </p>
                                                         <SelectFormGroup
                                                             eRef={
@@ -591,14 +586,12 @@ const Settings = ({
                                                         }}
                                                     >
                                                         <h5 className="card-title mb-1">
-                                                            Estado para Entrada
-                                                            de Leads [Lead]
+                                                            Estado de Lead Nuevo
                                                         </h5>
                                                         <p className="card-text">
                                                             ¿Qué estado de lead
-                                                            define mejor a un
-                                                            lead que entra al
-                                                            sistema?
+                                                            se le asignara a un
+                                                            lead nuevo?
                                                         </p>
                                                         <SelectFormGroup
                                                             eRef={
