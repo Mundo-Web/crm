@@ -609,11 +609,15 @@ class MetaController extends Controller
                     ->orderBy('microtime', 'desc');
 
                 if ($clientJpa->complete_registration) {
-                    $lastMessageMicrotime = Message::where('role', 'form')
+                    $waId = $origin == 'evoapi' ? $clientJpa->contact_phone : $clientJpa->integration_user_id;
+                    $lastMessageMicrotime = Message::where('role', 'Form')
+                        ->where('wa_id', $waId)
                         ->where('business_id', $clientJpa->business_id)
                         ->orderBy('microtime', 'desc')
                         ->value('microtime');
-                    $messagesQuery->where('microtime', '>', $lastMessageMicrotime);
+                    if ($lastMessageMicrotime) {
+                        $messagesQuery->where('microtime', '>', $lastMessageMicrotime);
+                    }
                 }
 
                 $messages = $messagesQuery->limit(40)
@@ -865,7 +869,7 @@ class MetaController extends Controller
                         ClientNote::create([
                             'note_type_id' => '8e895346-3d87-4a87-897a-4192b917c211',
                             'client_id' => $clientJpa->id,
-                            'name' => 'Formulario completado',
+                            'name' => 'Respuesta de formulario',
                             'description' => $formString
                         ]);
                     } else {
