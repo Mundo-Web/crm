@@ -34,8 +34,8 @@ const BusinessCard = ({
                 />
                 <div className="w-100">
                     <h5
-                        className={`m-0 ${!clickable && "text-primary"} text-truncate`}
-                        style={{ width: "115px", fontSize: "18px" }}
+                        className={`m-0 ${!clickable && "text-muted"} text-truncate`}
+                        style={{ width: "115px", fontSize: "16px" }}
                     >
                         {name}
                     </h5>
