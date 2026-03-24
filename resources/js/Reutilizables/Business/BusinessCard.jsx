@@ -25,7 +25,7 @@ const BusinessCard = ({
             style={{ cursor: clickable ? "pointer" : "default" }}
             onClick={onBusinessClicked}
         >
-            <div className="d-flex align-items-start">
+            <div className="d-flex align-items-center">
                 <img
                     className="d-flex me-2 rounded-circle"
                     src={`//${APP_DOMAIN}/api/logo/thumbnail/null`}

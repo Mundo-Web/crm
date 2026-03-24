@@ -214,7 +214,7 @@ const Menu = ({
                                     : "default",
                         }}
                     >
-                        <div className="d-flex align-items-start">
+                        <div className="d-flex align-items-center">
                             <img
                                 className="d-flex me-2 rounded-circle"
                                 src={`//${APP_DOMAIN}/api/logo/thumbnail/null`}
@@ -228,7 +228,10 @@ const Menu = ({
                                 >
                                     {currentBusiness.name}
                                 </h5>
-                                <span className="font-12 mb-0 hidden">
+                                <span
+                                    className="font-12 mb-0 hidden"
+                                    style={{ display: "none" }}
+                                >
                                     RUC:{" "}
                                     {currentBusiness.person.document_number}
                                 </span>
