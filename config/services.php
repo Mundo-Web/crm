@@ -31,4 +31,13 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    'meta' => [
+        'facebook_graph_url' => env('FACEBOOK_GRAPH_URL', 'https://graph.facebook.com/v22.0'),
+        'instagram_graph_url' => env('INSTAGRAM_GRAPH_URL', 'https://graph.instagram.com/v22.0'),
+    ],
+
+    'gemini' => [
+        'api_url' => env('GEMINI_API_URL', 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent'),
+    ],
+
 ];

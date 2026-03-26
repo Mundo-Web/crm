@@ -10,6 +10,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Log;
 
 class MetaAssistantJob implements ShouldQueue
 {
@@ -31,6 +32,13 @@ class MetaAssistantJob implements ShouldQueue
     try {
       MetaController::assistant($this->clientJpa, $this->messageJpa, $this->origin);
     } catch (\Throwable $th) {
+      Log::error('MetaAssistantJob failed', [
+        'client_id' => $this->clientJpa->id,
+        'origin' => $this->origin,
+        'error' => $th->getMessage(),
+        'line' => $th->getLine(),
+        'file' => $th->getFile(),
+      ]);
     }
   }
 }

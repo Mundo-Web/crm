@@ -105,6 +105,30 @@ class IntegrationController extends BasicController
 
     public function afterSave(Request $request, object $jpa, ?bool $isNew)
     {
+        if ($request->service === 'whatsapp') {
+            $wabaId = $jpa->meta_business_id;
+            $accessToken = $jpa->meta_access_token;
+
+            $res = new \SoDe\Extend\Fetch(config('services.meta.facebook_graph_url') . "/{$wabaId}/subscribed_apps", [
+                'method' => 'POST',
+                'headers' => [
+                    'Authorization' => "Bearer {$accessToken}"
+                ]
+            ]);
+
+            $data = $res->json();
+
+            if (!($data['success'] ?? false)) {
+                $errorMsg = $data['error']['message'] ?? 'Error desconocido al suscribir WABA a la App';
+                $errorCode = $data['error']['code'] ?? 0;
+
+                // Delete the just-created integration so it doesn't stay in a broken state
+                $jpa->forceDelete();
+
+                throw new \Exception("❌ La App de Meta no está validada o el token no tiene permisos suficientes. [{$errorCode}] {$errorMsg}");
+            }
+        }
+
         return $jpa;
     }
 }
