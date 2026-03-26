@@ -566,10 +566,11 @@ class MetaController extends Controller
             : [null, false];
     }
 
-    private static function runFlow(Business $businessJpa, Client $clientJpa, ?string $origin = null, string $prompt2save = '')
+    private static function runFlow(Business $businessJpa, Client $clientJpa, ?string $origin = null, string $prompt2save = '', string $prefix = '')
     {
         $flowItems = $clientJpa->form_answers ?? [];
         $hasIncompleteItems = false;
+        $firstMessageSent = false;
 
         foreach ($flowItems as $index => &$item) {
             if ($item['completed'] ?? false) continue;
@@ -580,7 +581,7 @@ class MetaController extends Controller
                 if (isset($item['questions']) && is_array($item['questions']) && count($item['questions']) > 0) {
                     // Send first question
                     $question = $item['questions'][0];
-                    $welcomeMessage = $question['text'];
+                    $welcomeMessage = ($firstMessageSent ? '' : $prefix) . $question['text'];
                     if ($question['closed'] ?? false) {
                         try {
                             foreach ($question['answers'] as $aIdx => $value) {
@@ -607,8 +608,10 @@ class MetaController extends Controller
                 $msgId = $item['message_id'] ?? null;
                 $defaultMsg = \App\Models\DefaultMessage::find($msgId);
                 if ($defaultMsg) {
-                    $text = strip_tags($defaultMsg->description);
+                    $text = ($firstMessageSent ? '' : $prefix) . strip_tags($defaultMsg->description);
                     self::sendWithOrigin($businessJpa, $clientJpa, $text, $prompt2save, $origin);
+                    $firstMessageSent = true;
+                    $prefix = '';
                 }
                 $item['completed'] = true;
             } else if ($item['type'] === 'repository' || $item['type'] === 'file') {
@@ -617,8 +620,10 @@ class MetaController extends Controller
                 if ($repoFile) {
                     $domain = env('APP_URL');
                     $fileUrl = $domain . '/storage/' . $repoFile->file;
-                    $msg = "Enviando archivo: {$repoFile->name}" . Text::lineBreak() . $fileUrl;
+                    $msg = ($firstMessageSent ? '' : $prefix) . "Enviando archivo: {$repoFile->name}" . Text::lineBreak() . $fileUrl;
                     self::sendWithOrigin($businessJpa, $clientJpa, $msg, $prompt2save, $origin);
+                    $firstMessageSent = true;
+                    $prefix = '';
                 }
                 $item['completed'] = true;
             } else {
@@ -887,11 +892,11 @@ class MetaController extends Controller
                     $clientJpa->refresh();
 
                     if ($hasFlow) {
-                        // Mensaje de transición
+                        // Mensaje de transición simplificado
                         $firstName = explode(' ', trim($data2Save['contact_name']))[0];
-                        self::sendWithOrigin($businessJpa, $clientJpa, "Bien {$firstName}, ya tengo tus datos.", $prompt2save, $origin);
-                        // Iniciar flujo
-                        self::runFlow($businessJpa, $clientJpa, $origin, $prompt2save);
+                        $prefix = "¡Perfecto, {$firstName}! Continuemos con unas breves preguntas:" . Text::lineBreak(2);
+                        // Iniciar flujo con el prefijo
+                        self::runFlow($businessJpa, $clientJpa, $origin, $prompt2save, $prefix);
                     } else {
                         $welcomeMessage = Setting::get('whatsapp-new-lead-notification-message-client', $clientJpa->business_id);
                         $welcomeMessage = Text::replaceData($welcomeMessage, $clientJpa->toArray());
