@@ -37,7 +37,6 @@ export const LeadsProvider = ({ statuses, months, currentMonth, currentYear, chi
             filter.push(['created_at', '<', nextMonth.toISOString().slice(0, 10)]);
             const response = await leadsRest.paginate({
                 filter: ArrayJoin(filter, 'and'),
-                sort: [{ selector: "created_at", desc: true }],
                 skip: 0,
                 take: 10,
                 sort: [{ selector: "created_at", desc: true }],

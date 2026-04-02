@@ -37,52 +37,52 @@ class ProjectController extends BasicController
 
     public function setPaginationInstance(Request $request, string $model)
     {
-        $query = $model::with(['client', 'type', 'status', 'subdomain', 'users'])->select([
-            'projects.*',
-            'projects.status AS project_status',
-            DB::raw('COALESCE(SUM(payments.amount), 0) AS total_payments'),
-            // DB::raw('MAX(payments.date) AS last_payment_date'),
-            'last_payment.date',
-            'last_payment.date AS last_payment_date',
-        ])
-            ->distinct()
-            ->leftJoin('types AS type', 'type.id', 'projects.type_id')
-            ->leftJoin('clients AS client', 'client.id', 'projects.client_id')
-            ->leftJoin('payments', 'payments.project_id', 'projects.id')
-            ->leftJoin(
-                DB::raw('(SELECT project_id, amount, date 
-                        FROM payments p1
-                        WHERE date = (
-                            SELECT MAX(date) 
-                            FROM payments p2 
-                            WHERE p2.project_id = p1.project_id
-                        )
-                    ) AS last_payment'),
-                'last_payment.project_id',
-                '=',
-                'projects.id'
-            )
-            ->leftJoin('statuses AS status', 'status.id', 'projects.status_id')
-            ->groupBy('projects.id', 'last_payment.date')
-            ->where('projects.business_id', Auth::user()->business_id);
+        try {
+            $query = $model::with(['client', 'type', 'status', 'subdomain', 'users'])->select([
+                'projects.*',
+                'projects.status AS project_status',
+                DB::raw('(SELECT COALESCE(SUM(amount), 0) FROM payments WHERE payments.project_id = projects.id) AS total_payments'),
+                'last_payment.date AS last_payment_date',
+            ])
+                ->leftJoin('types AS type', 'type.id', 'projects.type_id')
+                ->leftJoin('clients AS client', 'client.id', 'projects.client_id')
+                ->leftJoin(
+                    DB::raw('(SELECT project_id, amount, date 
+                            FROM payments p1
+                            WHERE date = (
+                                SELECT MAX(date) 
+                                FROM payments p2 
+                                WHERE p2.project_id = p1.project_id
+                            )
+                        ) AS last_payment'),
+                    'last_payment.project_id',
+                    '=',
+                    'projects.id'
+                )
+                ->leftJoin('statuses AS status', 'status.id', 'projects.status_id')
+                ->where('projects.business_id', Auth::user()->business_id);
 
-        if (!$request->isLoadingAll) {
-            $finishedProjectStatus = Setting::get('finished-project-status');
-            $query = $query
-                ->where('projects.status_id', '<>', $finishedProjectStatus)
-                ->whereNotNull('projects.status');
+            if (!$request->isLoadingAll) {
+                $finishedProjectStatus = Setting::get('finished-project-status');
+                $query = $query
+                    ->where('projects.status_id', '<>', $finishedProjectStatus)
+                    ->whereNotNull('projects.status');
+            }
+
+            $userjpa = User::find(Auth::user()->service_user->id);
+            $userjpa->getAllPermissions();
+
+            if (!($userjpa->can('projects.listall') || $userjpa->can('projects.all'))) {
+                $query = $query
+                    ->join('users_by_projects AS ubp', 'ubp.project_id', 'projects.id')
+                    ->where('ubp.user_id', Auth::user()->service_user->id);
+            }
+
+            return $query;
+        } catch (\Throwable $th) {
+            \Illuminate\Support\Facades\Log::error('ProjectController::setPaginationInstance - ERROR: ' . $th->getMessage());
+            throw $th;
         }
-
-        $userjpa = User::find(Auth::user()->service_user->id);
-        $userjpa->getAllPermissions();
-
-        if (!($userjpa->can('projects.listall') || $userjpa->can('projects.all'))) {
-            $query = $query
-                ->leftJoin('users_by_projects AS ubp', 'ubp.project_id', 'projects.id')
-                ->where('ubp.user_id', Auth::user()->service_user->id);
-        }
-
-        return $query;
     }
 
     static function projectStatus(Request $request)

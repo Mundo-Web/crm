@@ -19,7 +19,7 @@ export default defineConfig({
                 ...glob.sync('resources/js/*.jsx'),
                 'resources/css/app.css',
             ],
-            refresh: false, // Disabled auto refresh
+            refresh: true, // Disabled auto refresh
             hmr: true // Enable Hot Module Replacement
         }),
         react(),

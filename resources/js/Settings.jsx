@@ -39,6 +39,7 @@ const Settings = ({
     const archivedLeadStatusRef = useRef();
     const archivedLeadStatusDaysRef = useRef();
     const archivedLeadStatusDirectRef = useRef();
+    const defaultProjectStatusRef = useRef();
 
     const [constantType, setConstantType] = useState();
     const [specification, setSpecification] = useState();
@@ -237,6 +238,14 @@ const Settings = ({
         await settingsRest.save(request);
     };
 
+    const onDefaultProjectStatusChange = async (e) => {
+        const request = {
+            name: "default-project-status",
+            value: e.target.value,
+        };
+        await settingsRest.save(request);
+    };
+
     const onConvertedLeadStatusChange = async (e) => {
         const request = {
             name: "converted-lead-status",
@@ -266,6 +275,7 @@ const Settings = ({
     const archivedLeadStatusDirect = getConstant("archived-lead-status-direct");
 
     const finishedProjectStatus = getConstant("finished-project-status");
+    const defaultProjectStatus = getConstant("default-project-status");
     const convertedLeadStatus = getConstant("converted-lead-status");
     const newLeadStatus = getConstant("default-manage-lead-status");
     const defaultLeadStatus = getConstant("default-lead-status");
@@ -284,6 +294,9 @@ const Settings = ({
         $(archivedLeadStatusDaysRef.current).val(archivedLeadStatusDays.value);
         $(finishedProjectStatusRef.current)
             .val(finishedProjectStatus.value)
+            .select2();
+        $(defaultProjectStatusRef.current)
+            .val(defaultProjectStatus.value)
             .select2();
         $(convertedLeadStatusRef.current)
             .val(convertedLeadStatus.value)
@@ -920,6 +933,57 @@ const Settings = ({
                                         >
                                             <h4>Configuracion de Proyectos</h4>
                                             <div className="row">
+                                                <div className="col-md-4 col-sm-6 col-xs-12">
+                                                    <div className="card card-body border p-2">
+                                                        <h5 className="card-title mb-1">
+                                                            Estado de
+                                                            inicialización
+                                                        </h5>
+                                                        <p className="card-text">
+                                                            ¿Qué estado define
+                                                            mejor a un proyecto
+                                                            nuevo que se crea?
+                                                        </p>
+                                                        <SelectFormGroup
+                                                            eRef={
+                                                                defaultProjectStatusRef
+                                                            }
+                                                            label="Escoge un estado"
+                                                            noMargin
+                                                            onChange={
+                                                                onDefaultProjectStatusChange
+                                                            }
+                                                        >
+                                                            {statuses
+                                                                .filter(
+                                                                    (item) =>
+                                                                        item.table_id ==
+                                                                        "cd8bd48f-c73c-4a62-9935-024139f3be5f",
+                                                                )
+                                                                .map(
+                                                                    (
+                                                                        status,
+                                                                        index,
+                                                                    ) => {
+                                                                        return (
+                                                                            <option
+                                                                                key={
+                                                                                    index
+                                                                                }
+                                                                                value={
+                                                                                    status.id
+                                                                                }
+                                                                            >
+                                                                                {
+                                                                                    status.name
+                                                                                }
+                                                                            </option>
+                                                                        );
+                                                                    },
+                                                                )}
+                                                        </SelectFormGroup>
+                                                    </div>
+                                                </div>
                                                 <div className="col-md-4 col-sm-6 col-xs-12">
                                                     <div className="card card-body border p-2">
                                                         <h5 className="card-title mb-1">

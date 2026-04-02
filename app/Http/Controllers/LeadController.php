@@ -14,9 +14,11 @@ use App\Models\Message;
 use App\Models\NoteType;
 use App\Models\Process;
 use App\Models\Product;
+use App\Models\Project;
 use App\Models\Setting;
 use App\Models\Status;
 use App\Models\Task;
+use App\Models\Type;
 use App\Models\User;
 use Carbon\Carbon;
 use Exception;
@@ -74,6 +76,10 @@ class LeadController extends BasicController
         $signs = BusinessSign::select()
             ->where('business_id', Auth::user()->business_id)
             ->where('user_id', Auth::id())
+            ->get();
+
+        $projectTypes = Type::where('table_id', 'cd8bd48f-c73c-4a62-9935-024139f3be5f')
+            ->where('business_id', Auth::user()->business_id)
             ->get();
 
         $usersJpa = User::byBusiness();
@@ -143,6 +149,7 @@ class LeadController extends BasicController
             'defaultMessages' => $defaultMessages,
             'signs' => $signs,
             'users' => $usersJpa,
+            'projectTypes' => $projectTypes,
             'hasForms' => $hasForms,
             'months' => $months,
             'currentMonth' => $currentMonth,
@@ -538,13 +545,35 @@ class LeadController extends BasicController
 
     public function leadStatus(Request $request)
     {
+        \Illuminate\Support\Facades\Log::info('LeadController::leadStatus - INICIO', [
+            'request_all' => $request->all(),
+            'default_client_status' => Setting::get('default-client-status'),
+            'converted_lead_status' => Setting::get('converted-lead-status')
+        ]);
+
         $response = Response::simpleTryCatch(function (Response $response) use ($request) {
             $leadJpa = Client::find($request->lead);
+            if (!$leadJpa) {
+                \Illuminate\Support\Facades\Log::warning('LeadController::leadStatus - Lead no encontrado', ['id' => $request->lead]);
+                throw new Exception('Lead no encontrado');
+            }
             if ($leadJpa->business_id != Auth::user()->business_id) throw new Exception('Este lead no pertenece a tu empresa');
+            
+            $oldStatus = $leadJpa->status_id;
             $leadJpa->status_id = $request->status;
 
+            \Illuminate\Support\Facades\Log::info('LeadController::leadStatus - Actualizando estado', [
+                'old_status' => $oldStatus,
+                'new_status' => $request->status,
+                'matches_default_client' => ($request->status == Setting::get('default-client-status'))
+            ]);
+
             if ($request->ruc) $leadJpa->ruc = $request->ruc;
-            if ($request->tradename) $leadJpa->tradename = $request->tradename;
+            if ($request->tradename) {
+                $leadJpa->tradename = $request->tradename;
+                $leadJpa->name = $request->tradename;
+            }
+            if ($request->fullname) $leadJpa->contact_name = $request->fullname;
 
             try {
                 $assignationStatus = JSON::parse(Setting::get('assignation-lead-status') ?? '{}');
@@ -553,9 +582,51 @@ class LeadController extends BasicController
                 if ($leadJpa->status_id == ($assignationStatus['lead'] ?? '')) StatusController::updateStatus4Lead($leadJpa, true);
                 if ($leadJpa->status_id == ($revertionStatus['lead'] ?? '')) StatusController::updateStatus4Lead($leadJpa, false);
             } catch (\Throwable $th) {
+                \Illuminate\Support\Facades\Log::error('LeadController::leadStatus - Error en StatusController', ['error' => $th->getMessage()]);
             }
 
             $leadJpa->save();
+
+            if ($request->createProject && $request->projectData) {
+                \Illuminate\Support\Facades\Log::info('LeadController::leadStatus - Creando proyecto manual');
+                $projectData = $request->projectData;
+                $cost = $projectData['cost'] ?? 0;
+                Project::create([
+                    'id' => Uuid::uuid1()->toString(),
+                    'client_id' => $leadJpa->id,
+                    'name' => $projectData['name'],
+                    'type_id' => $projectData['type_id'],
+                    'description' => 'Proyecto generado al convertir lead',
+                    'cost' => $cost,
+                    'remaining_amount' => $cost,
+                    'business_id' => $leadJpa->business_id,
+                    'starts_at' => $projectData['starts_at'],
+                    'ends_at' => $projectData['ends_at'],
+                    'signed_at' => $projectData['signed_at'] ?? null,
+                    'status_id' => Setting::get('default-project-status') ?? Status::where('table_id', 'cd8bd48f-c73c-4a62-9935-024139f3be5f')->where('business_id', $leadJpa->business_id)->where('status', true)->first()?->id,
+                ]);
+            } else if ($leadJpa->status_id == Setting::get('default-client-status')) {
+                \Illuminate\Support\Facades\Log::info('LeadController::leadStatus - Intentando conversion automatica');
+                $product = $leadJpa->products()->first();
+                if ($product) {
+                    $projectExists = Project::where('client_id', $leadJpa->id)->exists();
+                    if (!$projectExists) {
+                        $cost = $product->pivot->price ?? $product->price ?? 0;
+                        Project::create([
+                            'id' => Uuid::uuid1()->toString(),
+                            'client_id' => $leadJpa->id,
+                            'name' => ($product->name ?? 'Servicio') . ' - ' . ($leadJpa->tradename ?: $leadJpa->contact_name),
+                            'description' => 'Proyecto generado automáticamente al convertir lead',
+                            'cost' => $cost,
+                            'remaining_amount' => $cost,
+                            'business_id' => $leadJpa->business_id,
+                            'status_id' => Setting::get('default-project-status') ?? Status::where('table_id', 'cd8bd48f-c73c-4a62-9935-024139f3be5f')->where('business_id', $leadJpa->business_id)->where('status', true)->first()?->id,
+                        ]);
+                    }
+                } else {
+                    \Illuminate\Support\Facades\Log::info('LeadController::leadStatus - No hay productos para crear proyecto automatico');
+                }
+            }
             return $leadJpa->load(['status', 'assigned', 'manageStatus', 'creator']);
         });
         return response($response->toArray(), $response->status);
@@ -563,10 +634,27 @@ class LeadController extends BasicController
 
     public function manageStatus(Request $request)
     {
+        \Illuminate\Support\Facades\Log::info('LeadController::manageStatus - INICIO', [
+            'request_all' => $request->all(),
+            'converted_lead_status' => Setting::get('converted-lead-status')
+        ]);
+
         $response = Response::simpleTryCatch(function (Response $response) use ($request) {
             $leadJpa = Client::find($request->lead);
+            if (!$leadJpa) {
+                \Illuminate\Support\Facades\Log::warning('LeadController::manageStatus - Lead no encontrado', ['id' => $request->lead]);
+                throw new Exception('Lead no encontrado');
+            }
             if ($leadJpa->business_id != Auth::user()->business_id) throw new Exception('Este lead no pertenece a tu empresa');
+            
+            $oldManageStatus = $leadJpa->manage_status_id;
             $leadJpa->manage_status_id = $request->status;
+            
+            \Illuminate\Support\Facades\Log::info('LeadController::manageStatus - Actualizando etiqueta', [
+                'old_manage_status' => $oldManageStatus,
+                'new_manage_status' => $request->status,
+                'is_conversion_status' => ($request->status == Setting::get('converted-lead-status'))
+            ]);
 
             try {
                 $assignationStatus = JSON::parse(Setting::get('assignation-lead-status') ?? '{}');
@@ -575,6 +663,7 @@ class LeadController extends BasicController
                 if ($leadJpa->manage_status_id == ($assignationStatus['manage'] ?? '')) StatusController::updateStatus4Lead($leadJpa, true);
                 if ($leadJpa->manage_status_id == ($revertionStatus['manage'] ?? '')) StatusController::updateStatus4Lead($leadJpa, false);
             } catch (\Throwable $th) {
+                \Illuminate\Support\Facades\Log::error('LeadController::manageStatus - Error en StatusController', ['error' => $th->getMessage()]);
             }
 
             try {

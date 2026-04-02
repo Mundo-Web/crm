@@ -20,3 +20,6 @@ yarn-error.log
 /storage/profile
 /storage/app/images/
 /vite.config.js.*
+
+# Fixes
+/public/fix_projects_assignment.php

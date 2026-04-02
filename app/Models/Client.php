@@ -167,7 +167,7 @@ class Client extends Model
     public function products()
     {
         return $this->belongsToMany(Product::class, 'client_has_products', 'client_id', 'product_id')
-            ->withPivot('id');
+            ->withPivot('id', 'price');
     }
 
     public function campaign()

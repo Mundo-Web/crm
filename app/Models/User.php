@@ -24,6 +24,7 @@ class User extends Authenticable
     use HasRoles;
     use HasPermissions;
 
+    protected $connection = 'mysql';
     protected $table = 'users';
 
     /**

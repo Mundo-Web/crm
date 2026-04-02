@@ -12,6 +12,12 @@ use Illuminate\Contracts\Routing\ResponseFactory;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response as HttpResponse;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\StatusController;
+use App\Models\Setting;
+use App\Models\Project;
+use App\Models\Status as AppStatus;
+use Illuminate\Support\Facades\DB;
+use Ramsey\Uuid\Uuid;
 use SoDe\Extend\JSON;
 
 class ClientNoteController extends BasicController
@@ -57,16 +63,123 @@ class ClientNoteController extends BasicController
 
     public function afterSave(Request $request, object $jpa, ?bool $isNew)
     {
+        \Illuminate\Support\Facades\Log::info('ClientNoteController::afterSave - PROCESANDO', [
+            'jpa_id' => $jpa->id,
+            'client_id' => $jpa->client_id,
+            'has_client_data' => isset($request->client_data),
+            'request_status' => $request->status_id,
+            'request_manage_status' => $request->manage_status_id
+        ]);
 
-        if ($jpa->status_id || $jpa->manage_status_id) {
-            $clientJpa = Client::find($jpa->client_id);
-            if ($jpa->status_id) $clientJpa->status_id = $jpa->status_id;
-            if ($jpa->manage_status_id) $clientJpa->manage_status_id = $jpa->manage_status_id;
-            if ($request->client_data) {
-                $clientJpa->ruc = $request->client_data['dni'];
-                $clientJpa->tradename = $request->client_data['fullname'];
+        $clientJpa = Client::find($jpa->client_id);
+        if ($clientJpa) {
+            $shouldSaveClient = false;
+
+            // Actualizar estados si vienen en el request (aunque no se guarden en la nota)
+            if ($request->status_id) {
+                $clientJpa->status_id = $request->status_id;
+                $shouldSaveClient = true;
             }
-            $clientJpa->save();
+            if ($request->manage_status_id) {
+                $clientJpa->manage_status_id = $request->manage_status_id;
+                $shouldSaveClient = true;
+            }
+
+            // Si hay datos de conversión a cliente
+            if ($request->client_data) {
+                $clientData = $request->client_data;
+                if (isset($clientData['ruc'])) $clientJpa->ruc = $clientData['ruc'];
+                if (isset($clientData['dni']) && !$clientJpa->ruc) $clientJpa->ruc = $clientData['dni'];
+                
+                if (isset($clientData['tradename'])) {
+                    $clientJpa->tradename = $clientData['tradename'];
+                    $clientJpa->name = $clientData['tradename'];
+                }
+                if (isset($clientData['fullname'])) $clientJpa->contact_name = $clientData['fullname'];
+                
+                $shouldSaveClient = true;
+                
+                \Illuminate\Support\Facades\Log::info('ClientNoteController::afterSave - Datos de cliente cargados');
+            }
+
+            if ($shouldSaveClient) {
+                try {
+                    $assignationStatus = JSON::parse(Setting::get('assignation-lead-status') ?? '{}');
+                    $revertionStatus = JSON::parse(Setting::get('revertion-lead-status') ?? '{}');
+
+                    if ($clientJpa->status_id == ($assignationStatus['lead'] ?? '')) StatusController::updateStatus4Lead($clientJpa, true);
+                    if ($clientJpa->status_id == ($revertionStatus['lead'] ?? '')) StatusController::updateStatus4Lead($clientJpa, false);
+                    
+                    if ($clientJpa->manage_status_id == ($assignationStatus['manage'] ?? '')) StatusController::updateStatus4Lead($clientJpa, true);
+                    if ($clientJpa->manage_status_id == ($revertionStatus['manage'] ?? '')) StatusController::updateStatus4Lead($clientJpa, false);
+                } catch (\Throwable $th) {
+                    \Illuminate\Support\Facades\Log::error('ClientNoteController::afterSave - Error en StatusController: ' . $th->getMessage());
+                }
+
+                $clientJpa->save();
+
+                // Lógica de proyectos
+                $createProjectExplicitly = $request->client_data && isset($request->client_data['createProject']) && $request->client_data['createProject'];
+                $skipProjectExplicitly = $request->client_data && isset($request->client_data['createProject']) && !$request->client_data['createProject'];
+
+                if ($createProjectExplicitly) {
+                    \Illuminate\Support\Facades\Log::info('ClientNoteController::afterSave - CREANDO PROYECTO MANUAL');
+                    $projectData = $request->client_data['projectData'];
+                    $cost = $projectData['cost'] ?? 0;
+                    $projectId = Uuid::uuid1()->toString();
+                    Project::create([
+                        'id' => $projectId,
+                        'client_id' => $clientJpa->id,
+                        'name' => $projectData['name'],
+                        'type_id' => $projectData['type_id'],
+                        'description' => 'Proyecto generado al convertir lead desde notas',
+                        'cost' => $cost,
+                        'remaining_amount' => $cost,
+                        'business_id' => $clientJpa->business_id,
+                        'starts_at' => $projectData['starts_at'] ?? date('Y-m-d'),
+                        'ends_at' => $projectData['ends_at'] ?? date('Y-m-d', strtotime('+1 month')),
+                        'signed_at' => $projectData['signed_at'] ?? date('Y-m-d'),
+                        'status_id' => Setting::get('default-project-status') ?? AppStatus::where('table_id', 'cd8bd48f-c73c-4a62-9935-024139f3be5f')->where('business_id', $clientJpa->business_id)->where('status', true)->first()?->id,
+                    ]);
+                    // Asignar al usuario actual
+                    if (Auth::user()->service_user?->id) {
+                        DB::table('users_by_projects')->insert([
+                            'project_id' => $projectId,
+                            'user_id' => Auth::user()->service_user->id
+                        ]);
+                    }
+                } else if (!$skipProjectExplicitly && $clientJpa->status_id == Setting::get('default-client-status')) {
+                    \Illuminate\Support\Facades\Log::info('ClientNoteController::afterSave - INTENTANDO CONVERSION AUTOMATICA');
+                    $product = $clientJpa->products()->first();
+                    if ($product) {
+                        $projectExists = Project::where('client_id', $clientJpa->id)->exists();
+                        if (!$projectExists) {
+                            $cost = $product->pivot->price ?? $product->price ?? 0;
+                            $projectId = Uuid::uuid1()->toString();
+                            Project::create([
+                                'id' => $projectId,
+                                'client_id' => $clientJpa->id,
+                                'name' => ($product->name ?? 'Servicio') . ' - ' . ($clientJpa->tradename ?: $clientJpa->contact_name),
+                                'description' => 'Proyecto generado automáticamente al convertir lead desde notas',
+                                'cost' => $cost,
+                                'remaining_amount' => $cost,
+                                'business_id' => $clientJpa->business_id,
+                                'starts_at' => date('Y-m-d'),
+                                'ends_at' => date('Y-m-d', strtotime('+1 month')),
+                                'signed_at' => date('Y-m-d'),
+                                'status_id' => Setting::get('default-project-status') ?? AppStatus::where('table_id', 'cd8bd48f-c73c-4a62-9935-024139f3be5f')->where('business_id', $clientJpa->business_id)->where('status', true)->first()?->id,
+                            ]);
+                            // Asignar al usuario actual
+                            if (Auth::user()->service_user?->id) {
+                                DB::table('users_by_projects')->insert([
+                                    'project_id' => $projectId,
+                                    'user_id' => Auth::user()->service_user->id
+                                ]);
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         $mentions = $request->mentions;

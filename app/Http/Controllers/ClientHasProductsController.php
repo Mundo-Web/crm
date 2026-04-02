@@ -16,31 +16,31 @@ class ClientHasProductsController extends BasicController
 
     public function byClient(Request $request, $client): HttpResponse|ResponseFactory
     {
-        $response = Response::simpleTryCatch(function () use ($client) {
-            $products = Product::select([
-                'products.*',
-                'chp.id AS pivot_id',
-                'chp.price AS pivot_price'
-            ])
-                ->join('client_has_products AS chp', 'chp.product_id', 'products.id')
-                ->where('chp.client_id', $client)
-                ->get();
-
-            return $products;
+        $response = Response::simpleTryCatch(function (Response $response) use ($client) {
+            $clientModel = \App\Models\Client::find($client);
+            if (!$clientModel) {
+                $response->data = [];
+                return;
+            }
+            $response->data = $clientModel->products->map(function ($product) {
+                $product->pivot_id = $product->pivot->id;
+                $product->pivot_price = $product->pivot->price;
+                return $product;
+            })->values()->toArray();
         });
         return response($response->toArray(), $response->status);
     }
 
     public function afterSave(Request $request, object $jpa, ?bool $isNew)
     {
-        $productJpa = Product::select([
-            'products.*',
-            'chp.id AS pivot_id',
-            'chp.price AS pivot_price'
-        ])
-            ->join('client_has_products AS chp', 'chp.product_id', 'products.id')
-            ->where('chp.id', $jpa->id)
-            ->first();
-        return $productJpa;
+        $chp = ClientHasProducts::find($jpa->id);
+        if (!$chp) return null;
+
+        $product = Product::find($chp->product_id);
+        if ($product) {
+            $product->pivot_id = $chp->id;
+            $product->pivot_price = $chp->price;
+        }
+        return $product;
     }
 }
