@@ -257,11 +257,6 @@ class KPILeadsController extends BasicController
                 ->groupBy('status.id', 'status.name', 'status.color')
                 ->get();
 
-            $convertedLeadStatus = Setting::get('converted-lead-status');
-            $convertedLabelsCount = Client::byMonth($year, $month)
-                ->where('manage_status_id', $convertedLeadStatus)
-                ->count();
-
             $totalArchivedCounts = Client::byMonth($year, $month)
                 ->select([
                     DB::raw('IFNULL(origin, "Otros") as name'),
@@ -329,7 +324,6 @@ class KPILeadsController extends BasicController
                 'totalArchivedCounts' => $totalArchivedCounts,
                 'archivedLabelsCount' => $archivedLabelsCount,
                 'archivedBreakdown' => $archivedBreakdown,
-                'convertedLabelsCount' => $convertedLabelsCount
             ];
             $response->data = $groupedByManageStatus;
         });

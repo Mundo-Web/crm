@@ -276,7 +276,20 @@ const KPILeads = ({ months = [], currentMonth, currentYear }) => {
                     </div>
                 </div>
             </div>
+
             {/* Dummy data for kpiData */}
+
+            <div className="d-flex align-items-center mt-4 px-1">
+                <div>
+                    <h3
+                        className="mb-0 fw-bold text-dark"
+                        style={{ letterSpacing: "-0.5px" }}
+                    >
+                        Cards de conversión
+                    </h3>
+                </div>
+            </div>
+
             {(() => {
                 const formatNumber = (n) => n.toLocaleString("es-PE");
                 const formatPercentage = (n) => {
@@ -471,6 +484,16 @@ const KPILeads = ({ months = [], currentMonth, currentYear }) => {
                 );
             })()}
 
+            <div className="d-flex align-items-center mb-4 mt-4 px-1">
+                <div>
+                    <h3
+                        className="mb-0 fw-bold text-dark"
+                        style={{ letterSpacing: "-0.5px" }}
+                    >
+                        Análisis total de leads
+                    </h3>
+                </div>
+            </div>
             <div className="row g-4 mb-4">
                 <div className="col-lg-4">
                     <div
@@ -482,7 +505,7 @@ const KPILeads = ({ months = [], currentMonth, currentYear }) => {
                                 <i className="mdi mdi-filter-minus-outline me-2 text-danger"></i>
                                 Funnel de Caída
                             </h5>
-                            <div style={{ width: "100%", height: 350 }}>
+                            <div style={{ width: "100%", height: 600 }}>
                                 <ResponsiveContainer width="100%" height="100%">
                                     <RechartsFunnelChart>
                                         <Tooltip
@@ -510,7 +533,7 @@ const KPILeads = ({ months = [], currentMonth, currentYear }) => {
                                                 },
                                                 {
                                                     name: "VENTAS CONCRETADAS",
-                                                    count: convertedLabelsCount,
+                                                    count: clientsCount,
                                                     fill: "#EF4444",
                                                 },
                                             ]}
@@ -538,7 +561,7 @@ const KPILeads = ({ months = [], currentMonth, currentYear }) => {
                                     },
                                     {
                                         name: "VENTAS CONCRETADAS",
-                                        count: convertedLabelsCount,
+                                        count: clientsCount,
                                         fill: "#EF4444",
                                     },
                                 ].map((item, index) => (
@@ -581,6 +604,13 @@ const KPILeads = ({ months = [], currentMonth, currentYear }) => {
                             color: item.color,
                         }))}
                     />
+
+                    <PipelineChart data={groupedByManageStatus} />
+                </div>
+                <div className="col-lg-8">
+                    <DirectCampaignPerformance
+                        originCounts={originCampaignCounts}
+                    />
                 </div>
             </div>
 
@@ -616,11 +646,6 @@ const KPILeads = ({ months = [], currentMonth, currentYear }) => {
                 <div className="col-lg-6">
                     <ArchivedAnalysis data={totalArchivedCounts} />
                 </div>
-                <div className="col-12">
-                    <DirectCampaignPerformance
-                        originCounts={originCampaignCounts}
-                    />
-                </div>
             </div>
 
             <div className="row g-4 mb-4">
@@ -636,9 +661,6 @@ const KPILeads = ({ months = [], currentMonth, currentYear }) => {
                                 count: funnelCounts[funnel],
                             }))}
                     />
-                </div>
-                <div className="col-lg-7">
-                    <PipelineChart data={groupedByManageStatus} />
                 </div>
             </div>
 
