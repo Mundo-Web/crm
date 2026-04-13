@@ -9,7 +9,6 @@ use App\Models\Status;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Mockery\Undefined;
 use SoDe\Extend\JSON;
 use SoDe\Extend\Response;
 
@@ -88,7 +87,7 @@ class KPILeadsController extends BasicController
                 ])
                 ->leftJoin('statuses AS status', 'status.id', 'clients.status_id')
                 ->whereIn('clients.status_id', $leadStatusesIds)
-                ->groupBy('status_id')
+                ->groupBy('status.id', 'status.name', 'status.color', 'status.order')
                 ->orderBy('status.order', 'asc')
                 ->get();
 
@@ -135,7 +134,7 @@ class KPILeadsController extends BasicController
                 ->whereNotNull('status.status')
                 ->whereNotNull('clients.status')
                 ->whereIn('clients.status_id', array_merge($leadStatusesIds, $clientStatusesIds))
-                ->groupBy('status_id')
+                ->groupBy('status.id', 'status.name', 'status.color', 'status.table_id', 'status.order')
                 ->orderBy('status.table_id', 'desc')
                 ->orderBy('status.order', 'asc')
                 ->get();
@@ -224,9 +223,44 @@ class KPILeadsController extends BasicController
                 ->where('business_id', Auth::user()->business_id)
                 ->whereNotNull('origin')
                 ->where('origin', '<>', '')
-                ->groupBy('origin')
+            ->groupBy('origin')
                 ->havingRaw('COUNT(CASE WHEN lead_origin = "integration" THEN 1 END) > 0 OR COUNT(CASE WHEN campaign_id IS NOT NULL THEN 1 END) > 0')
                 ->get();
+
+            // 1. Estados de archivo automático (JSON)
+            $archivedLeadStatusRaw = Setting::get('archived-lead-status');
+            $archivedLeadStatus = is_array($archivedLeadStatusRaw) ? $archivedLeadStatusRaw : (JSON::parse($archivedLeadStatusRaw ?? '[]') ?? []);
+            if (!is_array($archivedLeadStatus)) $archivedLeadStatus = [$archivedLeadStatus];
+
+            // 2. Estados de archivo directo (JSON)
+            $archivedLeadStatusDirectRaw = Setting::get('archived-lead-status-direct');
+            $archivedLeadStatusDirect = is_array($archivedLeadStatusDirectRaw) ? $archivedLeadStatusDirectRaw : (JSON::parse($archivedLeadStatusDirectRaw ?? '[]') ?? []);
+            if (!is_array($archivedLeadStatusDirect)) $archivedLeadStatusDirect = [$archivedLeadStatusDirect];
+
+            // Combinar todos los estados desestimados
+            $allArchivedStatuses = array_unique(array_merge($archivedLeadStatus, $archivedLeadStatusDirect));
+
+            // Conteo total para el funnel
+            $archivedLabelsCount = Client::byMonth($year, $month)
+                ->where('business_id', Auth::user()->business_id)
+                ->whereIn('manage_status_id', $allArchivedStatuses)
+                ->count();
+
+            // Desglose detallado por etiqueta (para el gráfico de detalle)
+            $archivedBreakdown = DB::table('clients')
+                ->select('status.id', 'status.name', 'status.color', DB::raw('count(clients.id) as quantity'))
+                ->leftJoin('statuses as status', 'status.id', '=', 'clients.manage_status_id')
+                ->where('clients.business_id', Auth::user()->business_id)
+                ->whereIn('clients.manage_status_id', $allArchivedStatuses)
+                ->whereMonth('clients.created_at', $month)
+                ->whereYear('clients.created_at', $year)
+                ->groupBy('status.id', 'status.name', 'status.color')
+                ->get();
+
+            $convertedLeadStatus = Setting::get('converted-lead-status');
+            $convertedLabelsCount = Client::byMonth($year, $month)
+                ->where('manage_status_id', $convertedLeadStatus)
+                ->count();
 
             $totalArchivedCounts = Client::byMonth($year, $month)
                 ->select([
@@ -292,7 +326,10 @@ class KPILeadsController extends BasicController
                 'usersAssignation' => $usersAssignation,
                 'breakdownCounts' => $breakdownCounts,
                 'funnelCounts' => $funnelCounts,
-                'totalArchivedCounts' => $totalArchivedCounts
+                'totalArchivedCounts' => $totalArchivedCounts,
+                'archivedLabelsCount' => $archivedLabelsCount,
+                'archivedBreakdown' => $archivedBreakdown,
+                'convertedLabelsCount' => $convertedLabelsCount
             ];
             $response->data = $groupedByManageStatus;
         });

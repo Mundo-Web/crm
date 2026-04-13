@@ -1,411 +1,653 @@
-import React, { useEffect, useState } from 'react'
-import { createRoot } from 'react-dom/client'
-import Adminto from './components/Adminto'
-import CreateReactScript from './Utils/CreateReactScript'
-import { renderToString } from 'react-dom/server';
-import KPILeadsRest from './actions/KPILeadsRest';
-import Global from './Utils/Global';
-import '../css/kpileads.css'
-import Tippy from '@tippyjs/react';
-import { GET } from 'sode-extend-react';
-import Swal from 'sweetalert2';
-import { TrafficSourceAnalysis } from './Reutilizables/KPSLeads/TrafficSourceAnalysis';
-import { DirectCampaignPerformance } from './Reutilizables/KPSLeads/DirectCampaignPerformance';
-import { FunnelChart } from './Reutilizables/KPSLeads/FunnelChart';
-import { ChannelDistribution } from './Reutilizables/KPSLeads/ChannelDistribution';
-import { ConversionComparison } from './Reutilizables/KPSLeads/ConversionComparison';
-import { PipelineChart } from './Reutilizables/KPSLeads/PipelineChart';
-import { ArchivedAnalysis } from './Reutilizables/KPSLeads/ArchivedAnalysis';
+import React, { useEffect, useState } from "react";
+import { createRoot } from "react-dom/client";
+import Adminto from "./components/Adminto";
+import CreateReactScript from "./Utils/CreateReactScript";
+import { renderToString } from "react-dom/server";
+import KPILeadsRest from "./actions/KPILeadsRest";
+import Global from "./Utils/Global";
+import "../css/kpileads.css";
+import Tippy from "@tippyjs/react";
+import { GET } from "sode-extend-react";
+import Swal from "sweetalert2";
+import { TrafficSourceAnalysis } from "./Reutilizables/KPSLeads/TrafficSourceAnalysis";
+import { DirectCampaignPerformance } from "./Reutilizables/KPSLeads/DirectCampaignPerformance";
+import { FunnelChart } from "./Reutilizables/KPSLeads/FunnelChart";
+import { ChannelDistribution } from "./Reutilizables/KPSLeads/ChannelDistribution";
+import { ConversionComparison } from "./Reutilizables/KPSLeads/ConversionComparison";
+import { PipelineChart } from "./Reutilizables/KPSLeads/PipelineChart";
+import { ArchivedAnalysis } from "./Reutilizables/KPSLeads/ArchivedAnalysis";
+import {
+    Tooltip,
+    ResponsiveContainer,
+    Cell,
+    Funnel,
+    FunnelChart as RechartsFunnelChart,
+    LabelList,
+    Legend,
+} from "recharts";
 
 // Lista de 10 colores aleatorios
-const colors = ['#71b6f9', '#f1556c', '#1abc9c', '#4a81d4', '#f7b84b', '#5b6be8', '#34c38f', '#50a5f1', '#ffbb78', '#aec7e8'];
+const colors = [
+    "#71b6f9",
+    "#f1556c",
+    "#1abc9c",
+    "#4a81d4",
+    "#f7b84b",
+    "#5b6be8",
+    "#34c38f",
+    "#50a5f1",
+    "#ffbb78",
+    "#aec7e8",
+];
 
 const KPILeads = ({ months = [], currentMonth, currentYear }) => {
-  const [selectedMonth, setSelectedMonth] = useState(`${currentYear}-${currentMonth}`)
-  const [grouped, setGrouped] = useState([])
-  const [groupedByManageStatus, setGroupedByManageStatus] = useState([])
+    const [selectedMonth, setSelectedMonth] = useState(
+        `${currentYear}-${currentMonth}`,
+    );
+    const [grouped, setGrouped] = useState([]);
+    const [groupedByManageStatus, setGroupedByManageStatus] = useState([]);
 
-  const [totalCount, setTotalCount] = useState(0)
-  const [pendingCount, setPendingCount] = useState(0)
-  const [clientsCount, setClientsCount] = useState(0)
-  const [archivedCount, setArchivedCount] = useState(0)
-  const [managingCount, setManagingCount] = useState(0)
+    const [totalCount, setTotalCount] = useState(0);
+    const [pendingCount, setPendingCount] = useState(0);
+    const [clientsCount, setClientsCount] = useState(0);
+    const [archivedCount, setArchivedCount] = useState(0);
+    const [managingCount, setManagingCount] = useState(0);
 
-  const [totalSum, setTotalSum] = useState(0)
-  const [clientsSum, setClientsSum] = useState(0)
-  const [archivedSum, setArchivedSum] = useState(0)
-  const [managingSum, setManagingSum] = useState(0)
+    const [totalSum, setTotalSum] = useState(0);
+    const [clientsSum, setClientsSum] = useState(0);
+    const [archivedSum, setArchivedSum] = useState(0);
+    const [managingSum, setManagingSum] = useState(0);
 
-  const [leadSources, setLeadSources] = useState({})
-  const [originCounts, setOriginCounts] = useState([])
-  const [originCampaignCounts, setOriginCampaignCounts] = useState([])
-  const [breakdowns, setBreakdowns] = useState(0)
-  const [funnelCounts, setFunnelCounts] = useState({})
-  const [originLandingCampaignCounts, setOriginLandingCampaignCounts] = useState([])
-  const [totalArchivedCounts, setTotalArchivedCounts] = useState([])
+    const [leadSources, setLeadSources] = useState({});
+    const [originCounts, setOriginCounts] = useState([]);
+    const [originCampaignCounts, setOriginCampaignCounts] = useState([]);
+    const [breakdowns, setBreakdowns] = useState(0);
+    const [funnelCounts, setFunnelCounts] = useState({});
+    const [originLandingCampaignCounts, setOriginLandingCampaignCounts] =
+        useState([]);
+    const [totalArchivedCounts, setTotalArchivedCounts] = useState([]);
+    const [archivedLabelsCount, setArchivedLabelsCount] = useState(0);
+    const [convertedLabelsCount, setConvertedLabelsCount] = useState(0);
+    const [archivedBreakdown, setArchivedBreakdown] = useState([]);
+    const [totalConversionPercent, setTotalConversionPercent] = useState(0);
 
-  const [topUsers, setTopUsers] = useState([])
+    const [topUsers, setTopUsers] = useState([]);
 
-  const monthTemplate = ({
-    id,
-    text,
-    element
-  }) => {
-    if (!id) return text
-    const data = $(element).data('option')
-    return $(renderToString(<div>
-      <b className='d-block'>{text}</b>
-      <small>
-        <i className='me-1 fa fa-users'></i>
-        {data.quantity} entradas
-      </small>
-    </div>))
-  }
-
-  const fetchGraph = (selectedMonth) => {
-    setLeadSources({})
-    setOriginCounts([])
-
-    KPILeadsRest.kpi(selectedMonth)
-      .then(({ data, summary }) => {
-        setGroupedByManageStatus(data)
-        setGrouped(summary.grouped ?? [])
-
-        setTotalCount(summary.totalCount ?? 0)
-        setPendingCount(summary.pendingCount ?? 0)
-        setClientsCount(summary.clientsCount ?? 0)
-        setArchivedCount(summary.archivedCount ?? 0)
-        setManagingCount(summary.managingCount ?? 0)
-
-        setTotalSum(summary.totalSum ?? 0)
-        setClientsSum(summary.clientsSum ?? 0)
-        setArchivedSum(summary.archivedSum ?? 0)
-        setManagingSum(summary.managingSum ?? 0)
-
-        setLeadSources(summary.leadSources ?? {})
-        setOriginCounts(summary.originCounts ?? [])
-        setOriginCampaignCounts(summary.originCampaignCounts ?? []);
-        setFunnelCounts(summary.funnelCounts ?? {})
-        setOriginLandingCampaignCounts(summary.originLandingCampaignCounts ?? [])
-        setTotalArchivedCounts(summary.totalArchivedCounts ?? [])
-
-        setBreakdowns(summary.breakdownCounts ?? 0)
-
-        setTopUsers(summary.usersAssignation ?? [])
-      });
-  }
-
-  useEffect(() => {
-    fetchGraph(selectedMonth)
-  }, [selectedMonth])
-
-  useEffect(() => {
-    const ctx = document.getElementById('leadsStatusPie');
-    let chart;
-
-    if (ctx) {
-      // Destroy existing chart if it exists
-      if (window.leadsStatusChart) {
-        window.leadsStatusChart.destroy();
-      }
-
-      // Create new chart
-      chart = new Chart(ctx, {
-        type: 'pie',
-        data: {
-          labels: [Global.APP_NAME, 'WhatsApp', 'Integración'],
-          datasets: [{
-            data: [leadSources.crm_count, leadSources.whatsapp_count, leadSources.integration_count],
-            backgroundColor: ['#f1556c', '#1abc9c', '#4a81d4'],
-            borderWidth: 0
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: {
-              position: 'bottom'
-            }
-          }
-        }
-      });
-
-      // Store chart reference globally
-      window.leadsStatusChart = chart;
-    }
-    // Cleanup function to destroy chart when component unmounts
-    return () => {
-      if (window.leadsStatusChart) {
-        window.leadsStatusChart.destroy();
-      }
+    const monthTemplate = ({ id, text, element }) => {
+        if (!id) return text;
+        const data = $(element).data("option");
+        return $(
+            renderToString(
+                <div>
+                    <b className="d-block">{text}</b>
+                    <small>
+                        <i className="me-1 fa fa-users"></i>
+                        {data.quantity} entradas
+                    </small>
+                </div>,
+            ),
+        );
     };
-  }, [leadSources])
 
-  useEffect(() => {
-    $('[data-plugin="knob"]').knob({
-      'draw': function () {
-        const count = this.i.attr('data-count')
-        $(this.i).val(count)
-      }
-    })
+    const fetchGraph = (selectedMonth) => {
+        setLeadSources({});
+        setOriginCounts([]);
 
-    return () => {
-      $('[data-plugin="knob"]').trigger('change');
-    }
-  }, [leadSources, originCounts])
+        KPILeadsRest.kpi(selectedMonth).then(({ data, summary }) => {
+            setGroupedByManageStatus(data);
+            setGrouped(summary.grouped ?? []);
 
-  useEffect(() => {
-    if (GET.message) {
-      Swal.fire({
-        icon: 'success',
-        title: 'Operación exitosa',
-        text: GET.message
-      })
-      history.pushState(null, null, '/home')
-    }
-  }, [null])
+            setTotalCount(summary.totalCount ?? 0);
+            setPendingCount(summary.pendingCount ?? 0);
+            setClientsCount(summary.clientsCount ?? 0);
+            setArchivedCount(summary.archivedCount ?? 0);
+            setManagingCount(summary.managingCount ?? 0);
 
-  return (
-    <>
+            setTotalSum(summary.totalSum ?? 0);
+            setClientsSum(summary.clientsSum ?? 0);
+            setArchivedSum(summary.archivedSum ?? 0);
+            setManagingSum(summary.managingSum ?? 0);
 
-      <div className="row">
-        <div className='col-xxl-2 col-xl-3 col-lg-4 col-md-6 col-sm-8 col-12 mb-0'>
-          <div className="d-flex gap-2">
-            <div className="dropdown flex-grow-1">
-              <button
-                className="btn btn-light bg-white dropdown-toggle w-100 text-start rounded-pill"
-                type="button"
-                id="monthDropdown"
-                data-bs-toggle="dropdown"
-                aria-expanded="false"
-              >
-                {(() => {
-                  const selected = months.find(m => m.id === selectedMonth);
-                  if (!selected) return 'Seleccione un mes';
-                  const month = moment({ month: selected.month - 1, year: selected.year });
-                  return month.format('MMMM YYYY').toTitleCase();
-                })()}
-              </button>
-              <ul className="dropdown-menu w-100" aria-labelledby="monthDropdown">
-                {months.map((row, index) => {
-                  const month = moment({ month: row.month - 1, year: row.year });
-                  return (
-                    <li key={index}>
-                      <a
-                        className="dropdown-item"
-                        href="#"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          setSelectedMonth(row.id);
-                        }}
-                      >
-                        <b className='d-block'>{month.format('MMMM YYYY').toTitleCase()}</b>
-                        <small>
-                          <i className='me-1 fa fa-users'></i>
-                          {row.quantity} entradas
-                        </small>
-                      </a>
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>
-            <button
-              className="btn btn-light rounded-pill"
-              type="button"
-              onClick={() => fetchGraph(selectedMonth)}
-              title="Refrescar"
-            >
-              <i className="mdi mdi-refresh"></i>
-            </button>
-          </div>
-        </div>
-      </div>
-      {/* Dummy data for kpiData */}
-      {(() => {
-        const formatNumber = n => n.toLocaleString('es-PE');
-        const formatPercentage = n => {
-          return `${n.toFixed(1)}%`
+            setLeadSources(summary.leadSources ?? {});
+            setOriginCounts(summary.originCounts ?? []);
+            setOriginCampaignCounts(summary.originCampaignCounts ?? []);
+            setFunnelCounts(summary.funnelCounts ?? {});
+            setOriginLandingCampaignCounts(
+                summary.originLandingCampaignCounts ?? [],
+            );
+            setTotalArchivedCounts(summary.totalArchivedCounts ?? []);
+            setArchivedLabelsCount(summary.archivedLabelsCount ?? 0);
+            setConvertedLabelsCount(summary.convertedLabelsCount ?? 0);
+            setArchivedBreakdown(summary.archivedBreakdown || []);
+            setTotalConversionPercent(summary.totalConversionPercent ?? 0);
+
+            setBreakdowns(summary.breakdownCounts ?? 0);
+
+            setTopUsers(summary.usersAssignation ?? []);
+        });
+    };
+
+    useEffect(() => {
+        fetchGraph(selectedMonth);
+    }, [selectedMonth]);
+
+    useEffect(() => {
+        const ctx = document.getElementById("leadsStatusPie");
+        let chart;
+
+        if (ctx) {
+            // Destroy existing chart if it exists
+            if (window.leadsStatusChart) {
+                window.leadsStatusChart.destroy();
+            }
+
+            // Create new chart
+            chart = new Chart(ctx, {
+                type: "pie",
+                data: {
+                    labels: [Global.APP_NAME, "WhatsApp", "Integración"],
+                    datasets: [
+                        {
+                            data: [
+                                leadSources.crm_count,
+                                leadSources.whatsapp_count,
+                                leadSources.integration_count,
+                            ],
+                            backgroundColor: ["#f1556c", "#1abc9c", "#4a81d4"],
+                            borderWidth: 0,
+                        },
+                    ],
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: "bottom",
+                        },
+                    },
+                },
+            });
+
+            // Store chart reference globally
+            window.leadsStatusChart = chart;
+        }
+        // Cleanup function to destroy chart when component unmounts
+        return () => {
+            if (window.leadsStatusChart) {
+                window.leadsStatusChart.destroy();
+            }
         };
+    }, [leadSources]);
 
-        return (
-          <div className="row g-3 mb-3 mt-0">
-            <div className="col-md-6 col-xl">
-              <div className="card border-0 shadow-sm h-100" style={{ borderRadius: '16px' }}>
-                <div className="card-body">
-                  <div className="d-flex justify-content-between align-items-start">
-                    <div className="flex-grow-1">
-                      <p className="text-muted mb-1 small text-uppercase fw-semibold">Total Leads</p>
-                      <h2 className="mb-0 fw-bold">{formatNumber(totalCount)}</h2>
-                      {/* <div className="mt-2">
+    useEffect(() => {
+        $('[data-plugin="knob"]').knob({
+            draw: function () {
+                const count = this.i.attr("data-count");
+                $(this.i).val(count);
+            },
+        });
+
+        return () => {
+            $('[data-plugin="knob"]').trigger("change");
+        };
+    }, [leadSources, originCounts]);
+
+    useEffect(() => {
+        if (GET.message) {
+            Swal.fire({
+                icon: "success",
+                title: "Operación exitosa",
+                text: GET.message,
+            });
+            history.pushState(null, null, "/home");
+        }
+    }, [null]);
+
+    return (
+        <>
+            <div className="row">
+                <div className="col-xxl-2 col-xl-3 col-lg-4 col-md-6 col-sm-8 col-12 mb-0">
+                    <div className="d-flex gap-2">
+                        <div className="dropdown flex-grow-1">
+                            <button
+                                className="btn btn-light bg-white dropdown-toggle w-100 text-start rounded-pill"
+                                type="button"
+                                id="monthDropdown"
+                                data-bs-toggle="dropdown"
+                                aria-expanded="false"
+                            >
+                                {(() => {
+                                    const selected = months.find(
+                                        (m) => m.id === selectedMonth,
+                                    );
+                                    if (!selected) return "Seleccione un mes";
+                                    const month = moment({
+                                        month: selected.month - 1,
+                                        year: selected.year,
+                                    });
+                                    return month
+                                        .format("MMMM YYYY")
+                                        .toTitleCase();
+                                })()}
+                            </button>
+                            <ul
+                                className="dropdown-menu w-100"
+                                aria-labelledby="monthDropdown"
+                            >
+                                {months.map((row, index) => {
+                                    const month = moment({
+                                        month: row.month - 1,
+                                        year: row.year,
+                                    });
+                                    return (
+                                        <li key={index}>
+                                            <a
+                                                className="dropdown-item"
+                                                href="#"
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    setSelectedMonth(row.id);
+                                                }}
+                                            >
+                                                <b className="d-block">
+                                                    {month
+                                                        .format("MMMM YYYY")
+                                                        .toTitleCase()}
+                                                </b>
+                                                <small>
+                                                    <i className="me-1 fa fa-users"></i>
+                                                    {row.quantity} entradas
+                                                </small>
+                                            </a>
+                                        </li>
+                                    );
+                                })}
+                            </ul>
+                        </div>
+                        <button
+                            className="btn btn-light rounded-pill"
+                            type="button"
+                            onClick={() => fetchGraph(selectedMonth)}
+                            title="Refrescar"
+                        >
+                            <i className="mdi mdi-refresh"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            {/* Dummy data for kpiData */}
+            {(() => {
+                const formatNumber = (n) => n.toLocaleString("es-PE");
+                const formatPercentage = (n) => {
+                    return `${n.toFixed(1)}%`;
+                };
+
+                return (
+                    <div className="row g-3 mb-3 mt-0">
+                        <div className="col-md-6 col-xl">
+                            <div
+                                className="card border-0 shadow-sm h-100"
+                                style={{ borderRadius: "16px" }}
+                            >
+                                <div className="card-body">
+                                    <div className="d-flex justify-content-between align-items-start">
+                                        <div className="flex-grow-1">
+                                            <p className="text-muted mb-1 small text-uppercase fw-semibold">
+                                                Total Leads
+                                            </p>
+                                            <h2 className="mb-0 fw-bold">
+                                                {formatNumber(totalCount)}
+                                            </h2>
+                                            {/* <div className="mt-2">
                         <span className="badge bg-success bg-opacity-10 text-success">
                           <i className="mdi mdi-arrow-up me-1"></i>
                           12.5%
                         </span>
                       </div> */}
-                    </div>
-                    <div
-                      className="rounded-circle d-flex align-items-center justify-content-center"
-                      style={{
-                        width: '56px',
-                        height: '56px',
-                        backgroundColor: '#6366F115'
-                      }}
-                    >
-                      <i className="mdi mdi-account-multiple fs-4" style={{ color: '#6366F1' }}></i>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="col-md-6 col-xl">
-              <div className="card border-0 shadow-sm h-100" style={{ borderRadius: '16px' }}>
-                <div className="card-body">
-                  <div className="d-flex justify-content-between align-items-start">
-                    <div className="flex-grow-1">
-                      <p className="text-muted mb-1 small text-uppercase fw-semibold">Leads Nuevos</p>
-                      <h2 className="mb-0 fw-bold">{formatNumber(pendingCount)}</h2>
-                      {/* <div className="mt-2">
+                                        </div>
+                                        <div
+                                            className="rounded-circle d-flex align-items-center justify-content-center"
+                                            style={{
+                                                width: "56px",
+                                                height: "56px",
+                                                backgroundColor: "#6366F115",
+                                            }}
+                                        >
+                                            <i
+                                                className="mdi mdi-account-multiple fs-4"
+                                                style={{ color: "#6366F1" }}
+                                            ></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="col-md-6 col-xl">
+                            <div
+                                className="card border-0 shadow-sm h-100"
+                                style={{ borderRadius: "16px" }}
+                            >
+                                <div className="card-body">
+                                    <div className="d-flex justify-content-between align-items-start">
+                                        <div className="flex-grow-1">
+                                            <p className="text-muted mb-1 small text-uppercase fw-semibold">
+                                                Leads Nuevos
+                                            </p>
+                                            <h2 className="mb-0 fw-bold">
+                                                {formatNumber(pendingCount)}
+                                            </h2>
+                                            {/* <div className="mt-2">
                         <span className="badge bg-success bg-opacity-10 text-success">
                           <i className="mdi mdi-arrow-up me-1"></i>
                           8.3%
                         </span>
                       </div> */}
-                    </div>
-                    <div
-                      className="rounded-circle d-flex align-items-center justify-content-center"
-                      style={{
-                        width: '56px',
-                        height: '56px',
-                        backgroundColor: '#3B82F615'
-                      }}
-                    >
-                      <i className="mdi mdi-account-plus fs-4" style={{ color: '#3B82F6' }}></i>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="col-md-6 col-xl">
-              <div className="card border-0 shadow-sm h-100" style={{ borderRadius: '16px' }}>
-                <div className="card-body">
-                  <div className="d-flex justify-content-between align-items-start">
-                    <div className="flex-grow-1">
-                      <p className="text-muted mb-1 small text-uppercase fw-semibold">Leads Contactados</p>
-                      <h2 className="mb-0 fw-bold">{formatNumber(managingCount)}</h2>
-                    </div>
-                    <div
-                      className="rounded-circle d-flex align-items-center justify-content-center"
-                      style={{
-                        width: '56px',
-                        height: '56px',
-                        backgroundColor: '#F59E0B15'
-                      }}
-                    >
-                      <i className="mdi mdi-phone fs-4" style={{ color: '#F59E0B' }}></i>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="col-md-6 col-xl">
-              <div className="card border-0 shadow-sm h-100" style={{ borderRadius: '16px' }}>
-                <div className="card-body">
-                  <div className="d-flex justify-content-between align-items-start">
-                    <div className="flex-grow-1">
-                      <p className="text-muted mb-1 small text-uppercase fw-semibold">Ventas Cerradas</p>
-                      <h2 className="mb-0 fw-bold">{formatNumber(clientsCount)}</h2>
-                      {/* <div className="mt-2">
+                                        </div>
+                                        <div
+                                            className="rounded-circle d-flex align-items-center justify-content-center"
+                                            style={{
+                                                width: "56px",
+                                                height: "56px",
+                                                backgroundColor: "#3B82F615",
+                                            }}
+                                        >
+                                            <i
+                                                className="mdi mdi-account-plus fs-4"
+                                                style={{ color: "#3B82F6" }}
+                                            ></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="col-md-6 col-xl">
+                            <div
+                                className="card border-0 shadow-sm h-100"
+                                style={{ borderRadius: "16px" }}
+                            >
+                                <div className="card-body">
+                                    <div className="d-flex justify-content-between align-items-start">
+                                        <div className="flex-grow-1">
+                                            <p className="text-muted mb-1 small text-uppercase fw-semibold">
+                                                Leads Contactados
+                                            </p>
+                                            <h2 className="mb-0 fw-bold">
+                                                {formatNumber(managingCount)}
+                                            </h2>
+                                        </div>
+                                        <div
+                                            className="rounded-circle d-flex align-items-center justify-content-center"
+                                            style={{
+                                                width: "56px",
+                                                height: "56px",
+                                                backgroundColor: "#F59E0B15",
+                                            }}
+                                        >
+                                            <i
+                                                className="mdi mdi-phone fs-4"
+                                                style={{ color: "#F59E0B" }}
+                                            ></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="col-md-6 col-xl">
+                            <div
+                                className="card border-0 shadow-sm h-100"
+                                style={{ borderRadius: "16px" }}
+                            >
+                                <div className="card-body">
+                                    <div className="d-flex justify-content-between align-items-start">
+                                        <div className="flex-grow-1">
+                                            <p className="text-muted mb-1 small text-uppercase fw-semibold">
+                                                Ventas Cerradas
+                                            </p>
+                                            <h2 className="mb-0 fw-bold">
+                                                {formatNumber(clientsCount)}
+                                            </h2>
+                                            {/* <div className="mt-2">
                         <span className="badge bg-success bg-opacity-10 text-success">
                           <i className="mdi mdi-arrow-up me-1"></i>
                           15.7%
                         </span>
                       </div> */}
+                                        </div>
+                                        <div
+                                            className="rounded-circle d-flex align-items-center justify-content-center"
+                                            style={{
+                                                width: "56px",
+                                                height: "56px",
+                                                backgroundColor: "#10B98115",
+                                            }}
+                                        >
+                                            <i
+                                                className="mdi mdi-trophy fs-4"
+                                                style={{ color: "#10B981" }}
+                                            ></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="col-md-6 col-xl">
+                            <div
+                                className="card border-0 shadow-sm h-100"
+                                style={{ borderRadius: "16px" }}
+                            >
+                                <div className="card-body">
+                                    <div className="d-flex justify-content-between align-items-start">
+                                        <div className="flex-grow-1">
+                                            <p className="text-muted mb-1 small text-uppercase fw-semibold">
+                                                Tasa de Conversión
+                                            </p>
+                                            <h2 className="mb-0 fw-bold">
+                                                {formatPercentage(
+                                                    (clientsCount /
+                                                        totalCount) *
+                                                        100 || 0,
+                                                )}
+                                            </h2>
+                                        </div>
+                                        <div
+                                            className="rounded-circle d-flex align-items-center justify-content-center"
+                                            style={{
+                                                width: "56px",
+                                                height: "56px",
+                                                backgroundColor: "#8B5CF615",
+                                            }}
+                                        >
+                                            <i
+                                                className="mdi mdi-percent fs-4"
+                                                style={{ color: "#8B5CF6" }}
+                                            ></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
+                );
+            })()}
+
+            <div className="row g-4 mb-4">
+                <div className="col-lg-4">
                     <div
-                      className="rounded-circle d-flex align-items-center justify-content-center"
-                      style={{
-                        width: '56px',
-                        height: '56px',
-                        backgroundColor: '#10B98115'
-                      }}
+                        className="card border-0 shadow-sm h-100"
+                        style={{ borderRadius: "16px" }}
                     >
-                      <i className="mdi mdi-trophy fs-4" style={{ color: '#10B981' }}></i>
+                        <div className="card-body">
+                            <h5 className="card-title mb-4">
+                                <i className="mdi mdi-filter-minus-outline me-2 text-danger"></i>
+                                Funnel de Caída
+                            </h5>
+                            <div style={{ width: "100%", height: 350 }}>
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <RechartsFunnelChart>
+                                        <Tooltip
+                                            formatter={(value) =>
+                                                value.toLocaleString("es-PE")
+                                            }
+                                        />
+                                        <Funnel
+                                            dataKey="count"
+                                            data={[
+                                                {
+                                                    name: "TOTAL LEADS",
+                                                    count: totalCount,
+                                                    fill: "#1E40AF",
+                                                },
+                                                {
+                                                    name: "CONTACTADOS",
+                                                    count: managingCount,
+                                                    fill: "#F97316",
+                                                },
+                                                {
+                                                    name: "DESESTIMADOS",
+                                                    count: archivedLabelsCount,
+                                                    fill: "#22C55E",
+                                                },
+                                                {
+                                                    name: "VENTAS CONCRETADAS",
+                                                    count: convertedLabelsCount,
+                                                    fill: "#EF4444",
+                                                },
+                                            ]}
+                                            isAnimationActive
+                                        ></Funnel>
+                                    </RechartsFunnelChart>
+                                </ResponsiveContainer>
+                            </div>
+                            <div className="d-flex flex-wrap justify-content-center gap-3 mt-4">
+                                {[
+                                    {
+                                        name: "TOTAL LEADS",
+                                        count: totalCount,
+                                        fill: "#1E40AF",
+                                    },
+                                    {
+                                        name: "CONTACTADOS",
+                                        count: managingCount,
+                                        fill: "#F97316",
+                                    },
+                                    {
+                                        name: "DESESTIMADOS",
+                                        count: archivedLabelsCount,
+                                        fill: "#22C55E",
+                                    },
+                                    {
+                                        name: "VENTAS CONCRETADAS",
+                                        count: convertedLabelsCount,
+                                        fill: "#EF4444",
+                                    },
+                                ].map((item, index) => (
+                                    <div
+                                        key={index}
+                                        className="d-flex align-items-center"
+                                    >
+                                        <div
+                                            style={{
+                                                width: 12,
+                                                height: 12,
+                                                backgroundColor: item.fill,
+                                                borderRadius: "50%",
+                                                marginRight: 8,
+                                            }}
+                                        ></div>
+                                        <span
+                                            style={{
+                                                fontSize: "12px",
+                                                fontWeight: "600",
+                                                color: "#475569",
+                                            }}
+                                        >
+                                            {item.name}:{" "}
+                                            {item.count.toLocaleString("es-PE")}
+                                        </span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
                     </div>
-                  </div>
                 </div>
-              </div>
-            </div>
-            <div className="col-md-6 col-xl">
-              <div className="card border-0 shadow-sm h-100" style={{ borderRadius: '16px' }}>
-                <div className="card-body">
-                  <div className="d-flex justify-content-between align-items-start">
-                    <div className="flex-grow-1">
-                      <p className="text-muted mb-1 small text-uppercase fw-semibold">Tasa de Conversión</p>
-                      <h2 className="mb-0 fw-bold">{formatPercentage((clientsCount / totalCount * 100) || 0)}</h2>
-                    </div>
-                    <div
-                      className="rounded-circle d-flex align-items-center justify-content-center"
-                      style={{
-                        width: '56px',
-                        height: '56px',
-                        backgroundColor: '#8B5CF615'
-                      }}
-                    >
-                      <i className="mdi mdi-percent fs-4" style={{ color: '#8B5CF6' }}></i>
-                    </div>
-                  </div>
+                <div className="col-lg-8">
+                    <FunnelChart
+                        title="Detalle de Desestimados"
+                        showRates={false}
+                        extraData={archivedBreakdown.map((item) => ({
+                            stage: item.name,
+                            count: item.quantity,
+                            color: item.color,
+                        }))}
+                    />
                 </div>
-              </div>
             </div>
-          </div>
-        );
-      })()}
 
-      <div className="row g-4 mb-4">
-        <div className="col-lg-8">
-          <FunnelChart data={{ impressions: breakdowns, contacted: funnelCounts.managing, salesClosed: funnelCounts.clients }} extraData={Object.keys(funnelCounts)
-            .filter(funnel => funnel != 'clients' && funnel != 'managing')
-            .map((funnel, idx) => ({ stage: funnel, count: funnelCounts[funnel], color: colors[idx % colors.length] }))
-          } />
-        </div>
-        <div className="col-lg-4">
-          <ChannelDistribution data={originCounts} />
-        </div>
-      </div>
+            <div className="row g-4 mb-4">
+                <div className="col-lg-8">
+                    <FunnelChart
+                        data={{
+                            impressions: breakdowns,
+                            contacted: funnelCounts.managing,
+                            salesClosed: funnelCounts.clients,
+                        }}
+                        extraData={Object.keys(funnelCounts)
+                            .filter(
+                                (funnel) =>
+                                    funnel != "clients" && funnel != "managing",
+                            )
+                            .map((funnel, idx) => ({
+                                stage: funnel,
+                                count: funnelCounts[funnel],
+                                color: colors[idx % colors.length],
+                            }))}
+                    />
+                </div>
+                <div className="col-lg-4">
+                    <ChannelDistribution data={originCounts} />
+                </div>
+            </div>
 
-      <div className="row mb-3 g-3">
-        <div className="col-lg-6">
-          <TrafficSourceAnalysis data={originLandingCampaignCounts} />
-        </div>
-        <div className="col-lg-6">
-          <ArchivedAnalysis data={totalArchivedCounts} />
-        </div>
-        <div className="col-12">
-          <DirectCampaignPerformance originCounts={originCampaignCounts} />
-        </div>
-      </div>
+            <div className="row mb-3 g-3">
+                <div className="col-lg-6">
+                    <TrafficSourceAnalysis data={originLandingCampaignCounts} />
+                </div>
+                <div className="col-lg-6">
+                    <ArchivedAnalysis data={totalArchivedCounts} />
+                </div>
+                <div className="col-12">
+                    <DirectCampaignPerformance
+                        originCounts={originCampaignCounts}
+                    />
+                </div>
+            </div>
 
-      <div className="row g-4 mb-4">
-        <div className="col-lg-5">
-          <ConversionComparison data={Object.keys(funnelCounts)
-            .filter(funnel => funnel != 'clients' && funnel != 'managing').map(funnel => ({
-              label: funnel,
-              count: funnelCounts[funnel]
-            }))} />
-        </div>
-        <div className="col-lg-7">
-          <PipelineChart data={groupedByManageStatus} />
-        </div>
-      </div>
+            <div className="row g-4 mb-4">
+                <div className="col-lg-5">
+                    <ConversionComparison
+                        data={Object.keys(funnelCounts)
+                            .filter(
+                                (funnel) =>
+                                    funnel != "clients" && funnel != "managing",
+                            )
+                            .map((funnel) => ({
+                                label: funnel,
+                                count: funnelCounts[funnel],
+                            }))}
+                    />
+                </div>
+                <div className="col-lg-7">
+                    <PipelineChart data={groupedByManageStatus} />
+                </div>
+            </div>
 
-      {/* <div className="row">
+            {/* <div className="row">
         <div className="col-12">
           <h4 className='mt-0 mb-2'>Vista general de leads</h4>
         </div>
       </div> */}
-      {/* <div className="row">
+            {/* <div className="row">
         <div className="col-md-4">
           <div className="card card-body">
             <div style={{ height: '250px' }}>
@@ -523,7 +765,7 @@ const KPILeads = ({ months = [], currentMonth, currentYear }) => {
         </div>
       </div> */}
 
-      {/* <div className='row'>
+            {/* <div className='row'>
         <div className="col-xl-3 col-lg-4 col-sm-6 col-xs-12">
           <div className="card">
             <div className="card-header bg-danger">
@@ -631,15 +873,15 @@ const KPILeads = ({ months = [], currentMonth, currentYear }) => {
           </div>
         </div>
       </div> */}
-    </>
-  );
+        </>
+    );
 };
 
 CreateReactScript((el, properties) => {
-  if (!properties.can('dashboard', 'leads')) return location.href = '/';
-  createRoot(el).render(
-    <Adminto {...properties} title={`KPI - Leads`}>
-      <KPILeads {...properties} />
-    </Adminto>
-  );
-})
+    if (!properties.can("dashboard", "leads")) return (location.href = "/");
+    createRoot(el).render(
+        <Adminto {...properties} title={`KPI - Leads`}>
+            <KPILeads {...properties} />
+        </Adminto>,
+    );
+});

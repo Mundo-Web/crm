@@ -658,14 +658,15 @@ const Settings = ({
                                                         }}
                                                     >
                                                         <h5 className="card-title mb-1">
-                                                            Estado para archivar
+                                                            Etiquetas para
+                                                            archivar
                                                         </h5>
                                                         <p className="card-text">
-                                                            ¿Qué estado define
-                                                            mejor a un lead que
-                                                            debe archivarse tras
-                                                            N días de
-                                                            inactividad?
+                                                            ¿Qué etiquetas
+                                                            definen mejor a un
+                                                            lead que debe
+                                                            archivarse tras N
+                                                            días de inactividad?
                                                         </p>
                                                         <SelectFormGroup
                                                             eRef={
@@ -731,13 +732,12 @@ const Settings = ({
                                                         }}
                                                     >
                                                         <h5 className="card-title mb-1">
-                                                            Estado de
-                                                            archivación
-                                                            (directo)
+                                                            Etiquetas para
+                                                            archivación directa
                                                         </h5>
                                                         <p className="card-text">
-                                                            Define el estado que
-                                                            archiva
+                                                            Define las etiquetas
+                                                            que archivan
                                                             inmediatamente al
                                                             lead
                                                         </p>
