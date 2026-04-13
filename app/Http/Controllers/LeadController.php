@@ -6,6 +6,7 @@ use App\Jobs\SaveNotification;
 use App\Jobs\SendNewLeadNotification;
 use App\Models\Atalaya\Business;
 use App\Models\Atalaya\BusinessSign;
+use App\Models\BusinessSector;
 use App\Models\Campaign;
 use App\Models\Client;
 use App\Models\ClientNote;
@@ -136,6 +137,7 @@ class LeadController extends BasicController
             ]);
         }
 
+
         return [
             'lead' => $request->lead,
             'manageStatuses' => $manageStatuses,
@@ -153,7 +155,7 @@ class LeadController extends BasicController
             'hasForms' => $hasForms,
             'months' => $months,
             'currentMonth' => $currentMonth,
-            'currentYear' => $currentYear
+            'currentYear' => $currentYear,
         ];
     }
 
@@ -162,7 +164,7 @@ class LeadController extends BasicController
         $response = Response::simpleTryCatch(function (Response $response) use ($lead) {
             $data = $this->model::select('clients.*')
                 ->withCount(['notes', 'tasks', 'pendingTasks', 'products'])
-                ->with(['status', 'assigned', 'manageStatus', 'creator'])
+                ->with(['status', 'assigned', 'manageStatus', 'creator', 'businessSector'])
                 ->join('statuses AS status', 'status.id', 'status_id')
                 ->leftJoin('statuses AS manage_status', 'manage_status.id', 'manage_status_id')
                 ->whereIn('status.table_id', ['e05a43e5-b3a6-46ce-8d1f-381a73498f33', 'a8367789-666e-4929-aacb-7cbc2fbf74de'])
@@ -180,7 +182,7 @@ class LeadController extends BasicController
         $defaultLeadStatus = Setting::get('default-lead-status');
         $query = $model::select($request->fields ?? 'clients.*')
             ->withCount($request->withCount ?? ['notes', 'tasks', 'pendingTasks', 'products'])
-            ->with($request->with ?? ['status', 'assigned', 'manageStatus', 'creator', 'integration', 'campaign'])
+            ->with($request->with ?? ['status', 'assigned', 'manageStatus', 'creator', 'integration', 'campaign', 'businessSector'])
             ->leftJoin('statuses AS status', 'status.id', 'status_id')
             ->leftJoin('statuses AS manage_status', 'manage_status.id', 'manage_status_id')
             ->leftJoin('users AS assigned', 'assigned.id', 'clients.assigned_to')
@@ -443,15 +445,16 @@ class LeadController extends BasicController
             $manage_status = Setting::get('default-manage-lead-status');
             $body['status_id'] = $status;
             $body['manage_status_id'] = $manage_status;
+            $body['created_by'] = Auth::user()->service_user->id;
+            $body['source'] = env('APP_NAME');
+            $body['origin'] = env('APP_NAME');
+            $body['triggered_by'] = 'Formulario';
+            $body['date'] = Trace::getDate('date');
+            $body['time'] = Trace::getDate('time');
+            $body['ip'] = $request->ip();
+            $body['complete_registration'] = true;
+            $body['status'] = true;
         }
-        $body['created_by'] = Auth::user()->service_user->id;
-        $body['source'] = env('APP_NAME');
-        $body['origin'] = env('APP_NAME');
-        $body['triggered_by'] = 'Formulario';
-        $body['date'] = Trace::getDate('date');
-        $body['time'] = Trace::getDate('time');
-        $body['ip'] = $request->ip();
-        $body['complete_registration'] = true;
 
         return $body;
     }

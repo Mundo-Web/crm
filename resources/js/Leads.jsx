@@ -122,6 +122,7 @@ const Leads = (properties) => {
     const messageRef = useRef();
     const rucRef = useRef();
     const workersRef = useRef();
+    const sectorRef = useRef();
     // const sourceChannelRef = useRef()
 
     const [processStatus, setProcessStatus] = useState(null);
@@ -567,12 +568,14 @@ const Leads = (properties) => {
             process: processRef.current.value,
             // status_id: $(statusRef.current).is(':visible') ? statusRef.current.value : undefined,
             // manage_status_id: $(manageStatusRef.current).is(':visible') ? manageStatusRef.current.value : undefined,
-            status_id: type == "8e895346-3d87-4a87-897a-4192b917c211"
-                ? processStatus2save
-                : undefined,
-            manage_status_id: type == "8e895346-3d87-4a87-897a-4192b917c211"
-                ? processManageStatus
-                : undefined,
+            status_id:
+                type == "8e895346-3d87-4a87-897a-4192b917c211"
+                    ? processStatus2save
+                    : undefined,
+            manage_status_id:
+                type == "8e895346-3d87-4a87-897a-4192b917c211"
+                    ? processManageStatus
+                    : undefined,
             name: title,
             description: !isTask ? content : undefined,
             raw: !isTask ? text : undefined,
@@ -785,11 +788,11 @@ const Leads = (properties) => {
         }
 
         let result = null;
-        alert('Cambiando estado...');
-        console.log('onManageStatusChange', {
+        alert("Cambiando estado...");
+        console.log("onManageStatusChange", {
             statusId: status.id,
             convertedLeadStatus,
-            equals: status.id == convertedLeadStatus
+            equals: status.id == convertedLeadStatus,
         });
         if (
             convertedLeadStatus &&
@@ -907,6 +910,7 @@ const Leads = (properties) => {
             ruc: rucRef.current.value,
             workers: workersRef.current.value,
             web_url: webUrlRef.current.value,
+            business_sector_id: sectorRef.current.value,
             message: messageRef.current.value || "Sin mensaje",
             client_width: window.screen.width,
             client_height: window.screen.height,
@@ -942,6 +946,7 @@ const Leads = (properties) => {
         rucRef.current.value = data?.ruc ?? "";
         workersRef.current.value = data?.workers ?? "";
         webUrlRef.current.value = data?.web_url ?? "";
+        SetSelectValue(sectorRef.current, data?.business_sector_id ?? "");
         messageRef.current.value = data?.message ?? "";
         // sourceChannelRef.current.value = data?.source_channel ?? ''
 
@@ -2541,15 +2546,19 @@ const Leads = (properties) => {
                         label="Link de WEB"
                         col="col-md-6"
                     />
-                    <InputFormGroup
-                        eRef={rucRef}
-                        label="RUC"
-                        col="col-md-6"
-                    />
+                    <InputFormGroup eRef={rucRef} label="RUC" col="col-md-6" />
                     <InputFormGroup
                         eRef={workersRef}
                         label="N° Trabajadores"
                         col="col-md-6"
+                    />
+                    <SelectAPIFormGroup
+                        eRef={sectorRef}
+                        label="Rubro de Negocio"
+                        col="col-md-12"
+                        searchAPI="/api/business-sectors/paginate"
+                        searchBy="name"
+                        dropdownParent={newLeadModalRef.current}
                     />
                     <TextareaFormGroup
                         eRef={messageRef}

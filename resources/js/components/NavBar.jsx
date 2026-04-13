@@ -487,6 +487,9 @@ const NavBar = ({ can, session = {}, services, theme, setTheme, title = '', wsAc
                   {can('types', 'root', 'all', 'list') &&
                     <DDMenuItem icon='mdi mdi-format-list-text' href='/types' pinned={pinned} setPinned={setPinned}>Tipos</DDMenuItem>
                   }
+                  {can('types', 'root', 'all', 'list') &&
+                    <DDMenuItem icon='mdi mdi-buffer' href='/business-sectors' pinned={pinned} setPinned={setPinned}>Rubros de Negocio</DDMenuItem>
+                  }
                 </div>
               </>
             }

@@ -39,6 +39,7 @@ use App\Http\Controllers\UserByProjectController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\UtilController;
 use App\Http\Controllers\ViewController;
+use App\Http\Controllers\BusinessSectorController;
 use App\Http\Controllers\WhatsAppController;
 use Illuminate\Support\Facades\Route;
 
@@ -142,6 +143,12 @@ Route::middleware('auth')->group(function () {
     Route::post('/statuses/paginate', [StatusController::class, 'paginate']);
     Route::patch('/statuses/status', [StatusController::class, 'status']);
     Route::delete('/statuses/{id}', [StatusController::class, 'delete']);
+
+    // BusinessSectors routes
+    Route::post('/business-sectors', [BusinessSectorController::class, 'save']);
+    Route::post('/business-sectors/paginate', [BusinessSectorController::class, 'paginate']);
+    Route::patch('/business-sectors/status', [BusinessSectorController::class, 'status']);
+    Route::delete('/business-sectors/{id}', [BusinessSectorController::class, 'delete']);
 
     // Types routes
     Route::post('/products', [ProductController::class, 'save']);

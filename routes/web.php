@@ -3,6 +3,7 @@
 use App\Http\Controllers\ApikeyController;
 use App\Http\Controllers\ArchivedController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\BusinessSectorController;
 use App\Http\Controllers\CampaignController;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\ChatruchoController;
@@ -96,6 +97,7 @@ Route::middleware(['auth', 'firstTime', 'hasPlan'])->group(function () {
     Route::get('/webhooks', [WebhookController::class, 'reactView'])->name('Webhooks.jsx');
     Route::get('/types', [TypeController::class, 'reactView'])->name('Types.jsx');
     Route::get('/settings', [SettingController::class, 'reactView'])->name('Settings.jsx');
+    Route::get('/business-sectors', [BusinessSectorController::class, 'reactView'])->name('BusinessSectors.jsx');
 
     Route::get('/chatrucho', [ChatruchoController::class, 'reactView'])->name('Chatrucho.jsx');
 });

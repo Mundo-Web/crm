@@ -769,6 +769,15 @@ const LeadTable = ({
                     },
                 },
                 {
+                    dataField: "business_sector.name",
+                    caption: "Rubro",
+                    dataType: "string",
+                    width: 150,
+                    cellTemplate: (container, { data }) => {
+                        container.text(data.business_sector?.name || "-");
+                    },
+                },
+                {
                     dataField: "created_at",
                     caption: "Fecha creacion",
                     dataType: "date",

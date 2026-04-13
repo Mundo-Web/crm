@@ -67,7 +67,8 @@ class Client extends Model
         'campaign_id',
         'last_message',
         'last_message_microtime',
-        'lead_origin'
+        'lead_origin',
+        'business_sector_id'
     ];
 
     protected $casts = [
@@ -126,6 +127,11 @@ class Client extends Model
     public function manageStatus()
     {
         return $this->hasOne(Status::class, 'id', 'manage_status_id');
+    }
+
+    public function businessSector()
+    {
+        return $this->belongsTo(BusinessSector::class, 'business_sector_id');
     }
 
     public function notes()
