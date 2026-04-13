@@ -612,10 +612,23 @@ const KPILeads = ({ months = [], currentMonth, currentYear }) => {
                         originCounts={originCampaignCounts}
                     />
                 </div>
+                <div className="col-lg-4">
+                    <ChannelDistribution data={originCounts} />
+                </div>
+            </div>
+            <div className="d-flex align-items-center mb-4 mt-4 px-1">
+                <div>
+                    <h3
+                        className="mb-0 fw-bold text-dark"
+                        style={{ letterSpacing: "-0.5px" }}
+                    >
+                        Rendimiento de landing
+                    </h3>
+                </div>
             </div>
 
             <div className="row g-4 mb-4">
-                <div className="col-lg-8">
+                <div className="col-lg-12">
                     <FunnelChart
                         data={{
                             impressions: breakdowns,
@@ -633,9 +646,6 @@ const KPILeads = ({ months = [], currentMonth, currentYear }) => {
                                 color: colors[idx % colors.length],
                             }))}
                     />
-                </div>
-                <div className="col-lg-4">
-                    <ChannelDistribution data={originCounts} />
                 </div>
             </div>
 
