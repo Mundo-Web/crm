@@ -738,7 +738,7 @@ const LeadTable = ({
                                         <code
                                             style={{
                                                 color: "#ff8acc",
-                                                maxWidth: "40px",
+                                                maxWidth: "50px",
                                             }}
                                             className="d-inline-block text-truncate"
                                         >
@@ -754,7 +754,7 @@ const LeadTable = ({
                                         style={{ maxWidth: "100%" }}
                                     >
                                         <code
-                                            style={{ maxWidth: "40px" }}
+                                            style={{ maxWidth: "50px" }}
                                             className="d-inline-block text-truncate"
                                         >
                                             {data.campaign.code}
@@ -767,6 +767,18 @@ const LeadTable = ({
                             ),
                         );
                     },
+                },
+                {
+                    dataField: "adset_name",
+                    caption: "Grupo de anuncios",
+                    dataType: "string",
+                    width: 150,
+                },
+                {
+                    dataField: "ad_name",
+                    caption: "Anuncio",
+                    dataType: "string",
+                    width: 150,
                 },
                 {
                     dataField: "business_sector.name",

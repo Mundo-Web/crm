@@ -176,7 +176,7 @@ class MetaController extends Controller
 
             if ($origin === 'forms') {
                 Log::info('Processing Meta Lead Form event');
-                $leadRes = new Fetch(env('FACEBOOK_GRAPH_URL') . '/' . $entry['changes'][0]['value']['leadgen_id'] . '?fields=created_time,platform,ad_id,ad_name,campaign_id,campaign_name,form_id,field_data', [
+                $leadRes = new Fetch(env('FACEBOOK_GRAPH_URL') . '/' . $entry['changes'][0]['value']['leadgen_id'] . '?fields=created_time,platform,ad_id,ad_name,adset_id,adset_name,campaign_id,campaign_name,form_id,field_data', [
                     'headers' =>  [
                         'Authorization' => 'Bearer ' . $integrationJpa->meta_access_token
                     ]
@@ -234,6 +234,8 @@ class MetaController extends Controller
                     'origin' => $origins[$leadData['platform']] ?? $leadData['platform'], // Aqui va facebook o instagram
                     'triggered_by' => str_replace('_', ' ', $leadData['campaign_name']),
                     'campaign_id' => $campaignJpa->id,
+                    'adset_name' => $leadData['adset_name'] ?? null,
+                    'ad_name' => $leadData['ad_name'] ?? null,
                     'status' => true,
                     'complete_registration' => true,
                 ]);

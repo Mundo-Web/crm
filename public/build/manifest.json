@@ -19,12 +19,12 @@
     "file": "assets/ArrayJoin-2k6ba35P.js",
     "name": "ArrayJoin"
   },
-  "_AssignUsersModal-PcQbzBI6.js": {
-    "file": "assets/AssignUsersModal-PcQbzBI6.js",
+  "_AssignUsersModal-HkKLYqWF.js": {
+    "file": "assets/AssignUsersModal-HkKLYqWF.js",
     "name": "AssignUsersModal",
     "imports": [
       "_CreateReactScript-Dnl9MgkI.js",
-      "_DropDown-CNsIhHKp.js",
+      "_Dropdown-CNsIhHKp.js",
       "_DropdownItem-Bldz8Bc7.js",
       "_DateRange-DGNacDAO.js",
       "_sweetalert2.esm.all-BCYFRl-c.js",
@@ -64,9 +64,9 @@
       "_server.browser-BjGtZLUE.js"
     ]
   },
-  "_DropDown-CNsIhHKp.js": {
-    "file": "assets/DropDown-CNsIhHKp.js",
-    "name": "DropDown",
+  "_Dropdown-CNsIhHKp.js": {
+    "file": "assets/Dropdown-CNsIhHKp.js",
+    "name": "Dropdown",
     "imports": [
       "_CreateReactScript-Dnl9MgkI.js",
       "_Adminto-CPkt26-C.js"
@@ -530,7 +530,7 @@
     ]
   },
   "resources/js/Clients.jsx": {
-    "file": "assets/Clients-Ix3osa9z.js",
+    "file": "assets/Clients-Uhd83XGf.js",
     "name": "Clients",
     "src": "resources/js/Clients.jsx",
     "isEntry": true,
@@ -545,7 +545,7 @@
       "_SetSelectValue-CK1-HSDd.js",
       "_DropdownItem-Bldz8Bc7.js",
       "_DropdownEnd-BSYmI5nj.js",
-      "_AssignUsersModal-PcQbzBI6.js",
+      "_AssignUsersModal-HkKLYqWF.js",
       "_ReactAppend-yJHBLahj.js",
       "_ProductsByClientsRest-BPKP_Cya.js",
       "_DateRange-DGNacDAO.js",
@@ -553,7 +553,7 @@
       "_TippyButton-D00iinus.js",
       "_Number2Currency-e57Tgsuk.js",
       "_DxBox-oRXWSBNz.js",
-      "_DropDown-CNsIhHKp.js",
+      "_Dropdown-CNsIhHKp.js",
       "_LeadsRest-BptDg9Zw.js",
       "_DxPanelButton-CGE7--Y4.js",
       "_server.browser-BjGtZLUE.js",
@@ -661,7 +661,7 @@
     ]
   },
   "resources/js/Leads.jsx": {
-    "file": "assets/Leads-BeZqqW73.js",
+    "file": "assets/Leads-sB8rZzTM.js",
     "name": "Leads",
     "src": "resources/js/Leads.jsx",
     "isEntry": true,
@@ -680,7 +680,7 @@
       "_SelectFormGroup-D9SroxtZ.js",
       "_SetSelectValue-CK1-HSDd.js",
       "_ProductsByClientsRest-BPKP_Cya.js",
-      "_DropDown-CNsIhHKp.js",
+      "_Dropdown-CNsIhHKp.js",
       "_DropdownItem-Bldz8Bc7.js",
       "_Number2Currency-e57Tgsuk.js",
       "_server.browser-BjGtZLUE.js",
@@ -864,14 +864,14 @@
     ]
   },
   "resources/js/Projects.jsx": {
-    "file": "assets/Projects-BycftWCC.js",
+    "file": "assets/Projects-DGoJQS33.js",
     "name": "Projects",
     "src": "resources/js/Projects.jsx",
     "isEntry": true,
     "imports": [
       "_CreateReactScript-Dnl9MgkI.js",
       "_sweetalert2.esm.all-BCYFRl-c.js",
-      "_AssignUsersModal-PcQbzBI6.js",
+      "_AssignUsersModal-HkKLYqWF.js",
       "_Number2Currency-e57Tgsuk.js",
       "_SetSelectValue-CK1-HSDd.js",
       "_DateRange-DGNacDAO.js",
@@ -885,7 +885,7 @@
       "_SelectFormGroup-D9SroxtZ.js",
       "_DxPanelButton-CGE7--Y4.js",
       "_SubdomainsRest-DXDp_U2w.js",
-      "_DropDown-CNsIhHKp.js",
+      "_Dropdown-CNsIhHKp.js",
       "_DropdownItem-Bldz8Bc7.js",
       "_TippyButton-D00iinus.js",
       "_server.browser-BjGtZLUE.js",
@@ -919,14 +919,14 @@
     ]
   },
   "resources/js/ProjectsDone.jsx": {
-    "file": "assets/ProjectsDone-D-pGDUqF.js",
+    "file": "assets/ProjectsDone-Bf2iVuBd.js",
     "name": "ProjectsDone",
     "src": "resources/js/ProjectsDone.jsx",
     "isEntry": true,
     "imports": [
       "_CreateReactScript-Dnl9MgkI.js",
       "_sweetalert2.esm.all-BCYFRl-c.js",
-      "_AssignUsersModal-PcQbzBI6.js",
+      "_AssignUsersModal-HkKLYqWF.js",
       "_Number2Currency-e57Tgsuk.js",
       "_SetSelectValue-CK1-HSDd.js",
       "_DateRange-DGNacDAO.js",
@@ -940,7 +940,7 @@
       "_SelectFormGroup-D9SroxtZ.js",
       "_DxPanelButton-CGE7--Y4.js",
       "_SubdomainsRest-DXDp_U2w.js",
-      "_DropDown-CNsIhHKp.js",
+      "_Dropdown-CNsIhHKp.js",
       "_DropdownItem-Bldz8Bc7.js",
       "_TippyButton-D00iinus.js",
       "_server.browser-BjGtZLUE.js",
@@ -1071,7 +1071,7 @@
     ]
   },
   "resources/js/Tasks.jsx": {
-    "file": "assets/Tasks-BCP_t6tf.js",
+    "file": "assets/Tasks-BIGYrhmg.js",
     "name": "Tasks",
     "src": "resources/js/Tasks.jsx",
     "isEntry": true,
@@ -1083,7 +1083,7 @@
       "_Table-B7k6823T.js",
       "_ReactAppend-yJHBLahj.js",
       "_DxBox-oRXWSBNz.js",
-      "_DropDown-CNsIhHKp.js",
+      "_Dropdown-CNsIhHKp.js",
       "_DropdownItem-Bldz8Bc7.js",
       "_server.browser-BjGtZLUE.js",
       "_Logout-9tgSO4-m.js",
