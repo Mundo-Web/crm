@@ -9,6 +9,7 @@ use App\Http\Controllers\ChatController;
 use App\Http\Controllers\ChatruchoController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\DefaultMessageController;
+use App\Http\Controllers\KPICampaignsController;
 use App\Http\Controllers\KPILeadsController;
 use App\Http\Controllers\KPIProjectsController;
 use App\Http\Controllers\LeadController;
@@ -67,6 +68,7 @@ Route::middleware('auth')->group(function () {
 Route::middleware(['auth', 'firstTime', 'hasPlan'])->group(function () {
     Route::get('/', [WelcomeController::class, 'reactView'])->name('Welcome.jsx');
     Route::get('/home', [KPILeadsController::class, 'reactView'])->name('KPILeads.jsx');
+    Route::get('/home/campaigns', [KPICampaignsController::class, 'reactView'])->name('KPICampaigns.jsx');
     Route::get('/home/projects', [KPIProjectsController::class, 'reactView'])->name('KPIProjects.jsx');
     Route::get('/clients', [ClientController::class, 'reactView'])->name('Clients.jsx');
     Route::get('/chat/{lead?}', [ChatController::class, 'reactView'])->name('Chat.jsx');

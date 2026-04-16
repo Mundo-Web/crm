@@ -13,6 +13,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DefaultMessageController;
 use App\Http\Controllers\GmailController;
 use App\Http\Controllers\IntegrationController;
+use App\Http\Controllers\KPICampaignsController;
 use App\Http\Controllers\KPILeadsController;
 use App\Http\Controllers\LeadController;
 use App\Http\Controllers\MessageController;
@@ -76,6 +77,7 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/dashboard/{range}', [DashboardController::class, 'revenue']);
     Route::get('/dashboard/leads/kpi/{month}', [KPILeadsController::class, 'kpi']);
+    Route::get('/dashboard/campaigns/kpi/{month}', [KPICampaignsController::class, 'kpi']);
 
     // Users sign Routes
     Route::post('/users/sign', [UserController::class, 'addSign']);

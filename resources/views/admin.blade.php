@@ -154,7 +154,7 @@
     <!-- Vendor js -->
     <script src="/lte/assets/js/vendor.min.js"></script>
 
-    @if ($route == 'KPILeads.jsx' || $route == 'KPIProjects.jsx')
+    @if ($route == 'KPILeads.jsx' || $route == 'KPIProjects.jsx' || $route == 'KPICampaigns.jsx')
         <script src="/lte/assets/libs/chart.js/Chart.bundle.min.js"></script>
         <script src="/lte/assets/libs/jquery-knob/jquery.knob.min.js"></script>
     @elseif($route == 'Calendar.jsx')

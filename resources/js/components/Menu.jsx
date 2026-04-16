@@ -286,15 +286,26 @@ const Menu = ({
                                 icon="mdi mdi-chart-donut-variant"
                             >
                                 {can("dashboard", "leads") && (
-                                    <MenuItem
-                                        pinned={pinned}
-                                        setPinned={setPinned}
-                                        href="/home"
-                                        icon="mdi mdi-account-multiple"
-                                        pinLabel="KPIs • Leads"
-                                    >
-                                        Leads
-                                    </MenuItem>
+                                    <>
+                                        <MenuItem
+                                            pinned={pinned}
+                                            setPinned={setPinned}
+                                            href="/home"
+                                            icon="mdi mdi-account-multiple"
+                                            pinLabel="KPIs • Leads"
+                                        >
+                                            Leads
+                                        </MenuItem>
+                                        <MenuItem
+                                            pinned={pinned}
+                                            setPinned={setPinned}
+                                            href="/home/campaigns"
+                                            icon="mdi mdi-google-ads"
+                                            pinLabel="KPIs • Campañas"
+                                        >
+                                            Campañas
+                                        </MenuItem>
+                                    </>
                                 )}
                                 {can("dashboard", "projects") && (
                                     <MenuItem
