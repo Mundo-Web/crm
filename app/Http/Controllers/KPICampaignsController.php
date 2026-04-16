@@ -77,7 +77,9 @@ class KPICampaignsController extends BasicController
             $leadStatusesIds = array_map(fn($status) => $status['id'], $leadStatuses->toArray());
             $clientStatusesIds = array_map(fn($status) => $status['id'], $clientStatuses->toArray());
 
-            $query = fn() => Client::byMonth($year, $month)->whereNotNull('campaign_id');
+            $query = fn() => Client::byMonth($year, $month)
+                ->where('clients.business_id', Auth::user()->business_id)
+                ->whereNotNull('campaign_id');
 
             $grouped = $query()
                 ->select([
@@ -301,6 +303,52 @@ class KPICampaignsController extends BasicController
                 ->orderBy('assignation_date', 'desc')
                 ->get();
 
+            // Hierarchical Data: Campaign -> Ad Set -> Ads
+            $rawAdsData = $query()
+                ->select([
+                    DB::raw('IFNULL(campaign.title, "(Campaña desconocida)") AS campaign_name'),
+                    DB::raw('IFNULL(clients.adset_name, "(Sin grupo de anuncios)") as adset_name'),
+                    DB::raw('IFNULL(clients.ad_name, "(Sin anuncio)") as ad_name'),
+                    DB::raw('COUNT(*) as total'),
+                    DB::raw('COUNT(CASE WHEN clients.status_id = "' . $defaultLeadStatus . '" THEN 1 END) as pending'),
+                    DB::raw('COUNT(CASE WHEN clients.status_id IN (' . implode(',', array_map(fn($id) => '"' . $id . '"', $clientStatusesIds)) . ') AND clients.status IS NOT NULL THEN 1 END) as sales'),
+                    DB::raw('COUNT(CASE WHEN clients.status IS NULL THEN 1 END) as archived'),
+                ])
+                ->leftJoin('campaigns AS campaign', 'campaign.id', 'clients.campaign_id')
+                ->where('clients.business_id', Auth::user()->business_id)
+                ->groupBy('campaign.title', 'clients.adset_name', 'clients.ad_name')
+                ->orderBy('campaign.title', 'asc')
+                ->orderBy('total', 'desc')
+                ->get();
+
+            $hierarchy = [];
+            foreach ($rawAdsData as $row) {
+                if (!isset($hierarchy[$row->campaign_name])) {
+                    $hierarchy[$row->campaign_name] = [
+                        'name' => $row->campaign_name,
+                        'adSets' => []
+                    ];
+                }
+                if (!isset($hierarchy[$row->campaign_name]['adSets'][$row->adset_name])) {
+                    $hierarchy[$row->campaign_name]['adSets'][$row->adset_name] = [
+                        'name' => $row->adset_name,
+                        'ads' => []
+                    ];
+                }
+                $hierarchy[$row->campaign_name]['adSets'][$row->adset_name]['ads'][] = [
+                    'name' => $row->ad_name,
+                    'total' => $row->total,
+                    'contacted' => $row->total - $row->pending,
+                    'archived' => $row->archived,
+                    'sales' => $row->sales
+                ];
+            }
+
+            // Convert nested adSets to indexed array
+            foreach ($hierarchy as &$campaign) {
+                $campaign['adSets'] = array_values($campaign['adSets']);
+            }
+
             $response->summary = [
                 'grouped' => $grouped,
                 'totalCount' => $totalCount,
@@ -322,6 +370,7 @@ class KPICampaignsController extends BasicController
                 'totalArchivedCounts' => $totalArchivedCounts,
                 'archivedLabelsCount' => $archivedLabelsCount,
                 'archivedBreakdown' => $archivedBreakdown,
+                'hierarchy' => array_values($hierarchy)
             ];
             $response->data = $groupedByManageStatus;
         });

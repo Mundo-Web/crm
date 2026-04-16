@@ -15,22 +15,6 @@
       "Adminto.css"
     ]
   },
-  "_ArchivedAnalysis-!~{01c}~.js": {
-    "file": "ArchivedAnalysis.css",
-    "src": "_ArchivedAnalysis-!~{01c}~.js"
-  },
-  "_ArchivedAnalysis-uR29LP5a.js": {
-    "file": "assets/ArchivedAnalysis-uR29LP5a.js",
-    "name": "ArchivedAnalysis",
-    "imports": [
-      "_CreateReactScript-CdFATXLL.js",
-      "_index-Bx6_9p8l.js",
-      "_index-8JwjhRSi.js"
-    ],
-    "css": [
-      "ArchivedAnalysis.css"
-    ]
-  },
   "_ArrayJoin-2k6ba35P.js": {
     "file": "assets/ArrayJoin-2k6ba35P.js",
     "name": "ArrayJoin"
@@ -172,6 +156,22 @@
     "name": "PermissionsRest",
     "imports": [
       "_CreateReactScript-CdFATXLL.js"
+    ]
+  },
+  "_PipelineChart-!~{01c}~.js": {
+    "file": "PipelineChart.css",
+    "src": "_PipelineChart-!~{01c}~.js"
+  },
+  "_PipelineChart-vM4JyE1_.js": {
+    "file": "assets/PipelineChart-vM4JyE1_.js",
+    "name": "PipelineChart",
+    "imports": [
+      "_CreateReactScript-CdFATXLL.js",
+      "_index-Bx6_9p8l.js",
+      "_index-8JwjhRSi.js"
+    ],
+    "css": [
+      "PipelineChart.css"
     ]
   },
   "_ProductsByClientsRest-DuK19DnT.js": {
@@ -642,7 +642,7 @@
     ]
   },
   "resources/js/KPICampaigns.jsx": {
-    "file": "assets/KPICampaigns-CgZYNuNg.js",
+    "file": "assets/KPICampaigns-Bf6Wg-Jc.js",
     "name": "KPICampaigns",
     "src": "resources/js/KPICampaigns.jsx",
     "isEntry": true,
@@ -650,7 +650,7 @@
       "_CreateReactScript-CdFATXLL.js",
       "_Adminto-CGFH6DFi.js",
       "_server.browser-Bo-BiJWX.js",
-      "_ArchivedAnalysis-uR29LP5a.js",
+      "_PipelineChart-vM4JyE1_.js",
       "_sweetalert2.esm.all-BuvcKzCS.js",
       "_Logout-Dfbya5P9.js",
       "_index-Bx6_9p8l.js",
@@ -658,7 +658,7 @@
     ]
   },
   "resources/js/KPILeads.jsx": {
-    "file": "assets/KPILeads-DnEfTJNz.js",
+    "file": "assets/KPILeads-7nO-DqLi.js",
     "name": "KPILeads",
     "src": "resources/js/KPILeads.jsx",
     "isEntry": true,
@@ -666,7 +666,7 @@
       "_CreateReactScript-CdFATXLL.js",
       "_Adminto-CGFH6DFi.js",
       "_server.browser-Bo-BiJWX.js",
-      "_ArchivedAnalysis-uR29LP5a.js",
+      "_PipelineChart-vM4JyE1_.js",
       "_sweetalert2.esm.all-BuvcKzCS.js",
       "_Logout-Dfbya5P9.js",
       "_index-Bx6_9p8l.js",

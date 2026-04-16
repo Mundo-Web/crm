@@ -24,7 +24,143 @@ import {
     FunnelChart as RechartsFunnelChart,
     LabelList,
     Legend,
+    BarChart,
+    Bar,
+    XAxis,
+    YAxis,
+    CartesianGrid,
+    Tooltip as RechartsTooltip,
 } from "recharts";
+
+const AdSetPerformanceCard = ({ adSet }) => {
+    const chartData = adSet.ads.map((ad) => ({
+        name: ad.name,
+        "TOTAL LEADS": ad.total,
+        CONTACTADOS: ad.contacted,
+        DESESTIMADOS: ad.archived,
+        "VENTAS CONCRETADAS": ad.sales,
+    }));
+
+    return (
+        <div
+            className="card border-0 shadow-sm mb-4"
+            style={{ borderRadius: "16px" }}
+        >
+            <div className="card-body">
+                <div className="d-flex justify-content-between align-items-center mb-4">
+                    <h5 className="card-title mb-0 fw-bold text-dark">
+                        <i className="mdi mdi-folder-outline me-2 text-primary"></i>
+                        {adSet.name}
+                    </h5>
+                    <span className="badge bg-light text-dark rounded-pill px-3 border">
+                        {adSet.ads.length} Anuncios
+                    </span>
+                </div>
+
+                <div style={{ width: "100%", height: 400 }}>
+                    <ResponsiveContainer width="100%" height="100%">
+                        <BarChart
+                            data={chartData}
+                            margin={{
+                                top: 20,
+                                right: 30,
+                                left: 20,
+                                bottom: 60,
+                            }}
+                        >
+                            <CartesianGrid
+                                strokeDasharray="3 3"
+                                vertical={false}
+                                stroke="#f0f0f0"
+                            />
+                            <XAxis
+                                dataKey="name"
+                                interval={0}
+                                height={60}
+                                tick={{
+                                    fontSize: 10,
+                                    fontWeight: 600,
+                                    fill: "#475569",
+                                }}
+                                axisLine={false}
+                                tickLine={false}
+                            />
+                            <YAxis hide axisLine={false} tickLine={false} />
+                            <RechartsTooltip
+                                cursor={{ fill: "#f1f5f9" }}
+                                contentStyle={{
+                                    borderRadius: "16px",
+                                    border: "none",
+                                    boxShadow: "0 10px 25px -5px rgba(0,0,0,0.1)",
+                                }}
+                            />
+                            <Legend
+                                verticalAlign="top"
+                                height={60}
+                                content={() => (
+                                    <div className="d-flex flex-wrap justify-content-center gap-3 mb-4">
+                                        {[
+                                            { label: "TOTAL LEADS", color: "#1E40AF" },
+                                            { label: "CONTACTADOS", color: "#F97316" },
+                                            { label: "DESESTIMADOS", color: "#22C55E" },
+                                            { label: "VENTAS CONCRETADAS", color: "#EF4444" },
+                                        ].map((item, i) => (
+                                            <div key={i} className="d-flex align-items-center">
+                                                <div
+                                                    style={{
+                                                        width: 10,
+                                                        height: 10,
+                                                        backgroundColor: item.color,
+                                                        borderRadius: "50%",
+                                                        marginRight: 6,
+                                                    }}
+                                                ></div>
+                                                <span
+                                                    style={{
+                                                        fontSize: "10px",
+                                                        fontWeight: "700",
+                                                        color: "#475569",
+                                                        textTransform: "uppercase",
+                                                    }}
+                                                >
+                                                    {item.label}
+                                                </span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            />
+                            <Bar
+                                dataKey="TOTAL LEADS"
+                                fill="#1E40AF"
+                                radius={[4, 4, 0, 0]}
+                                barSize={25}
+                            />
+                            <Bar
+                                dataKey="CONTACTADOS"
+                                fill="#F97316"
+                                radius={[4, 4, 0, 0]}
+                                barSize={25}
+                            />
+                            <Bar
+                                dataKey="DESESTIMADOS"
+                                fill="#22C55E"
+                                radius={[4, 4, 0, 0]}
+                                barSize={25}
+                            />
+                            <Bar
+                                dataKey="VENTAS CONCRETADAS"
+                                fill="#EF4444"
+                                radius={[4, 4, 0, 0]}
+                                barSize={25}
+                            />
+                        </BarChart>
+                    </ResponsiveContainer>
+                </div>
+            </div>
+        </div>
+    );
+};
 
 // Lista de 10 colores aleatorios
 const colors = [
@@ -72,6 +208,7 @@ const KPICampaigns = ({ months = [], currentMonth, currentYear }) => {
     const [totalConversionPercent, setTotalConversionPercent] = useState(0);
 
     const [topUsers, setTopUsers] = useState([]);
+    const [hierarchy, setHierarchy] = useState([]);
 
     const monthTemplate = ({ id, text, element }) => {
         if (!id) return text;
@@ -121,9 +258,8 @@ const KPICampaigns = ({ months = [], currentMonth, currentYear }) => {
             setArchivedBreakdown(summary.archivedBreakdown || []);
             setTotalConversionPercent(summary.totalConversionPercent ?? 0);
 
-            setBreakdowns(summary.breakdownCounts ?? 0);
-
             setTopUsers(summary.usersAssignation ?? []);
+            setHierarchy(summary.hierarchy ?? []);
         });
     };
 
@@ -484,6 +620,33 @@ const KPICampaigns = ({ months = [], currentMonth, currentYear }) => {
                 );
             })()}
 
+            {hierarchy.map((campaign, cIdx) => (
+                <div key={cIdx} className="mb-5">
+                    <div className="d-flex align-items-center mb-4 mt-5 px-1">
+                        <div className="flex-grow-1 border-bottom pb-2">
+                            <h2
+                                className="mb-0 fw-bold text-primary"
+                                style={{ letterSpacing: "-1px" }}
+                            >
+                                <i className="mdi mdi-bullhorn-outline me-2"></i>
+                                CAMPAÑA: {campaign.name}
+                            </h2>
+                            <p className="text-muted small mb-0 mt-1">
+                                Análisis de rendimiento publicitario por grupo
+                                de anuncios
+                            </p>
+                        </div>
+                    </div>
+
+                    <div className="row">
+                        {campaign.adSets.map((adSet, asIdx) => (
+                            <div className="col-lg-4" key={asIdx}>
+                                <AdSetPerformanceCard adSet={adSet} />
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            ))}
             <div className="d-flex align-items-center mb-4 mt-4 px-1">
                 <div>
                     <h3
@@ -607,304 +770,7 @@ const KPICampaigns = ({ months = [], currentMonth, currentYear }) => {
 
                     <PipelineChart data={groupedByManageStatus} />
                 </div>
-                <div className="col-lg-8">
-                    <DirectCampaignPerformance
-                        originCounts={originCampaignCounts}
-                    />
-                </div>
-                <div className="col-lg-4">
-                    <ChannelDistribution data={originCounts} />
-                </div>
             </div>
-            <div className="d-flex align-items-center mb-4 mt-4 px-1">
-                <div>
-                    <h3
-                        className="mb-0 fw-bold text-dark"
-                        style={{ letterSpacing: "-0.5px" }}
-                    >
-                        Rendimiento de landing
-                    </h3>
-                </div>
-            </div>
-
-            <div className="row g-4 mb-4">
-                <div className="col-lg-12">
-                    <FunnelChart
-                        data={{
-                            impressions: breakdowns,
-                            contacted: funnelCounts.managing,
-                            salesClosed: funnelCounts.clients,
-                        }}
-                        extraData={Object.keys(funnelCounts)
-                            .filter(
-                                (funnel) =>
-                                    funnel != "clients" && funnel != "managing",
-                            )
-                            .map((funnel, idx) => ({
-                                stage: funnel,
-                                count: funnelCounts[funnel],
-                                color: colors[idx % colors.length],
-                            }))}
-                    />
-                </div>
-            </div>
-
-            <div className="row mb-3 g-3">
-                <div className="col-lg-6">
-                    <TrafficSourceAnalysis data={originLandingCampaignCounts} />
-                </div>
-                <div className="col-lg-6">
-                    <ArchivedAnalysis data={totalArchivedCounts} />
-                </div>
-            </div>
-
-            <div className="row g-4 mb-4">
-                <div className="col-lg-5">
-                    <ConversionComparison
-                        data={Object.keys(funnelCounts)
-                            .filter(
-                                (funnel) =>
-                                    funnel != "clients" && funnel != "managing",
-                            )
-                            .map((funnel) => ({
-                                label: funnel,
-                                count: funnelCounts[funnel],
-                            }))}
-                    />
-                </div>
-            </div>
-
-            {/* <div className="row">
-        <div className="col-12">
-          <h4 className='mt-0 mb-2'>Vista general de leads</h4>
-        </div>
-      </div> */}
-            {/* <div className="row">
-        <div className="col-md-4">
-          <div className="card card-body">
-            <div style={{ height: '250px' }}>
-              <canvas id="leadsStatusPie" width='100%' height='100%'></canvas>
-            </div>
-            <h4 className="mt-3 mb-2 text-center">Ingreso de leads</h4>
-            <div className="d-flex flex-wrap gap-2 justify-content-evenly">
-              <div className='text-center'>
-                <input data-plugin="knob" data-width="60" data-height="60" data-graph="sources"
-                  data-fgcolor="#f1556c" data-bgcolor="#f1556c33" value={(leadSources.crm_count / totalLeadSources * 100) || 0}
-                  data-count={leadSources.crm_count || 0} data-skin="tron" data-angleloffset="180" data-readonly={true}
-                  data-thickness=".15" style={{ outline: 'none', border: 'none' }} />
-                <small className='text-muted d-block text-center'>{Global.APP_NAME}</small>
-              </div>
-              <div className='text-center'>
-                <input data-plugin="knob" data-width="60" data-height="60" data-graph="sources"
-                  data-fgcolor="#1abc9c" data-bgcolor="#1abc9c33" value={(leadSources.whatsapp_count / totalLeadSources * 100) || 0}
-                  data-count={leadSources.whatsapp_count || 0} data-skin="tron" data-angleloffset="180" data-readonly={true}
-                  data-thickness=".15" style={{ outline: 'none', border: 'none' }} />
-                <small className='text-muted d-block text-center'>WhatsApp</small>
-              </div>
-              <div className='text-center'>
-                <input data-plugin="knob" data-width="60" data-height="60" data-graph="sources"
-                  data-fgcolor="#4a81d4" data-bgcolor="#4a81d433" value={(leadSources.integration_count / totalLeadSources * 100) || 0}
-                  data-count={leadSources.integration_count || 0} data-skin="tron" data-angleloffset="180" data-readonly={true}
-                  data-thickness=".15" style={{ outline: 'none', border: 'none' }} />
-                <small className='text-muted d-block text-center'>Integracion</small>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className="col-md-8">
-          <div className="row">
-            <div className="col-md-3 col-sm-6 col-xs-12">
-              <div className="card">
-                <div className="card-body widget-user">
-                  <div className="text-center">
-                    <h2 className="fw-normal text-info" data-plugin="counterup">{totalCount}</h2>
-                    <h5>Leads</h5>
-                    <small>S/. {Number2Currency(totalSum)}</small>
-                  </div>
-                </div>
-              </div>
-
-            </div>
-
-            <div className="col-md-3 col-sm-6 col-xs-12">
-              <div className="card">
-                <div className="card-body widget-user">
-                  <div className="text-center">
-                    <h2 className="fw-normal text-success" data-plugin="counterup">{clientsCount}</h2>
-                    <h5>Convertidos</h5>
-                    <small>S/. {Number2Currency(clientsSum)}</small>
-                  </div>
-                </div>
-              </div>
-
-            </div>
-
-            <div className="col-md-3 col-sm-6 col-xs-12">
-              <div className="card">
-                <div className="card-body widget-user">
-                  <div className="text-center">
-                    <h2 className="fw-normal text-danger" data-plugin="counterup">{archivedCount}</h2>
-                    <h5>No convertidos</h5>
-                    <small>S/. {Number2Currency(archivedSum)}</small>
-                  </div>
-                </div>
-              </div>
-
-            </div>
-
-            <div className="col-md-3 col-sm-6 col-xs-12">
-              <div className="card">
-                <div className="card-body widget-user">
-                  <div className="text-center">
-                    <h2 className="fw-normal text-primary" data-plugin="counterup">{managingCount}</h2>
-                    <h5>En gestion</h5>
-                    <small>S/. {Number2Currency(managingSum)}</small>
-                  </div>
-                </div>
-              </div>
-
-            </div>
-          </div>
-          <div className="row">
-            <div className="col-12">
-              <div className="card">
-                <div className="card-header">
-                  <h4 className="header-title text-center my-0">Ingreso de Leads por Integración</h4>
-                </div>
-                <div className=" card-body" style={{
-                  minHeight: '160px'
-                }}>
-                  <div className="d-flex flex-wrap gap-2 justify-content-evenly">
-                    {
-                      originCounts.map((origin, index) => {
-                        const count = origin.count || 0;
-                        const percent = count / leadSources.integration_count * 100
-                        const uniqueKey = `${count.origin}-${count.count}-${index}`
-                        return <div id={uniqueKey} key={uniqueKey} className='text-center'>
-                          <input data-plugin="knob" data-width="100" data-height="100"
-                            data-fgcolor="#4a81d4" data-bgcolor="#4a81d433" value={percent}
-                            data-count={count} data-skin="tron" data-angleloffset="180" data-readonly={true}
-                            data-thickness=".15" style={{ outline: 'none', border: 'none' }} />
-                          <small className='text-muted d-block text-center mt-1'>{origin.origin}</small>
-                        </div>
-                      })
-                    }
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div> */}
-
-            {/* <div className='row'>
-        <div className="col-xl-3 col-lg-4 col-sm-6 col-xs-12">
-          <div className="card">
-            <div className="card-header bg-danger">
-              <h4 className="header-title my-0 text-white">
-                <i className='mdi mdi-podium-gold me-1'></i>
-                Ranking de atenciones
-              </h4>
-            </div>
-            <div className="card-body" style={{
-              maxHeight: '400px',
-              overflowY: 'auto',
-            }}>
-              <div className="inbox-widget">
-                {
-                  topUsers
-                    .sort((a, b) => b.count - a.count)
-                    .map((row, index) => {
-                      const fullname = `${row.assigned.name.split(' ')[0]} ${row.assigned.lastname.split(' ')[0]}`
-                      return <div key={index} className="inbox-item">
-                        <div className="inbox-item-img position-relative">
-                          {
-                            index <= 1 &&
-                            <i className={`user-featured position-absolute mdi mdi-star ${index == 0 && 'text-warning'}`} />
-                          }
-                          <img className={`rounded-circle aspect-square ${index == 0 && 'border-warning'}`}
-                            src={`//${Global.APP_DOMAIN}/api/profile/thumbnail/${row.assigned.relative_id}`}
-                            style={{
-                              padding: index <= 1 ? '2px' : 0,
-                              border: index <= 1 ? '2px solid' : 0,
-                            }}
-                            onError={(e) => { e.target.src = `//${Global.APP_DOMAIN}/assets/img/user-404.svg`; }}
-                          />
-                        </div>
-                        <h5 className="inbox-item-author mt-0 mb-2 text-truncate">{fullname}</h5>
-                        <p className="inbox-item-text">
-                          <div className='d-flex gap-1 flex-wrap w-100'>
-                            <Tippy content={`${row.count} leads atendidos`}>
-                              <div className='text-start' style={{ width: '50px' }}>
-                                <i className='mdi mdi-account me-1'></i>
-                                {row.count}
-                              </div>
-                            </Tippy>
-                            <Tippy content={`${row.emails_sent} mails enviados`}>
-                              <div className='text-start' style={{ width: '50px' }}>
-                                <i className='mdi mdi-email-send me-1'></i>
-                                {row.emails_sent}
-                              </div>
-                            </Tippy>
-                            {
-                              row.converted !== null &&
-                              <Tippy content={`${row.converted} leads convertidos`}>
-                                <div className='text-start' style={{ width: '50px' }}>
-                                  <i className='mdi mdi-account-check me-1'></i>
-                                  {row.converted}
-                                </div>
-                              </Tippy>
-                            }
-                          </div>
-                        </p>
-                      </div>
-                    })
-                }
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className="col-xl-9 col-lg-8 col-sm-6 col-xs-12">
-          <div className='d-flex gap-3 mb-3' style={{
-            overflowX: 'auto',
-          }}>
-            {
-              grouped.map((kpi, index) => {
-                return <div key={index} className="card" style={{
-                  minWidth: '270px',
-                  maxWidth: '270px'
-                }}>
-                  <div className="card-header d-flex justify-content-between align-items-center">
-                    <h4 className="header-title my-0 text-truncate w-100" style={{ color: kpi.color }}>{kpi.name}</h4>
-                    <small className='font-bold'><b>{kpi.quantity}</b></small>
-                  </div>
-                  <div className="card-body" style={{
-                    maxHeight: '400px',
-                    overflowY: 'auto'
-                  }}>
-                    <div className='d-flex gap-3 flex-column'>
-                      {
-                        groupedByManageStatus.filter(({ status_id }) => status_id == kpi.id).sort((a, b) => b.quantity - a.quantity).map((row, index) => {
-                          const percent = ((row.quantity / kpi.quantity) * 100).toFixed(2);
-                          return <div key={index}>
-                            <h5 className="my-0">{row.manage_status_name} <span className="float-end" style={{ color: row.manage_status_color }}>{row.quantity}</span></h5>
-                            <div className="progress progress-bar-alt-primary progress-sm mt-0" style={{
-                              backgroundColor: `${row.manage_status_color}44`
-                            }}>
-                              <div className="progress-bar progress-animated wow animated animated" role="progressbar" aria-valuenow={percent} aria-valuemin="0" aria-valuemax="100" style={{ width: `${percent}%`, visibility: 'visible', animationName: 'animationProgress', backgroundColor: row.manage_status_color }}>
-                              </div>
-                            </div>
-                          </div>
-                        })
-                      }
-                    </div>
-                  </div>
-                </div>
-              })
-            }
-          </div>
-        </div>
-      </div> */}
         </>
     );
 };
