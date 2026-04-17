@@ -259,6 +259,7 @@ class KPILeadsController extends BasicController
                 ->leftJoin('statuses as status', 'status.id', '=', 'clients.manage_status_id')
                 ->where('clients.business_id', Auth::user()->business_id)
                 ->whereIn('clients.manage_status_id', $allArchivedStatuses)
+                ->whereNull('clients.status')
                 ->whereMonth('clients.created_at', $month)
                 ->whereYear('clients.created_at', $year)
                 ->groupBy('status.id', 'status.name', 'status.color')

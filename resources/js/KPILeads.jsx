@@ -300,7 +300,7 @@ const KPILeads = ({ months = [], currentMonth, currentYear }) => {
 
                 return (
                     <div className="row g-3 mb-3 mt-0">
-                        <div className="col-md-3 ">
+                        <div className="col-md-6 col-xl ">
                             <div
                                 className="card border-0 shadow-sm h-100"
                                 style={{ borderRadius: "16px" }}
@@ -338,7 +338,7 @@ const KPILeads = ({ months = [], currentMonth, currentYear }) => {
                                 </div>
                             </div>
                         </div>
-                        <div className="col-md-3 ">
+                        <div className="col-md-6 col-xl ">
                             <div
                                 className="card border-0 shadow-sm h-100"
                                 style={{ borderRadius: "16px" }}
@@ -376,7 +376,7 @@ const KPILeads = ({ months = [], currentMonth, currentYear }) => {
                                 </div>
                             </div>
                         </div>
-                        <div className="col-md-3 ">
+                        <div className="col-md-6 col-xl ">
                             <div
                                 className="card border-0 shadow-sm h-100"
                                 style={{ borderRadius: "16px" }}
@@ -408,7 +408,7 @@ const KPILeads = ({ months = [], currentMonth, currentYear }) => {
                                 </div>
                             </div>
                         </div>
-                        <div className="col-md-3 ">
+                        <div className="col-md-6 col-xl ">
                             <div
                                 className="card border-0 shadow-sm h-100"
                                 style={{ borderRadius: "16px" }}
@@ -442,7 +442,7 @@ const KPILeads = ({ months = [], currentMonth, currentYear }) => {
                                 </div>
                             </div>
                         </div>
-                        <div className="col-md-4 col-xl">
+                        <div className="col-md-6 col-xl">
                             <div
                                 className="card border-0 shadow-sm h-100"
                                 style={{ borderRadius: "16px" }}
