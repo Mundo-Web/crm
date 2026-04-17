@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import Adminto from "./components/Adminto";
 import CreateReactScript from "./Utils/CreateReactScript";
@@ -17,22 +17,30 @@ import { ConversionComparison } from "./Reutilizables/KPSLeads/ConversionCompari
 import { PipelineChart } from "./Reutilizables/KPSLeads/PipelineChart";
 import { ArchivedAnalysis } from "./Reutilizables/KPSLeads/ArchivedAnalysis";
 import {
-    Tooltip,
+    Bar,
+    BarChart,
+    CartesianGrid,
+    Legend,
     ResponsiveContainer,
+    Tooltip as RechartsTooltip,
+    XAxis,
+    YAxis,
+    LabelList,
+    Tooltip,
     Cell,
     Funnel,
     FunnelChart as RechartsFunnelChart,
-    LabelList,
-    Legend,
-    BarChart,
-    Bar,
-    XAxis,
-    YAxis,
-    CartesianGrid,
-    Tooltip as RechartsTooltip,
 } from "recharts";
+import Table from "./components/Table";
+import ReactAppend from "./Utils/ReactAppend";
+import axios from "axios";
 
-const AdSetPerformanceCard = ({ adSet, campaignId, campaignName, onViewLeads }) => {
+const AdSetPerformanceCard = ({
+    adSet,
+    campaignId,
+    campaignName,
+    onViewLeads,
+}) => {
     const chartData = adSet.ads.map((ad) => ({
         name: ad.name,
         "TOTAL LEADS": ad.total,
@@ -48,21 +56,34 @@ const AdSetPerformanceCard = ({ adSet, campaignId, campaignName, onViewLeads }) 
         >
             <div className="card-body">
                 <div className="d-flex justify-content-between align-items-center mb-4">
-                    <h5 className="card-title mb-0 fw-bold text-dark text-truncate" title={adSet.name}>
-                        <i className="mdi mdi-folder-outline me-2 text-primary"></i>
+                    <h5
+                        className="card-title mb-0 fw-bold text-dark text-truncate"
+                        title={adSet.name}
+                        style={{ maxWidth: "75%", fontSize: "15px" }}
+                    >
+                        <i className="mdi mdi-folder-heart-outline me-2 text-primary"></i>
                         {adSet.name}
                     </h5>
                     <div className="d-flex align-items-center gap-2">
-                        <Tippy content="Ver registros">
+                        <Tippy content="Ver registros detallados">
                             <button
                                 className="btn btn-sm btn-light-primary rounded-circle"
-                                onClick={() => onViewLeads(campaignId, campaignName, adSet.name)}
+                                onClick={() =>
+                                    onViewLeads(
+                                        campaignId,
+                                        campaignName,
+                                        adSet.name,
+                                    )
+                                }
                                 style={{ width: 32, height: 32, padding: 0 }}
                             >
                                 <i className="mdi mdi-eye-outline"></i>
                             </button>
                         </Tippy>
-                        <span className="badge bg-light text-dark rounded-pill px-3 border">
+                        <span
+                            className="badge bg-soft-primary text-primary rounded-pill px-3 border"
+                            style={{ fontSize: "10px" }}
+                        >
                             {adSet.ads.length} Ads
                         </span>
                     </div>
@@ -73,98 +94,174 @@ const AdSetPerformanceCard = ({ adSet, campaignId, campaignName, onViewLeads }) 
                         <BarChart
                             data={chartData}
                             margin={{
-                                top: 20,
-                                right: 30,
-                                left: 20,
-                                bottom: 60,
+                                top: 10,
+                                right: 10,
+                                left: -20,
+                                bottom: 20,
                             }}
+                            barGap={5}
                         >
                             <CartesianGrid
                                 strokeDasharray="3 3"
                                 vertical={false}
-                                stroke="#f0f0f0"
+                                stroke="#f1f5f9"
                             />
                             <XAxis
                                 dataKey="name"
                                 interval={0}
-                                height={60}
-                                tick={{
-                                    fontSize: 10,
-                                    fontWeight: 600,
-                                    fill: "#475569",
-                                }}
+                                height={40}
+                                tick={({ x, y, payload }) => (
+                                    <g transform={`translate(${x},${y})`}>
+                                        <text
+                                            x={0}
+                                            y={0}
+                                            dy={16}
+                                            textAnchor="middle"
+                                            fill="#94a3b8"
+                                            fontSize={10}
+                                            fontWeight={600}
+                                        >
+                                            {payload.value.length > 12
+                                                ? payload.value.substring(
+                                                      0,
+                                                      10,
+                                                  ) + "..."
+                                                : payload.value}
+                                        </text>
+                                    </g>
+                                )}
                                 axisLine={false}
                                 tickLine={false}
                             />
-                            <YAxis hide axisLine={false} tickLine={false} />
+                            <YAxis
+                                axisLine={false}
+                                tickLine={false}
+                                tick={{ fontSize: 10, fill: "#94a3b8" }}
+                            />
                             <RechartsTooltip
-                                cursor={{ fill: "#f1f5f9" }}
-                                contentStyle={{
-                                    borderRadius: "16px",
-                                    border: "none",
-                                    boxShadow: "0 10px 25px -5px rgba(0,0,0,0.1)",
+                                shared={false}
+                                animationDuration={0}
+                                cursor={{ fill: "#f8fafc", radius: 8 }}
+                                content={({ active, payload }) => {
+                                    if (active && payload && payload.length) {
+                                        const entry = payload[0];
+                                        return (
+                                            <div
+                                                className="bg-white p-3 rounded-4 shadow-lg border-0"
+                                                style={{ minWidth: "250px" }}
+                                            >
+                                                <p
+                                                    className="mb-2 text-muted fw-bold text-uppercase border-bottom pb-2"
+                                                    style={{
+                                                        fontSize: "10px",
+                                                        letterSpacing: "0.8px",
+                                                    }}
+                                                >
+                                                    {entry.payload.name}
+                                                </p>
+                                                <div className="d-flex justify-content-between align-items-center">
+                                                    <span
+                                                        style={{
+                                                            fontSize: "11px",
+                                                            color: "#64748b",
+                                                        }}
+                                                    >
+                                                        <strong className="text-dark">
+                                                            {entry.name}:
+                                                        </strong>
+                                                    </span>
+                                                    <span
+                                                        className="fw-bold fs-6"
+                                                        style={{
+                                                            color: entry.fill,
+                                                        }}
+                                                    >
+                                                        {entry.value.toLocaleString(
+                                                            "es-PE",
+                                                        )}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        );
+                                    }
+                                    return null;
                                 }}
                             />
                             <Legend
-                                verticalAlign="top"
-                                height={60}
-                                content={() => (
-                                    <div className="d-flex flex-wrap justify-content-center gap-3 mb-4">
-                                        {[
-                                            { label: "TOTAL LEADS", color: "#1E40AF" },
-                                            { label: "CONTACTADOS", color: "#F97316" },
-                                            { label: "DESESTIMADOS", color: "#EF4444" },
-                                            { label: "VENTAS CONCRETADAS", color: "#22C55E" },
-                                        ].map((item, i) => (
-                                            <div key={i} className="d-flex align-items-center">
-                                                <div
-                                                    style={{
-                                                        width: 10,
-                                                        height: 10,
-                                                        backgroundColor: item.color,
-                                                        borderRadius: "50%",
-                                                        marginRight: 6,
-                                                    }}
-                                                ></div>
-                                                <span
-                                                    style={{
-                                                        fontSize: "10px",
-                                                        fontWeight: "700",
-                                                        color: "#475569",
-                                                        textTransform: "uppercase",
-                                                    }}
-                                                >
-                                                    {item.label}
-                                                </span>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
+                                verticalAlign="bottom"
+                                align="center"
+                                iconType="circle"
+                                iconSize={8}
+                                wrapperStyle={{
+                                    paddingTop: "20px",
+                                    fontSize: "10px",
+                                    fontWeight: "bold",
+                                }}
                             />
                             <Bar
                                 dataKey="TOTAL LEADS"
-                                fill="#1E40AF"
+                                fill="#6366F1"
                                 radius={[4, 4, 0, 0]}
-                                barSize={35}
-                            />
+                                barSize={22}
+                            >
+                                <LabelList
+                                    dataKey="TOTAL LEADS"
+                                    position="top"
+                                    style={{
+                                        fill: "#6366F1",
+                                        fontSize: 10,
+                                        fontWeight: "800",
+                                    }}
+                                />
+                            </Bar>
                             <Bar
                                 dataKey="CONTACTADOS"
-                                fill="#F97316"
+                                fill="#F59E0B"
                                 radius={[4, 4, 0, 0]}
-                                barSize={35}
-                            />
+                                barSize={22}
+                            >
+                                <LabelList
+                                    dataKey="CONTACTADOS"
+                                    position="top"
+                                    style={{
+                                        fill: "#F59E0B",
+                                        fontSize: 10,
+                                        fontWeight: "800",
+                                    }}
+                                />
+                            </Bar>
                             <Bar
                                 dataKey="DESESTIMADOS"
-                                fill="#EF4444"
+                                fill="#F43F5E"
                                 radius={[4, 4, 0, 0]}
-                                barSize={35}
-                            />
+                                barSize={22}
+                            >
+                                <LabelList
+                                    dataKey="DESESTIMADOS"
+                                    position="top"
+                                    style={{
+                                        fill: "#F43F5E",
+                                        fontSize: 10,
+                                        fontWeight: "800",
+                                    }}
+                                />
+                            </Bar>
                             <Bar
                                 dataKey="VENTAS CONCRETADAS"
-                                fill="#22C55E"
+                                fill="#10B981"
                                 radius={[4, 4, 0, 0]}
-                                barSize={35}
-                            />
+                                barSize={22}
+                            >
+                                <LabelList
+                                    dataKey="VENTAS CONCRETADAS"
+                                    position="top"
+                                    style={{
+                                        fill: "#10B981",
+                                        fontSize: 10,
+                                        fontWeight: "800",
+                                    }}
+                                />
+                            </Bar>
                         </BarChart>
                     </ResponsiveContainer>
                 </div>
@@ -172,20 +269,6 @@ const AdSetPerformanceCard = ({ adSet, campaignId, campaignName, onViewLeads }) 
         </div>
     );
 };
-
-// Lista de 10 colores aleatorios
-const colors = [
-    "#71b6f9",
-    "#f1556c",
-    "#1abc9c",
-    "#4a81d4",
-    "#f7b84b",
-    "#5b6be8",
-    "#34c38f",
-    "#50a5f1",
-    "#ffbb78",
-    "#aec7e8",
-];
 
 const KPICampaigns = ({ months = [], currentMonth, currentYear }) => {
     const [selectedMonth, setSelectedMonth] = useState(
@@ -199,6 +282,7 @@ const KPICampaigns = ({ months = [], currentMonth, currentYear }) => {
     const [clientsCount, setClientsCount] = useState(0);
     const [archivedCount, setArchivedCount] = useState(0);
     const [managingCount, setManagingCount] = useState(0);
+    const [trueManagingCount, setTrueManagingCount] = useState(0);
 
     const [totalSum, setTotalSum] = useState(0);
     const [clientsSum, setClientsSum] = useState(0);
@@ -226,37 +310,39 @@ const KPICampaigns = ({ months = [], currentMonth, currentYear }) => {
     const [modalTitle, setModalTitle] = useState("");
     const [isModalLoading, setIsModalLoading] = useState(false);
 
-    const handleViewLeads = (campaignId, campaignName, adSetName) => {
-        setModalTitle(`${campaignName} - ${adSetName}`);
-        setIsModalOpen(true);
-        setIsModalLoading(true);
-        setModalLeads([]);
+    const gridRef = useRef();
+    const modalRef = useRef();
+    const [selectedCampaignId, setSelectedCampaignId] = useState(null);
+    const [selectedAdSetName, setSelectedAdSetName] = useState(null);
 
-        KPICampaignsRest.leads(selectedMonth, campaignId, adSetName)
-            .then((leads) => {
-                setModalLeads(leads);
-                setIsModalLoading(false);
-            })
-            .catch(() => {
-                setIsModalLoading(false);
-                setIsModalOpen(false);
-            });
+    const leadsRest = {
+        paginate: (params) => {
+            return axios
+                .post(`/api/dashboard/campaigns/leads/paginate`, {
+                    ...params,
+                    month: selectedMonth,
+                    campaign_id: selectedCampaignId,
+                    adset_name: selectedAdSetName,
+                })
+                .then((res) => res.data);
+        },
     };
 
-    const monthTemplate = ({ id, text, element }) => {
-        if (!id) return text;
-        const data = $(element).data("option");
-        return $(
-            renderToString(
-                <div>
-                    <b className="d-block">{text}</b>
-                    <small>
-                        <i className="me-1 fa fa-users"></i>
-                        {data.quantity} entradas
-                    </small>
-                </div>,
-            ),
+    const fetchLeads = (campaignId, campaignName, adSetName) => {
+        setModalTitle(
+            `Leads: ${campaignName} / ${adSetName ? adSetName : "Todos"}`,
         );
+
+        setSelectedCampaignId(campaignId);
+        setSelectedAdSetName(adSetName);
+
+        setTimeout(() => {
+            if (gridRef.current) {
+                $(gridRef.current).dxDataGrid("instance").refresh();
+            }
+        }, 100);
+
+        $(modalRef.current).modal("show");
     };
 
     const fetchGraph = (selectedMonth) => {
@@ -271,6 +357,7 @@ const KPICampaigns = ({ months = [], currentMonth, currentYear }) => {
             setPendingCount(summary.pendingCount ?? 0);
             setClientsCount(summary.clientsCount ?? 0);
             setArchivedCount(summary.archivedCount ?? 0);
+            setTrueManagingCount(summary.trueManagingCount ?? 0);
             setManagingCount(summary.managingCount ?? 0);
 
             setTotalSum(summary.totalSum ?? 0);
@@ -305,12 +392,10 @@ const KPICampaigns = ({ months = [], currentMonth, currentYear }) => {
         let chart;
 
         if (ctx) {
-            // Destroy existing chart if it exists
             if (window.leadsStatusChart) {
                 window.leadsStatusChart.destroy();
             }
 
-            // Create new chart
             chart = new Chart(ctx, {
                 type: "pie",
                 data: {
@@ -338,10 +423,8 @@ const KPICampaigns = ({ months = [], currentMonth, currentYear }) => {
                 },
             });
 
-            // Store chart reference globally
             window.leadsStatusChart = chart;
         }
-        // Cleanup function to destroy chart when component unmounts
         return () => {
             if (window.leadsStatusChart) {
                 window.leadsStatusChart.destroy();
@@ -446,8 +529,6 @@ const KPICampaigns = ({ months = [], currentMonth, currentYear }) => {
                 </div>
             </div>
 
-            {/* Dummy data for kpiData */}
-
             <div className="d-flex align-items-center mt-4 px-1">
                 <div>
                     <h3
@@ -487,12 +568,12 @@ const KPICampaigns = ({ months = [], currentMonth, currentYear }) => {
                                             style={{
                                                 width: "56px",
                                                 height: "56px",
-                                                backgroundColor: "#1E40AF15",
+                                                backgroundColor: "#6366F115",
                                             }}
                                         >
                                             <i
                                                 className="mdi mdi-account-multiple fs-4"
-                                                style={{ color: "#1E40AF" }}
+                                                style={{ color: "#6366F1" }}
                                             ></i>
                                         </div>
                                     </div>
@@ -508,10 +589,10 @@ const KPICampaigns = ({ months = [], currentMonth, currentYear }) => {
                                     <div className="d-flex justify-content-between align-items-start">
                                         <div className="flex-grow-1">
                                             <p className="text-muted mb-1 small text-uppercase fw-semibold">
-                                                Contactados
+                                                Leads Contactados
                                             </p>
                                             <h2 className="mb-0 fw-bold">
-                                                {formatNumber(totalCount - pendingCount)}
+                                                {formatNumber(managingCount)}
                                             </h2>
                                         </div>
                                         <div
@@ -519,12 +600,12 @@ const KPICampaigns = ({ months = [], currentMonth, currentYear }) => {
                                             style={{
                                                 width: "56px",
                                                 height: "56px",
-                                                backgroundColor: "#F9731615",
+                                                backgroundColor: "#F59E0B15",
                                             }}
                                         >
                                             <i
                                                 className="mdi mdi-phone fs-4"
-                                                style={{ color: "#F97316" }}
+                                                style={{ color: "#F59E0B" }}
                                             ></i>
                                         </div>
                                     </div>
@@ -540,7 +621,41 @@ const KPICampaigns = ({ months = [], currentMonth, currentYear }) => {
                                     <div className="d-flex justify-content-between align-items-start">
                                         <div className="flex-grow-1">
                                             <p className="text-muted mb-1 small text-uppercase fw-semibold">
-                                                Desestimados
+                                                Leads en Gestión
+                                            </p>
+                                            <h2 className="mb-0 fw-bold">
+                                                {formatNumber(
+                                                    trueManagingCount,
+                                                )}
+                                            </h2>
+                                        </div>
+                                        <div
+                                            className="rounded-circle d-flex align-items-center justify-content-center"
+                                            style={{
+                                                width: "56px",
+                                                height: "56px",
+                                                backgroundColor: "#3B82F615",
+                                            }}
+                                        >
+                                            <i
+                                                className="mdi mdi-account-clock fs-4"
+                                                style={{ color: "#3B82F6" }}
+                                            ></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="col-md-6 col-xl">
+                            <div
+                                className="card border-0 shadow-sm h-100"
+                                style={{ borderRadius: "16px" }}
+                            >
+                                <div className="card-body">
+                                    <div className="d-flex justify-content-between align-items-start">
+                                        <div className="flex-grow-1">
+                                            <p className="text-muted mb-1 small text-uppercase fw-semibold">
+                                                Leads Archivados
                                             </p>
                                             <h2 className="mb-0 fw-bold">
                                                 {formatNumber(archivedCount)}
@@ -551,12 +666,12 @@ const KPICampaigns = ({ months = [], currentMonth, currentYear }) => {
                                             style={{
                                                 width: "56px",
                                                 height: "56px",
-                                                backgroundColor: "#EF444415",
+                                                backgroundColor: "#64748B15",
                                             }}
                                         >
                                             <i
-                                                className="mdi mdi-account-remove fs-4"
-                                                style={{ color: "#EF4444" }}
+                                                className="mdi mdi-account-off fs-4"
+                                                style={{ color: "#64748B" }}
                                             ></i>
                                         </div>
                                     </div>
@@ -572,7 +687,7 @@ const KPICampaigns = ({ months = [], currentMonth, currentYear }) => {
                                     <div className="d-flex justify-content-between align-items-start">
                                         <div className="flex-grow-1">
                                             <p className="text-muted mb-1 small text-uppercase fw-semibold">
-                                                Ventas Concretadas
+                                                Ventas Cerradas
                                             </p>
                                             <h2 className="mb-0 fw-bold">
                                                 {formatNumber(clientsCount)}
@@ -583,12 +698,12 @@ const KPICampaigns = ({ months = [], currentMonth, currentYear }) => {
                                             style={{
                                                 width: "56px",
                                                 height: "56px",
-                                                backgroundColor: "#22C55E15",
+                                                backgroundColor: "#10B98115",
                                             }}
                                         >
                                             <i
                                                 className="mdi mdi-trophy fs-4"
-                                                style={{ color: "#22C55E" }}
+                                                style={{ color: "#10B981" }}
                                             ></i>
                                         </div>
                                     </div>
@@ -660,7 +775,7 @@ const KPICampaigns = ({ months = [], currentMonth, currentYear }) => {
                                     adSet={adSet}
                                     campaignId={campaign.id}
                                     campaignName={campaign.name}
-                                    onViewLeads={handleViewLeads}
+                                    onViewLeads={fetchLeads}
                                 />
                             </div>
                         ))}
@@ -692,36 +807,92 @@ const KPICampaigns = ({ months = [], currentMonth, currentYear }) => {
                                 <ResponsiveContainer width="100%" height="100%">
                                     <RechartsFunnelChart>
                                         <Tooltip
-                                            formatter={(value) =>
-                                                value.toLocaleString("es-PE")
-                                            }
+                                            content={({ active, payload }) => {
+                                                if (
+                                                    active &&
+                                                    payload &&
+                                                    payload.length
+                                                ) {
+                                                    return (
+                                                        <div
+                                                            className="bg-white p-2 rounded shadow-lg border-0"
+                                                            style={{
+                                                                minWidth:
+                                                                    "150px",
+                                                            }}
+                                                        >
+                                                            <p
+                                                                className="mb-1 text-dark fw-bold text-uppercase"
+                                                                style={{
+                                                                    fontSize:
+                                                                        "12px",
+                                                                    letterSpacing:
+                                                                        "0.5px",
+                                                                }}
+                                                            >
+                                                                {
+                                                                    payload[0]
+                                                                        .payload
+                                                                        .name
+                                                                }
+                                                            </p>
+                                                            <div className="d-flex justify-content-between align-items-center border-top pt-1">
+                                                                <span
+                                                                    className="text-muted"
+                                                                    style={{
+                                                                        fontSize:
+                                                                            "11px",
+                                                                    }}
+                                                                >
+                                                                    <strong className="text-dark">
+                                                                        Cantidad:
+                                                                    </strong>
+                                                                </span>
+                                                                <span
+                                                                    className="fw-bold text-primary"
+                                                                    style={{
+                                                                        fontSize:
+                                                                            "12px",
+                                                                    }}
+                                                                >
+                                                                    {payload[0].value.toLocaleString(
+                                                                        "es-PE",
+                                                                    )}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                }
+                                                return null;
+                                            }}
                                         />
                                         <Funnel
                                             dataKey="count"
+                                            nameKey="name"
                                             data={[
                                                 {
                                                     name: "TOTAL LEADS",
                                                     count: totalCount,
-                                                    fill: "#1E40AF",
+                                                    fill: "#6366F1",
                                                 },
                                                 {
                                                     name: "CONTACTADOS",
                                                     count: managingCount,
-                                                    fill: "#F97316",
+                                                    fill: "#F59E0B",
                                                 },
                                                 {
                                                     name: "DESESTIMADOS",
                                                     count: archivedLabelsCount,
-                                                    fill: "#22C55E",
+                                                    fill: "#e66747",
                                                 },
                                                 {
                                                     name: "VENTAS CONCRETADAS",
                                                     count: clientsCount,
-                                                    fill: "#EF4444",
+                                                    fill: "#10B981",
                                                 },
                                             ]}
                                             isAnimationActive
-                                        ></Funnel>
+                                        />
                                     </RechartsFunnelChart>
                                 </ResponsiveContainer>
                             </div>
@@ -730,22 +901,22 @@ const KPICampaigns = ({ months = [], currentMonth, currentYear }) => {
                                     {
                                         name: "TOTAL LEADS",
                                         count: totalCount,
-                                        fill: "#1E40AF",
+                                        fill: "#6366F1",
                                     },
                                     {
                                         name: "CONTACTADOS",
                                         count: managingCount,
-                                        fill: "#F97316",
+                                        fill: "#F59E0B",
                                     },
                                     {
                                         name: "DESESTIMADOS",
                                         count: archivedLabelsCount,
-                                        fill: "#22C55E",
+                                        fill: "#e66747",
                                     },
                                     {
                                         name: "VENTAS CONCRETADAS",
                                         count: clientsCount,
-                                        fill: "#EF4444",
+                                        fill: "#10B981",
                                     },
                                 ].map((item, index) => (
                                     <div
@@ -792,105 +963,157 @@ const KPICampaigns = ({ months = [], currentMonth, currentYear }) => {
                 </div>
             </div>
 
-            {/* Leads Modal */}
-            <div
-                className={`modal fade ${isModalOpen ? "show d-block" : ""}`}
-                style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
-                tabIndex="-1"
-            >
-                <div className="modal-dialog modal-lg modal-dialog-centered">
-                    <div className="modal-content border-0 shadow-lg" style={{ borderRadius: '20px' }}>
+            <div className="modal fade" ref={modalRef} tabIndex="-1">
+                <div className="modal-dialog modal-xl modal-dialog-centered">
+                    <div
+                        className="modal-content border-0 shadow-lg"
+                        style={{ borderRadius: "20px" }}
+                    >
                         <div className="modal-header border-0 pb-0">
                             <h5 className="modal-title fw-bold text-dark pt-2 px-2">
                                 <i className="mdi mdi-account-group me-2 text-primary"></i>
-                                Registros: {modalTitle}
+                                {modalTitle}
                             </h5>
                             <button
                                 type="button"
                                 className="btn-close me-2"
-                                onClick={() => setIsModalOpen(false)}
+                                data-bs-dismiss="modal"
                             ></button>
                         </div>
-                        <div className="modal-body p-4">
-                            {isModalLoading ? (
-                                <div className="text-center py-5">
-                                    <div className="spinner-border text-primary" role="status"></div>
-                                    <p className="mt-2 text-muted">Cargando registros...</p>
-                                </div>
-                            ) : (
-                                <div className="table-responsive">
-                                    <table className="table table-hover align-middle">
-                                        <thead className="table-light">
-                                            <tr>
-                                                <th className="border-0">Nombre</th>
-                                                <th className="border-0">Contacto</th>
-                                                <th className="border-0 text-center">Campaign ID</th>
-                                                <th className="border-0 text-center">Origen</th>
-                                                <th className="border-0">Fecha</th>
-                                                <th className="border-0 text-center">Estado</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {modalLeads.length > 0 ? (
-                                                modalLeads.map((lead, index) => (
-                                                    <tr key={index}>
-                                                        <td className="fw-medium">
-                                                            {lead.name}
-                                                        </td>
-                                                        <td>
-                                                            <div>
-                                                                <a href={`tel:${lead.contact_phone}`} className="text-decoration-none d-block">
-                                                                    <i className="mdi mdi-phone me-1"></i>
-                                                                    {lead.contact_phone}
-                                                                </a>
-                                                                <small className="text-muted d-block mt-1">
-                                                                    <i className="mdi mdi-email-outline me-1"></i>
-                                                                    {lead.contact_email}
-                                                                </small>
-                                                            </div>
-                                                        </td>
-                                                        <td className="small text-muted font-monospace text-center" style={{ fontSize: '0.75rem' }}>
-                                                            {lead.campaign_id || <span className="text-danger italic">N/A</span>}
-                                                        </td>
-                                                        <td className="small text-center">
-                                                            <span className="badge bg-light text-dark border">
-                                                                {lead.origin || 'N/A'}
-                                                            </span>
-                                                        </td>
-                                                        <td className="small text-muted">
-                                                            {moment(lead.created_at).format('DD/MM/YYYY HH:mm')}
-                                                        </td>
-                                                        <td>
-                                                            <span
-                                                                className="badge rounded-pill px-3"
-                                                                style={{
-                                                                    backgroundColor: `${lead.status_color}15`,
-                                                                    color: lead.status_color,
-                                                                    border: `1px solid ${lead.status_color}33`
-                                                                }}
-                                                            >
-                                                                {lead.status_name}
-                                                            </span>
-                                                        </td>
-                                                    </tr>
-                                                ))
-                                            ) : (
-                                                <tr>
-                                                    <td colSpan="4" className="text-center py-4 text-muted">
-                                                        No se encontraron registros en este periodo.
-                                                    </td>
-                                                </tr>
-                                            )}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            )}
+                        <div className="modal-body p-0">
+                            <Table
+                                gridRef={gridRef}
+                                title={modalTitle}
+                                rest={leadsRest}
+                                height="500px"
+                                pageSize={10}
+                                allowedPageSizes={[10, 25, 50, 100]}
+                                toolBar={() => {}}
+                                exportable={true}
+                                showDatePicker={false}
+                                reloadWith={[
+                                    selectedMonth,
+                                    selectedCampaignId,
+                                    selectedAdSetName,
+                                ]}
+                                columns={[
+                                    {
+                                        dataField: "name",
+                                        caption: "Lead",
+                                        cellTemplate: (container, { data }) => {
+                                            ReactAppend(
+                                                container,
+                                                <div className="d-flex align-items-center gap-2">
+                                                    <div
+                                                        style={{
+                                                            width: "4px",
+                                                            height: "24px",
+                                                            backgroundColor:
+                                                                data.status_color ||
+                                                                "#e2e8f0",
+                                                            borderRadius: "2px",
+                                                        }}
+                                                    />
+                                                    <span className="fw-bold text-dark">
+                                                        {data.name}
+                                                    </span>
+                                                </div>,
+                                            );
+                                        },
+                                    },
+                                    {
+                                        dataField: "contact_phone",
+                                        caption: "Contacto",
+                                        cellTemplate: (container, { data }) => {
+                                            container.html(
+                                                renderToString(
+                                                    <div>
+                                                        <div className="text-primary small fw-bold">
+                                                            <i className="mdi mdi-phone me-1"></i>
+                                                            {data.contact_phone}
+                                                        </div>
+                                                        <div
+                                                            className="text-muted"
+                                                            style={{
+                                                                fontSize:
+                                                                    "11px",
+                                                            }}
+                                                        >
+                                                            {data.contact_email}
+                                                        </div>
+                                                    </div>,
+                                                ),
+                                            );
+                                        },
+                                    },
+                                    {
+                                        dataField: "assigned_name",
+                                        caption: "Atendido por",
+                                        width: 150,
+                                        cellTemplate: (container, { data }) => {
+                                            if (!data.assigned_name) {
+                                                container.html(
+                                                    '<span class="text-muted small italic">Sin asignar</span>',
+                                                );
+                                                return;
+                                            }
+                                            ReactAppend(
+                                                container,
+                                                <div className="d-flex align-items-center gap-2">
+                                                    <img
+                                                        src={`//${Global.APP_DOMAIN}/api/profile/thumbnail/${data.assigned_relative_id}`}
+                                                        className="avatar-xs rounded-circle"
+                                                        style={{
+                                                            width: "24px",
+                                                            height: "24px",
+                                                        }}
+                                                        onError={(e) => {
+                                                            e.target.src = `//${Global.APP_DOMAIN}/assets/img/user-404.svg`;
+                                                        }}
+                                                    />
+                                                    <span className="small text-truncate">
+                                                        {data.assigned_name}
+                                                    </span>
+                                                </div>,
+                                            );
+                                        },
+                                    },
+                                    {
+                                        dataField: "created_at",
+                                        caption: "Fecha",
+                                        dataType: "datetime",
+                                        format: "dd/MM/yyyy HH:mm",
+                                        width: 140,
+                                    },
+                                    {
+                                        dataField: "status_name",
+                                        caption: "Estado",
+                                        width: 130,
+                                        cellTemplate: (container, { data }) => {
+                                            ReactAppend(
+                                                container,
+                                                <span
+                                                    className="badge rounded-pill px-2"
+                                                    style={{
+                                                        backgroundColor: `${data.status_color}15`,
+                                                        color: data.status_color,
+                                                        border: `1px solid ${data.status_color}33`,
+                                                        fontSize: "10px",
+                                                    }}
+                                                >
+                                                    {data.status_name}
+                                                </span>,
+                                            );
+                                        },
+                                    },
+                                ]}
+                            />
                         </div>
                         <div className="modal-footer border-0 pt-0">
                             <button
                                 type="button"
                                 className="btn btn-light rounded-pill px-4"
-                                onClick={() => setIsModalOpen(false)}
+                                data-bs-dismiss="modal"
                             >
                                 Cerrar
                             </button>

@@ -9,7 +9,7 @@ import 'react-date-range/dist/theme/default.css'
 import Tippy from '@tippyjs/react'
 import ArrayJoin from '../Utils/ArrayJoin'
 
-const Table = ({ title, filter = [], gridRef, rest, columns, toolBar, masterDetail, filterValue = [], defaultRows, selection, cardClass = '', className = '', allowedPageSizes, pageSize, exportable = false, customizeCell, reloadWith, height, cardStyle, keyExpr, onSelectionChanged, massiveActions }) => {
+const Table = ({ title, filter = [], gridRef, rest, columns, toolBar, masterDetail, filterValue = [], defaultRows, selection, cardClass = '', className = '', allowedPageSizes, pageSize, exportable = false, customizeCell, reloadWith, height, cardStyle, keyExpr, onSelectionChanged, massiveActions, showDatePicker = true }) => {
   const html = renderToString(<div>{title}</div>)
   const text = $(html).text().trim().replace('-', '')
   const [range, setRange] = useState([{ startDate: new Date(), endDate: new Date(), key: 'selection', }])
@@ -230,93 +230,95 @@ const Table = ({ title, filter = [], gridRef, rest, columns, toolBar, masterDeta
                     )}
                   </div>
                 }
-                <div className="dropdown position-relative" ref={datePickerRef}>
-                  <button
-                    className="position-relative btn btn-sm btn-white dropdown-toggle bg-white"
-                    onClick={() => setIsDatePickerOpen(!isDatePickerOpen)}
-                    style={{ zIndex: isDatePickerOpen ? 10000 : undefined }}
-                  >
-                    <i className="mdi mdi-calendar-range me-md-1"></i>
-                    <span className='d-none d-md-inline-block'>Periodo</span>
-                    {filtering && <span className='ms-1 badge bg-primary'>
-                      <i className='mdi mdi-filter'></i>
-                    </span>}
-                  </button>
+                {showDatePicker && (
+                  <div className="dropdown position-relative" ref={datePickerRef}>
+                    <button
+                      className="position-relative btn btn-sm btn-white dropdown-toggle bg-white"
+                      onClick={() => setIsDatePickerOpen(!isDatePickerOpen)}
+                      style={{ zIndex: isDatePickerOpen ? 10000 : undefined }}
+                    >
+                      <i className="mdi mdi-calendar-range me-md-1"></i>
+                      <span className='d-none d-md-inline-block'>Periodo</span>
+                      {filtering && <span className='ms-1 badge bg-primary'>
+                        <i className='mdi mdi-filter'></i>
+                      </span>}
+                    </button>
 
-                  {isDatePickerOpen && (
-                    <>
-                      <div
-                        className='position-fixed'
-                        style={{
-                          top: 0,
-                          left: 0,
+                    {isDatePickerOpen && (
+                      <>
+                        <div
+                          className='position-fixed'
+                          style={{
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                            zIndex: 9999
+                          }}
+                          onClick={() => setIsDatePickerOpen(false)}
+                        ></div>
+
+                        <div className="dropdown-menu p-2 show mt-1" style={{
+                          minWidth: '650px',
+                          position: 'absolute',
                           right: 0,
-                          bottom: 0,
-                          backgroundColor: 'rgba(0, 0, 0, 0.5)',
-                          zIndex: 9999
-                        }}
-                        onClick={() => setIsDatePickerOpen(false)}
-                      ></div>
-
-                      <div className="dropdown-menu p-2 show mt-1" style={{
-                        minWidth: '650px',
-                        position: 'absolute',
-                        right: 0,
-                        transform: 'translateX(0)',
-                        zIndex: 10000
-                      }}>
-                        <DateRange
-                          editableDateInputs={true}
-                          onChange={item => setRange([item.selection])}
-                          moveRangeOnFirstSelection={false}
-                          ranges={range}
-                          locale={es}
-                          months={2}
-                          direction="horizontal"
-                          showDateDisplay={false}
-                        />
-                        <div className="d-flex justify-content-end gap-2 mt-2">
-                          <div className="dropdown">
-                            <button
-                              className="btn btn-sm btn-white dropdown-toggle"
-                              type="button"
-                              data-bs-toggle="dropdown"
-                              aria-expanded="false"
-                            >
-                              {dateFilterType === 'created_at' ? 'Fecha creación' : 'Fecha actualización'}
+                          transform: 'translateX(0)',
+                          zIndex: 10000
+                        }}>
+                          <DateRange
+                            editableDateInputs={true}
+                            onChange={item => setRange([item.selection])}
+                            moveRangeOnFirstSelection={false}
+                            ranges={range}
+                            locale={es}
+                            months={2}
+                            direction="horizontal"
+                            showDateDisplay={false}
+                          />
+                          <div className="d-flex justify-content-end gap-2 mt-2">
+                            <div className="dropdown">
+                              <button
+                                className="btn btn-sm btn-white dropdown-toggle"
+                                type="button"
+                                data-bs-toggle="dropdown"
+                                aria-expanded="false"
+                              >
+                                {dateFilterType === 'created_at' ? 'Fecha creación' : 'Fecha actualización'}
+                              </button>
+                              <ul className="dropdown-menu">
+                                <li>
+                                  <button
+                                    className="dropdown-item"
+                                    type="button"
+                                    onClick={() => setDateFilterType('created_at')}
+                                  >
+                                    Fecha creación
+                                  </button>
+                                </li>
+                                <li>
+                                  <button
+                                    className="dropdown-item"
+                                    type="button"
+                                    onClick={() => setDateFilterType('updated_at')}
+                                  >
+                                    Fecha actualización
+                                  </button>
+                                </li>
+                              </ul>
+                            </div>
+                            <button className="btn btn-sm btn-danger" onClick={handleResetDateFilter}>
+                              <i className="mdi mdi-filter-remove me-1"></i>Limpiar
                             </button>
-                            <ul className="dropdown-menu">
-                              <li>
-                                <button
-                                  className="dropdown-item"
-                                  type="button"
-                                  onClick={() => setDateFilterType('created_at')}
-                                >
-                                  Fecha creación
-                                </button>
-                              </li>
-                              <li>
-                                <button
-                                  className="dropdown-item"
-                                  type="button"
-                                  onClick={() => setDateFilterType('updated_at')}
-                                >
-                                  Fecha actualización
-                                </button>
-                              </li>
-                            </ul>
+                            <button className="btn btn-sm btn-primary" onClick={() => handleDateFilter()}>
+                              <i className="mdi mdi-filter me-1"></i>Filtrar
+                            </button>
                           </div>
-                          <button className="btn btn-sm btn-danger" onClick={handleResetDateFilter}>
-                            <i className="mdi mdi-filter-remove me-1"></i>Limpiar
-                          </button>
-                          <button className="btn btn-sm btn-primary" onClick={() => handleDateFilter()}>
-                            <i className="mdi mdi-filter me-1"></i>Filtrar
-                          </button>
                         </div>
-                      </div>
-                    </>
-                  )}
-                </div>
+                      </>
+                    )}
+                  </div>
+                )}
 
                 <button
                   className='btn btn-sm btn-white text-nowrap'

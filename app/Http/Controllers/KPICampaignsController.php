@@ -16,6 +16,7 @@ class KPICampaignsController extends BasicController
 {
     public $model = Client::class;
     public $reactView = 'KPICampaigns';
+    public $prefix4filter = 'clients';
 
     public function setReactViewProperties(Request $request)
     {
@@ -30,6 +31,11 @@ class KPICampaignsController extends BasicController
         ])
             ->where('clients.business_id', Auth::user()->business_id)
             ->whereNotNull('clients.campaign_id')
+            ->whereRaw('LENGTH(clients.campaign_id) > 10')
+            ->whereNotNull('clients.adset_name')
+            ->where('clients.adset_name', '<>', '')
+            ->whereNotNull('clients.ad_name')
+            ->where('clients.ad_name', '<>', '')
             ->groupBy(
                 DB::raw('YEAR(clients.created_at)'),
                 DB::raw('MONTH(clients.created_at)'),
@@ -80,7 +86,11 @@ class KPICampaignsController extends BasicController
             $query = fn() => Client::byMonth($year, $month)
                 ->join('campaigns as campaign', 'campaign.id', '=', 'clients.campaign_id')
                 ->where('clients.business_id', Auth::user()->business_id)
-                ->whereRaw('LENGTH(clients.campaign_id) > 10');
+                ->whereRaw('LENGTH(clients.campaign_id) > 10')
+                ->whereNotNull('clients.adset_name')
+                ->where('clients.adset_name', '<>', '')
+                ->whereNotNull('clients.ad_name')
+                ->where('clients.ad_name', '<>', '');
 
             $grouped = $query()
                 ->select([
@@ -96,13 +106,16 @@ class KPICampaignsController extends BasicController
                 ->orderBy('status.order', 'asc')
                 ->get();
 
-            $totalCount = $query()
-                ->where('clients.status', true)
-                ->count();
+            // Lógica unificada de gestión
+            $managingBase = $query()
+                ->whereIn('clients.status_id', $leadStatusesIds)
+                ->where('clients.status_id', '<>', $defaultLeadStatus);
+
+            $totalCount = $query()->count();
             $totalSum = $query()
-                ->where('clients.status', true)
                 ->join('client_has_products AS chp', 'chp.client_id', 'clients.id')
                 ->sum('chp.price');
+
             $clientsCount = $query()
                 ->where('clients.status', true)
                 ->whereIn('clients.status_id', $clientStatusesIds)
@@ -112,26 +125,16 @@ class KPICampaignsController extends BasicController
                 ->whereIn('clients.status_id', $clientStatusesIds)
                 ->join('client_has_products AS chp', 'chp.client_id', 'clients.id')
                 ->sum('chp.price');
-            $archivedCount = $query()
-                ->whereNull('clients.status')
-                ->count();
-            $archivedSum = $query()
-                ->whereNull('clients.status')
-                ->join('client_has_products AS chp', 'chp.client_id', 'clients.id')
-                ->sum('chp.price');
+
+            $archivedCount = (clone $managingBase)->whereNull('clients.status')->count();
+            $trueManagingCount = (clone $managingBase)->where('clients.status', true)->count();
+            $managingCount = (clone $managingBase)->count(); // Total (Vivo + Muerto)
+
             $pendingCount = $query()
-                ->where('clients.status', true)
                 ->where('clients.status_id', $defaultLeadStatus)
                 ->count();
-            $managingCount = $query()
-                ->where('clients.status', true)
-                ->whereIn('clients.status_id', $leadStatusesIds)
-                ->where('clients.status_id', '<>', $defaultLeadStatus)
-                ->count();
-            $managingSum = $query()
-                ->where('clients.status', true)
-                ->whereIn('clients.status_id', $leadStatusesIds)
-                ->where('clients.status_id', '<>', $defaultLeadStatus)
+
+            $managingSum = (clone $managingBase)
                 ->join('client_has_products AS chp', 'chp.client_id', 'clients.id')
                 ->sum('chp.price');
 
@@ -319,14 +322,8 @@ class KPICampaignsController extends BasicController
                 ->select([
                     'clients.campaign_id AS campaign_id',
                     'campaign.title AS campaign_name',
-                    DB::raw('CASE 
-                        WHEN clients.adset_name IS NOT NULL AND clients.adset_name != "" THEN clients.adset_name 
-                        WHEN clients.origin = "CRM Atalaya" THEN "CRM Atalaya (Manual)"
-                        WHEN clients.origin = "WhatsApp" THEN "WhatsApp (Directo)"
-                        WHEN clients.origin = "Google" THEN "Google (Landing)"
-                        ELSE "(Sin grupo de anuncios)"
-                    END as adset_name'),
-                    DB::raw('IFNULL(clients.ad_name, "(Sin anuncio)") as ad_name'),
+                    'clients.adset_name AS adset_name',
+                    'clients.ad_name AS ad_name',
                     DB::raw('COUNT(*) as total'),
                     DB::raw('COUNT(CASE WHEN clients.status_id = "' . $defaultLeadStatus . '" THEN 1 END) as pending'),
                     DB::raw('COUNT(CASE WHEN clients.status_id IN (' . implode(',', array_map(fn($id) => '"' . $id . '"', $clientStatusesIds)) . ') AND clients.status IS NOT NULL THEN 1 END) as sales'),
@@ -338,7 +335,11 @@ class KPICampaignsController extends BasicController
                 })
                 ->where('clients.business_id', Auth::user()->business_id)
                 ->whereRaw('LENGTH(clients.campaign_id) > 10')
-                ->groupBy('clients.campaign_id', 'campaign.title', 'adset_name', 'clients.ad_name', 'clients.origin')
+                ->whereNotNull('clients.adset_name')
+                ->where('clients.adset_name', '<>', '')
+                ->whereNotNull('clients.ad_name')
+                ->where('clients.ad_name', '<>', '')
+                ->groupBy('clients.campaign_id', 'campaign.title', 'clients.adset_name', 'clients.ad_name')
                 ->orderBy('campaign.title', 'asc')
                 ->orderBy('total', 'desc')
                 ->get();
@@ -390,6 +391,11 @@ class KPICampaignsController extends BasicController
                 $finalHierarchy[] = $cData;
             }
 
+            $archivedSum = (clone $managingBase)
+                ->whereNull('clients.status')
+                ->join('client_has_products AS chp', 'chp.client_id', 'clients.id')
+                ->sum('chp.price');
+
             $totalConversionPercent = $totalCount > 0 ? round(($clientsCount / $totalCount) * 100, 1) : 0;
 
             $response->summary = [
@@ -403,6 +409,7 @@ class KPICampaignsController extends BasicController
                 'archivedSum' => $archivedSum,
                 'pendingCount' => $pendingCount,
                 'managingCount' => $managingCount,
+                'trueManagingCount' => $trueManagingCount,
                 'managingSum' => $managingSum,
                 'leadSources' => $leadSources,
                 'originCounts' => $originCounts,
@@ -421,59 +428,39 @@ class KPICampaignsController extends BasicController
         return \response($response->toArray(), $response->status);
     }
 
-    public function leads(Request $request)
+    public function leadsPaginate(Request $request)
     {
-        $response = Response::simpleTryCatch(function ($response) use ($request) {
-            $monthParam = $request->route('month') ?? $request->month;
-            [$year, $month] = \explode('-', $monthParam);
-            $adsetName = trim($request->adset_name);
-            $adName = trim($request->ad_name);
+        return $this->paginate($request);
+    }
 
-            $query = Client::byMonth($year, $month)
-                ->where('clients.business_id', Auth::user()->business_id)
-                ->select([
-                    'clients.id',
-                    'clients.name',
-                    'clients.contact_phone',
-                    'clients.contact_email',
-                    'clients.campaign_id',
-                    'clients.adset_name',
-                    'clients.ad_name',
-                    'clients.origin',
-                    'status.name as status_name',
-                    'status.color as status_color',
-                    'clients.created_at'
-                ])
-                ->join('campaigns as campaign', 'campaign.id', '=', 'clients.campaign_id')
-                ->leftJoin('statuses as status', 'status.id', '=', 'clients.status_id')
-                ->where('clients.campaign_id', $campaignId);
-
-            // Handle both real AdSets and our Virtual Labels based on origin
-            if ($adsetName === 'CRM Atalaya (Manual)') {
-                $query->where('clients.origin', 'CRM Atalaya')->where(function($q){ $q->whereNull('clients.adset_name')->orWhere('clients.adset_name', ''); });
-            } elseif ($adsetName === 'WhatsApp (Directo)') {
-                $query->where('clients.origin', 'WhatsApp')->where(function($q){ $q->whereNull('clients.adset_name')->orWhere('clients.adset_name', ''); });
-            } elseif ($adsetName === 'Google (Landing)') {
-                $query->where('clients.origin', 'Google')->where(function($q){ $q->whereNull('clients.adset_name')->orWhere('clients.adset_name', ''); });
-            } elseif ($adsetName === '(Sin grupo de anuncios)' || !$adsetName) {
-                $query->where(function ($q) {
-                    $q->whereNull('clients.adset_name')->orWhere('clients.adset_name', '');
-                })->whereNotIn('clients.origin', ['CRM Atalaya', 'WhatsApp', 'Google']);
-            } else {
-                $query->where('clients.adset_name', $adsetName);
-            }
-
-            // Optional filter by Ad Name
-            if ($adName && $adName !== '(Sin anuncio)') {
-                $query->where('clients.ad_name', $adName);
-            } elseif ($adName === '(Sin anuncio)') {
-                $query->where(function($q) {
-                    $q->whereNull('clients.ad_name')->orWhere('clients.ad_name', '');
-                });
-            }
-
-            $response->data = $query->orderBy('clients.created_at', 'desc')->get();
-        });
-        return \response($response->toArray(), $response->status);
+    public function setPaginationInstance(Request $request, string $model)
+    {
+        return Client::select([
+            'clients.id',
+            'clients.name',
+            'clients.contact_phone',
+            'clients.contact_email',
+            'clients.campaign_id',
+            'clients.adset_name',
+            'clients.ad_name',
+            'clients.created_at',
+            'statuses.name as status_name',
+            'statuses.color as status_color',
+            'users.name as assigned_name',
+            'users.relative_id as assigned_relative_id'
+        ])
+            ->leftJoin('statuses', 'statuses.id', '=', 'clients.status_id')
+            ->leftJoin('users', 'users.id', '=', 'clients.assigned_to')
+            ->where(function ($query) use ($request) {
+                if ($request->month) {
+                    $query->whereRaw("DATE_FORMAT(clients.created_at, '%Y-%m') = ?", [$request->month]);
+                }
+                if ($request->campaign_id) {
+                    $query->where('clients.campaign_id', $request->campaign_id);
+                }
+                if ($request->adset_name) {
+                    $query->where('clients.adset_name', $request->adset_name);
+                }
+            });
     }
 }

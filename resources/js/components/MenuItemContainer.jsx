@@ -2,13 +2,22 @@ import React from 'react'
 
 const MenuItemContainer = ({ title, icon, children }) => {
 
-  const refs = []
-  if (Array.isArray(children)) {
-    children.forEach(child => refs.push(child?.props?.href))
-  } else {
-    refs.push(children?.props?.href)
-  }
-  const isExpanded = refs.filter(Boolean).some(x => location.pathname.includes(x))
+  const getHrefs = (children) => {
+    let hrefs = [];
+    React.Children.forEach(children, (child) => {
+      if (!child) return;
+      if (child.props && child.props.href) {
+        hrefs.push(child.props.href);
+      }
+      if (child.props && child.props.children) {
+        hrefs = hrefs.concat(getHrefs(child.props.children));
+      }
+    });
+    return hrefs;
+  };
+
+  const refs = getHrefs(children);
+  const isExpanded = refs.filter(Boolean).some(x => location.pathname === x || location.pathname.startsWith(x + '/'))
 
   const id = `item-${crypto.randomUUID()}`
 

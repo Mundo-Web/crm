@@ -26,6 +26,8 @@
   @inertia
   <script src="/lte/assets/libs/gsap/gsap.min.js"></script>
   <script src="/lte/assets/libs/gsap/ScrollTrigger.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
   <script src="/assets/js/yeti.js?v=06d3ebc8-645c-4d80-a600-c9652743c425"></script>
 </body>
 

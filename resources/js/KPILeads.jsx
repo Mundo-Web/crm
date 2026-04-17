@@ -577,36 +577,94 @@ const KPILeads = ({ months = [], currentMonth, currentYear }) => {
                                 <ResponsiveContainer width="100%" height="100%">
                                     <RechartsFunnelChart>
                                         <Tooltip
-                                            formatter={(value) =>
-                                                value.toLocaleString("es-PE")
-                                            }
+                                            content={({ active, payload }) => {
+                                                if (
+                                                    active &&
+                                                    payload &&
+                                                    payload.length
+                                                ) {
+                                                    return (
+                                                        <div
+                                                            className="bg-white p-2 rounded shadow-lg border-0"
+                                                            style={{
+                                                                minWidth:
+                                                                    "150px",
+                                                                borderRadius:
+                                                                    "16px",
+                                                            }}
+                                                        >
+                                                            <p
+                                                                className="mb-1 text-muted   text-uppercase"
+                                                                style={{
+                                                                    fontSize:
+                                                                        "12px",
+                                                                    letterSpacing:
+                                                                        "0.5px",
+                                                                }}
+                                                            >
+                                                                {
+                                                                    payload[0]
+                                                                        .payload
+                                                                        .name
+                                                                }
+                                                            </p>
+                                                            <div className="d-flex justify-content-between align-items-center border-top pt-1">
+                                                                <span
+                                                                    className="text-dark "
+                                                                    style={{
+                                                                        fontSize:
+                                                                            "14px",
+                                                                    }}
+                                                                >
+                                                                    <strong className="text-dark">
+                                                                        Cantidad:
+                                                                    </strong>
+                                                                </span>
+                                                                <span
+                                                                    className="text-dark"
+                                                                    style={{
+                                                                        fontSize:
+                                                                            "14px",
+                                                                    }}
+                                                                >
+                                                                    {payload[0].value.toLocaleString(
+                                                                        "es-PE",
+                                                                    )}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                }
+                                                return null;
+                                            }}
                                         />
                                         <Funnel
                                             dataKey="count"
+                                            nameKey="name"
                                             data={[
                                                 {
                                                     name: "TOTAL LEADS",
                                                     count: totalCount,
-                                                    fill: "#1E40AF",
+                                                    fill: "#6366F1",
                                                 },
                                                 {
                                                     name: "CONTACTADOS",
                                                     count: managingCount,
-                                                    fill: "#F97316",
+                                                    fill: "#F59E0B",
                                                 },
                                                 {
                                                     name: "DESESTIMADOS",
                                                     count: archivedLabelsCount,
-                                                    fill: "#22C55E",
+                                                    fill: "#e66747",
                                                 },
                                                 {
                                                     name: "VENTAS CONCRETADAS",
                                                     count: clientsCount,
-                                                    fill: "#EF4444",
+                                                    fill: "#10B981",
                                                 },
                                             ]}
                                             isAnimationActive
-                                        ></Funnel>
+                                        />
                                     </RechartsFunnelChart>
                                 </ResponsiveContainer>
                             </div>
@@ -615,22 +673,22 @@ const KPILeads = ({ months = [], currentMonth, currentYear }) => {
                                     {
                                         name: "TOTAL LEADS",
                                         count: totalCount,
-                                        fill: "#1E40AF",
+                                        fill: "#6366F1",
                                     },
                                     {
                                         name: "CONTACTADOS",
                                         count: managingCount,
-                                        fill: "#F97316",
+                                        fill: "#F59E0B",
                                     },
                                     {
                                         name: "DESESTIMADOS",
                                         count: archivedLabelsCount,
-                                        fill: "#22C55E",
+                                        fill: "#e66747",
                                     },
                                     {
                                         name: "VENTAS CONCRETADAS",
                                         count: clientsCount,
-                                        fill: "#EF4444",
+                                        fill: "#10B981",
                                     },
                                 ].map((item, index) => (
                                     <div
