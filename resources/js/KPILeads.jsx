@@ -51,6 +51,7 @@ const KPILeads = ({ months = [], currentMonth, currentYear }) => {
     const [pendingCount, setPendingCount] = useState(0);
     const [clientsCount, setClientsCount] = useState(0);
     const [archivedCount, setArchivedCount] = useState(0);
+    const [trueManagingCount, setTrueManagingCount] = useState(0);
     const [managingCount, setManagingCount] = useState(0);
 
     const [totalSum, setTotalSum] = useState(0);
@@ -101,6 +102,7 @@ const KPILeads = ({ months = [], currentMonth, currentYear }) => {
             setPendingCount(summary.pendingCount ?? 0);
             setClientsCount(summary.clientsCount ?? 0);
             setArchivedCount(summary.archivedCount ?? 0);
+            setTrueManagingCount(summary.trueManagingCount ?? 0);
             setManagingCount(summary.managingCount ?? 0);
 
             setTotalSum(summary.totalSum ?? 0);
@@ -298,7 +300,7 @@ const KPILeads = ({ months = [], currentMonth, currentYear }) => {
 
                 return (
                     <div className="row g-3 mb-3 mt-0">
-                        <div className="col-md-6 col-xl">
+                        <div className="col-md-3 ">
                             <div
                                 className="card border-0 shadow-sm h-100"
                                 style={{ borderRadius: "16px" }}
@@ -336,7 +338,7 @@ const KPILeads = ({ months = [], currentMonth, currentYear }) => {
                                 </div>
                             </div>
                         </div>
-                        <div className="col-md-6 col-xl">
+                        <div className="col-md-3 ">
                             <div
                                 className="card border-0 shadow-sm h-100"
                                 style={{ borderRadius: "16px" }}
@@ -374,7 +376,7 @@ const KPILeads = ({ months = [], currentMonth, currentYear }) => {
                                 </div>
                             </div>
                         </div>
-                        <div className="col-md-6 col-xl">
+                        <div className="col-md-3 ">
                             <div
                                 className="card border-0 shadow-sm h-100"
                                 style={{ borderRadius: "16px" }}
@@ -400,6 +402,72 @@ const KPILeads = ({ months = [], currentMonth, currentYear }) => {
                                             <i
                                                 className="mdi mdi-phone fs-4"
                                                 style={{ color: "#F59E0B" }}
+                                            ></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="col-md-3 ">
+                            <div
+                                className="card border-0 shadow-sm h-100"
+                                style={{ borderRadius: "16px" }}
+                            >
+                                <div className="card-body">
+                                    <div className="d-flex justify-content-between align-items-start">
+                                        <div className="flex-grow-1">
+                                            <p className="text-muted mb-1 small text-uppercase fw-semibold">
+                                                Leads en Gestión
+                                            </p>
+                                            <h2 className="mb-0 fw-bold">
+                                                {formatNumber(
+                                                    trueManagingCount,
+                                                )}
+                                            </h2>
+                                        </div>
+                                        <div
+                                            className="rounded-circle d-flex align-items-center justify-content-center"
+                                            style={{
+                                                width: "56px",
+                                                height: "56px",
+                                                backgroundColor: "#3B82F615",
+                                            }}
+                                        >
+                                            <i
+                                                className="mdi mdi-account-clock fs-4"
+                                                style={{ color: "#3B82F6" }}
+                                            ></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="col-md-4 col-xl">
+                            <div
+                                className="card border-0 shadow-sm h-100"
+                                style={{ borderRadius: "16px" }}
+                            >
+                                <div className="card-body">
+                                    <div className="d-flex justify-content-between align-items-start">
+                                        <div className="flex-grow-1">
+                                            <p className="text-muted mb-1 small text-uppercase fw-semibold">
+                                                Leads Archivados
+                                            </p>
+                                            <h2 className="mb-0 fw-bold">
+                                                {formatNumber(archivedCount)}
+                                            </h2>
+                                        </div>
+                                        <div
+                                            className="rounded-circle d-flex align-items-center justify-content-center"
+                                            style={{
+                                                width: "56px",
+                                                height: "56px",
+                                                backgroundColor: "#64748B15",
+                                            }}
+                                        >
+                                            <i
+                                                className="mdi mdi-account-off fs-4"
+                                                style={{ color: "#64748B" }}
                                             ></i>
                                         </div>
                                     </div>

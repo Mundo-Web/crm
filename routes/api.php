@@ -78,6 +78,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard/{range}', [DashboardController::class, 'revenue']);
     Route::get('/dashboard/leads/kpi/{month}', [KPILeadsController::class, 'kpi']);
     Route::get('/dashboard/campaigns/kpi/{month}', [KPICampaignsController::class, 'kpi']);
+    Route::get('/dashboard/campaigns/leads/{month}', [KPICampaignsController::class, 'leads']);
 
     // Users sign Routes
     Route::post('/users/sign', [UserController::class, 'addSign']);

@@ -78,8 +78,9 @@ class KPICampaignsController extends BasicController
             $clientStatusesIds = array_map(fn($status) => $status['id'], $clientStatuses->toArray());
 
             $query = fn() => Client::byMonth($year, $month)
+                ->join('campaigns as campaign', 'campaign.id', '=', 'clients.campaign_id')
                 ->where('clients.business_id', Auth::user()->business_id)
-                ->whereNotNull('campaign_id');
+                ->whereRaw('LENGTH(clients.campaign_id) > 10');
 
             $grouped = $query()
                 ->select([
@@ -95,35 +96,42 @@ class KPICampaignsController extends BasicController
                 ->orderBy('status.order', 'asc')
                 ->get();
 
-            $totalCount = $query()->count();
+            $totalCount = $query()
+                ->where('clients.status', true)
+                ->count();
             $totalSum = $query()
+                ->where('clients.status', true)
                 ->join('client_has_products AS chp', 'chp.client_id', 'clients.id')
                 ->sum('chp.price');
             $clientsCount = $query()
-                ->whereIn('status_id', $clientStatusesIds)
-                ->whereNotNull('status')
+                ->where('clients.status', true)
+                ->whereIn('clients.status_id', $clientStatusesIds)
                 ->count();
             $clientsSum = $query()
-                ->whereIn('status_id', $clientStatusesIds)
+                ->where('clients.status', true)
+                ->whereIn('clients.status_id', $clientStatusesIds)
                 ->join('client_has_products AS chp', 'chp.client_id', 'clients.id')
                 ->sum('chp.price');
             $archivedCount = $query()
-                ->whereNull('status')
+                ->whereNull('clients.status')
                 ->count();
             $archivedSum = $query()
                 ->whereNull('clients.status')
                 ->join('client_has_products AS chp', 'chp.client_id', 'clients.id')
                 ->sum('chp.price');
             $pendingCount = $query()
-                ->where('status_id', $defaultLeadStatus)
+                ->where('clients.status', true)
+                ->where('clients.status_id', $defaultLeadStatus)
                 ->count();
             $managingCount = $query()
-                ->whereIn('status_id', $leadStatusesIds)
-                ->where('status_id', '<>', $defaultLeadStatus)
+                ->where('clients.status', true)
+                ->whereIn('clients.status_id', $leadStatusesIds)
+                ->where('clients.status_id', '<>', $defaultLeadStatus)
                 ->count();
             $managingSum = $query()
-                ->whereIn('status_id', $leadStatusesIds)
-                ->where('status_id', '<>', $defaultLeadStatus)
+                ->where('clients.status', true)
+                ->whereIn('clients.status_id', $leadStatusesIds)
+                ->where('clients.status_id', '<>', $defaultLeadStatus)
                 ->join('client_has_products AS chp', 'chp.client_id', 'clients.id')
                 ->sum('chp.price');
 
@@ -136,7 +144,7 @@ class KPICampaignsController extends BasicController
                 ])
                 ->leftJoin('statuses AS status', 'status.id', 'clients.status_id')
                 ->whereNotNull('status.status')
-                ->whereNotNull('clients.status')
+                ->where('clients.status', true)
                 ->whereIn('clients.status_id', array_merge($leadStatusesIds, $clientStatusesIds))
                 ->groupBy('status.id', 'status.name', 'status.color', 'status.table_id', 'status.order')
                 ->orderBy('status.table_id', 'desc')
@@ -146,48 +154,48 @@ class KPICampaignsController extends BasicController
             $leadSources = $query()
                 ->select([
                     DB::raw('COUNT(CASE 
-                        WHEN origin = "CRM Atalaya" AND triggered_by = "Formulario" THEN 1 
+                        WHEN clients.origin = "CRM Atalaya" AND clients.triggered_by = "Formulario" THEN 1 
                         END) as crm_count'),
                     DB::raw('COUNT(CASE 
-                        WHEN origin = "WhatsApp" AND triggered_by = "Gemini AI" THEN 1 
+                        WHEN clients.origin = "WhatsApp" AND clients.triggered_by = "Gemini AI" THEN 1 
                         END) as whatsapp_count'),
                     DB::raw('COUNT(CASE 
-                        WHEN (origin != "CRM Atalaya" OR triggered_by != "Formulario") 
-                        AND (origin != "WhatsApp" OR triggered_by != "Gemini AI") 
+                        WHEN (clients.origin != "CRM Atalaya" OR clients.triggered_by != "Formulario") 
+                        AND (clients.origin != "WhatsApp" OR clients.triggered_by != "Gemini AI") 
                         THEN 1 END) as integration_count')
                 ])
-                ->where('business_id', Auth::user()->business_id)
+                ->where('clients.business_id', Auth::user()->business_id)
                 ->first();
 
             $originCounts = $query()
                 ->select([
-                    'origin',
+                    'clients.origin as origin',
                     DB::raw('COUNT(*) as total'),
-                    DB::raw('COUNT(CASE WHEN status_id = "' . $defaultLeadStatus . '" THEN 1 END) as pending'),
-                    DB::raw('COUNT(CASE WHEN status_id IN (' . implode(',', array_map(fn($id) => '"' . $id . '"', $clientStatusesIds)) . ') THEN 1 END) as clients'),
-                    DB::raw('COUNT(CASE WHEN status_id IN (' . implode(',', array_map(fn($id) => '"' . $id . '"', $leadStatusesIds)) . ') AND status_id <> "' . $defaultLeadStatus . '" THEN 1 END) as managing')
+                    DB::raw('COUNT(CASE WHEN clients.status_id = "' . $defaultLeadStatus . '" THEN 1 END) as pending'),
+                    DB::raw('COUNT(CASE WHEN clients.status_id IN (' . implode(',', array_map(fn($id) => '"' . $id . '"', $clientStatusesIds)) . ') THEN 1 END) as clients'),
+                    DB::raw('COUNT(CASE WHEN clients.status_id IN (' . implode(',', array_map(fn($id) => '"' . $id . '"', $leadStatusesIds)) . ') AND clients.status_id <> "' . $defaultLeadStatus . '" THEN 1 END) as managing')
                 ])
-                ->where('business_id', Auth::user()->business_id)
-                ->whereNotNull('origin')
-                ->where('origin', '<>', '')
-                ->groupBy('origin')
+                ->where('clients.business_id', Auth::user()->business_id)
+                ->whereNotNull('clients.origin')
+                ->where('clients.origin', '<>', '')
+                ->groupBy('clients.origin')
                 ->orderBy('total', 'desc')
                 ->get();
 
             $originCampaignCounts = $query()
                 ->select([
-                    'origin',
+                    'clients.origin as origin',
                     DB::raw('COUNT(*) as total'),
-                    DB::raw('COUNT(CASE WHEN status_id = "' . $defaultLeadStatus . '" THEN 1 END) as pending'),
-                    DB::raw('COUNT(CASE WHEN status_id IN (' . implode(',', array_map(fn($id) => '"' . $id . '"', $clientStatusesIds)) . ') THEN 1 END) as clients'),
-                    DB::raw('COUNT(CASE WHEN status_id IN (' . implode(',', array_map(fn($id) => '"' . $id . '"', $leadStatusesIds)) . ') AND status_id <> "' . $defaultLeadStatus . '" THEN 1 END) as managing')
+                    DB::raw('COUNT(CASE WHEN clients.status_id = "' . $defaultLeadStatus . '" THEN 1 END) as pending'),
+                    DB::raw('COUNT(CASE WHEN clients.status_id IN (' . implode(',', array_map(fn($id) => '"' . $id . '"', $clientStatusesIds)) . ') THEN 1 END) as clients'),
+                    DB::raw('COUNT(CASE WHEN clients.status_id IN (' . implode(',', array_map(fn($id) => '"' . $id . '"', $leadStatusesIds)) . ') AND clients.status_id <> "' . $defaultLeadStatus . '" THEN 1 END) as managing')
                 ])
-                ->where('business_id', Auth::user()->business_id)
-                ->whereNotNull('origin')
-                ->where('origin', '<>', '')
-                ->whereNotNull('campaign_id')
-                ->where('campaign_id', '<>', '')
-                ->groupBy('origin')
+                ->where('clients.business_id', Auth::user()->business_id)
+                ->whereNotNull('clients.origin')
+                ->where('clients.origin', '<>', '')
+                ->whereNotNull('clients.campaign_id')
+                ->where('clients.campaign_id', '<>', '')
+                ->groupBy('clients.origin')
                 ->orderBy('total', 'desc')
                 ->get();
 
@@ -198,17 +206,17 @@ class KPICampaignsController extends BasicController
             
             $funnelRaw = $query()
                 ->select([
-                    'triggered_by',
+                    'clients.triggered_by as triggered_by',
                     DB::raw('COUNT(*) as total'),
-                    DB::raw('COUNT(CASE WHEN status_id IN (' . implode(',', array_map(fn($id) => '"' . $id . '"', $clientStatusesIds)) . ') THEN 1 END) as clients'),
-                    DB::raw('COUNT(CASE WHEN status_id IN (' . implode(',', array_map(fn($id) => '"' . $id . '"', array_merge($leadStatusesIds, $clientStatusesIds))) . ') AND status_id <> "' . $defaultLeadStatus . '" AND status_id <> "' . ($asignationLeadStatus['lead'] ?? '') . '" THEN 1 END) as managing')
+                    DB::raw('COUNT(CASE WHEN clients.status_id IN (' . implode(',', array_map(fn($id) => '"' . $id . '"', $clientStatusesIds)) . ') THEN 1 END) as clients'),
+                    DB::raw('COUNT(CASE WHEN clients.status_id IN (' . implode(',', array_map(fn($id) => '"' . $id . '"', array_merge($leadStatusesIds, $clientStatusesIds))) . ') AND clients.status_id <> "' . $defaultLeadStatus . '" AND clients.status_id <> "' . ($asignationLeadStatus['lead'] ?? '') . '" THEN 1 END) as managing')
                 ])
-                ->where('business_id', Auth::user()->business_id)
-                ->where('lead_origin', 'integration')
-                ->whereNotNull('triggered_by')
+                ->where('clients.business_id', Auth::user()->business_id)
+                ->where('clients.lead_origin', 'integration')
+                ->whereNotNull('clients.triggered_by')
                 ->whereNotNull('clients.status')
-                ->where('triggered_by', '<>', '')
-                ->groupBy('triggered_by')
+                ->where('clients.triggered_by', '<>', '')
+                ->groupBy('clients.triggered_by')
                 ->orderBy('total', 'desc')
                 ->get();
 
@@ -221,15 +229,15 @@ class KPICampaignsController extends BasicController
 
             $originLandingCampaignCounts = $query()
                 ->select([
-                    'origin as name',
-                    DB::raw('COUNT(CASE WHEN lead_origin = "integration" THEN 1 END) as landing'),
-                    DB::raw('COUNT(CASE WHEN campaign_id IS NOT NULL THEN 1 END) as direct')
+                    'clients.origin as name',
+                    DB::raw('COUNT(CASE WHEN clients.lead_origin = "integration" THEN 1 END) as landing'),
+                    DB::raw('COUNT(CASE WHEN clients.campaign_id IS NOT NULL THEN 1 END) as direct')
                 ])
-                ->where('business_id', Auth::user()->business_id)
-                ->whereNotNull('origin')
-                ->where('origin', '<>', '')
-                ->groupBy('origin')
-                ->havingRaw('COUNT(CASE WHEN lead_origin = "integration" THEN 1 END) > 0 OR COUNT(CASE WHEN campaign_id IS NOT NULL THEN 1 END) > 0')
+                ->where('clients.business_id', Auth::user()->business_id)
+                ->whereNotNull('clients.origin')
+                ->where('clients.origin', '<>', '')
+                ->groupBy('clients.origin')
+                ->havingRaw('COUNT(CASE WHEN clients.lead_origin = "integration" THEN 1 END) > 0 OR COUNT(CASE WHEN clients.campaign_id IS NOT NULL THEN 1 END) > 0')
                 ->get();
 
             $archivedLeadStatusRaw = Setting::get('archived-lead-status');
@@ -243,8 +251,9 @@ class KPICampaignsController extends BasicController
             $allArchivedStatuses = array_unique(array_merge($archivedLeadStatus, $archivedLeadStatusDirect));
 
             $archivedLabelsCount = $query()
-                ->where('business_id', Auth::user()->business_id)
-                ->whereIn('manage_status_id', $allArchivedStatuses)
+                ->where('clients.business_id', Auth::user()->business_id)
+                ->whereNull('clients.status')
+                ->whereIn('clients.manage_status_id', $allArchivedStatuses)
                 ->count();
 
             $archivedBreakdown = DB::table('clients')
@@ -260,12 +269,13 @@ class KPICampaignsController extends BasicController
 
             $totalArchivedCounts = $query()
                 ->select([
-                    DB::raw('IFNULL(origin, "Otros") as name'),
+                    DB::raw('IFNULL(clients.origin, "Otros") as name'),
                     DB::raw('COUNT(*) as incoming'),
                     DB::raw('COUNT(CASE WHEN clients.status IS NULL THEN 1 END) as archived')
                 ])
-                ->where('business_id', Auth::user()->business_id)
-                ->groupBy(DB::raw('IFNULL(origin, "Otros")'))
+                ->where('clients.business_id', Auth::user()->business_id)
+                ->whereNull('clients.status')
+                ->groupBy(DB::raw('IFNULL(clients.origin, "Otros")'))
                 ->orderBy('incoming', 'desc')
                 ->get();
 
@@ -296,7 +306,7 @@ class KPICampaignsController extends BasicController
             $usersAssignation = $query()
                 ->select($columns)
                 ->with('assigned')
-                ->where('business_id', Auth::user()->business_id)
+                ->where('clients.business_id', Auth::user()->business_id)
                 ->whereNotNull('assigned_to')
                 ->groupBy('assigned_to')
                 ->orderBy('count', 'desc')
@@ -304,52 +314,86 @@ class KPICampaignsController extends BasicController
                 ->get();
 
             // Hierarchical Data: Campaign -> Ad Set -> Ads
-            $rawAdsData = $query()
+            // Hierarchical Data: Campaign -> Ad Set -> Ads
+            $rawAdsData = Client::byMonth($year, $month)
                 ->select([
-                    DB::raw('IFNULL(campaign.title, "(Campaña desconocida)") AS campaign_name'),
-                    DB::raw('IFNULL(clients.adset_name, "(Sin grupo de anuncios)") as adset_name'),
+                    'clients.campaign_id AS campaign_id',
+                    'campaign.title AS campaign_name',
+                    DB::raw('CASE 
+                        WHEN clients.adset_name IS NOT NULL AND clients.adset_name != "" THEN clients.adset_name 
+                        WHEN clients.origin = "CRM Atalaya" THEN "CRM Atalaya (Manual)"
+                        WHEN clients.origin = "WhatsApp" THEN "WhatsApp (Directo)"
+                        WHEN clients.origin = "Google" THEN "Google (Landing)"
+                        ELSE "(Sin grupo de anuncios)"
+                    END as adset_name'),
                     DB::raw('IFNULL(clients.ad_name, "(Sin anuncio)") as ad_name'),
                     DB::raw('COUNT(*) as total'),
                     DB::raw('COUNT(CASE WHEN clients.status_id = "' . $defaultLeadStatus . '" THEN 1 END) as pending'),
                     DB::raw('COUNT(CASE WHEN clients.status_id IN (' . implode(',', array_map(fn($id) => '"' . $id . '"', $clientStatusesIds)) . ') AND clients.status IS NOT NULL THEN 1 END) as sales'),
                     DB::raw('COUNT(CASE WHEN clients.status IS NULL THEN 1 END) as archived'),
                 ])
-                ->leftJoin('campaigns AS campaign', 'campaign.id', 'clients.campaign_id')
+                ->join('campaigns AS campaign', function($join) {
+                    $join->on('campaign.id', '=', 'clients.campaign_id')
+                         ->whereRaw('LENGTH(campaign.id) > 10');
+                })
                 ->where('clients.business_id', Auth::user()->business_id)
-                ->groupBy('campaign.title', 'clients.adset_name', 'clients.ad_name')
+                ->whereRaw('LENGTH(clients.campaign_id) > 10')
+                ->groupBy('clients.campaign_id', 'campaign.title', 'adset_name', 'clients.ad_name', 'clients.origin')
                 ->orderBy('campaign.title', 'asc')
                 ->orderBy('total', 'desc')
                 ->get();
 
             $hierarchy = [];
             foreach ($rawAdsData as $row) {
-                if (!isset($hierarchy[$row->campaign_name])) {
-                    $hierarchy[$row->campaign_name] = [
+                if (!isset($hierarchy[$row->campaign_id])) {
+                    $hierarchy[$row->campaign_id] = [
+                        'id' => $row->campaign_id,
                         'name' => $row->campaign_name,
                         'adSets' => []
                     ];
                 }
-                if (!isset($hierarchy[$row->campaign_name]['adSets'][$row->adset_name])) {
-                    $hierarchy[$row->campaign_name]['adSets'][$row->adset_name] = [
+
+                if (!isset($hierarchy[$row->campaign_id]['adSets'][$row->adset_name])) {
+                    $hierarchy[$row->campaign_id]['adSets'][$row->adset_name] = [
                         'name' => $row->adset_name,
                         'ads' => []
                     ];
                 }
-                $hierarchy[$row->campaign_name]['adSets'][$row->adset_name]['ads'][] = [
-                    'name' => $row->ad_name,
-                    'total' => $row->total,
-                    'contacted' => $row->total - $row->pending,
-                    'archived' => $row->archived,
-                    'sales' => $row->sales
-                ];
+
+                $adName = $row->ad_name;
+                if (!isset($hierarchy[$row->campaign_id]['adSets'][$row->adset_name]['ads'][$adName])) {
+                    $hierarchy[$row->campaign_id]['adSets'][$row->adset_name]['ads'][$adName] = [
+                        'name' => $adName,
+                        'total' => 0,
+                        'contacted' => 0,
+                        'archived' => 0,
+                        'sales' => 0
+                    ];
+                }
+
+                $ad = &$hierarchy[$row->campaign_id]['adSets'][$row->adset_name]['ads'][$adName];
+                $ad['total'] += $row->total;
+                $ad['contacted'] += ($row->total - $row->pending);
+                $ad['archived'] += $row->archived;
+                $ad['sales'] += $row->sales;
             }
 
-            // Convert nested adSets to indexed array
-            foreach ($hierarchy as &$campaign) {
-                $campaign['adSets'] = array_values($campaign['adSets']);
+            // Convert adSets and ads from associative to indexed arrays
+            $finalHierarchy = [];
+            foreach ($hierarchy as $cId => $cData) {
+                $adSets = [];
+                foreach ($cData['adSets'] as $asName => $asData) {
+                    $asData['ads'] = array_values($asData['ads']);
+                    $adSets[] = $asData;
+                }
+                $cData['adSets'] = $adSets;
+                $finalHierarchy[] = $cData;
             }
+
+            $totalConversionPercent = $totalCount > 0 ? round(($clientsCount / $totalCount) * 100, 1) : 0;
 
             $response->summary = [
+                'hierarchy' => $finalHierarchy,
                 'grouped' => $grouped,
                 'totalCount' => $totalCount,
                 'totalSum' => $totalSum,
@@ -364,15 +408,71 @@ class KPICampaignsController extends BasicController
                 'originCounts' => $originCounts,
                 'originCampaignCounts' => $originCampaignCounts,
                 'originLandingCampaignCounts' => $originLandingCampaignCounts,
+                'totalConversionPercent' => $totalConversionPercent,
                 'usersAssignation' => $usersAssignation,
                 'breakdownCounts' => $breakdownCounts,
                 'funnelCounts' => $funnelCounts,
                 'totalArchivedCounts' => $totalArchivedCounts,
                 'archivedLabelsCount' => $archivedLabelsCount,
                 'archivedBreakdown' => $archivedBreakdown,
-                'hierarchy' => array_values($hierarchy)
             ];
             $response->data = $groupedByManageStatus;
+        });
+        return \response($response->toArray(), $response->status);
+    }
+
+    public function leads(Request $request)
+    {
+        $response = Response::simpleTryCatch(function ($response) use ($request) {
+            $monthParam = $request->route('month') ?? $request->month;
+            [$year, $month] = \explode('-', $monthParam);
+            $adsetName = trim($request->adset_name);
+            $adName = trim($request->ad_name);
+
+            $query = Client::byMonth($year, $month)
+                ->where('clients.business_id', Auth::user()->business_id)
+                ->select([
+                    'clients.id',
+                    'clients.name',
+                    'clients.contact_phone',
+                    'clients.contact_email',
+                    'clients.campaign_id',
+                    'clients.adset_name',
+                    'clients.ad_name',
+                    'clients.origin',
+                    'status.name as status_name',
+                    'status.color as status_color',
+                    'clients.created_at'
+                ])
+                ->join('campaigns as campaign', 'campaign.id', '=', 'clients.campaign_id')
+                ->leftJoin('statuses as status', 'status.id', '=', 'clients.status_id')
+                ->where('clients.campaign_id', $campaignId);
+
+            // Handle both real AdSets and our Virtual Labels based on origin
+            if ($adsetName === 'CRM Atalaya (Manual)') {
+                $query->where('clients.origin', 'CRM Atalaya')->where(function($q){ $q->whereNull('clients.adset_name')->orWhere('clients.adset_name', ''); });
+            } elseif ($adsetName === 'WhatsApp (Directo)') {
+                $query->where('clients.origin', 'WhatsApp')->where(function($q){ $q->whereNull('clients.adset_name')->orWhere('clients.adset_name', ''); });
+            } elseif ($adsetName === 'Google (Landing)') {
+                $query->where('clients.origin', 'Google')->where(function($q){ $q->whereNull('clients.adset_name')->orWhere('clients.adset_name', ''); });
+            } elseif ($adsetName === '(Sin grupo de anuncios)' || !$adsetName) {
+                $query->where(function ($q) {
+                    $q->whereNull('clients.adset_name')->orWhere('clients.adset_name', '');
+                })->whereNotIn('clients.origin', ['CRM Atalaya', 'WhatsApp', 'Google']);
+            } else {
+                $query->where('clients.adset_name', $adsetName);
+            }
+
+            // Optional filter by Ad Name
+            if ($adName && $adName !== '(Sin anuncio)') {
+                $query->where('clients.ad_name', $adName);
+            } elseif ($adName === '(Sin anuncio)') {
+                $query->where(function($q) {
+                    $q->whereNull('clients.ad_name')->orWhere('clients.ad_name', '');
+                });
+            }
+
+            $response->data = $query->orderBy('clients.created_at', 'desc')->get();
         });
         return \response($response->toArray(), $response->status);
     }

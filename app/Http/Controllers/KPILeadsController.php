@@ -77,6 +77,19 @@ class KPILeadsController extends BasicController
             $leadStatusesIds = array_map(fn($status) => $status['id'], $leadStatuses->toArray());
             $clientStatusesIds = array_map(fn($status) => $status['id'], $clientStatuses->toArray());
 
+            // 1. Estados de archivo automático (JSON)
+            $archivedLeadStatusRaw = Setting::get('archived-lead-status');
+            $archivedLeadStatus = is_array($archivedLeadStatusRaw) ? $archivedLeadStatusRaw : (JSON::parse($archivedLeadStatusRaw ?? '[]') ?? []);
+            if (!is_array($archivedLeadStatus)) $archivedLeadStatus = [$archivedLeadStatus];
+
+            // 2. Estados de archivo directo (JSON)
+            $archivedLeadStatusDirectRaw = Setting::get('archived-lead-status-direct');
+            $archivedLeadStatusDirect = is_array($archivedLeadStatusDirectRaw) ? $archivedLeadStatusDirectRaw : (JSON::parse($archivedLeadStatusDirectRaw ?? '[]') ?? []);
+            if (!is_array($archivedLeadStatusDirect)) $archivedLeadStatusDirect = [$archivedLeadStatusDirect];
+
+            // Combinar todos los estados desestimados
+            $allArchivedStatuses = array_unique(array_merge($archivedLeadStatus, $archivedLeadStatusDirect));
+
             $grouped = Client::byMonth($year, $month)
                 ->select([
                     'status.id',
@@ -113,13 +126,18 @@ class KPILeadsController extends BasicController
             $pendingCount = Client::byMonth($year, $month)
                 ->where('status_id', $defaultLeadStatus)
                 ->count();
-            $managingCount = Client::byMonth($year, $month)
+            $managingBase = Client::byMonth($year, $month)
                 ->whereIn('status_id', $leadStatusesIds)
-                ->where('status_id', '<>', $defaultLeadStatus)
-                ->count();
-            $managingSum = Client::byMonth($year, $month)
-                ->whereIn('status_id', $leadStatusesIds)
-                ->where('status_id', '<>', $defaultLeadStatus)
+                ->where('status_id', '<>', $defaultLeadStatus);
+
+            // Gran total de contactados (Vivos + Muertos)
+            $managingCount = (clone $managingBase)->count();
+
+            // Desglose de contactados
+            $trueManagingCount = (clone $managingBase)->where('status', true)->count();
+            $archivedCount = (clone $managingBase)->whereNull('status')->count();
+
+            $managingSum = (clone $managingBase)
                 ->join('client_has_products AS chp', 'chp.client_id', 'clients.id')
                 ->sum('chp.price');
 
@@ -227,21 +245,10 @@ class KPILeadsController extends BasicController
                 ->havingRaw('COUNT(CASE WHEN lead_origin = "integration" THEN 1 END) > 0 OR COUNT(CASE WHEN campaign_id IS NOT NULL THEN 1 END) > 0')
                 ->get();
 
-            // 1. Estados de archivo automático (JSON)
-            $archivedLeadStatusRaw = Setting::get('archived-lead-status');
-            $archivedLeadStatus = is_array($archivedLeadStatusRaw) ? $archivedLeadStatusRaw : (JSON::parse($archivedLeadStatusRaw ?? '[]') ?? []);
-            if (!is_array($archivedLeadStatus)) $archivedLeadStatus = [$archivedLeadStatus];
-
-            // 2. Estados de archivo directo (JSON)
-            $archivedLeadStatusDirectRaw = Setting::get('archived-lead-status-direct');
-            $archivedLeadStatusDirect = is_array($archivedLeadStatusDirectRaw) ? $archivedLeadStatusDirectRaw : (JSON::parse($archivedLeadStatusDirectRaw ?? '[]') ?? []);
-            if (!is_array($archivedLeadStatusDirect)) $archivedLeadStatusDirect = [$archivedLeadStatusDirect];
-
-            // Combinar todos los estados desestimados
-            $allArchivedStatuses = array_unique(array_merge($archivedLeadStatus, $archivedLeadStatusDirect));
 
             // Conteo total para el funnel
             $archivedLabelsCount = Client::byMonth($year, $month)
+                ->whereNull('status')
                 ->where('business_id', Auth::user()->business_id)
                 ->whereIn('manage_status_id', $allArchivedStatuses)
                 ->count();
@@ -323,6 +330,7 @@ class KPILeadsController extends BasicController
                 'funnelCounts' => $funnelCounts,
                 'totalArchivedCounts' => $totalArchivedCounts,
                 'archivedLabelsCount' => $archivedLabelsCount,
+                'trueManagingCount' => $trueManagingCount,
                 'archivedBreakdown' => $archivedBreakdown,
             ];
             $response->data = $groupedByManageStatus;

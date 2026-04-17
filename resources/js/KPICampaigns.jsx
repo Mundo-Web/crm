@@ -32,7 +32,7 @@ import {
     Tooltip as RechartsTooltip,
 } from "recharts";
 
-const AdSetPerformanceCard = ({ adSet }) => {
+const AdSetPerformanceCard = ({ adSet, campaignId, campaignName, onViewLeads }) => {
     const chartData = adSet.ads.map((ad) => ({
         name: ad.name,
         "TOTAL LEADS": ad.total,
@@ -48,13 +48,24 @@ const AdSetPerformanceCard = ({ adSet }) => {
         >
             <div className="card-body">
                 <div className="d-flex justify-content-between align-items-center mb-4">
-                    <h5 className="card-title mb-0 fw-bold text-dark">
+                    <h5 className="card-title mb-0 fw-bold text-dark text-truncate" title={adSet.name}>
                         <i className="mdi mdi-folder-outline me-2 text-primary"></i>
                         {adSet.name}
                     </h5>
-                    <span className="badge bg-light text-dark rounded-pill px-3 border">
-                        {adSet.ads.length} Anuncios
-                    </span>
+                    <div className="d-flex align-items-center gap-2">
+                        <Tippy content="Ver registros">
+                            <button
+                                className="btn btn-sm btn-light-primary rounded-circle"
+                                onClick={() => onViewLeads(campaignId, campaignName, adSet.name)}
+                                style={{ width: 32, height: 32, padding: 0 }}
+                            >
+                                <i className="mdi mdi-eye-outline"></i>
+                            </button>
+                        </Tippy>
+                        <span className="badge bg-light text-dark rounded-pill px-3 border">
+                            {adSet.ads.length} Ads
+                        </span>
+                    </div>
                 </div>
 
                 <div style={{ width: "100%", height: 400 }}>
@@ -102,8 +113,8 @@ const AdSetPerformanceCard = ({ adSet }) => {
                                         {[
                                             { label: "TOTAL LEADS", color: "#1E40AF" },
                                             { label: "CONTACTADOS", color: "#F97316" },
-                                            { label: "DESESTIMADOS", color: "#22C55E" },
-                                            { label: "VENTAS CONCRETADAS", color: "#EF4444" },
+                                            { label: "DESESTIMADOS", color: "#EF4444" },
+                                            { label: "VENTAS CONCRETADAS", color: "#22C55E" },
                                         ].map((item, i) => (
                                             <div key={i} className="d-flex align-items-center">
                                                 <div
@@ -134,25 +145,25 @@ const AdSetPerformanceCard = ({ adSet }) => {
                                 dataKey="TOTAL LEADS"
                                 fill="#1E40AF"
                                 radius={[4, 4, 0, 0]}
-                                barSize={25}
+                                barSize={35}
                             />
                             <Bar
                                 dataKey="CONTACTADOS"
                                 fill="#F97316"
                                 radius={[4, 4, 0, 0]}
-                                barSize={25}
+                                barSize={35}
                             />
                             <Bar
                                 dataKey="DESESTIMADOS"
-                                fill="#22C55E"
+                                fill="#EF4444"
                                 radius={[4, 4, 0, 0]}
-                                barSize={25}
+                                barSize={35}
                             />
                             <Bar
                                 dataKey="VENTAS CONCRETADAS"
-                                fill="#EF4444"
+                                fill="#22C55E"
                                 radius={[4, 4, 0, 0]}
-                                barSize={25}
+                                barSize={35}
                             />
                         </BarChart>
                     </ResponsiveContainer>
@@ -209,6 +220,28 @@ const KPICampaigns = ({ months = [], currentMonth, currentYear }) => {
 
     const [topUsers, setTopUsers] = useState([]);
     const [hierarchy, setHierarchy] = useState([]);
+
+    const [modalLeads, setModalLeads] = useState([]);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [modalTitle, setModalTitle] = useState("");
+    const [isModalLoading, setIsModalLoading] = useState(false);
+
+    const handleViewLeads = (campaignId, campaignName, adSetName) => {
+        setModalTitle(`${campaignName} - ${adSetName}`);
+        setIsModalOpen(true);
+        setIsModalLoading(true);
+        setModalLeads([]);
+
+        KPICampaignsRest.leads(selectedMonth, campaignId, adSetName)
+            .then((leads) => {
+                setModalLeads(leads);
+                setIsModalLoading(false);
+            })
+            .catch(() => {
+                setIsModalLoading(false);
+                setIsModalOpen(false);
+            });
+    };
 
     const monthTemplate = ({ id, text, element }) => {
         if (!id) return text;
@@ -448,24 +481,18 @@ const KPICampaigns = ({ months = [], currentMonth, currentYear }) => {
                                             <h2 className="mb-0 fw-bold">
                                                 {formatNumber(totalCount)}
                                             </h2>
-                                            {/* <div className="mt-2">
-                        <span className="badge bg-success bg-opacity-10 text-success">
-                          <i className="mdi mdi-arrow-up me-1"></i>
-                          12.5%
-                        </span>
-                      </div> */}
                                         </div>
                                         <div
                                             className="rounded-circle d-flex align-items-center justify-content-center"
                                             style={{
                                                 width: "56px",
                                                 height: "56px",
-                                                backgroundColor: "#6366F115",
+                                                backgroundColor: "#1E40AF15",
                                             }}
                                         >
                                             <i
                                                 className="mdi mdi-account-multiple fs-4"
-                                                style={{ color: "#6366F1" }}
+                                                style={{ color: "#1E40AF" }}
                                             ></i>
                                         </div>
                                     </div>
@@ -481,48 +508,10 @@ const KPICampaigns = ({ months = [], currentMonth, currentYear }) => {
                                     <div className="d-flex justify-content-between align-items-start">
                                         <div className="flex-grow-1">
                                             <p className="text-muted mb-1 small text-uppercase fw-semibold">
-                                                Leads Nuevos
+                                                Contactados
                                             </p>
                                             <h2 className="mb-0 fw-bold">
-                                                {formatNumber(pendingCount)}
-                                            </h2>
-                                            {/* <div className="mt-2">
-                        <span className="badge bg-success bg-opacity-10 text-success">
-                          <i className="mdi mdi-arrow-up me-1"></i>
-                          8.3%
-                        </span>
-                      </div> */}
-                                        </div>
-                                        <div
-                                            className="rounded-circle d-flex align-items-center justify-content-center"
-                                            style={{
-                                                width: "56px",
-                                                height: "56px",
-                                                backgroundColor: "#3B82F615",
-                                            }}
-                                        >
-                                            <i
-                                                className="mdi mdi-account-plus fs-4"
-                                                style={{ color: "#3B82F6" }}
-                                            ></i>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="col-md-6 col-xl">
-                            <div
-                                className="card border-0 shadow-sm h-100"
-                                style={{ borderRadius: "16px" }}
-                            >
-                                <div className="card-body">
-                                    <div className="d-flex justify-content-between align-items-start">
-                                        <div className="flex-grow-1">
-                                            <p className="text-muted mb-1 small text-uppercase fw-semibold">
-                                                Leads Contactados
-                                            </p>
-                                            <h2 className="mb-0 fw-bold">
-                                                {formatNumber(managingCount)}
+                                                {formatNumber(totalCount - pendingCount)}
                                             </h2>
                                         </div>
                                         <div
@@ -530,12 +519,12 @@ const KPICampaigns = ({ months = [], currentMonth, currentYear }) => {
                                             style={{
                                                 width: "56px",
                                                 height: "56px",
-                                                backgroundColor: "#F59E0B15",
+                                                backgroundColor: "#F9731615",
                                             }}
                                         >
                                             <i
                                                 className="mdi mdi-phone fs-4"
-                                                style={{ color: "#F59E0B" }}
+                                                style={{ color: "#F97316" }}
                                             ></i>
                                         </div>
                                     </div>
@@ -551,29 +540,55 @@ const KPICampaigns = ({ months = [], currentMonth, currentYear }) => {
                                     <div className="d-flex justify-content-between align-items-start">
                                         <div className="flex-grow-1">
                                             <p className="text-muted mb-1 small text-uppercase fw-semibold">
-                                                Ventas Cerradas
+                                                Desestimados
                                             </p>
                                             <h2 className="mb-0 fw-bold">
-                                                {formatNumber(clientsCount)}
+                                                {formatNumber(archivedCount)}
                                             </h2>
-                                            {/* <div className="mt-2">
-                        <span className="badge bg-success bg-opacity-10 text-success">
-                          <i className="mdi mdi-arrow-up me-1"></i>
-                          15.7%
-                        </span>
-                      </div> */}
                                         </div>
                                         <div
                                             className="rounded-circle d-flex align-items-center justify-content-center"
                                             style={{
                                                 width: "56px",
                                                 height: "56px",
-                                                backgroundColor: "#10B98115",
+                                                backgroundColor: "#EF444415",
+                                            }}
+                                        >
+                                            <i
+                                                className="mdi mdi-account-remove fs-4"
+                                                style={{ color: "#EF4444" }}
+                                            ></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="col-md-6 col-xl">
+                            <div
+                                className="card border-0 shadow-sm h-100"
+                                style={{ borderRadius: "16px" }}
+                            >
+                                <div className="card-body">
+                                    <div className="d-flex justify-content-between align-items-start">
+                                        <div className="flex-grow-1">
+                                            <p className="text-muted mb-1 small text-uppercase fw-semibold">
+                                                Ventas Concretadas
+                                            </p>
+                                            <h2 className="mb-0 fw-bold">
+                                                {formatNumber(clientsCount)}
+                                            </h2>
+                                        </div>
+                                        <div
+                                            className="rounded-circle d-flex align-items-center justify-content-center"
+                                            style={{
+                                                width: "56px",
+                                                height: "56px",
+                                                backgroundColor: "#22C55E15",
                                             }}
                                         >
                                             <i
                                                 className="mdi mdi-trophy fs-4"
-                                                style={{ color: "#10B981" }}
+                                                style={{ color: "#22C55E" }}
                                             ></i>
                                         </div>
                                     </div>
@@ -641,7 +656,12 @@ const KPICampaigns = ({ months = [], currentMonth, currentYear }) => {
                     <div className="row">
                         {campaign.adSets.map((adSet, asIdx) => (
                             <div className="col-lg-4" key={asIdx}>
-                                <AdSetPerformanceCard adSet={adSet} />
+                                <AdSetPerformanceCard
+                                    adSet={adSet}
+                                    campaignId={campaign.id}
+                                    campaignName={campaign.name}
+                                    onViewLeads={handleViewLeads}
+                                />
                             </div>
                         ))}
                     </div>
@@ -769,6 +789,113 @@ const KPICampaigns = ({ months = [], currentMonth, currentYear }) => {
                     />
 
                     <PipelineChart data={groupedByManageStatus} />
+                </div>
+            </div>
+
+            {/* Leads Modal */}
+            <div
+                className={`modal fade ${isModalOpen ? "show d-block" : ""}`}
+                style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+                tabIndex="-1"
+            >
+                <div className="modal-dialog modal-lg modal-dialog-centered">
+                    <div className="modal-content border-0 shadow-lg" style={{ borderRadius: '20px' }}>
+                        <div className="modal-header border-0 pb-0">
+                            <h5 className="modal-title fw-bold text-dark pt-2 px-2">
+                                <i className="mdi mdi-account-group me-2 text-primary"></i>
+                                Registros: {modalTitle}
+                            </h5>
+                            <button
+                                type="button"
+                                className="btn-close me-2"
+                                onClick={() => setIsModalOpen(false)}
+                            ></button>
+                        </div>
+                        <div className="modal-body p-4">
+                            {isModalLoading ? (
+                                <div className="text-center py-5">
+                                    <div className="spinner-border text-primary" role="status"></div>
+                                    <p className="mt-2 text-muted">Cargando registros...</p>
+                                </div>
+                            ) : (
+                                <div className="table-responsive">
+                                    <table className="table table-hover align-middle">
+                                        <thead className="table-light">
+                                            <tr>
+                                                <th className="border-0">Nombre</th>
+                                                <th className="border-0">Contacto</th>
+                                                <th className="border-0 text-center">Campaign ID</th>
+                                                <th className="border-0 text-center">Origen</th>
+                                                <th className="border-0">Fecha</th>
+                                                <th className="border-0 text-center">Estado</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {modalLeads.length > 0 ? (
+                                                modalLeads.map((lead, index) => (
+                                                    <tr key={index}>
+                                                        <td className="fw-medium">
+                                                            {lead.name}
+                                                        </td>
+                                                        <td>
+                                                            <div>
+                                                                <a href={`tel:${lead.contact_phone}`} className="text-decoration-none d-block">
+                                                                    <i className="mdi mdi-phone me-1"></i>
+                                                                    {lead.contact_phone}
+                                                                </a>
+                                                                <small className="text-muted d-block mt-1">
+                                                                    <i className="mdi mdi-email-outline me-1"></i>
+                                                                    {lead.contact_email}
+                                                                </small>
+                                                            </div>
+                                                        </td>
+                                                        <td className="small text-muted font-monospace text-center" style={{ fontSize: '0.75rem' }}>
+                                                            {lead.campaign_id || <span className="text-danger italic">N/A</span>}
+                                                        </td>
+                                                        <td className="small text-center">
+                                                            <span className="badge bg-light text-dark border">
+                                                                {lead.origin || 'N/A'}
+                                                            </span>
+                                                        </td>
+                                                        <td className="small text-muted">
+                                                            {moment(lead.created_at).format('DD/MM/YYYY HH:mm')}
+                                                        </td>
+                                                        <td>
+                                                            <span
+                                                                className="badge rounded-pill px-3"
+                                                                style={{
+                                                                    backgroundColor: `${lead.status_color}15`,
+                                                                    color: lead.status_color,
+                                                                    border: `1px solid ${lead.status_color}33`
+                                                                }}
+                                                            >
+                                                                {lead.status_name}
+                                                            </span>
+                                                        </td>
+                                                    </tr>
+                                                ))
+                                            ) : (
+                                                <tr>
+                                                    <td colSpan="4" className="text-center py-4 text-muted">
+                                                        No se encontraron registros en este periodo.
+                                                    </td>
+                                                </tr>
+                                            )}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            )}
+                        </div>
+                        <div className="modal-footer border-0 pt-0">
+                            <button
+                                type="button"
+                                className="btn btn-light rounded-pill px-4"
+                                onClick={() => setIsModalOpen(false)}
+                            >
+                                Cerrar
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </>
