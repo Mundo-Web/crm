@@ -154,6 +154,19 @@ class BasicRest {
       return false
     }
   }
+
+  fetch = async (url, options = {}) => {
+    const { status, result } = await Fetch(`/api/${url}`, {
+      ...options,
+      body: JSON.stringify(options.body)
+    })
+    return status ? result : null
+  }
+
+  get = async (id) => {
+    const { status, result } = await Fetch(`/api/${this.path}/${id}`)
+    return status ? result.data : null
+  }
 }
 
 export default BasicRest

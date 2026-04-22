@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Jobs\MetaAssistantJob;
+use App\Models\Ad;
+use App\Models\AdSet;
 use App\Models\Atalaya\Business;
 use App\Models\Atalaya\ServicesByBusiness;
 use App\Models\Campaign;
@@ -276,6 +278,7 @@ class MetaController extends Controller
                 $inOut = 'in';
                 $waId = $message['from'];
                 $messageContent = $message['text']['body'] ?? '';
+                $referral = $message['referral'] ?? null;
             } else {
                 $inOut = $entry['id'] == $messaging['sender']['id'] ? 'out' : 'in';
                 $waId = $inOut == 'in' ? $messaging['sender']['id'] : $messaging['recipient']['id'];
@@ -338,6 +341,33 @@ class MetaController extends Controller
                     break;
             }
 
+            $referralData = null;
+            if (isset($referral['source_id'])) {
+                $token = $integrationJpa->meta_access_token;
+                if (!$token) {
+                    $formsIntegration = Integration::query()
+                        ->where('business_id', $businessJpa->id)
+                        ->where('meta_service', 'forms')
+                        ->where('status', true)
+                        ->first();
+                    $token = $formsIntegration->meta_access_token ?? null;
+                }
+
+                if ($token) {
+                    try {
+                        $adId = $referral['source_id'];
+                        $facebookGraphUrl = config('services.meta.facebook_graph_url', 'https://graph.facebook.com/v19.0');
+                        $adRes = new Fetch("{$facebookGraphUrl}/{$adId}?" . http_build_query([
+                            'fields' => 'name,adset{id,name},campaign{id,name}',
+                            'access_token' => $token
+                        ]));
+                        $referralData = $adRes->json();
+                    } catch (\Exception $e) {
+                        Log::error('Error fetching referral ad data', ['error' => $e->getMessage()]);
+                    }
+                }
+            }
+
             $alreadyExists = Client::query()
                 ->where('integration_id', $integrationJpa->id)
                 ->where('integration_user_id', $profileData['id'])
@@ -367,6 +397,21 @@ class MetaController extends Controller
             if (!$alreadyExists) {
                 $preClient['last_message'] = $messageJpa->message;
                 $preClient['last_message_microtime'] = $messageJpa->microtime;
+            }
+
+            if ($referralData && !isset($referralData['error'])) {
+                $campaignJpa = Campaign::updateOrCreate([
+                    'business_id' => $businessJpa->id,
+                    'code' => $referralData['campaign']['id']
+                ], [
+                    'title' => $referralData['campaign']['name'],
+                    'source' => strtolower($origin)
+                ]);
+
+                $preClient['campaign_id'] = $campaignJpa->id;
+                $preClient['adset_name'] = $referralData['adset']['name'] ?? null;
+                $preClient['ad_name'] = $referralData['name'] ?? null;
+                $preClient['triggered_by'] = $referralData['campaign']['name'] ?? 'Click to WhatsApp Ad';
             }
 
             $clientJpa = Client::updateOrCreate([
@@ -403,6 +448,102 @@ class MetaController extends Controller
             ]);
         });
         return response($response->toArray(), 200);
+    }
+
+    public function syncMetaHierarchy(Request $request)
+    {
+        $response = Response::simpleTryCatch(function () use ($request) {
+            $integrationJpa = Integration::query()
+                ->where('business_id', \Illuminate\Support\Facades\Auth::user()->business_id)
+                ->where('meta_service', 'forms')
+                ->where('status', true)
+                ->first();
+
+            if (!$integrationJpa || !$integrationJpa->meta_access_token) {
+                throw new Exception('No hay una integración de Meta activa (Forms) para este negocio');
+            }
+
+            $token = $integrationJpa->meta_access_token;
+
+            $syncedCount = 0;
+
+            // 1. Obtener las campañas existentes en el CRM que provienen de Meta
+            $campaigns = Campaign::query()
+                ->where('business_id', \Illuminate\Support\Facades\Auth::user()->business_id)
+                ->whereIn('source', ['facebook', 'instagram', 'fb', 'ig'])
+                ->get();
+
+            // 2. Fetch Hierarchy directly per campaign
+            foreach ($campaigns as $campaignJpa) {
+                $metaCampaignId = trim($campaignJpa->meta_id ?? $campaignJpa->code);
+                
+                if (!$metaCampaignId) continue;
+
+                $fields = 'id,name,status,adsets{id,name,status,ads{id,name,status}}';
+                Log::info('Sincronizando campaña Meta', ['id' => $metaCampaignId]);
+                $facebookGraphUrl = config('services.meta.facebook_graph_url', 'https://graph.facebook.com/v19.0');
+                $url = "{$facebookGraphUrl}/{$metaCampaignId}?" . http_build_query([
+                    'fields' => $fields,
+                    'access_token' => $token
+                ]);
+                $hierarchyFetch = new Fetch($url);
+                
+                try {
+                    $hierarchyData = $hierarchyFetch->json();
+                    if (empty($hierarchyData)) {
+                        Log::warning('Respuesta vacía de Meta para la campaña', ['id' => $metaCampaignId]);
+                        continue;
+                    }
+                } catch (\Throwable $t) {
+                    Log::error('Error al procesar JSON de Meta', ['id' => $metaCampaignId, 'error' => $t->getMessage()]);
+                    continue; // Skip silently if response isn't JSON or throws TypeError
+                }
+
+                if (isset($hierarchyData['error'])) {
+                    Log::error('Meta rechazó la consulta', ['id' => $metaCampaignId, 'message' => $hierarchyData['error']['message']]);
+                    continue;
+                }
+
+                // Update existing campaign with precise Meta status
+                $campaignJpa->update([
+                    'meta_id' => $hierarchyData['id'],
+                    'title' => $hierarchyData['name'],
+                    'status' => isset($hierarchyData['status']) ? ($hierarchyData['status'] === 'ACTIVE') : true
+                ]);
+
+                // Process Ad Sets
+                if (isset($hierarchyData['adsets']['data'])) {
+                    foreach ($hierarchyData['adsets']['data'] as $metaAdSet) {
+                        $adSetJpa = AdSet::updateOrCreate([
+                            'business_id' => \Illuminate\Support\Facades\Auth::user()->business_id,
+                            'meta_id' => $metaAdSet['id'],
+                        ], [
+                            'campaign_id' => $campaignJpa->id,
+                            'name' => $metaAdSet['name'],
+                            'status' => $metaAdSet['status'] ?? null
+                        ]);
+
+                        // Process Ads
+                        if (isset($metaAdSet['ads']['data'])) {
+                            foreach ($metaAdSet['ads']['data'] as $metaAd) {
+                                Ad::updateOrCreate([
+                                    'business_id' => \Illuminate\Support\Facades\Auth::user()->business_id,
+                                    'meta_id' => $metaAd['id'],
+                                ], [
+                                    'ad_set_id' => $adSetJpa->id,
+                                    'name' => $metaAd['name'],
+                                    'status' => $metaAd['status'] ?? null
+                                ]);
+                            }
+                        }
+                    }
+                }
+                $syncedCount++;
+            }
+
+            return "Se sincronizaron {$syncedCount} campañas y sus jerarquías con éxito.";
+        });
+        return response($response->toArray(), $response->status);
     }
 
     public function send(Request $request)

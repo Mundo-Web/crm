@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Campaign extends Model
+class AdSet extends Model
 {
     use HasFactory, HasUuids;
 
@@ -14,24 +14,20 @@ class Campaign extends Model
     protected $keyType = 'string';
 
     protected $fillable = [
-        'code',
+        'campaign_id',
         'meta_id',
-        'source',
-        'title',
-        'link',
-        'notes',
+        'name',
         'status',
-        'business_id',
-        'protected'
+        'business_id'
     ];
 
-    protected $casts = [
-        'status' => 'boolean',
-        'protected' => 'boolean',
-    ];
-
-    public function adSets()
+    public function campaign()
     {
-        return $this->hasMany(AdSet::class);
+        return $this->belongsTo(Campaign::class);
+    }
+
+    public function ads()
+    {
+        return $this->hasMany(Ad::class);
     }
 }

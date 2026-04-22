@@ -42,6 +42,8 @@ use App\Http\Controllers\UtilController;
 use App\Http\Controllers\ViewController;
 use App\Http\Controllers\BusinessSectorController;
 use App\Http\Controllers\WhatsAppController;
+use App\Http\Controllers\AdSetController;
+use App\Http\Controllers\AdController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -74,6 +76,7 @@ Route::middleware('auth')->group(function () {
     Route::delete('/whatsapp', [WhatsAppController::class, 'close']);
 
     Route::post('/meta/send', [MetaController::class, 'send']);
+    Route::post('/meta/sync-hierarchy', [MetaController::class, 'syncMetaHierarchy']);
 
     Route::get('/dashboard/{range}', [DashboardController::class, 'revenue']);
     Route::get('/dashboard/leads/kpi/{month}', [KPILeadsController::class, 'kpi']);
@@ -175,6 +178,9 @@ Route::middleware('auth')->group(function () {
     Route::post('/campaigns/paginate', [CampaignController::class, 'paginate']);
     Route::patch('/campaigns/status', [CampaignController::class, 'status']);
     Route::delete('/campaigns/{id}', [CampaignController::class, 'delete']);
+
+    Route::post('/ad-sets/paginate', [AdSetController::class, 'paginate']);
+    Route::post('/ads/paginate', [AdController::class, 'paginate']);
 
     // Projects routes
     Route::post('/projects', [ProjectController::class, 'save']);

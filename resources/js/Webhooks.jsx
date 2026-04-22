@@ -146,8 +146,8 @@ const IntegrationWizardModal = ({ service, setService, apikey, auth_token, onClo
       authSteps: [
         'Ve a la configuración de tu aplicación en <strong>Meta for Developers</strong>',
         'Navega a <code>"Webhooks"</code> → <em>"Settings"</em> en el menú lateral',
-        'Selecciona la <span style="color: #0084FF; font-weight: 600;">página de Facebook</span> que deseas conectar',
-        'Genera un <strong>Page Access Token</strong> con permisos de leads',
+        'Asegúrese de usar un token de <strong>Usuario del Sistema (System User)</strong> desde su Business Manager',
+        'El token debe tener los permisos <span style="color: #0084FF; font-weight: 600;">leads_retrieval y ads_read</span>',
         'Copia el <code>Page ID</code> y el <code>Access Token</code> generados'
       ]
     },
