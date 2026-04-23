@@ -503,6 +503,10 @@ class LeadController extends BasicController
                         'ad_name' => $leadData['ad_name'] ?? null,
                         'status_id' => Setting::get('default-lead-status', $business_id),
                         'manage_status_id' => Setting::get('default-manage-lead-status', $business_id),
+                        'message' => 'Lead sincronizado desde Meta',
+                        'date' => now()->format('Y-m-d'),
+                        'time' => now()->format('H:i:s'),
+                        'ip' => $request->ip() ?? '127.0.0.1',
                         'complete_registration' => true,
                         'status' => true
                     ]);
