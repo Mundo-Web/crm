@@ -192,6 +192,7 @@ class MetaController extends Controller
                         ]
                     ]);
                     $leadData = $leadRes->json();
+                    Log::info('Meta Lead Data Response', ['leadData' => $leadData]);
                 } catch (\Exception $e) {
                     Log::error('Error consultando detalles del lead en Meta', ['error' => $e->getMessage()]);
                 }
