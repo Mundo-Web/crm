@@ -255,10 +255,11 @@ class MetaController extends Controller
                 $adSetId = preg_replace('/^[a-z]+:/i', '', $leadData['adset_id'] ?? '');
                 $adSetJpa = \App\Models\AdSet::updateOrCreate([
                     'campaign_id' => $campaignJpa->id,
-                    'code' => $adSetId
+                    'meta_id' => $adSetId
                 ], [
                     'name' => $leadData['adset_name'] ?? 'Conjunto de anuncios Form',
-                    'status' => 'ACTIVE'
+                    'status' => 'ACTIVE',
+                    'business_id' => $businessJpa->id
                 ]);
 
                 // Registrar Ad para Formularios
@@ -266,10 +267,11 @@ class MetaController extends Controller
                 if ($adIdClean) {
                     \App\Models\Ad::updateOrCreate([
                         'ad_set_id' => $adSetJpa->id,
-                        'code' => $adIdClean
+                        'meta_id' => $adIdClean
                     ], [
                         'name' => $leadData['ad_name'] ?? 'Anuncio de Formulario',
-                        'status' => 'ACTIVE'
+                        'status' => 'ACTIVE',
+                        'business_id' => $businessJpa->id
                     ]);
                 }
 
