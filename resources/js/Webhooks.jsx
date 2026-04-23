@@ -120,6 +120,7 @@ const IntegrationWizardModal = ({ service, setService, apikey, auth_token, onClo
   const modalRef = useRef(null)
   const [step, setStep] = useState(1)
   const [accessToken, setAccessToken] = useState('')
+  const [appToken, setAppToken] = useState('')
   const [accountId, setAccountId] = useState('')
   const [phoneId, setPhoneId] = useState('')
   const [accountVerified, setAccountVerified] = useState(null)
@@ -144,11 +145,10 @@ const IntegrationWizardModal = ({ service, setService, apikey, auth_token, onClo
         'Generar token de página con <span style="color: #0084FF; font-weight: 600;">permisos de leads</span>'
       ],
       authSteps: [
-        'Ve a la configuración de tu aplicación en <strong>Meta for Developers</strong>',
-        'Navega a <code>"Webhooks"</code> → <em>"Settings"</em> en el menú lateral',
-        'Asegúrese de usar un token de <strong>Usuario del Sistema (System User)</strong> desde su Business Manager',
-        'El token debe tener los permisos <span style="color: #0084FF; font-weight: 600;">leads_retrieval y ads_read</span>',
-        'Copia el <code>Page ID</code> y el <code>Access Token</code> generados'
+        '<strong>🔑 Access Token</strong> (para recibir leads del formulario)<br/><span style="color:#555">Ve a <strong>Meta for Developers</strong> → tu app → <strong>Herramientas</strong> → <em>Explorador de la Graph API</em>. Genera un <strong>Page Access Token</strong> de larga duración con los permisos:</span><br/><code style="display:inline-block;margin-top:4px;background:#f1f5f9;padding:2px 8px;border-radius:4px">leads_retrieval &nbsp;·&nbsp; pages_read_engagement &nbsp;·&nbsp; pages_manage_metadata &nbsp;·&nbsp; business_management &nbsp;·&nbsp; pages_show_list</code>',
+        '<strong>⚡ App Token</strong> (para sincronizar campañas / adsets / ads)<br/><span style="color:#555">Desde <strong>Business Manager</strong> → <em>Usuarios del sistema</em>, genera un token de usuario del sistema con los permisos:</span><br/><code style="display:inline-block;margin-top:4px;background:#f1f5f9;padding:2px 8px;border-radius:4px">ads_management &nbsp;·&nbsp; ads_read &nbsp;·&nbsp; pages_manage_ads</code><br/><span style="color:#888;font-size:0.85em">Este token va en el campo <em>"App Token"</em> del formulario de abajo.</span>',
+        'Copia el <code>Page ID</code> de la página de Facebook conectada a tus formularios de leads',
+        'Pega el <strong>Access Token</strong> (leads) y el <strong>App Token</strong> (campañas) en los campos correspondientes del formulario'
       ]
     },
     messenger: {
@@ -382,7 +382,8 @@ const IntegrationWizardModal = ({ service, setService, apikey, auth_token, onClo
       service,
       phoneId,
       accountId,
-      accessToken
+      accessToken,
+      appToken: service === 'forms' ? appToken : undefined
     })
     setIntegrating(false)
     if (!result) return
@@ -395,6 +396,7 @@ const IntegrationWizardModal = ({ service, setService, apikey, auth_token, onClo
       setStep(1)
       setAccountId('')
       setAccessToken('')
+      setAppToken('')
       setPhoneId('')
       setAccountVerified(null)
       $(modalRef.current).modal('show')
@@ -840,6 +842,34 @@ const IntegrationWizardModal = ({ service, setService, apikey, auth_token, onClo
                     }}
                   />
                 </div>
+
+                {/* App Token - Solo para Meta Forms (campañas/ads sync) */}
+                {service === 'forms' && (
+                  <div className="col-12">
+                    <label className='form-label fw-semibold d-flex align-items-center'>
+                      <i className="mdi mdi-key-star me-2" style={{ color: config.color }}></i>
+                      App Token <span className="text-muted fw-normal ms-2 small">(para sincronizar campañas)</span>:
+                    </label>
+                    <input
+                      type="text"
+                      className="form-control border-2"
+                      value={appToken}
+                      onChange={e => setAppToken(e.target.value)}
+                      placeholder="Token con permisos: ads_management, ads_read, pages_manage_ads"
+                      disabled={!!accountVerified}
+                      style={{
+                        borderColor: accountVerified ? '#28a745' : 'var(--bs-border-color)',
+                        backgroundColor: accountVerified ? '#d4edda' : 'var(--bs-body-bg)',
+                        color: 'var(--bs-body-color)'
+                      }}
+                    />
+                    <div className="form-text text-muted mt-1">
+                      <i className="mdi mdi-information-outline me-1"></i>
+                      Opcional. Token diferente al de leads con permisos de gestión de anuncios.
+                    </div>
+                  </div>
+                )}
+
               </div>
 
               <div className="mt-4">

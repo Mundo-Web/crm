@@ -519,98 +519,120 @@ class MetaController extends Controller
     public function syncMetaHierarchy(Request $request)
     {
         $response = Response::simpleTryCatch(function () use ($request) {
+            $businessId = \Illuminate\Support\Facades\Auth::user()->business_id;
+
             $integrationJpa = Integration::query()
-                ->where('business_id', \Illuminate\Support\Facades\Auth::user()->business_id)
+                ->where('business_id', $businessId)
                 ->where('meta_service', 'forms')
                 ->where('status', true)
                 ->first();
 
-            if (!$integrationJpa || !$integrationJpa->meta_access_token) {
+            if (!$integrationJpa) {
                 throw new Exception('No hay una integración de Meta activa (Forms) para este negocio');
             }
 
-            $token = $integrationJpa->meta_access_token;
+            // meta_app_token: ads_management/ads_read permissions
+            // meta_access_token: fallback (leads_retrieval)
+            $token = $integrationJpa->meta_app_token ?? $integrationJpa->meta_access_token;
+            if (!$token) {
+                throw new Exception('Configure el App Token en la integración para sincronizar campañas.');
+            }
 
+            $facebookGraphUrl = env('FACEBOOK_GRAPH_URL', 'https://graph.facebook.com/v22.0');
             $syncedCount = 0;
 
-            // 1. Obtener las campañas existentes en el CRM que provienen de Meta
-            $campaigns = Campaign::query()
-                ->where('business_id', \Illuminate\Support\Facades\Auth::user()->business_id)
-                ->whereIn('source', ['facebook', 'instagram', 'fb', 'ig'])
-                ->get();
+            // meta_access_token: discovers ad accounts (it has user-level authority)
+            // meta_app_token: reads campaign hierarchy (has ads_management permissions)
+            $discoveryToken  = $integrationJpa->meta_access_token;
+            $campaignToken   = $integrationJpa->meta_app_token ?? $discoveryToken;
 
-            // 2. Fetch Hierarchy directly per campaign
-            foreach ($campaigns as $campaignJpa) {
-                $metaCampaignId = preg_replace('/^[a-z]+:/i', '', trim($campaignJpa->meta_id ?? $campaignJpa->code));
-                
-                if (!$metaCampaignId) continue;
+            // STEP 1: Discover ALL ad accounts using the access token
+            Log::info('Fetching all ad accounts from Meta');
+            $adAccountsRes = new Fetch("{$facebookGraphUrl}/me/adaccounts?fields=id,name,account_status&limit=50", [
+                'headers' => ['Authorization' => 'Bearer ' . $discoveryToken]
+            ]);
+            $adAccountsData = $adAccountsRes->json();
 
-                $fields = 'id,name,status,adsets{id,name,status,ads{id,name,status}}';
-                Log::info('Sincronizando campaña Meta', ['id' => $metaCampaignId]);
-                $facebookGraphUrl = config('services.meta.facebook_graph_url', 'https://graph.facebook.com/v19.0');
-                $url = "{$facebookGraphUrl}/{$metaCampaignId}?" . http_build_query([
-                    'fields' => $fields,
-                    'access_token' => $token
-                ]);
-                $hierarchyFetch = new Fetch($url);
-                
-                try {
-                    $hierarchyData = $hierarchyFetch->json();
-                    if (empty($hierarchyData)) {
-                        Log::warning('Respuesta vacía de Meta para la campaña', ['id' => $metaCampaignId]);
-                        continue;
-                    }
-                } catch (\Throwable $t) {
-                    Log::error('Error al procesar JSON de Meta', ['id' => $metaCampaignId, 'error' => $t->getMessage()]);
-                    continue; // Skip silently if response isn't JSON or throws TypeError
-                }
+            if (isset($adAccountsData['error'])) {
+                throw new Exception('Error obteniendo cuentas publicitarias: ' . $adAccountsData['error']['message']);
+            }
 
-                if (isset($hierarchyData['error'])) {
-                    Log::error('Meta rechazó la consulta', ['id' => $metaCampaignId, 'message' => $hierarchyData['error']['message']]);
+            $adAccounts = $adAccountsData['data'] ?? [];
+            Log::info('Ad accounts found', ['count' => count($adAccounts)]);
+
+            if (empty($adAccounts)) {
+                throw new Exception('No se encontraron cuentas publicitarias asociadas al token.');
+            }
+
+            // STEP 2: For each Ad Account, fetch campaigns with full hierarchy
+            foreach ($adAccounts as $adAccount) {
+                $adAccountId = $adAccount['id']; // already has 'act_' prefix
+
+                Log::info('Sincronizando cuenta publicitaria', ['account' => $adAccountId]);
+
+                $campaignsRes = new Fetch(
+                    "{$facebookGraphUrl}/{$adAccountId}/campaigns?" . http_build_query([
+                        'fields' => 'id,name,status,adsets{id,name,status,ads{id,name,status}}',
+                        'limit'  => 100
+                    ]),
+                    ['headers' => ['Authorization' => 'Bearer ' . $campaignToken]]
+                );
+                $campaignsData = $campaignsRes->json();
+
+                if (isset($campaignsData['error'])) {
+                    Log::error('Meta rechazó la consulta de campañas', [
+                        'account' => $adAccountId,
+                        'message' => $campaignsData['error']['message']
+                    ]);
                     continue;
                 }
 
-                // Update existing campaign with precise Meta status
-                $campaignJpa->update([
-                    'meta_id' => $hierarchyData['id'],
-                    'title' => $hierarchyData['name'],
-                    'status' => isset($hierarchyData['status']) ? ($hierarchyData['status'] === 'ACTIVE') : true
-                ]);
+                foreach ($campaignsData['data'] ?? [] as $metaCampaign) {
+                    // STEP 3: Upsert Campaign in local DB
+                    $campaignJpa = Campaign::updateOrCreate(
+                        ['business_id' => $businessId, 'code' => $metaCampaign['id']],
+                        [
+                            'meta_id' => $metaCampaign['id'],
+                            'title'   => $metaCampaign['name'],
+                            'source'  => 'facebook',
+                            'status'  => ($metaCampaign['status'] ?? '') === 'ACTIVE'
+                        ]
+                    );
 
-                // Process Ad Sets
-                if (isset($hierarchyData['adsets']['data'])) {
-                    foreach ($hierarchyData['adsets']['data'] as $metaAdSet) {
-                        $adSetJpa = AdSet::updateOrCreate([
-                            'business_id' => \Illuminate\Support\Facades\Auth::user()->business_id,
-                            'meta_id' => $metaAdSet['id'],
-                        ], [
-                            'campaign_id' => $campaignJpa->id,
-                            'name' => $metaAdSet['name'],
-                            'status' => $metaAdSet['status'] ?? null
-                        ]);
+                    // STEP 4: Upsert AdSets
+                    foreach ($metaCampaign['adsets']['data'] ?? [] as $metaAdSet) {
+                        $adSetJpa = AdSet::updateOrCreate(
+                            ['business_id' => $businessId, 'meta_id' => $metaAdSet['id']],
+                            [
+                                'campaign_id' => $campaignJpa->id,
+                                'name'        => $metaAdSet['name'],
+                                'status'      => $metaAdSet['status'] ?? null
+                            ]
+                        );
 
-                        // Process Ads
-                        if (isset($metaAdSet['ads']['data'])) {
-                            foreach ($metaAdSet['ads']['data'] as $metaAd) {
-                                Ad::updateOrCreate([
-                                    'business_id' => \Illuminate\Support\Facades\Auth::user()->business_id,
-                                    'meta_id' => $metaAd['id'],
-                                ], [
+                        // STEP 5: Upsert Ads
+                        foreach ($metaAdSet['ads']['data'] ?? [] as $metaAd) {
+                            Ad::updateOrCreate(
+                                ['business_id' => $businessId, 'meta_id' => $metaAd['id']],
+                                [
                                     'ad_set_id' => $adSetJpa->id,
-                                    'name' => $metaAd['name'],
-                                    'status' => $metaAd['status'] ?? null
-                                ]);
-                            }
+                                    'name'      => $metaAd['name'],
+                                    'status'    => $metaAd['status'] ?? null
+                                ]
+                            );
                         }
                     }
+
+                    $syncedCount++;
+                    Log::info('Campaña sincronizada', ['campaign' => $metaCampaign['name'], 'id' => $metaCampaign['id']]);
                 }
-                $syncedCount++;
             }
 
-            return "Se sincronizaron {$syncedCount} campañas y sus jerarquías con éxito.";
+            return "Se sincronizaron {$syncedCount} campañas desde Meta con éxito.";
         });
         return response($response->toArray(), $response->status);
     }
+
 
     public function send(Request $request)
     {

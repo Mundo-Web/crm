@@ -12,6 +12,6 @@ class CampaignController extends BasicController
 
     public function setPaginationInstance(Request $request, string $model)
     {
-        return $model::whereNotNull('status');
+        return $model::where('status', true);
     }
 }

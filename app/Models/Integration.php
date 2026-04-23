@@ -21,12 +21,14 @@ class Integration extends Model
         'meta_business_name',
         'meta_business_profile',
         'meta_access_token',
+        'meta_app_token',
         'business_id',
         'status'
     ];
 
     protected $hidden = [
         'meta_access_token',
+        'meta_app_token',
     ];
 
     public function leads(): HasMany

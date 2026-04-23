@@ -62,6 +62,7 @@ class IntegrationController extends BasicController
             'meta_business_name' => $metaBusiness['name'] . (isset($metaBusiness['username']) ? ' (@' . $metaBusiness['username'] . ')' : ''),
             'meta_business_profile' => $metaBusinessProfile,
             'meta_access_token' => $request->accessToken,
+            'meta_app_token' => $request->appToken ?? null,
         ];
 
         $integrationJpa = Integration::query()
