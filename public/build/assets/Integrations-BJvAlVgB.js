@@ -1,1 +1,0 @@
-import{C as o,c as i,j as t}from"./CreateReactScript-CYIF4B79.js";import{A as n}from"./Adminto-BMWwRDEk.js";import"./server.browser-CJWx4AIt.js";import"./Logout-BIaHUvkF.js";import"./sweetalert2.esm.all-C3pNMji3.js";const s=()=>t.jsx(t.Fragment,{});o((e,r)=>{i(e).render(t.jsx(n,{...r,title:"Integraciones",children:t.jsx(s,{...r})}))});
