@@ -151,15 +151,16 @@ class MetaController extends Controller
         $response = Response::simpleTryCatch(function () use ($request, $origin, $business_uuid) {
             $data = $request->all();
 
-            if (!in_array($origin, ['messenger', 'instagram', 'whatsapp', 'forms'])) throw new Exception('Error, origen no permitido');
+            try {
+                if (!in_array($origin, ['messenger', 'instagram', 'whatsapp', 'forms'])) throw new Exception('Error, origen no permitido');
 
-            $entry = $data['entry'][0] ?? [];
+                $entry = $data['entry'][0] ?? [];
 
-            Log::info('Meta webhook received', [
-                'origin' => $origin,
-                'business_uuid' => $business_uuid,
-                'payload' => $data
-            ]);
+                Log::info('Meta webhook received', [
+                    'origin' => $origin,
+                    'business_uuid' => $business_uuid,
+                    'payload' => $data
+                ]);
 
             $businessJpa = Business::query()
                 ->where('uuid', $business_uuid)
@@ -581,6 +582,13 @@ class MetaController extends Controller
                 'status' => 'Pendiente',
                 'asignable' => true
             ]);
+            } catch (\Throwable $th) {
+                Log::error('Error crítico no manejado en Meta Webhook: ' . $th->getMessage(), [
+                    'file' => $th->getFile(),
+                    'line' => $th->getLine()
+                ]);
+                throw $th;
+            }
         });
         return response($response->toArray(), 200);
     }
