@@ -188,7 +188,7 @@ class MetaController extends Controller
                     $facebookGraphUrl = env('FACEBOOK_GRAPH_URL', 'https://graph.facebook.com/v19.0');
                     $leadRes = new Fetch($facebookGraphUrl . '/' . $leadgenId . '?fields=created_time,platform,ad_id,ad_name,adset_id,adset_name,campaign_id,campaign_name,form_id,field_data', [
                         'headers' =>  [
-                            'Authorization' => 'Bearer ' . ($integrationJpa->meta_access_token ?? '')
+                            'Authorization' => 'Bearer ' . $integrationJpa->meta_access_token
                         ]
                     ]);
                     $leadData = $leadRes->json();
@@ -202,18 +202,16 @@ class MetaController extends Controller
                     $fieldData[$field['name']] = $field['values'][0] ?? null;
                 }
 
-                // Create new client lead with parsed data
-                $cleanLeadId = preg_replace('/^[a-z]+:/i', '', $leadData['id'] ?? $leadgenId);
-
+                // Check if client already exists
                 $clientJpa = Client::query()
                     ->where('integration_id', $integrationJpa->id)
-                    ->where('integration_user_id', $cleanLeadId)
+                    ->where('integration_user_id', $leadData['id'] ?? $leadgenId)
                     ->where('business_id', $businessJpa->id)
                     ->where('status', true)
                     ->first();
 
                 if ($clientJpa) {
-                    Log::info('Lead already exists, skipping', ['lead_id' => $cleanLeadId]);
+                    Log::info('Lead already exists, skipping', ['lead_id' => $leadData['id'] ?? $leadgenId]);
                     return;
                 }
 
@@ -232,21 +230,25 @@ class MetaController extends Controller
                 
                 $campaignJpa = Campaign::updateOrCreate([
                     'business_id' => $businessJpa->id,
-                    'code' => $cleanCampaignId
+                    'code' => $leadData['campaign_id'] ?? 'external'
                 ], [
                     'title' => $leadData['campaign_name'] ?? 'Campaña Externa',
                     'source' => strtolower($originName)
                 ]);
 
+                $fullName = $fieldData['full_name'] ?? $fieldData['nombre_completo'] ?? $fieldData['nombre'] ?? 'Sin nombre';
+                $phone = $fieldData['phone_number'] ?? $fieldData['telefono'] ?? $fieldData['movil'] ?? '';
+                $email = $fieldData['email'] ?? $fieldData['correo'] ?? null;
+
                 // Create new client
                 $clientJpa = Client::create([
                     'integration_id' => $integrationJpa->id,
-                    'integration_user_id' => $cleanLeadId,
+                    'integration_user_id' => $leadData['id'] ?? $leadgenId,
                     'business_id' => $businessJpa->id,
-                    'name' => $fieldData['full_name'] ?? 'Sin nombre',
-                    'contact_name' => $fieldData['full_name'] ?? 'Sin nombre',
-                    'contact_phone' => Text::keep($fieldData['phone_number'] ?? '', '0123456789'),
-                    'contact_email' => $fieldData['email'] ?? null,
+                    'name' => $fullName,
+                    'contact_name' => $fullName,
+                    'contact_phone' => Text::keep($phone, '0123456789'),
+                    'contact_email' => $email,
                     'message' => 'Sin mensaje',
                     'source' => 'Meta',
                     'date' => Trace::getDate('date'),
