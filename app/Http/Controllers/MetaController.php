@@ -546,19 +546,28 @@ class MetaController extends Controller
             $discoveryToken  = $integrationJpa->meta_access_token;
             $campaignToken   = $integrationJpa->meta_app_token ?? $discoveryToken;
 
-            // STEP 1: Discover ALL ad accounts using the access token
-            Log::info('Fetching all ad accounts from Meta');
-            $adAccountsRes = new Fetch("{$facebookGraphUrl}/me/adaccounts?fields=id,name,account_status&limit=50", [
-                'headers' => ['Authorization' => 'Bearer ' . $discoveryToken]
-            ]);
-            $adAccountsData = $adAccountsRes->json();
+            // STEP 1: Determine which ad accounts to sync
+            // Priority: use stored meta_ad_account_id, fallback to /me/adaccounts discovery
+            if ($integrationJpa->meta_ad_account_id) {
+                $rawId = trim($integrationJpa->meta_ad_account_id);
+                $cleanId = str_starts_with($rawId, 'act_') ? $rawId : 'act_' . $rawId;
+                $adAccounts = [['id' => $cleanId]];
+                Log::info('Using stored Ad Account ID', ['account' => $cleanId]);
+            } else {
+                Log::info('Fetching all ad accounts from Meta (no specific ID configured)');
+                $adAccountsRes = new Fetch("{$facebookGraphUrl}/me/adaccounts?fields=id,name,account_status&limit=50", [
+                    'headers' => ['Authorization' => 'Bearer ' . $discoveryToken]
+                ]);
+                $adAccountsData = $adAccountsRes->json();
 
-            if (isset($adAccountsData['error'])) {
-                throw new Exception('Error obteniendo cuentas publicitarias: ' . $adAccountsData['error']['message']);
+                if (isset($adAccountsData['error'])) {
+                    throw new Exception('Error obteniendo cuentas publicitarias: ' . $adAccountsData['error']['message']);
+                }
+
+                $adAccounts = $adAccountsData['data'] ?? [];
             }
 
-            $adAccounts = $adAccountsData['data'] ?? [];
-            Log::info('Ad accounts found', ['count' => count($adAccounts)]);
+            Log::info('Ad accounts to sync', ['count' => count($adAccounts)]);
 
             if (empty($adAccounts)) {
                 throw new Exception('No se encontraron cuentas publicitarias asociadas al token.');

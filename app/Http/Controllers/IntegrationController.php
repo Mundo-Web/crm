@@ -63,6 +63,7 @@ class IntegrationController extends BasicController
             'meta_business_profile' => $metaBusinessProfile,
             'meta_access_token' => $request->accessToken,
             'meta_app_token' => $request->appToken ?? null,
+            'meta_ad_account_id' => $request->adAccountId ?? null,
         ];
 
         $integrationJpa = Integration::query()

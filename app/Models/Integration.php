@@ -22,6 +22,7 @@ class Integration extends Model
         'meta_business_profile',
         'meta_access_token',
         'meta_app_token',
+        'meta_ad_account_id',
         'business_id',
         'status'
     ];
@@ -29,6 +30,7 @@ class Integration extends Model
     protected $hidden = [
         'meta_access_token',
         'meta_app_token',
+        'meta_ad_account_id',
     ];
 
     public function leads(): HasMany

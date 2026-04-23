@@ -121,6 +121,7 @@ const IntegrationWizardModal = ({ service, setService, apikey, auth_token, onClo
   const [step, setStep] = useState(1)
   const [accessToken, setAccessToken] = useState('')
   const [appToken, setAppToken] = useState('')
+  const [adAccountId, setAdAccountId] = useState('')
   const [accountId, setAccountId] = useState('')
   const [phoneId, setPhoneId] = useState('')
   const [accountVerified, setAccountVerified] = useState(null)
@@ -383,7 +384,8 @@ const IntegrationWizardModal = ({ service, setService, apikey, auth_token, onClo
       phoneId,
       accountId,
       accessToken,
-      appToken: service === 'forms' ? appToken : undefined
+      appToken: service === 'forms' ? appToken : undefined,
+      adAccountId: service === 'forms' ? adAccountId : undefined
     })
     setIntegrating(false)
     if (!result) return
@@ -397,6 +399,7 @@ const IntegrationWizardModal = ({ service, setService, apikey, auth_token, onClo
       setAccountId('')
       setAccessToken('')
       setAppToken('')
+      setAdAccountId('')
       setPhoneId('')
       setAccountVerified(null)
       $(modalRef.current).modal('show')
@@ -843,31 +846,56 @@ const IntegrationWizardModal = ({ service, setService, apikey, auth_token, onClo
                   />
                 </div>
 
-                {/* App Token - Solo para Meta Forms (campañas/ads sync) */}
+                {/* App Token + Ad Account ID - Solo para Meta Forms */}
                 {service === 'forms' && (
-                  <div className="col-12">
-                    <label className='form-label fw-semibold d-flex align-items-center'>
-                      <i className="mdi mdi-key-star me-2" style={{ color: config.color }}></i>
-                      App Token <span className="text-muted fw-normal ms-2 small">(para sincronizar campañas)</span>:
-                    </label>
-                    <input
-                      type="text"
-                      className="form-control border-2"
-                      value={appToken}
-                      onChange={e => setAppToken(e.target.value)}
-                      placeholder="Token con permisos: ads_management, ads_read, pages_manage_ads"
-                      disabled={!!accountVerified}
-                      style={{
-                        borderColor: accountVerified ? '#28a745' : 'var(--bs-border-color)',
-                        backgroundColor: accountVerified ? '#d4edda' : 'var(--bs-body-bg)',
-                        color: 'var(--bs-body-color)'
-                      }}
-                    />
-                    <div className="form-text text-muted mt-1">
-                      <i className="mdi mdi-information-outline me-1"></i>
-                      Opcional. Token diferente al de leads con permisos de gestión de anuncios.
+                  <>
+                    <div className="col-12">
+                      <label className='form-label fw-semibold d-flex align-items-center'>
+                        <i className="mdi mdi-key-star me-2" style={{ color: config.color }}></i>
+                        App Token <span className="text-muted fw-normal ms-2 small">(para sincronizar campañas)</span>:
+                      </label>
+                      <input
+                        type="text"
+                        className="form-control border-2"
+                        value={appToken}
+                        onChange={e => setAppToken(e.target.value)}
+                        placeholder="Token con permisos: ads_management, ads_read, pages_manage_ads"
+                        disabled={!!accountVerified}
+                        style={{
+                          borderColor: accountVerified ? '#28a745' : 'var(--bs-border-color)',
+                          backgroundColor: accountVerified ? '#d4edda' : 'var(--bs-body-bg)',
+                          color: 'var(--bs-body-color)'
+                        }}
+                      />
+                      <div className="form-text text-muted mt-1">
+                        <i className="mdi mdi-information-outline me-1"></i>
+                        Opcional. Token diferente al de leads con permisos de gestión de anuncios.
+                      </div>
                     </div>
-                  </div>
+                    <div className="col-12">
+                      <label className='form-label fw-semibold d-flex align-items-center'>
+                        <i className="mdi mdi-identifier me-2" style={{ color: config.color }}></i>
+                        Ad Account ID <span className="text-muted fw-normal ms-2 small">(para sincronizar campañas)</span>:
+                      </label>
+                      <input
+                        type="text"
+                        className="form-control border-2"
+                        value={adAccountId}
+                        onChange={e => setAdAccountId(e.target.value)}
+                        placeholder="Ej: 1960065440840205"
+                        disabled={!!accountVerified}
+                        style={{
+                          borderColor: accountVerified ? '#28a745' : 'var(--bs-border-color)',
+                          backgroundColor: accountVerified ? '#d4edda' : 'var(--bs-body-bg)',
+                          color: 'var(--bs-body-color)'
+                        }}
+                      />
+                      <div className="form-text text-muted mt-1">
+                        <i className="mdi mdi-information-outline me-1"></i>
+                        Opcional. Si lo pones, solo se sincronizarán las campañas de esta cuenta.
+                      </div>
+                    </div>
+                  </>
                 )}
 
               </div>
