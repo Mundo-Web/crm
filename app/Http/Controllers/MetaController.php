@@ -177,13 +177,24 @@ class MetaController extends Controller
                 ->first();
 
             if ($origin === 'forms') {
-                Log::info('Processing Meta Lead Form event');
-                $leadRes = new Fetch(env('FACEBOOK_GRAPH_URL') . '/' . $entry['changes'][0]['value']['leadgen_id'] . '?fields=created_time,platform,ad_id,ad_name,adset_id,adset_name,campaign_id,campaign_name,form_id,field_data', [
-                    'headers' =>  [
-                        'Authorization' => 'Bearer ' . $integrationJpa->meta_access_token
-                    ]
-                ]);
-                $leadData = $leadRes->json();
+                $leadgenId = $entry['changes'][0]['value']['leadgen_id'] ?? null;
+                if (!$leadgenId) {
+                    Log::error('Webhook Meta Forms sin leadgen_id');
+                    return;
+                }
+
+                $leadData = [];
+                try {
+                    $facebookGraphUrl = env('FACEBOOK_GRAPH_URL', 'https://graph.facebook.com/v19.0');
+                    $leadRes = new Fetch($facebookGraphUrl . '/' . $leadgenId . '?fields=created_time,platform,ad_id,ad_name,adset_id,adset_name,campaign_id,campaign_name,form_id,field_data', [
+                        'headers' =>  [
+                            'Authorization' => 'Bearer ' . ($integrationJpa->meta_access_token ?? '')
+                        ]
+                    ]);
+                    $leadData = $leadRes->json();
+                } catch (\Exception $e) {
+                    Log::error('Error consultando detalles del lead en Meta', ['error' => $e->getMessage()]);
+                }
 
                 // Parse lead data to extract form fields
                 $fieldData = [];
@@ -192,35 +203,45 @@ class MetaController extends Controller
                 }
 
                 // Create new client lead with parsed data
-                // Check if client already exists
+                $cleanLeadId = preg_replace('/^[a-z]+:/i', '', $leadData['id'] ?? $leadgenId);
+
                 $clientJpa = Client::query()
                     ->where('integration_id', $integrationJpa->id)
-                    ->where('integration_user_id', $leadData['id'])
+                    ->where('integration_user_id', $cleanLeadId)
                     ->where('business_id', $businessJpa->id)
                     ->where('status', true)
                     ->first();
 
                 if ($clientJpa) {
-                    Log::info('Lead already exists, skipping', ['lead_id' => $leadData['id']]);
+                    Log::info('Lead already exists, skipping', ['lead_id' => $cleanLeadId]);
                     return;
                 }
 
-                $origins = [
+                $platforms = [
                     'ig' => 'Instagram',
-                    'fb' => 'Facebook'
+                    'fb' => 'Facebook',
+                    'instagram' => 'Instagram',
+                    'facebook' => 'Facebook'
                 ];
+                $platformKey = strtolower($leadData['platform'] ?? '');
+                $originName = $platforms[$platformKey] ?? 'Facebook';
+
+                // Clean Meta IDs from prefixes (c:, as:, ag:, f:, l:)
+                $rawCampaignId = $leadData['campaign_id'] ?? null;
+                $cleanCampaignId = $rawCampaignId ? preg_replace('/^[a-z]+:/i', '', $rawCampaignId) : 'external';
+                
                 $campaignJpa = Campaign::updateOrCreate([
                     'business_id' => $businessJpa->id,
-                    'code' => $leadData['campaign_id']
+                    'code' => $cleanCampaignId
                 ], [
-                    'title' => $leadData['campaign_name'],
-                    'source' => strtolower($origins[$leadData['platform']] ?? $leadData['platform'])
+                    'title' => $leadData['campaign_name'] ?? 'Campaña Externa',
+                    'source' => strtolower($originName)
                 ]);
 
                 // Create new client
                 $clientJpa = Client::create([
                     'integration_id' => $integrationJpa->id,
-                    'integration_user_id' => $leadData['id'],
+                    'integration_user_id' => $cleanLeadId,
                     'business_id' => $businessJpa->id,
                     'name' => $fieldData['full_name'] ?? 'Sin nombre',
                     'contact_name' => $fieldData['full_name'] ?? 'Sin nombre',
@@ -233,17 +254,19 @@ class MetaController extends Controller
                     'ip' => $request->ip(),
                     'status_id' => Setting::get('default-lead-status', $businessJpa->id),
                     'manage_status_id' => Setting::get('default-manage-lead-status', $businessJpa->id),
-                    'origin' => $origins[$leadData['platform']] ?? $leadData['platform'], // Aqui va facebook o instagram
-                    'triggered_by' => str_replace('_', ' ', $leadData['campaign_name']),
+                    'origin' => $originName, // Aqui va Facebook o Instagram
+                    'lead_origin' => $originName,
+                    'triggered_by' => str_replace('_', ' ', $leadData['campaign_name'] ?? 'Campaña Meta'),
                     'campaign_id' => $campaignJpa->id,
                     'adset_name' => $leadData['adset_name'] ?? null,
                     'ad_name' => $leadData['ad_name'] ?? null,
                     'status' => true,
                     'complete_registration' => true,
+                    'source_channel' => $originName . ' Form'
                 ]);
 
                 // Build form answers note, ignoring full_name, phone_number and email
-                $formString = '<b>Formulario Facebook Forms</b><br>';
+                $formString = "<b>Formulario {$originName} Forms</b><br>";
                 $questionIndex = 1;
                 foreach ($leadData['field_data'] ?? [] as $field) {
                     $fieldName = $field['name'] ?? '';
@@ -260,7 +283,7 @@ class MetaController extends Controller
                 ClientNote::create([
                     'note_type_id' => '8e895346-3d87-4a87-897a-4192b917c211',
                     'client_id' => $clientJpa->id,
-                    'name' => 'Formulario Facebook Forms',
+                    'name' => "Formulario {$originName} Forms",
                     'description' => $formString,
                 ]);
                 Log::info('Lead created and note added');
@@ -355,7 +378,7 @@ class MetaController extends Controller
 
                 if ($token) {
                     try {
-                        $adId = $referral['source_id'];
+                        $adId = preg_replace('/^[a-z]+:/i', '', $referral['source_id']);
                         $facebookGraphUrl = config('services.meta.facebook_graph_url', 'https://graph.facebook.com/v19.0');
                         $adRes = new Fetch("{$facebookGraphUrl}/{$adId}?" . http_build_query([
                             'fields' => 'name,adset{id,name},campaign{id,name}',
@@ -400,18 +423,45 @@ class MetaController extends Controller
             }
 
             if ($referralData && !isset($referralData['error'])) {
+                $cleanCampaignId = preg_replace('/^[a-z]+:/i', '', $referralData['campaign']['id']);
                 $campaignJpa = Campaign::updateOrCreate([
                     'business_id' => $businessJpa->id,
-                    'code' => $referralData['campaign']['id']
+                    'code' => $cleanCampaignId
                 ], [
                     'title' => $referralData['campaign']['name'],
                     'source' => strtolower($origin)
                 ]);
 
+                // Registrar AdSet
+                $adSetId = preg_replace('/^[a-z]+:/i', '', $referralData['adset']['id']);
+                $adSetJpa = \App\Models\AdSet::updateOrCreate([
+                    'campaign_id' => $campaignJpa->id,
+                    'code' => $adSetId
+                ], [
+                    'name' => $referralData['adset']['name'],
+                    'status' => 'ACTIVE'
+                ]);
+
+                // Registrar Ad
+                $adIdClean = preg_replace('/^[a-z]+:/i', '', $referralData['id'] ?? $referralData['ad_id'] ?? '');
+                if ($adIdClean) {
+                    \App\Models\Ad::updateOrCreate([
+                        'ad_set_id' => $adSetJpa->id,
+                        'code' => $adIdClean
+                    ], [
+                        'name' => $referralData['name'] ?? 'Anuncio de WhatsApp',
+                        'status' => 'ACTIVE'
+                    ]);
+                }
+
                 $preClient['campaign_id'] = $campaignJpa->id;
                 $preClient['adset_name'] = $referralData['adset']['name'] ?? null;
                 $preClient['ad_name'] = $referralData['name'] ?? null;
                 $preClient['triggered_by'] = $referralData['campaign']['name'] ?? 'Click to WhatsApp Ad';
+                $preClient['source'] = 'Meta';
+                $preClient['origin'] = 'Facebook'; // Por defecto para anuncios Click-to-WhatsApp
+                $preClient['lead_origin'] = 'Facebook';
+                $preClient['source_channel'] = 'WhatsApp Ad';
             }
 
             $clientJpa = Client::updateOrCreate([
@@ -475,7 +525,7 @@ class MetaController extends Controller
 
             // 2. Fetch Hierarchy directly per campaign
             foreach ($campaigns as $campaignJpa) {
-                $metaCampaignId = trim($campaignJpa->meta_id ?? $campaignJpa->code);
+                $metaCampaignId = preg_replace('/^[a-z]+:/i', '', trim($campaignJpa->meta_id ?? $campaignJpa->code));
                 
                 if (!$metaCampaignId) continue;
 

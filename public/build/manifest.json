@@ -158,9 +158,9 @@
       "_CreateReactScript-CmL8RTlq.js"
     ]
   },
-  "_PipelineChart-!~{01c}~.js": {
+  "_PipelineChart-!~{01b}~.js": {
     "file": "PipelineChart.css",
-    "src": "_PipelineChart-!~{01c}~.js"
+    "src": "_PipelineChart-!~{01b}~.js"
   },
   "_PipelineChart-6xG2JKVy.js": {
     "file": "assets/PipelineChart-6xG2JKVy.js",
@@ -198,9 +198,9 @@
       "_CreateReactScript-CmL8RTlq.js"
     ]
   },
-  "_RepositoryDropzone-!~{01a}~.js": {
+  "_RepositoryDropzone-!~{019}~.js": {
     "file": "RepositoryDropzone.css",
-    "src": "_RepositoryDropzone-!~{01a}~.js"
+    "src": "_RepositoryDropzone-!~{019}~.js"
   },
   "_RepositoryDropzone-Dy1EUITt.js": {
     "file": "assets/RepositoryDropzone-Dy1EUITt.js",
@@ -491,28 +491,20 @@
     ]
   },
   "resources/js/Campaigns.jsx": {
-    "file": "assets/Campaigns-DeGvEPPi.js",
+    "file": "assets/Campaigns-DErDIV5g.js",
     "name": "Campaigns",
     "src": "resources/js/Campaigns.jsx",
     "isEntry": true,
     "imports": [
       "_CreateReactScript-CmL8RTlq.js",
-      "_server.browser-vjhT8Fsn.js",
-      "_ReactAppend-D4xFZMj8.js",
       "_Adminto-gv9Z2m2T.js",
       "_Modal-CziyrsZw.js",
-      "_Table-DTZKYC6n.js",
       "_InputFormGroup-yx0fXeFG.js",
       "_TextareaFormGroup-yGf5DZBr.js",
       "_SelectFormGroup-WU4mFyfX.js",
       "_sweetalert2.esm.all-CjHhFUXd.js",
-      "_DxPanelButton-Bu4SkM12.js",
-      "_DxButton-CsjWvhyj.js",
       "_socials-DxbJIEf3.js",
-      "_Logout-CepmT0ri.js",
-      "_default-C_GWLBq9.js",
-      "_index-pesoA-P8.js",
-      "_ArrayJoin-2k6ba35P.js"
+      "_Logout-CepmT0ri.js"
     ]
   },
   "resources/js/Chat.jsx": {
