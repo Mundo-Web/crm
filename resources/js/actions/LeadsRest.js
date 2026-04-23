@@ -135,6 +135,28 @@ class LeadsRest extends BasicRest {
       return false
     }
   }
+
+  syncMeta = async (leads) => {
+    try {
+      const { status, result } = await Fetch(`/api/${this.path}/sync-meta`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(leads)
+      })
+      if (!status) throw new Error(result?.message || 'Ocurrio un error inesperado')
+      return true
+    } catch (error) {
+      Notify.add({
+        icon: '/assets/img/logo-login.svg',
+        title: 'Error',
+        body: error.message,
+        type: 'danger'
+      })
+      return false
+    }
+  }
 }
 
 export default LeadsRest

@@ -125,8 +125,8 @@
     "file": "assets/JSEncrypt-D3I3x59l.js",
     "name": "JSEncrypt"
   },
-  "_LeadsRest-C-mCAjWm.js": {
-    "file": "assets/LeadsRest-C-mCAjWm.js",
+  "_LeadsRest-CSNPBwgx.js": {
+    "file": "assets/LeadsRest-CSNPBwgx.js",
     "name": "LeadsRest",
     "imports": [
       "_CreateReactScript-CmL8RTlq.js",
@@ -508,14 +508,14 @@
     ]
   },
   "resources/js/Chat.jsx": {
-    "file": "assets/Chat-DIkKVjN8.js",
+    "file": "assets/Chat-C6sTUoiP.js",
     "name": "Chat",
     "src": "resources/js/Chat.jsx",
     "isEntry": true,
     "imports": [
       "_CreateReactScript-CmL8RTlq.js",
       "_Adminto-gv9Z2m2T.js",
-      "_LeadsRest-C-mCAjWm.js",
+      "_LeadsRest-CSNPBwgx.js",
       "_ClientNotesRest-BWtZLqOV.js",
       "_wa2html-BTRF3k34.js",
       "_ArrayJoin-2k6ba35P.js",
@@ -539,7 +539,7 @@
     ]
   },
   "resources/js/Clients.jsx": {
-    "file": "assets/Clients-0YFFFKxT.js",
+    "file": "assets/Clients-CL_jywsk.js",
     "name": "Clients",
     "src": "resources/js/Clients.jsx",
     "isEntry": true,
@@ -563,7 +563,7 @@
       "_Number2Currency-e57Tgsuk.js",
       "_DxBox-PhlYjGro.js",
       "_Dropdown-BZ2zB_VD.js",
-      "_LeadsRest-C-mCAjWm.js",
+      "_LeadsRest-CSNPBwgx.js",
       "_DxPanelButton-Bu4SkM12.js",
       "_server.browser-vjhT8Fsn.js",
       "_Logout-CepmT0ri.js",
@@ -689,7 +689,7 @@
     ]
   },
   "resources/js/Leads.jsx": {
-    "file": "assets/Leads-DOkxyXjx.js",
+    "file": "assets/Leads-NckKnmZ-.js",
     "name": "Leads",
     "src": "resources/js/Leads.jsx",
     "isEntry": true,
@@ -699,7 +699,7 @@
       "_QuillFormGroup-DRhwNHqZ.js",
       "_sweetalert2.esm.all-CjHhFUXd.js",
       "_ClientNotesRest-BWtZLqOV.js",
-      "_LeadsRest-C-mCAjWm.js",
+      "_LeadsRest-CSNPBwgx.js",
       "_TasksRest-DyPqHmac.js",
       "_UsersRest-BDh7ND-K.js",
       "_Modal-CziyrsZw.js",

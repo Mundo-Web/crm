@@ -18,6 +18,7 @@ use App\Models\Product;
 use App\Models\Project;
 use App\Models\Setting;
 use App\Models\Status;
+
 use App\Models\Task;
 use App\Models\Type;
 use App\Models\User;
@@ -186,7 +187,6 @@ class LeadController extends BasicController
             ->leftJoin('statuses AS status', 'status.id', 'status_id')
             ->leftJoin('statuses AS manage_status', 'manage_status.id', 'manage_status_id')
             ->leftJoin('users AS assigned', 'assigned.id', 'clients.assigned_to')
-            ->leftJoin('campaigns AS campaign', 'campaign.id', 'clients.campaign_id')
             ->where(function ($q) use ($request) {
                 if ($request->includeClients) {
                     $q->whereIn('status.table_id', ['e05a43e5-b3a6-46ce-8d1f-381a73498f33', 'a8367789-666e-4929-aacb-7cbc2fbf74de']);
@@ -430,6 +430,102 @@ class LeadController extends BasicController
             }
             DB::commit();
         }, fn() =>       DB::rollBack());
+
+        return response($response->toArray(), $response->status);
+    }
+
+    public function syncMetaLeads(Request $request)
+    {
+        $response = Response::simpleTryCatch(function () use ($request) {
+            $leads = $request->all();
+            if (empty($leads)) {
+                $leads = json_decode($request->getContent(), true);
+            }
+            
+            \Illuminate\Support\Facades\Log::info('Contenido recibido en syncMetaLeads: ' . json_encode($leads));
+            
+            if (!$leads || !is_array($leads)) {
+                \Illuminate\Support\Facades\Log::error('Error en sincronización Meta: JSON inválido o vacío. Contenido recibido: ' . substr($request->getContent(), 0, 500));
+                throw new Exception('El JSON proporcionado no es válido o está vacío.');
+            }
+            
+            \Illuminate\Support\Facades\Log::info('Iniciando sincronización Meta: ' . count($leads) . ' leads recibidos.');
+            
+            $business_id = Auth::user()->business_id;
+            $updatedCount = 0;
+
+            foreach ($leads as $leadData) {
+                $email = $leadData['email'] ?? null;
+                if (!$email) {
+                    \Illuminate\Support\Facades\Log::warning('Lead sin email ignorado en sincronización.');
+                    continue;
+                }
+
+                $clients = Client::where('business_id', $business_id)
+                    ->where(DB::raw('LOWER(contact_email)'), strtolower($email))
+                    ->get();
+
+                $platformCode = strtolower($leadData['platform'] ?? 'fb');
+                $platformName = $platformCode == 'ig' ? 'Instagram' : 'Facebook';
+                
+                // Sync campaign
+                $campaignId = null;
+                $rawCampaignId = $leadData['campaign_id'] ?? null;
+                $cleanCampaignId = $rawCampaignId ? preg_replace('/^[a-z]+:/i', '', $rawCampaignId) : null;
+                
+                if ($cleanCampaignId) {
+                    $campaign = Campaign::updateOrCreate([
+                        'business_id' => $business_id,
+                        'code' => $cleanCampaignId
+                    ], [
+                        'title' => $leadData['campaign_name'] ?? 'Campaña Meta',
+                        'source' => strtolower($leadData['platform'] ?? 'fb') == 'ig' ? 'instagram' : 'facebook'
+                    ]);
+                    $campaignId = $campaign->id;
+                }
+
+                if ($clients->isEmpty()) {
+                    // Create new lead if it doesn't exist
+                    \Illuminate\Support\Facades\Log::info("Creando nuevo lead para email: {$email}");
+                    $client = Client::create([
+                        'business_id' => $business_id,
+                        'contact_email' => $email,
+                        'contact_name' => $leadData['full_name'] ?? 'Sin nombre',
+                        'name' => $leadData['full_name'] ?? 'Sin nombre',
+                        'contact_phone' => preg_replace('/[^0-9]/', '', $leadData['phone_number'] ?? ''),
+                        'source' => 'Meta',
+                        'origin' => $platformName,
+                        'lead_origin' => $platformName,
+                        'triggered_by' => "Formulario {$platformName}",
+                        'source_channel' => "{$platformName} Form",
+                        'campaign_id' => $campaignId,
+                        'adset_name' => $leadData['adset_name'] ?? null,
+                        'ad_name' => $leadData['ad_name'] ?? null,
+                        'status_id' => Setting::get('default-lead-status', $business_id),
+                        'manage_status_id' => Setting::get('default-manage-lead-status', $business_id),
+                        'complete_registration' => true,
+                        'status' => true
+                    ]);
+                    $updatedCount++;
+                } else {
+                    // Update all existing leads with this email
+                    foreach ($clients as $client) {
+                        \Illuminate\Support\Facades\Log::info("Actualizando cliente ID {$client->id} ({$email})");
+                        $client->origin = $platformName;
+                        $client->lead_origin = $platformName;
+                        $client->source = 'Meta';
+                        $client->triggered_by = "Formulario {$platformName}";
+                        $client->adset_name = $leadData['adset_name'] ?? $client->adset_name;
+                        $client->ad_name = $leadData['ad_name'] ?? $client->ad_name;
+                        $client->source_channel = "{$platformName} Form";
+                        $client->campaign_id = $campaignId ?? $client->campaign_id;
+                        $client->save();
+                        $updatedCount++;
+                    }
+                }
+            }
+            return "Se han sincronizado {$updatedCount} leads correctamente.";
+        });
 
         return response($response->toArray(), $response->status);
     }

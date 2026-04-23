@@ -256,13 +256,13 @@ class MetaController extends Controller
                     'manage_status_id' => Setting::get('default-manage-lead-status', $businessJpa->id),
                     'origin' => $originName, // Aqui va Facebook o Instagram
                     'lead_origin' => $originName,
-                    'triggered_by' => str_replace('_', ' ', $leadData['campaign_name'] ?? 'Campaña Meta'),
+                    'triggered_by' => "Formulario {$originName}",
                     'campaign_id' => $campaignJpa->id,
                     'adset_name' => $leadData['adset_name'] ?? null,
                     'ad_name' => $leadData['ad_name'] ?? null,
                     'status' => true,
                     'complete_registration' => true,
-                    'source_channel' => $originName . ' Form'
+                    'source_channel' => "{$originName} Form"
                 ]);
 
                 // Build form answers note, ignoring full_name, phone_number and email
