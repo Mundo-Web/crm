@@ -532,8 +532,10 @@ class MetaController extends Controller
                 $alreadyExists->update(array_merge([
                     'integration_id' => $integrationJpa->id,
                     'integration_user_id' => $profileData['id'],
+                    'status' => true
                 ], $preClient));
                 $clientJpa = $alreadyExists;
+                Log::info('Lead omnicanal actualizado exitosamente', ['client_id' => $clientJpa->id, 'phone' => $profileData['id']]);
             } else {
                 // Crear cliente totalmente nuevo
                 $clientJpa = Client::create(array_merge([
@@ -541,6 +543,7 @@ class MetaController extends Controller
                     'integration_user_id' => $profileData['id'],
                     'business_id' => $businessJpa->id,
                 ], $preClient));
+                Log::info('Nuevo lead creado desde WhatsApp', ['client_id' => $clientJpa->id, 'phone' => $profileData['id']]);
             }
 
             $hasApikey = Setting::get('gemini-api-key', $businessJpa->id);
