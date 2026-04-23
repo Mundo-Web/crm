@@ -345,7 +345,7 @@ const LeadTable = ({
                         : []
                 }
                 toolBar={(container) => {
-                    container.unshift({
+                    /*    container.unshift({
                         widget: "dxButton",
                         location: "after",
                         options: {
@@ -353,11 +353,11 @@ const LeadTable = ({
                             text: "Sincronizar Meta",
                             hint: "Sincronizar leads desde JSON de Meta",
                             elementAttr: {
-                                class: "btn btn-soft-warning btn-xs waves-effect waves-light",
+                                class: "btn  btn-soft-warning btn-xs waves-effect waves-light",
                             },
                             onClick: () => syncInputRef.current.click(),
                         },
-                    });
+                    });*/
                 }}
                 keyExpr="id"
                 selection={{
