@@ -483,10 +483,11 @@ class MetaController extends Controller
                 $adSetId = preg_replace('/^[a-z]+:/i', '', $referralData['adset']['id'] ?? '');
                 $adSetJpa = \App\Models\AdSet::updateOrCreate([
                     'campaign_id' => $campaignJpa->id,
-                    'code' => $adSetId
+                    'meta_id' => $adSetId
                 ], [
                     'name' => $referralData['adset']['name'] ?? 'Conjunto de anuncios WhatsApp',
-                    'status' => 'ACTIVE'
+                    'status' => 'ACTIVE',
+                    'business_id' => $businessJpa->id
                 ]);
 
                 // Registrar Ad
@@ -494,10 +495,11 @@ class MetaController extends Controller
                 if ($adIdClean) {
                     \App\Models\Ad::updateOrCreate([
                         'ad_set_id' => $adSetJpa->id,
-                        'code' => $adIdClean
+                        'meta_id' => $adIdClean
                     ], [
                         'name' => $referralData['name'] ?? 'Anuncio de WhatsApp',
-                        'status' => 'ACTIVE'
+                        'status' => 'ACTIVE',
+                        'business_id' => $businessJpa->id
                     ]);
                 }
 
