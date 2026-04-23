@@ -345,7 +345,7 @@ const LeadTable = ({
                         : []
                 }
                 toolBar={(container) => {
-                    container.unshift({
+                    /*  container.unshift({
                         widget: "dxButton",
                         location: "after",
                         options: {
@@ -357,7 +357,7 @@ const LeadTable = ({
                             },
                             onClick: () => syncInputRef.current.click(),
                         },
-                    });
+                    });*/
                 }}
                 keyExpr="id"
                 selection={{
