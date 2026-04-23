@@ -186,10 +186,23 @@ class MetaController extends Controller
                 $leadData = [];
                 try {
                     $facebookGraphUrl = env('FACEBOOK_GRAPH_URL');
+                    $accessToken = $integrationJpa->meta_access_token;
+
+                    // Step 1: Try to get Page Access Token if it's a user token
+                    $pageId = $entry['changes'][0]['value']['page_id'] ?? $integrationJpa->meta_business_id;
+                    $pageRes = new Fetch("{$facebookGraphUrl}/{$pageId}?fields=access_token", [
+                        'headers' => ['Authorization' => 'Bearer ' . $accessToken]
+                    ]);
+                    $pageData = $pageRes->json();
+                    
+                    if (isset($pageData['access_token'])) {
+                        $accessToken = $pageData['access_token'];
+                        Log::info('Using Page Access Token for lead retrieval');
+                    }
+
+                    // Step 2: Fetch Lead Data
                     $leadRes = new Fetch($facebookGraphUrl . '/' . $leadgenId . '?fields=created_time,platform,ad_id,ad_name,adset_id,adset_name,campaign_id,campaign_name,form_id,field_data', [
-                        'headers' =>  [
-                            'Authorization' => 'Bearer ' . $integrationJpa->meta_access_token
-                        ]
+                        'headers' => ['Authorization' => 'Bearer ' . $accessToken]
                     ]);
                     $leadData = $leadRes->json();
                     Log::info('Meta Lead Data Response', ['leadData' => $leadData]);
