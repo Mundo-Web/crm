@@ -598,8 +598,9 @@ class MetaController extends Controller
 
                 foreach ($campaignsData['data'] ?? [] as $metaCampaign) {
                     // STEP 3: Upsert Campaign in local DB
+                    $metaCampaignId = trim($metaCampaign['id']);
                     $campaignJpa = Campaign::updateOrCreate(
-                        ['business_id' => $businessId, 'code' => $metaCampaign['id']],
+                        ['business_id' => $businessId, 'code' => $metaCampaignId],
                         [
                             'meta_id' => $metaCampaign['id'],
                             'title'   => $metaCampaign['name'],

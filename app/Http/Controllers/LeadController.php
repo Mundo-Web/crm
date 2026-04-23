@@ -471,7 +471,7 @@ class LeadController extends BasicController
                 // Sync campaign
                 $campaignId = null;
                 $rawCampaignId = $leadData['campaign_id'] ?? null;
-                $cleanCampaignId = $rawCampaignId ? preg_replace('/^[a-z]+:/i', '', $rawCampaignId) : null;
+                $cleanCampaignId = $rawCampaignId ? trim(preg_replace('/^[a-z]+:/i', '', $rawCampaignId)) : null;
                 
                 if ($cleanCampaignId) {
                     $campaign = Campaign::updateOrCreate([
