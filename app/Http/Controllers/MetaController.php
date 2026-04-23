@@ -185,8 +185,8 @@ class MetaController extends Controller
 
                 $leadData = [];
                 try {
-                    $facebookGraphUrl = env('FACEBOOK_GRAPH_URL', 'https://graph.facebook.com/v19.0');
-                    $leadRes = new Fetch($facebookGraphUrl . '/l:' . $leadgenId . '?fields=created_time,platform,ad_id,ad_name,adset_id,adset_name,campaign_id,campaign_name,form_id,field_data', [
+                    $facebookGraphUrl = env('FACEBOOK_GRAPH_URL');
+                    $leadRes = new Fetch($facebookGraphUrl . '/' . $leadgenId . '?fields=created_time,platform,ad_id,ad_name,adset_id,adset_name,campaign_id,campaign_name,form_id,field_data', [
                         'headers' =>  [
                             'Authorization' => 'Bearer ' . $integrationJpa->meta_access_token
                         ]
