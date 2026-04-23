@@ -375,7 +375,10 @@ class MetaController extends Controller
                 $integrationJpa->update(['meta_business_id' => $entry['id']]);
             }
 
-            if (!$integrationJpa->meta_access_token) return;
+            if (!$integrationJpa->meta_access_token) {
+                Log::warning('Webhook abortado: La integración de ' . $origin . ' no tiene meta_access_token configurado.', ['business_id' => $businessJpa->id]);
+                return;
+            }
 
             switch ($origin) {
                 case 'messenger':
