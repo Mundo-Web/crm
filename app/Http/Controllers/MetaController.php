@@ -250,6 +250,28 @@ class MetaController extends Controller
                     'source' => strtolower($originName)
                 ]);
 
+                // Registrar AdSet para Formularios
+                $adSetId = preg_replace('/^[a-z]+:/i', '', $leadData['adset_id'] ?? '');
+                $adSetJpa = \App\Models\AdSet::updateOrCreate([
+                    'campaign_id' => $campaignJpa->id,
+                    'code' => $adSetId
+                ], [
+                    'name' => $leadData['adset_name'] ?? 'Conjunto de anuncios Form',
+                    'status' => 'ACTIVE'
+                ]);
+
+                // Registrar Ad para Formularios
+                $adIdClean = preg_replace('/^[a-z]+:/i', '', $leadData['ad_id'] ?? '');
+                if ($adIdClean) {
+                    \App\Models\Ad::updateOrCreate([
+                        'ad_set_id' => $adSetJpa->id,
+                        'code' => $adIdClean
+                    ], [
+                        'name' => $leadData['ad_name'] ?? 'Anuncio de Formulario',
+                        'status' => 'ACTIVE'
+                    ]);
+                }
+
                 $fullName = $fieldData['full_name'] ?? $fieldData['nombre_completo'] ?? $fieldData['nombre'] ?? 'Sin nombre';
                 $phone = $fieldData['phone_number'] ?? $fieldData['telefono'] ?? $fieldData['movil'] ?? '';
                 $email = $fieldData['email'] ?? $fieldData['correo'] ?? null;
@@ -270,7 +292,7 @@ class MetaController extends Controller
                     'ip' => $request->ip(),
                     'status_id' => Setting::get('default-lead-status', $businessJpa->id),
                     'manage_status_id' => Setting::get('default-manage-lead-status', $businessJpa->id),
-                    'origin' => $originName, // Aqui va Facebook o Instagram
+                    'origin' => $originName,
                     'lead_origin' => $originName,
                     'triggered_by' => "Formulario {$originName}",
                     'campaign_id' => $campaignJpa->id,
@@ -408,13 +430,16 @@ class MetaController extends Controller
             }
 
             $alreadyExists = Client::query()
-                ->where('integration_id', $integrationJpa->id)
-                ->where('integration_user_id', $profileData['id'])
                 ->where('business_id', $businessJpa->id)
+                ->where(function ($q) use ($profileData) {
+                    $q->where('contact_phone', 'like', '%' . $profileData['id'] . '%')
+                      ->orWhere('integration_user_id', $profileData['id']);
+                })
                 ->where('status', true)
                 ->first();
 
-            if ($alreadyExists && $alreadyExists->complete_registration) return;
+            // Si el cliente existe, ya no hacemos "return" prematuro aquí, 
+            // permitiendo que el sistema actualice su integration_id al nuevo canal (WhatsApp)
 
             $preClient = [
                 'message' => $messaging['message']['text'] ?? 'Sin mensaje',
@@ -439,22 +464,24 @@ class MetaController extends Controller
             }
 
             if ($referralData && !isset($referralData['error'])) {
-                $cleanCampaignId = preg_replace('/^[a-z]+:/i', '', $referralData['campaign']['id']);
+                $rawCampaignId = $referralData['campaign']['id'] ?? 'external';
+                $cleanCampaignId = trim(preg_replace('/^[a-z]+:/i', '', $rawCampaignId));
+                
                 $campaignJpa = Campaign::updateOrCreate([
                     'business_id' => $businessJpa->id,
                     'code' => $cleanCampaignId
                 ], [
-                    'title' => $referralData['campaign']['name'],
+                    'title' => $referralData['campaign']['name'] ?? 'Campaña WhatsApp Ads',
                     'source' => strtolower($origin)
                 ]);
 
                 // Registrar AdSet
-                $adSetId = preg_replace('/^[a-z]+:/i', '', $referralData['adset']['id']);
+                $adSetId = preg_replace('/^[a-z]+:/i', '', $referralData['adset']['id'] ?? '');
                 $adSetJpa = \App\Models\AdSet::updateOrCreate([
                     'campaign_id' => $campaignJpa->id,
                     'code' => $adSetId
                 ], [
-                    'name' => $referralData['adset']['name'],
+                    'name' => $referralData['adset']['name'] ?? 'Conjunto de anuncios WhatsApp',
                     'status' => 'ACTIVE'
                 ]);
 
@@ -475,20 +502,56 @@ class MetaController extends Controller
                 $preClient['ad_name'] = $referralData['name'] ?? null;
                 $preClient['triggered_by'] = $referralData['campaign']['name'] ?? 'Click to WhatsApp Ad';
                 $preClient['source'] = 'Meta';
-                $preClient['origin'] = 'Facebook'; // Por defecto para anuncios Click-to-WhatsApp
-                $preClient['lead_origin'] = 'Facebook';
-                $preClient['source_channel'] = 'WhatsApp Ad';
+                // Detectar plataforma (FB o IG) desde la URL de referral
+                $platform = 'Facebook';
+                $sourceUrl = $referral['source_url'] ?? '';
+                if (str_contains($sourceUrl, 'instagram.com')) {
+                    $platform = 'Instagram';
+                }
+
+                $preClient['origin'] = $platform; 
+                $preClient['lead_origin'] = $platform;
+                $preClient['source_channel'] = "WhatsApp Ad ({$platform})";
+
+                // Guardar información del anuncio en una nota para que la IA tenga contexto
+                $adContext = "<b>Origen: Anuncio Click to WhatsApp</b><br>";
+                $adContext .= "<b>Campaña:</b> " . ($referralData['campaign']['name'] ?? 'Desconocida') . "<br>";
+                $adContext .= "<b>Anuncio:</b> " . ($referralData['name'] ?? 'Desconocido') . "<br>";
+                if (isset($referral['body'])) {
+                    $adContext .= "<b>Texto del anuncio:</b> " . $referral['body'] . "<br>";
+                }
+
+                $preClient['ad_context_note'] = $adContext; // Usaremos esto después del create
             }
 
-            $clientJpa = Client::updateOrCreate([
-                'integration_id' => $integrationJpa->id,
-                'integration_user_id' => $profileData['id'],
-                'business_id' => $businessJpa->id,
-            ], $preClient);
+            if ($alreadyExists) {
+                // Actualizar cliente existente con los nuevos datos de integración (ej. pasó de Form a WhatsApp)
+                $alreadyExists->update(array_merge([
+                    'integration_id' => $integrationJpa->id,
+                    'integration_user_id' => $profileData['id'],
+                ], $preClient));
+                $clientJpa = $alreadyExists;
+            } else {
+                // Crear cliente totalmente nuevo
+                $clientJpa = Client::create(array_merge([
+                    'integration_id' => $integrationJpa->id,
+                    'integration_user_id' => $profileData['id'],
+                    'business_id' => $businessJpa->id,
+                ], $preClient));
+            }
 
             $hasApikey = Setting::get('gemini-api-key', $businessJpa->id);
 
             if ($hasApikey && !$clientJpa->complete_registration) {
+                // Si es un lead de anuncio, le ponemos la nota de contexto antes de que Gemini responda
+                if (isset($preClient['ad_context_note'])) {
+                    \App\Models\ClientNote::create([
+                        'note_type_id' => '8e895346-3d87-4a87-897a-4192b917c211', // Tipo 'Nota'
+                        'client_id' => $clientJpa->id,
+                        'name' => 'Contexto de Anuncio Meta',
+                        'description' => $preClient['ad_context_note'],
+                    ]);
+                }
                 MetaAssistantJob::dispatchAfterResponse($clientJpa, $messageJpa, $origin);
             }
 
@@ -514,6 +577,56 @@ class MetaController extends Controller
             ]);
         });
         return response($response->toArray(), 200);
+    }
+
+    public function exchangeToken(Request $request)
+    {
+        $request->validate([
+            'integration_id' => 'required',
+            'short_token' => 'required',
+            'app_id' => 'required',
+            'app_secret' => 'required'
+        ]);
+
+        $integration = Integration::findOrFail($request->integration_id);
+        
+        $facebookGraphUrl = env('FACEBOOK_GRAPH_URL', 'https://graph.facebook.com/v20.0');
+        
+        $url = "{$facebookGraphUrl}/oauth/access_token?" . http_build_query([
+            'grant_type' => 'fb_exchange_token',
+            'client_id' => $request->app_id,
+            'client_secret' => $request->app_secret,
+            'fb_exchange_token' => $request->short_token
+        ]);
+
+        try {
+            $response = file_get_contents($url);
+            $data = json_decode($response, true);
+
+            if (isset($data['access_token'])) {
+                $integration->update([
+                    'meta_access_token' => $data['access_token'],
+                    'meta_app_id' => $request->app_id,
+                    'meta_app_secret' => $request->app_secret
+                ]);
+                return response()->json([
+                    'status' => 'success', 
+                    'message' => 'Token de larga duración generado y guardado correctamente', 
+                    'token' => $data['access_token']
+                ]);
+            }
+
+            return response()->json([
+                'status' => 'error', 
+                'message' => 'No se pudo generar el token: ' . ($data['error']['message'] ?? 'Error desconocido')
+            ], 400);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error', 
+                'message' => 'Error de conexión con Meta: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     public function syncMetaHierarchy(Request $request)

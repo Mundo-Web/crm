@@ -20,10 +20,13 @@ class IntegrationController extends BasicController
         $currentIntegration = Integration::query()
             ->where('meta_service', $request->service)
             ->where('business_id', Auth::user()->business_id)
-            ->where('status', true)
-            ->exists();
+            ->where('status', true);
 
-        if ($currentIntegration) throw new Exception('Ya tienes una integración activa con este servicio');
+        if ($request->id) {
+            $currentIntegration->where('id', '!=', $request->id);
+        }
+
+        if ($currentIntegration->exists()) throw new Exception('Ya tienes una integración activa con este servicio');
 
         $metaBusiness = ['error' => 'No se pudo obtener el perfil del negocio'];
         if ($request->service == 'messenger') {
@@ -64,6 +67,8 @@ class IntegrationController extends BasicController
             'meta_access_token' => $request->accessToken,
             'meta_app_token' => $request->appToken ?? null,
             'meta_ad_account_id' => $request->adAccountId ?? null,
+            'meta_app_id' => $request->meta_app_id ?? null,
+            'meta_app_secret' => $request->meta_app_secret ?? null,
         ];
 
         $integrationJpa = Integration::query()

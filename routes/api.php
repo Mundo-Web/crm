@@ -77,6 +77,7 @@ Route::middleware('auth')->group(function () {
 
     Route::post('/meta/send', [MetaController::class, 'send']);
     Route::post('/meta/sync-hierarchy', [MetaController::class, 'syncMetaHierarchy']);
+    Route::post('/meta/exchange-token', [MetaController::class, 'exchangeToken']);
 
     Route::get('/dashboard/{range}', [DashboardController::class, 'revenue']);
     Route::get('/dashboard/leads/kpi/{month}', [KPILeadsController::class, 'kpi']);

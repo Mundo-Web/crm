@@ -23,15 +23,13 @@ class Integration extends Model
         'meta_access_token',
         'meta_app_token',
         'meta_ad_account_id',
+        'meta_app_id',
+        'meta_app_secret',
         'business_id',
         'status'
     ];
 
-    protected $hidden = [
-        'meta_access_token',
-        'meta_app_token',
-        'meta_ad_account_id',
-    ];
+    protected $hidden = [];
 
     public function leads(): HasMany
     {

@@ -65,29 +65,40 @@ const ServiceCard = ({ service, icon, description, integration, onIntegrate, onU
           {
             integration?.meta_business_name ? (
               <div className="d-flex align-items-center justify-content-between">
-                <div className="d-flex align-items-center">
+                <div className="d-flex align-items-center flex-grow-1">
                   <img
                     className="avatar-sm rounded-circle me-2"
                     src={`/api/integrations/media/${integration.meta_business_profile}`}
                     alt={integration.meta_business_name}
                     onError={e => e.target.src = `//${Global.APP_DOMAIN}/api/logo/thumbnail/null`}
                   />
-                  <div>
-                    <h5 className="mb-0">{integration.meta_business_name}</h5>
+                  <div className="overflow-hidden" style={{ maxWidth: '160px' }}>
+                    <h5 className="mb-0 text-truncate">{integration.meta_business_name}</h5>
                     <small className="text-muted">
                       {integration.leads_count ?? 0} lead(s) generados
                     </small>
                   </div>
                 </div>
-                <Tippy content='Desvincular'>
-                  <button
-                    className="btn btn-link text-danger p-0"
-                    type="button"
-                    onClick={() => onUnlink(integration.id)}
-                  >
-                    <i className="mdi mdi-link-variant-off font-18"></i>
-                  </button>
-                </Tippy>
+                <div className="d-flex gap-1 ms-2">
+                  <Tippy content='Editar Configuración'>
+                    <button
+                      className="btn btn-link text-primary p-0"
+                      type="button"
+                      onClick={() => onIntegrate(service, integration)}
+                    >
+                      <i className="mdi mdi-pencil font-18"></i>
+                    </button>
+                  </Tippy>
+                  <Tippy content='Desvincular'>
+                    <button
+                      className="btn btn-link text-danger p-0"
+                      type="button"
+                      onClick={() => onUnlink(integration.id)}
+                    >
+                      <i className="mdi mdi-link-variant-off font-18"></i>
+                    </button>
+                  </Tippy>
+                </div>
               </div>
             ) : (
               <button
@@ -116,17 +127,20 @@ const ServiceCard = ({ service, icon, description, integration, onIntegrate, onU
   )
 }
 
-const IntegrationWizardModal = ({ service, setService, apikey, auth_token, onClose, onSuccess }) => {
+const IntegrationWizardModal = ({ service, setService, editingIntegration, apikey, auth_token, onClose, onSuccess }) => {
   const modalRef = useRef(null)
   const [step, setStep] = useState(1)
   const [accessToken, setAccessToken] = useState('')
   const [appToken, setAppToken] = useState('')
+  const [metaAppId, setMetaAppId] = useState('')
+  const [metaAppSecret, setMetaAppSecret] = useState('')
   const [adAccountId, setAdAccountId] = useState('')
   const [accountId, setAccountId] = useState('')
   const [phoneId, setPhoneId] = useState('')
   const [accountVerified, setAccountVerified] = useState(null)
   const [verifying, setVerifying] = useState(false);
   const [integrating, setIntegrating] = useState(false);
+  const [exchanging, setExchanging] = useState(false);
 
   // Service-specific configurations
   const serviceConfig = {
@@ -377,37 +391,92 @@ const IntegrationWizardModal = ({ service, setService, apikey, auth_token, onClo
     setAccountVerified(result)
   }
 
+  const onExchangeToken = async () => {
+    if (!accessToken || !metaAppId || !metaAppSecret) {
+      return toast.warning('Faltan datos', {
+        description: 'Debes ingresar el Access Token corto, el App ID y el App Secret.'
+      })
+    }
+
+    setExchanging(true)
+    try {
+      const response = await fetch('/api/meta/exchange-token', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content
+        },
+        body: JSON.stringify({
+          integration_id: editingIntegration?.id,
+          short_token: accessToken,
+          app_id: metaAppId,
+          app_secret: metaAppSecret
+        })
+      })
+
+      const result = await response.json()
+      if (result.status === 'success') {
+        setAccessToken(result.token)
+        toast.success('¡Éxito!', { description: result.message })
+      } else {
+        toast.error('Error', { description: result.message })
+      }
+    } catch (error) {
+      toast.error('Error de conexión', { description: 'No se pudo comunicar con el servidor.' })
+    } finally {
+      setExchanging(false)
+    }
+  }
+
   const onIntegrateClicked = async () => {
     setIntegrating(true)
     const result = await integrationsRest.save({
+      id: editingIntegration?.id,
       service,
       phoneId,
       accountId,
       accessToken,
-      appToken: service === 'forms' ? appToken : undefined,
-      adAccountId: service === 'forms' ? adAccountId : undefined
+      appToken: (service === 'forms' || service === 'whatsapp') ? appToken : undefined,
+      adAccountId: (service === 'forms' || service === 'whatsapp') ? adAccountId : undefined,
+      meta_app_id: (service === 'forms' || service === 'whatsapp') ? metaAppId : undefined,
+      meta_app_secret: (service === 'forms' || service === 'whatsapp') ? metaAppSecret : undefined
     })
     setIntegrating(false)
     if (!result) return
-    onSuccess(result)
+    onSuccess(result, !!editingIntegration)
     setService(null)
   }
 
   useEffect(() => {
     if (service) {
       setStep(1)
-      setAccountId('')
-      setAccessToken('')
-      setAppToken('')
-      setAdAccountId('')
-      setPhoneId('')
-      setAccountVerified(null)
+      // Cargar datos si estamos editando
+      setAccountId(editingIntegration?.meta_business_id || '')
+      setAccessToken(editingIntegration?.meta_access_token || '')
+      setAppToken(editingIntegration?.meta_app_token || '')
+      setAdAccountId(editingIntegration?.meta_ad_account_id || '')
+      setMetaAppId(editingIntegration?.meta_app_id || '')
+      setMetaAppSecret(editingIntegration?.meta_app_secret || '')
+      setPhoneId(editingIntegration?.meta_number_id || '')
+      
+      // Si ya tenemos cuenta e ID, podemos marcarlo como "pre-verificado" visualmente
+      if (editingIntegration?.meta_business_id && editingIntegration?.meta_access_token) {
+        setAccountVerified({
+          id: editingIntegration.meta_business_id,
+          name: editingIntegration.meta_business_name,
+          profile_pic: `/api/integrations/media/${editingIntegration.meta_business_profile}`
+        })
+      } else {
+        setAccountVerified(null)
+      }
+      
       $(modalRef.current).modal('show')
     } else {
       $(modalRef.current).modal('hide')
       $('.modal-backdrop').remove()
     }
-  }, [service])
+  }, [service, editingIntegration])
 
   useEffect(() => {
     $(modalRef.current).on('hidden.bs.modal', () => {
@@ -829,22 +898,63 @@ const IntegrationWizardModal = ({ service, setService, apikey, auth_token, onClo
                 <div className="col-12">
                   <label className='form-label fw-semibold d-flex align-items-center'>
                     <i className="mdi mdi-key-variant me-2" style={{ color: config.color }}></i>
-                    Access Token:
+                    {service === 'whatsapp' ? 'App Token (System User):' : 'Access Token:'}
                   </label>
-                  <input
-                    type="text"
-                    className="form-control border-2"
-                    value={accessToken}
-                    onChange={e => setAccessToken(e.target.value)}
-                    placeholder="Pega aquí tu Access Token"
-                    disabled={!!accountVerified}
-                    style={{
-                      borderColor: accountVerified ? '#28a745' : 'var(--bs-border-color)',
-                      backgroundColor: accountVerified ? '#d4edda' : 'var(--bs-body-bg)',
-                      color: 'var(--bs-body-color)'
-                    }}
-                  />
+                  <div className="input-group">
+                    <input
+                      type="text"
+                      className="form-control border-2"
+                      value={accessToken}
+                      onChange={e => setAccessToken(e.target.value)}
+                      placeholder={service === 'whatsapp' ? "Pega aquí tu System User Token" : "Pega aquí tu Access Token"}
+                      disabled={!!accountVerified}
+                      style={{
+                        borderColor: accountVerified ? '#28a745' : 'var(--bs-border-color)',
+                        backgroundColor: accountVerified ? '#d4edda' : 'var(--bs-body-bg)',
+                        color: 'var(--bs-body-color)'
+                      }}
+                    />
+                    {service === 'forms' && editingIntegration && (
+                      <Tippy content="Convertir a token de 60 días">
+                        <button
+                          type="button"
+                          className="btn btn-warning"
+                          onClick={onExchangeToken}
+                          disabled={exchanging}
+                        >
+                          {exchanging ? <i className="mdi mdi-loading mdi-spin"></i> : <i className="mdi mdi-flash"></i>}
+                        </button>
+                      </Tippy>
+                    )}
+                  </div>
                 </div>
+
+                {service === 'forms' && (
+                  <>
+                    <div className="col-md-6">
+                      <label className='form-label fw-semibold'>Meta App ID:</label>
+                      <input
+                        type="text"
+                        className="form-control border-2"
+                        value={metaAppId}
+                        onChange={e => setMetaAppId(e.target.value)}
+                        placeholder="Ej: 1408966357619599"
+                      />
+                      <div className="form-text small">ID de la App en Meta Developers</div>
+                    </div>
+                    <div className="col-md-6">
+                      <label className='form-label fw-semibold'>Meta App Secret:</label>
+                      <input
+                        type="password"
+                        className="form-control border-2"
+                        value={metaAppSecret}
+                        onChange={e => setMetaAppSecret(e.target.value)}
+                        placeholder="••••••••"
+                      />
+                      <div className="form-text small">Clave secreta de la App</div>
+                    </div>
+                  </>
+                )}
 
                 {/* App Token + Ad Account ID - Solo para Meta Forms */}
                 {service === 'forms' && (
@@ -1152,6 +1262,12 @@ const IntegrationWizardModal = ({ service, setService, apikey, auth_token, onClo
 const Webhooks = ({ apikey, auth_token, integrations: integrationsDB }) => {
   const [integrations, setIntegrations] = useState(integrationsDB)
   const [wizardService, setWizardService] = useState(null)
+  const [editingIntegration, setEditingIntegration] = useState(null)
+
+  const handleOpenWizard = (service, integration = null) => {
+    setEditingIntegration(integration)
+    setWizardService(service)
+  }
 
   const serviceDescriptions = {
     messenger: 'Integra tu página de Facebook para recibir y responder mensajes directamente desde Atalaya.',
@@ -1163,8 +1279,14 @@ const Webhooks = ({ apikey, auth_token, integrations: integrationsDB }) => {
     formularios: 'Conecta formularios web para recibir leads directamente en Atalaya.'
   }
 
-  const handleIntegrationSuccess = (newIntegration) => {
-    setIntegrations(old => [...old, newIntegration])
+  const handleIntegrationSuccess = (newIntegration, isEdit = false) => {
+    if (isEdit) {
+      setIntegrations(old => old.map(i => i.id === newIntegration.id ? newIntegration : i))
+      toast.success('Configuración actualizada')
+    } else {
+      setIntegrations(old => [...old, newIntegration])
+      toast.success('Integración vinculada exitosamente')
+    }
   }
 
   const onUnlinkClicked = async (integrationId) => {
@@ -1204,7 +1326,7 @@ const Webhooks = ({ apikey, auth_token, integrations: integrationsDB }) => {
             icon={icon}
             description={serviceDescriptions[service]}
             integration={ibms[service]}
-            onIntegrate={setWizardService}
+            onIntegrate={handleOpenWizard}
             onUnlink={onUnlinkClicked}
           />
         ))}
@@ -1213,9 +1335,13 @@ const Webhooks = ({ apikey, auth_token, integrations: integrationsDB }) => {
     <IntegrationWizardModal
       service={wizardService}
       setService={setWizardService}
+      editingIntegration={editingIntegration}
       apikey={apikey}
       auth_token={auth_token}
-      onClose={() => setWizardService(null)}
+      onClose={() => {
+        setWizardService(null)
+        setEditingIntegration(null)
+      }}
       onSuccess={handleIntegrationSuccess} />
   </>
 }
