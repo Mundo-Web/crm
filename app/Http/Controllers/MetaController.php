@@ -240,11 +240,11 @@ class MetaController extends Controller
 
                 // Clean Meta IDs from prefixes (c:, as:, ag:, f:, l:)
                 $rawCampaignId = $leadData['campaign_id'] ?? null;
-                $cleanCampaignId = $rawCampaignId ? preg_replace('/^[a-z]+:/i', '', $rawCampaignId) : 'external';
+                $cleanCampaignId = $rawCampaignId ? trim(preg_replace('/^[a-z]+:/i', '', $rawCampaignId)) : 'external';
                 
                 $campaignJpa = Campaign::updateOrCreate([
                     'business_id' => $businessJpa->id,
-                    'code' => $leadData['campaign_id'] ?? 'external'
+                    'code' => $cleanCampaignId
                 ], [
                     'title' => $leadData['campaign_name'] ?? 'Campaña Externa',
                     'source' => strtolower($originName)
