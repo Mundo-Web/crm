@@ -767,6 +767,15 @@ class MetaController extends Controller
                     $syncedCount++;
                     Log::info('Campaña sincronizada', ['campaign' => $metaCampaign['name'], 'id' => $metaCampaign['id']]);
                 }
+
+                // Sincronización masiva de TODAS las métricas y creatividades para esta cuenta publicitaria
+                try {
+                    Log::info('Iniciando sincronización masiva de métricas y formularios para la cuenta', ['account' => $adAccountId]);
+                    \App\Http\Controllers\CampaignController::syncAllMetricsForAdAccount($businessId, $adAccountId, $campaignToken);
+                    Log::info('Sincronización masiva completada');
+                } catch (\Exception $e) {
+                    Log::error('Error en sincronización masiva de métricas', ['account' => $adAccountId, 'error' => $e->getMessage()]);
+                }
             }
 
             return "Se sincronizaron {$syncedCount} campañas desde Meta con éxito.";

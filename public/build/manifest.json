@@ -323,16 +323,19 @@
       "_CreateReactScript-CYIF4B79.js"
     ]
   },
+  "_proxy-CkHFezt1.js": {
+    "file": "assets/proxy-CkHFezt1.js",
+    "name": "proxy",
+    "imports": [
+      "_CreateReactScript-CYIF4B79.js"
+    ]
+  },
   "_server.browser-CJWx4AIt.js": {
     "file": "assets/server.browser-CJWx4AIt.js",
     "name": "server.browser",
     "imports": [
       "_CreateReactScript-CYIF4B79.js"
     ]
-  },
-  "_socials-DxbJIEf3.js": {
-    "file": "assets/socials-DxbJIEf3.js",
-    "name": "socials"
   },
   "_sweetalert2.esm.all-!~{00J}~.js": {
     "file": "sweetalert2.esm.css",
@@ -491,7 +494,7 @@
     ]
   },
   "resources/js/Campaigns.jsx": {
-    "file": "assets/Campaigns-4WlXyx-O.js",
+    "file": "assets/Campaigns-DJrWjCWD.js",
     "name": "Campaigns",
     "src": "resources/js/Campaigns.jsx",
     "isEntry": true,
@@ -503,7 +506,7 @@
       "_TextareaFormGroup-CU21HcAt.js",
       "_SelectFormGroup-DUJzXShn.js",
       "_sweetalert2.esm.all-C3pNMji3.js",
-      "_socials-DxbJIEf3.js",
+      "_proxy-CkHFezt1.js",
       "_Logout-BIaHUvkF.js"
     ]
   },
@@ -689,7 +692,7 @@
     ]
   },
   "resources/js/Leads.jsx": {
-    "file": "assets/Leads-DpreWpQ7.js",
+    "file": "assets/Leads-G87bDqps.js",
     "name": "Leads",
     "src": "resources/js/Leads.jsx",
     "isEntry": true,
@@ -718,7 +721,7 @@
       "_StatusesRest-CfC3rnaB.js",
       "_TippyButton-BSHTHaqk.js",
       "_ArrayJoin-2k6ba35P.js",
-      "_socials-DxbJIEf3.js",
+      "_proxy-CkHFezt1.js",
       "_wa2html-BTRF3k34.js",
       "_Logout-BIaHUvkF.js",
       "_index-1UBeAoKp.js",

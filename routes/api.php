@@ -177,6 +177,7 @@ Route::middleware('auth')->group(function () {
     // Campaigns routes
     Route::post('/campaigns', [CampaignController::class, 'save']);
     Route::post('/campaigns/paginate', [CampaignController::class, 'paginate']);
+    Route::post('/campaigns/sync-meta', [CampaignController::class, 'syncMetaMetrics']);
     Route::patch('/campaigns/status', [CampaignController::class, 'status']);
     Route::delete('/campaigns/{id}', [CampaignController::class, 'delete']);
 

@@ -22,7 +22,10 @@ class Campaign extends Model
         'notes',
         'status',
         'business_id',
-        'protected'
+        'protected',
+        'spend',
+        'impressions',
+        'clicks'
     ];
 
     protected $casts = [
@@ -33,5 +36,10 @@ class Campaign extends Model
     public function adSets()
     {
         return $this->hasMany(AdSet::class);
+    }
+
+    public function clients()
+    {
+        return $this->hasMany(Client::class, 'campaign_id', 'id');
     }
 }

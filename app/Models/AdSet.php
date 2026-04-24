@@ -18,7 +18,8 @@ class AdSet extends Model
         'meta_id',
         'name',
         'status',
-        'business_id'
+        'business_id',
+        'spend'
     ];
 
     public function campaign()

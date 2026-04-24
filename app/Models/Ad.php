@@ -18,7 +18,11 @@ class Ad extends Model
         'meta_id',
         'name',
         'status',
-        'business_id'
+        'business_id',
+        'spend',
+        'preview_image_url',
+        'form_name',
+        'body_text'
     ];
 
     public function adSet()
