@@ -217,16 +217,22 @@ class MetaController extends Controller
                     $fieldData[$field['name']] = $field['values'][0] ?? null;
                 }
 
-                // Check if client already exists
+                $fullName = $fieldData['full_name'] ?? $fieldData['nombre_completo'] ?? $fieldData['nombre'] ?? 'Sin nombre';
+                $phone = Text::keep($fieldData['phone_number'] ?? $fieldData['telefono'] ?? $fieldData['movil'] ?? '', '0123456789');
+                $email = $fieldData['email'] ?? $fieldData['correo'] ?? null;
+
+                // Check if client already exists (By Phone or Email, since lead_id is unique per form)
                 $clientJpa = Client::query()
-                    ->where('integration_id', $integrationJpa->id)
-                    ->where('integration_user_id', $leadData['id'] ?? $leadgenId)
                     ->where('business_id', $businessJpa->id)
                     ->where('status', true)
+                    ->where(function($q) use ($phone, $email) {
+                        if ($phone) $q->where('contact_phone', $phone);
+                        if ($email) $q->orWhere('contact_email', $email);
+                    })
                     ->first();
 
-                if ($clientJpa) {
-                    Log::info('Lead already exists, skipping', ['lead_id' => $leadData['id'] ?? $leadgenId]);
+                if ($clientJpa && $clientJpa->campaign_id) {
+                    Log::info('Lead already exists and has a campaign, skipping', ['client_id' => $clientJpa->id]);
                     return;
                 }
 
@@ -279,32 +285,48 @@ class MetaController extends Controller
                 $phone = $fieldData['phone_number'] ?? $fieldData['telefono'] ?? $fieldData['movil'] ?? '';
                 $email = $fieldData['email'] ?? $fieldData['correo'] ?? null;
 
-                // Create new client
-                $clientJpa = Client::create([
-                    'integration_id' => $integrationJpa->id,
-                    'integration_user_id' => $leadData['id'] ?? $leadgenId,
-                    'business_id' => $businessJpa->id,
-                    'name' => $fullName,
-                    'contact_name' => $fullName,
-                    'contact_phone' => Text::keep($phone, '0123456789'),
-                    'contact_email' => $email,
-                    'message' => 'Sin mensaje',
-                    'source' => 'Meta',
-                    'date' => Trace::getDate('date'),
-                    'time' => Trace::getDate('time'),
-                    'ip' => $request->ip(),
-                    'status_id' => Setting::get('default-lead-status', $businessJpa->id),
-                    'manage_status_id' => Setting::get('default-manage-lead-status', $businessJpa->id),
-                    'origin' => $originName,
-                    'lead_origin' => $originName,
-                    'triggered_by' => "Formulario {$originName}",
-                    'campaign_id' => $campaignJpa->id,
-                    'adset_name' => $leadData['adset_name'] ?? null,
-                    'ad_name' => $leadData['ad_name'] ?? null,
-                    'status' => true,
-                    'complete_registration' => true,
-                    'source_channel' => "{$originName} Form"
-                ]);
+                if ($clientJpa) {
+                    // Actualizar atribución para lead existente sin campaña
+                    $clientJpa->update([
+                        'campaign_id' => $campaignJpa->id,
+                        'adset_name' => $adSetJpa->name,
+                        'ad_name' => $adIdClean,
+                        'source' => 'Meta',
+                        'origin' => $originName,
+                        'lead_origin' => $originName,
+                        'triggered_by' => "Formulario {$originName}",
+                        'source_channel' => "{$originName} Form"
+                    ]);
+                    Log::info('Existing lead updated via Form', ['client_id' => $clientJpa->id]);
+                } else {
+                    // Create new client
+                    $clientJpa = Client::create([
+                        'integration_id' => $integrationJpa->id,
+                        'integration_user_id' => $leadData['id'] ?? $leadgenId,
+                        'business_id' => $businessJpa->id,
+                        'name' => $fullName,
+                        'contact_name' => $fullName,
+                        'contact_phone' => Text::keep($phone, '0123456789'),
+                        'contact_email' => $email,
+                        'message' => 'Sin mensaje',
+                        'source' => 'Meta',
+                        'date' => Trace::getDate('date'),
+                        'time' => Trace::getDate('time'),
+                        'ip' => $request->ip(),
+                        'status_id' => Setting::get('default-lead-status', $businessJpa->id),
+                        'manage_status_id' => Setting::get('default-manage-lead-status', $businessJpa->id),
+                        'origin' => $originName,
+                        'lead_origin' => $originName,
+                        'triggered_by' => "Formulario {$originName}",
+                        'campaign_id' => $campaignJpa->id,
+                        'adset_name' => $adSetJpa->name,
+                        'ad_name' => $adIdClean,
+                        'status' => true,
+                        'complete_registration' => true,
+                        'source_channel' => "{$originName} Form"
+                    ]);
+                    Log::info('New lead created from Form', ['client_id' => $clientJpa->id]);
+                }
 
                 // Build form answers note, ignoring full_name, phone_number and email
                 $formString = "<b>Formulario {$originName} Forms</b><br>";
@@ -447,19 +469,21 @@ class MetaController extends Controller
             // Si el cliente existe, ya no hacemos "return" prematuro aquí, 
             // permitiendo que el sistema actualice su integration_id al nuevo canal (WhatsApp)
 
+            $hasApikey = Setting::get('gemini-api-key', $businessJpa->id);
+
             $preClient = [
                 'message' => $messaging['message']['text'] ?? 'Sin mensaje',
                 'contact_name' => $profileData['fullname'],
                 'contact_phone' => $origin == 'whatsapp' ? $profileData['id'] : null,
                 'name' => $profileData['fullname'],
-                'source' => 'Externo',
+                'source' => 'Organico',
                 'date' => Trace::getDate('date'),
                 'time' => Trace::getDate('time'),
                 'ip' => $request->ip(),
                 'status_id' => Setting::get('default-lead-status', $businessJpa->id),
                 'manage_status_id' => Setting::get('default-manage-lead-status', $businessJpa->id),
                 'origin' => Text::toTitleCase($origin),
-                'triggered_by' => 'Gemini AI',
+                'triggered_by' => 'Whatsapp API',
                 'status' => true,
                 'complete_registration' => false,
             ];
@@ -508,8 +532,9 @@ class MetaController extends Controller
                 $preClient['campaign_id'] = $campaignJpa->id;
                 $preClient['adset_name'] = $referralData['adset']['name'] ?? null;
                 $preClient['ad_name'] = $referralData['name'] ?? null;
-                $preClient['triggered_by'] = $referralData['campaign']['name'] ?? 'Click to WhatsApp Ad';
+                $preClient['triggered_by'] = 'Click to WhatsApp';
                 $preClient['source'] = 'Meta';
+                
                 // Detectar plataforma (FB o IG) desde la URL de referral
                 $platform = 'Facebook';
                 $sourceUrl = $referral['source_url'] ?? '';
@@ -533,12 +558,27 @@ class MetaController extends Controller
             }
 
             if ($alreadyExists) {
-                // Actualizar cliente existente con los nuevos datos de integración (ej. pasó de Form a WhatsApp)
-                $alreadyExists->update(array_merge([
+                // Actualizar cliente existente protegiendo su origen original
+                $updateData = [
                     'integration_id' => $integrationJpa->id,
                     'integration_user_id' => $profileData['id'],
                     'status' => true
-                ], $preClient));
+                ];
+
+                // Solo si el cliente actual no tiene una campaña y ahora nos escribe DESDE un anuncio (referral),
+                // permitimos actualizar la atribución. Si ya tenía una campaña, respetamos la primera.
+                if (!$alreadyExists->campaign_id && isset($preClient['campaign_id'])) {
+                    $updateData['campaign_id'] = $preClient['campaign_id'];
+                    $updateData['adset_name'] = $preClient['adset_name'];
+                    $updateData['ad_name'] = $preClient['ad_name'];
+                    $updateData['triggered_by'] = $preClient['triggered_by'];
+                    $updateData['source'] = $preClient['source'];
+                    $updateData['origin'] = $preClient['origin'];
+                    $updateData['lead_origin'] = $preClient['lead_origin'];
+                    $updateData['source_channel'] = $preClient['source_channel'];
+                }
+
+                $alreadyExists->update($updateData);
                 $clientJpa = $alreadyExists;
                 Log::info('Lead omnicanal actualizado exitosamente', ['client_id' => $clientJpa->id, 'phone' => $profileData['id']]);
             } else {
@@ -689,10 +729,10 @@ class MetaController extends Controller
                 $adAccountsRes = new Fetch("{$facebookGraphUrl}/me/adaccounts?fields=id,name,account_status&limit=50", [
                     'headers' => ['Authorization' => 'Bearer ' . $discoveryToken]
                 ]);
-                $adAccountsData = $adAccountsRes->json();
+                $adAccountsData = $adAccountsRes->ok ? $adAccountsRes->json() : [];
 
-                if (isset($adAccountsData['error'])) {
-                    throw new Exception('Error obteniendo cuentas publicitarias: ' . $adAccountsData['error']['message']);
+                if (!$adAccountsRes->ok || isset($adAccountsData['error'])) {
+                    throw new Exception('Error obteniendo cuentas publicitarias: ' . ($adAccountsData['error']['message'] ?? 'Respuesta de red inválida'));
                 }
 
                 $adAccounts = $adAccountsData['data'] ?? [];
@@ -717,12 +757,12 @@ class MetaController extends Controller
                     ]),
                     ['headers' => ['Authorization' => 'Bearer ' . $campaignToken]]
                 );
-                $campaignsData = $campaignsRes->json();
+                $campaignsData = $campaignsRes->ok ? $campaignsRes->json() : [];
 
-                if (isset($campaignsData['error'])) {
+                if (!$campaignsRes->ok || isset($campaignsData['error'])) {
                     Log::error('Meta rechazó la consulta de campañas', [
                         'account' => $adAccountId,
-                        'message' => $campaignsData['error']['message']
+                        'message' => $campaignsData['error']['message'] ?? 'Error de conexión'
                     ]);
                     continue;
                 }
@@ -1315,6 +1355,7 @@ class MetaController extends Controller
                     $prompt2save = JSON::stringify($body, true) . Text::lineBreak(2) . "Output: " . $answer;
                     self::sendWithOrigin($businessJpa, $clientJpa, $answer, $prompt2save, $origin);
                 }
+
                 break;
             }
         } catch (\Throwable $th) {

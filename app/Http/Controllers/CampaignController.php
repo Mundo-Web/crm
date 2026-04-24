@@ -25,7 +25,7 @@ class CampaignController extends BasicController
         
         while ($insightsUrl) {
             $restInsights = new \SoDe\Extend\Fetch($insightsUrl);
-            $insightsData = $restInsights->json() ?? [];
+            $insightsData = $restInsights->ok ? $restInsights->json() : [];
             if (isset($insightsData['error'])) break;
             
             if (isset($insightsData['data'])) {
@@ -48,7 +48,7 @@ class CampaignController extends BasicController
         
         while ($creativesUrl) {
             $restCreatives = new \SoDe\Extend\Fetch($creativesUrl);
-            $creativesData = $restCreatives->json() ?? [];
+            $creativesData = $restCreatives->ok ? $restCreatives->json() : [];
             if (isset($creativesData['error'])) {
                 \Illuminate\Support\Facades\Log::error('Meta Creatives API Error', $creativesData['error']);
                 break;
@@ -106,7 +106,7 @@ class CampaignController extends BasicController
         $formNames = [];
         foreach ($formIdsToFetch as $formId) {
             $formRes = new \SoDe\Extend\Fetch("{$url}/{$formId}?fields=name&access_token={$token}");
-            $formData = $formRes->json() ?? [];
+            $formData = $formRes->ok ? $formRes->json() : [];
             if (!isset($formData['error']) && isset($formData['name'])) {
                 $formNames[$formId] = $formData['name'];
             }

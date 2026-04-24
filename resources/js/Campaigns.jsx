@@ -8,11 +8,13 @@ import InputFormGroup from './components/form/InputFormGroup.jsx'
 import TextareaFormGroup from './components/form/TextareaFormGroup.jsx'
 import SelectFormGroup from './components/form/SelectFormGroup.jsx'
 import CampaignsRest from './actions/CampaignsRest.js'
+import IntegrationsRest from './actions/IntegrationsRest.js'
 import Swal from 'sweetalert2'
 import sourceOptions from './Reutilizables/Campaigns/socials.json'
 import { motion, AnimatePresence } from 'framer-motion'
 
 const campaignsRest = new CampaignsRest();
+const integrationsRest = new IntegrationsRest();
 
 const AdsList = ({ adSetId, campaignId }) => {
   const [ads, setAds] = useState([]);
@@ -309,6 +311,7 @@ const Campaigns = ({ can }) => {
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [isEditing, setIsEditing] = useState(false)
+  const [hasFormsIntegration, setHasFormsIntegration] = useState(false)
 
   const fetchCampaigns = async () => {
     setLoading(true)
@@ -319,8 +322,16 @@ const Campaigns = ({ can }) => {
     setLoading(false)
   }
 
+  const checkIntegrations = async () => {
+    const result = await integrationsRest.paginate({ take: 100 })
+    const data = result?.data || []
+    const formsIntegration = data.find(i => (i.service === 'forms' || i.service === 'whatsapp') && i.meta_access_token)
+    setHasFormsIntegration(!!formsIntegration)
+  }
+
   useEffect(() => {
     fetchCampaigns()
+    checkIntegrations()
   }, [])
 
   useEffect(() => {
@@ -401,13 +412,13 @@ const Campaigns = ({ can }) => {
           <p className='text-muted mb-0'>Organiza y sincroniza tus anuncios de Meta en tiempo real.</p>
         </div>
         <div className='d-flex gap-2'>
-          {can('campaigns', 'root', 'all', 'sync') && (
+          {can('campaigns', 'root', 'all', 'sync') && hasFormsIntegration && (
             <button className='btn btn-info rounded-pill px-3 shadow-sm d-flex align-items-center gap-2' onClick={onSyncMetaClicked}>
               <i className='fab fa-facebook-messenger'></i> Obtener Jerarquía Meta
             </button>
           )}
           {can('campaigns', 'all', 'create') && (
-            <button className='btn btn-primary rounded-pill px-3 shadow-sm d-flex align-items-center gap-2' onClick={() => onModalOpen()}>
+            <button hidden className='btn btn-primary rounded-pill px-3 shadow-sm d-flex align-items-center gap-2' onClick={() => onModalOpen()}>
               <i className='fa fa-plus'></i> Nueva Campaña
             </button>
           )}

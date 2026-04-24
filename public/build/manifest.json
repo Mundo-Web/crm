@@ -121,6 +121,14 @@
       "_CreateReactScript-CYIF4B79.js"
     ]
   },
+  "_IntegrationsRest-C5ZUquO7.js": {
+    "file": "assets/IntegrationsRest-C5ZUquO7.js",
+    "name": "IntegrationsRest",
+    "imports": [
+      "_CreateReactScript-CYIF4B79.js",
+      "_Adminto-BMWwRDEk.js"
+    ]
+  },
   "_JSEncrypt-D3I3x59l.js": {
     "file": "assets/JSEncrypt-D3I3x59l.js",
     "name": "JSEncrypt"
@@ -158,9 +166,9 @@
       "_CreateReactScript-CYIF4B79.js"
     ]
   },
-  "_PipelineChart-!~{01b}~.js": {
+  "_PipelineChart-!~{01c}~.js": {
     "file": "PipelineChart.css",
-    "src": "_PipelineChart-!~{01b}~.js"
+    "src": "_PipelineChart-!~{01c}~.js"
   },
   "_PipelineChart-BZfcoA9-.js": {
     "file": "assets/PipelineChart-BZfcoA9-.js",
@@ -198,9 +206,9 @@
       "_CreateReactScript-CYIF4B79.js"
     ]
   },
-  "_RepositoryDropzone-!~{019}~.js": {
+  "_RepositoryDropzone-!~{01a}~.js": {
     "file": "RepositoryDropzone.css",
-    "src": "_RepositoryDropzone-!~{019}~.js"
+    "src": "_RepositoryDropzone-!~{01a}~.js"
   },
   "_RepositoryDropzone-D7OqwOiw.js": {
     "file": "assets/RepositoryDropzone-D7OqwOiw.js",
@@ -286,9 +294,9 @@
       "_Adminto-BMWwRDEk.js"
     ]
   },
-  "_coming-soon-!~{01l}~.js": {
+  "_coming-soon-!~{01m}~.js": {
     "file": "coming-soon.css",
-    "src": "_coming-soon-!~{01l}~.js"
+    "src": "_coming-soon-!~{01m}~.js"
   },
   "_default-!~{00V}~.js": {
     "file": "default.css",
@@ -494,7 +502,7 @@
     ]
   },
   "resources/js/Campaigns.jsx": {
-    "file": "assets/Campaigns-DJrWjCWD.js",
+    "file": "assets/Campaigns-i8Fs0WzU.js",
     "name": "Campaigns",
     "src": "resources/js/Campaigns.jsx",
     "isEntry": true,
@@ -505,6 +513,7 @@
       "_InputFormGroup-Bgo_NIpG.js",
       "_TextareaFormGroup-CU21HcAt.js",
       "_SelectFormGroup-DUJzXShn.js",
+      "_IntegrationsRest-C5ZUquO7.js",
       "_sweetalert2.esm.all-C3pNMji3.js",
       "_proxy-CkHFezt1.js",
       "_Logout-BIaHUvkF.js"
@@ -1180,7 +1189,7 @@
     ]
   },
   "resources/js/Webhooks.jsx": {
-    "file": "assets/Webhooks-B1oRZ94S.js",
+    "file": "assets/Webhooks--flLkJV1.js",
     "name": "Webhooks",
     "src": "resources/js/Webhooks.jsx",
     "isEntry": true,
@@ -1188,6 +1197,7 @@
       "_CreateReactScript-CYIF4B79.js",
       "_Adminto-BMWwRDEk.js",
       "_sweetalert2.esm.all-C3pNMji3.js",
+      "_IntegrationsRest-C5ZUquO7.js",
       "_Modal-B-D9gPtV.js",
       "_Logout-BIaHUvkF.js"
     ]
