@@ -10,6 +10,20 @@ class CampaignController extends BasicController
     public $model = Campaign::class;
     public $reactView = 'Campaigns';
 
+    public function setReactViewProperties(Request $request)
+    {
+        $businessId = \Illuminate\Support\Facades\Auth::user()->business_id;
+        $hasFormsIntegration = \App\Models\Integration::where('business_id', $businessId)
+            ->where('meta_service', 'forms')
+            ->whereNotNull('meta_access_token')
+            ->where('status', true)
+            ->exists();
+
+        return [
+            'hasFormsIntegration' => $hasFormsIntegration
+        ];
+    }
+
     public function setPaginationInstance(Request $request, string $model)
     {
         return $model::where('status', true)->withCount('clients');
