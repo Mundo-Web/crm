@@ -290,7 +290,7 @@ class MetaController extends Controller
                     $clientJpa->update([
                         'campaign_id' => $campaignJpa->id,
                         'adset_name' => $adSetJpa->name,
-                        'ad_name' => $adIdClean,
+                        'ad_name' => $leadData['ad_name'] ?? $adIdClean,
                         'source' => 'Meta',
                         'origin' => $originName,
                         'lead_origin' => $originName,
@@ -320,7 +320,7 @@ class MetaController extends Controller
                         'triggered_by' => "Formulario {$originName}",
                         'campaign_id' => $campaignJpa->id,
                         'adset_name' => $adSetJpa->name,
-                        'ad_name' => $adIdClean,
+                        'ad_name' => $leadData['ad_name'] ?? $adIdClean,
                         'status' => true,
                         'complete_registration' => true,
                         'source_channel' => "{$originName} Form"
