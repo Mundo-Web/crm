@@ -328,17 +328,17 @@ class WhatsAppController extends Controller
             if ($request->hasFile('audio')) {
                 $file = $request->file('audio');
                 $filename = 'audio-' . Crypto::short() . '.mp3';
-                $file->storeAs('images/whatsapp', $filename, 'public');
+                $file->storeAs('images/whatsapp', $filename, 'local');
                 $message = '/audio:' . $filename;
             } else if ($request->hasFile('image')) {
                 $file = $request->file('image');
                 $filename = 'image-' . Crypto::short() . '.jpeg';
-                $file->storeAs('images/whatsapp', $filename, 'public');
+                $file->storeAs('images/whatsapp', $filename, 'local');
                 $message = trim('/image:' . $filename . Text::lineBreak() . $message);
             } else if ($request->hasFile('document')) {
                 $file = $request->file('document');
                 $filename = 'document-' . Crypto::short() . '.' . $file->getClientOriginalExtension();
-                $file->storeAs('images/whatsapp', $filename, 'public');
+                $file->storeAs('images/whatsapp', $filename, 'local');
                 $message = trim('/document:' . $filename . Text::lineBreak() . $message);
             }
 

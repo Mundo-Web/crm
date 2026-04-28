@@ -31,6 +31,7 @@ use App\Http\Controllers\TaskController;
 use App\Http\Controllers\TypeController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ViewController;
+use App\Http\Controllers\UtilController;
 use App\Http\Controllers\WebhookController;
 use App\Http\Controllers\WelcomeController;
 use Illuminate\Http\Request;
@@ -60,6 +61,8 @@ Route::get(
         // ])
         : redirect('//' . env('APP_DOMAIN') . '/join')
 )->name('login');
+
+Route::get('/storage/images/whatsapp/{filename}', [UtilController::class, 'whatsappMedia']);
 
 Route::middleware('auth')->group(function () {
     Route::get('/join', [AuthController::class, 'joinView'])->name('Join.jsx');

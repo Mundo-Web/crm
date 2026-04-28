@@ -9,6 +9,7 @@ use App\Models\Type;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Concerns\Importable;
 use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Support\Facades\Storage;
 use SoDe\Extend\File;
 use SoDe\Extend\Response;
 use SoDe\Extend\Text;
@@ -106,5 +107,19 @@ class UtilController
       $string = str_replace('{{' . $key . '}}', $value, $string);
     }
     return $string;
+  }
+
+  public function whatsappMedia(string $filename)
+  {
+    $path = "images/whatsapp/{$filename}";
+    if (!Storage::exists($path)) abort(404);
+
+    $content = Storage::get($path);
+    $mimeType = Storage::mimeType($path);
+
+    return response($content, 200, [
+      'Content-Type' => $mimeType,
+      'Cache-Control' => 'public, max-age=86400',
+    ]);
   }
 }

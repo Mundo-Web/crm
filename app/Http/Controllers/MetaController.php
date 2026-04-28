@@ -1540,9 +1540,10 @@ class MetaController extends Controller
             $cleanMimeType = explode(';', $mimeType)[0];
             $extension = File::getExtention($cleanMimeType);
             if ($extension == 'sode') $extension = 'bin';
+            if ($extension == 'jpe') $extension = 'jpeg';
 
-            // Guardar en /storage/app/public/images/whatsapp/
-            $storagePath = storage_path('app/public/images/whatsapp');
+            // Guardar en /storage/app/images/whatsapp/
+            $storagePath = storage_path('app/images/whatsapp');
             if (!is_dir($storagePath)) mkdir($storagePath, 0755, true);
 
             $savedFilename = $type . '-' . Crypto::short() . '.' . $extension;
