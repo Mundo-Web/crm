@@ -19,6 +19,7 @@ use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use SoDe\Extend\Crypto;
 use SoDe\Extend\Fetch;
 use SoDe\Extend\File;
 use SoDe\Extend\JSON;
@@ -363,12 +364,67 @@ class MetaController extends Controller
                 $message = $entry['changes'][0]['value']['messages'][0];
                 $inOut = 'in';
                 $waId = $message['from'];
-                $messageContent = $message['text']['body'] ?? '';
+                $messageId = $message['id'] ?? null;
+                $messageType = $message['type'] ?? 'text';
+                $messageContent = '';
+                $mask = null;
+
+                if ($messageType == 'text') {
+                    $messageContent = $message['text']['body'] ?? '';
+                } else {
+                    $mediaId = $message[$messageType]['id'] ?? null;
+                    $mask = $message[$messageType]['filename'] ?? null;
+                    $caption = $message[$messageType]['caption'] ?? '';
+
+                    if ($mediaId && $integrationJpa) {
+                        $filename = $this->getAndSaveMediaFromMeta($integrationJpa, $mediaId, $messageType);
+                        if ($filename) {
+                            switch ($messageType) {
+                                case 'image':
+                                case 'video':
+                                    $messageContent = trim("/image:{$filename}\n{$caption}");
+                                    break;
+                                case 'audio':
+                                case 'voice':
+                                    $messageContent = "/audio:{$filename}";
+                                    break;
+                                case 'document':
+                                    $messageContent = trim("/document:{$filename}\n{$caption}");
+                                    break;
+                                default:
+                                    $messageContent = "[Media: {$messageType}]";
+                                    break;
+                            }
+                        } else {
+                            $messageContent = "[Error al descargar media: {$messageType}]";
+                        }
+                    } else {
+                        $messageContent = "[Media recibida: {$messageType}]";
+                    }
+                }
                 $referral = $message['referral'] ?? null;
             } else {
                 $inOut = $entry['id'] == $messaging['sender']['id'] ? 'out' : 'in';
                 $waId = $inOut == 'in' ? $messaging['sender']['id'] : $messaging['recipient']['id'];
+                $messageId = $messaging['message']['mid'] ?? null;
                 $messageContent = $messaging['message']['text'] ?? '';
+                $mask = null;
+
+                // Handle Messenger/Instagram attachments if present
+                if (isset($messaging['message']['attachments'][0])) {
+                    $attachment = $messaging['message']['attachments'][0];
+                    $type = $attachment['type'];
+                    $url = $attachment['payload']['url'] ?? null;
+                    if ($url) {
+                        // For Messenger/Instagram, we could also download and save, 
+                        // but for now let's just prefix it if it's an image.
+                        if ($type == 'image') {
+                            $messageContent = "/attachment:{$url}\n" . ($messageContent ?: 'Foto');
+                        } else {
+                            $messageContent = "/attachment:{$url}\n" . ($messageContent ?: 'Archivo');
+                        }
+                    }
+                }
             }
 
             Log::info('Identifying event', [
@@ -381,6 +437,8 @@ class MetaController extends Controller
                 'wa_id' => $waId,
                 'role' => $inOut == 'in' ? 'Human' : 'AI',
                 'message' => $messageContent,
+                'mask' => $mask,
+                'message_id' => $messageId,
                 'microtime' => (int) (microtime(true) * 1_000_000),
                 'business_id' => $businessJpa->id
             ]);
@@ -1441,6 +1499,60 @@ class MetaController extends Controller
             return $result;
         } catch (\Exception $e) {
             return [];
+        }
+    }
+
+    public function getAndSaveMediaFromMeta($integrationJpa, $mediaId, $type)
+    {
+        try {
+            $accessToken = $integrationJpa->meta_access_token;
+            if (!$accessToken) throw new Exception('Token de Meta no configurado');
+
+            $facebookGraphUrl = env('FACEBOOK_GRAPH_URL');
+
+            // 1. Obtener la URL de descarga
+            $infoRes = new Fetch("{$facebookGraphUrl}/{$mediaId}", [
+                'headers' => [
+                    'Authorization' => "Bearer {$accessToken}"
+                ]
+            ]);
+
+            if (!$infoRes->ok) throw new Exception('Error al obtener info del media: ' . $infoRes->text());
+
+            $info = $infoRes->json();
+            $downloadUrl = $info['url'] ?? null;
+            $mimeType = $info['mime_type'] ?? '';
+
+            if (!$downloadUrl) throw new Exception('No se encontró URL de descarga');
+
+            // 2. Descargar el archivo
+            $mediaRes = new Fetch($downloadUrl, [
+                'headers' => [
+                    'Authorization' => "Bearer {$accessToken}"
+                ]
+            ]);
+
+            if (!$mediaRes->ok) throw new Exception('Error al descargar el archivo: ' . $mediaRes->text());
+
+            $fileContent = $mediaRes->blob();
+
+            // 3. Determinar extensión
+            $cleanMimeType = explode(';', $mimeType)[0];
+            $extension = File::getExtention($cleanMimeType);
+            if ($extension == 'sode') $extension = 'bin';
+
+            // Guardar en /storage/app/public/images/whatsapp/
+            $storagePath = storage_path('app/public/images/whatsapp');
+            if (!is_dir($storagePath)) mkdir($storagePath, 0755, true);
+
+            $savedFilename = $type . '-' . Crypto::short() . '.' . $extension;
+            $fullPath = $storagePath . '/' . $savedFilename;
+            file_put_contents($fullPath, $fileContent);
+
+            return $savedFilename;
+        } catch (\Throwable $th) {
+            Log::error('Error in MetaController::getAndSaveMediaFromMeta: ' . $th->getMessage());
+            return null;
         }
     }
 }

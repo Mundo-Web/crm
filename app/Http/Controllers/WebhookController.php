@@ -64,8 +64,8 @@ class WebhookController extends BasicController
             $fileContent = base64_decode($base64);
             if ($fileContent === false) throw new Exception('Error al decodificar base64');
 
-            // Guardar en /storage/app/images/whatsapp/
-            $storagePath = storage_path('app/images/whatsapp');
+            // Guardar en /storage/app/public/images/whatsapp/
+            $storagePath = storage_path('app/public/images/whatsapp');
             if (!is_dir($storagePath)) mkdir($storagePath, 0755, true);
 
             $savedFilename = $type . '-' . $id . '.' . $extension;
