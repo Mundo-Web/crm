@@ -17,14 +17,13 @@ const DetailLeadModal = ({
     defaultClientStatus,
     defaultMessages = [],
     signs = [],
-    projectTypes = []
+    projectTypes = [],
+    products = []
 }) => {
-    if (!lead) return null;
-
     return (
         <Modal
             modalRef={modalRef}
-            title="Detalles del lead"
+            title={lead?.contact_name || "Detalles del lead"}
             btnSubmitText="Guardar"
             size="full-width"
             bodyClass="p-3 bg-light"
@@ -33,22 +32,25 @@ const DetailLeadModal = ({
             onSubmit={(e) => e.preventDefault()}
             zIndex={1042}
         >
-            <LeadDetailContent
-                lead={lead}
-                statuses={statuses}
-                manageStatuses={manageStatuses}
-                noteTypes={noteTypes}
-                users={users}
-                processes={processes}
-                session={session}
-                onLeadUpdate={onLeadUpdate}
-                onOpenEditModal={onOpenEditModal}
-                convertedLeadStatus={convertedLeadStatus}
-                defaultClientStatus={defaultClientStatus}
-                defaultMessages={defaultMessages}
-                signs={signs}
-                projectTypes={projectTypes}
-            />
+            {lead && (
+                <LeadDetailContent
+                    lead={lead}
+                    statuses={statuses}
+                    manageStatuses={manageStatuses}
+                    noteTypes={noteTypes}
+                    users={users}
+                    processes={processes}
+                    session={session}
+                    onLeadUpdate={onLeadUpdate}
+                    onOpenEditModal={onOpenEditModal}
+                    convertedLeadStatus={convertedLeadStatus}
+                    defaultClientStatus={defaultClientStatus}
+                    defaultMessages={defaultMessages}
+                    signs={signs}
+                    projectTypes={projectTypes}
+                    products={products}
+                />
+            )}
         </Modal>
     );
 };

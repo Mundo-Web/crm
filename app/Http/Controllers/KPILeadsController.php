@@ -320,6 +320,21 @@ class KPILeadsController extends BasicController
                 // ->limit(5)
                 ->get();
 
+            $clientsList = (clone $clientsQuery)
+                ->with(['products'])
+                ->get();
+
+            $usersRanking = (clone $clientsQuery)
+                ->leftJoin('client_has_products', 'client_has_products.client_id', 'clients.id')
+                ->select('assigned_to', DB::raw('COUNT(DISTINCT clients.id) as count'), DB::raw('SUM(client_has_products.price) as total_amount'))
+                ->whereNotNull('assigned_to')
+                ->groupBy('assigned_to')
+                ->with(['assigned' => function ($query) {
+                    $query->select('id', 'name', 'lastname', 'relative_id');
+                }])
+                ->orderBy('count', 'desc')
+                ->get();
+
             $response->summary = [
                 'grouped' => $grouped,
                 'totalCount' => $totalCount,
@@ -342,6 +357,8 @@ class KPILeadsController extends BasicController
                 'archivedLabelsCount' => $archivedLabelsCount,
                 'trueManagingCount' => $trueManagingCount,
                 'archivedBreakdown' => $archivedBreakdown,
+                'clientsList' => $clientsList,
+                'usersRanking' => $usersRanking
             ];
             $response->data = $groupedByManageStatus;
         });

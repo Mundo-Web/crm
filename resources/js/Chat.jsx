@@ -27,7 +27,7 @@ const tasksRest = new TasksRest();
 const leadsRest = new LeadsRest()
 leadsRest.paginateSufix = null
 
-const Chat = ({ users = [], defaultMessages = [], activeLeadId: activeLeadIdDB, statuses = [], manageStatuses = [], noteTypes = [], processes = [], session = {}, signs = [], projectTypes = [], convertedLeadStatus, defaultClientStatus, ...properties }) => {
+const Chat = ({ users = [], defaultMessages = [], activeLeadId: activeLeadIdDB, statuses = [], manageStatuses = [], noteTypes = [], processes = [], session = {}, signs = [], projectTypes = [], products = [], convertedLeadStatus, defaultClientStatus, ...properties }) => {
   const settings = Local.get('adminto_settings') ?? {}
   const [theme, setTheme] = useState(settings.theme ?? 'light');
 
@@ -504,6 +504,7 @@ const Chat = ({ users = [], defaultMessages = [], activeLeadId: activeLeadIdDB, 
         projectTypes={projectTypes}
         convertedLeadStatus={convertedLeadStatus}
         defaultClientStatus={defaultClientStatus}
+        products={products}
       />
 
       <Modal

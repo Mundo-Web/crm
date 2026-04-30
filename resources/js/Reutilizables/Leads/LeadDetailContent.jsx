@@ -95,7 +95,7 @@ const LeadDetailContent = ({
         });
     }, [tokenUUID]);
 
-    useEffect(() => {
+    const getMails = () => {
         if (!(hasGSToken && leadLoaded?.contact_email)) return;
         setLoadingMails(true);
         setMails([]);
@@ -103,6 +103,10 @@ const LeadDetailContent = ({
             setMails(data ?? []);
             setLoadingMails(false);
         });
+    }
+
+    useEffect(() => {
+        getMails();
     }, [hasGSToken, leadLoaded]);
 
     useEffect(() => {
@@ -1047,6 +1051,7 @@ const LeadDetailContent = ({
                                                         col="col-lg-4 col-md-12"
                                                         required
                                                         dropdownParent={`#note-type-${type.id}`}
+                                                        defaultValue="Por hacer"
                                                     >
                                                         <option value="Llamada">
                                                             Llamada
@@ -1054,10 +1059,7 @@ const LeadDetailContent = ({
                                                         <option value="Correo">
                                                             Correo
                                                         </option>
-                                                        <option
-                                                            value="Por hacer"
-                                                            selected
-                                                        >
+                                                        <option value="Por hacer">
                                                             Por hacer
                                                         </option>
                                                     </SelectFormGroup>
@@ -1067,14 +1069,12 @@ const LeadDetailContent = ({
                                                         col="col-lg-3 col-md-12"
                                                         required
                                                         dropdownParent={`#note-type-${type.id}`}
+                                                        defaultValue="Media"
                                                     >
                                                         <option value="Baja">
                                                             Baja
                                                         </option>
-                                                        <option
-                                                            value="Media"
-                                                            selected
-                                                        >
+                                                        <option value="Media">
                                                             Media
                                                         </option>
                                                         <option value="Alta">

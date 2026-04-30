@@ -113,14 +113,14 @@ const LeadDetails = () => {
                         type.id == 'e20c7891-1ef8-4388-8150-4c1028cc4525' &&
                         <>
                           <InputFormGroup eRef={taskTitleRef} label='Titulo de la tarea' col='col-12' required />
-                          <SelectFormGroup eRef={taskTypeRef} label="Tipo de tarea" col="col-lg-4 col-md-12" required dropdownParent={`#note-type-${type.id}`} minimumResultsForSearch={Infinity} >
+                          <SelectFormGroup eRef={taskTypeRef} label="Tipo de tarea" col="col-lg-4 col-md-12" required dropdownParent={`#note-type-${type.id}`} minimumResultsForSearch={Infinity} defaultValue="Por hacer" >
                             <option value="Llamada">Llamada</option>
                             <option value="Correo">Correo</option>
-                            <option value="Por hacer" selected>Por hacer</option>
+                            <option value="Por hacer">Por hacer</option>
                           </SelectFormGroup>
-                          <SelectFormGroup eRef={taskPriorityRef} label="Prioridad" col="col-lg-3 col-md-12" required dropdownParent={`#note-type-${type.id}`} minimumResultsForSearch={Infinity} >
+                          <SelectFormGroup eRef={taskPriorityRef} label="Prioridad" col="col-lg-3 col-md-12" required dropdownParent={`#note-type-${type.id}`} minimumResultsForSearch={Infinity} defaultValue="Media" >
                             <option value="Baja">Baja</option>
-                            <option value="Media" selected>Media</option>
+                            <option value="Media">Media</option>
                             <option value="Alta">Alta</option>
                             <option value="Urgente">Urgente</option>
                           </SelectFormGroup>

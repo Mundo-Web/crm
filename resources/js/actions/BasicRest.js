@@ -11,22 +11,28 @@ class BasicRest {
   }
 
   paginate = async (params) => {
-    this.controller.abort('Nothing')
-    this.controller = new AbortController()
-    const signal = this.controller.signal
-    const res = await fetch(`/api/${this.path}/paginate${this.paginateSufix ? `/${this.paginateSufix}` : ''}`, {
-      method: 'POST',
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-        'X-Xsrf-Token': decodeURIComponent(Cookies.get('XSRF-TOKEN'))
-      },
-      body: JSON.stringify(params),
-      signal
-    })
-    const raw = await res.text()
-    if (!JSON.parseable(raw)) return null
-    return JSON.parse(raw)
+    try {
+      this.controller.abort('Nothing')
+      this.controller = new AbortController()
+      const signal = this.controller.signal
+      const res = await fetch(`/api/${this.path}/paginate${this.paginateSufix ? `/${this.paginateSufix}` : ''}`, {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'X-Xsrf-Token': decodeURIComponent(Cookies.get('XSRF-TOKEN'))
+        },
+        body: JSON.stringify(params),
+        signal
+      })
+      const raw = await res.text()
+      if (!JSON.parseable(raw)) return null
+      return JSON.parse(raw)
+    } catch (error) {
+      if (error.name === 'AbortError' || error === 'Nothing') return null
+      console.error(error)
+      return null
+    }
   }
 
   save = async (request, showNotification = true) => {
