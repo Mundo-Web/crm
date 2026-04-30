@@ -14,6 +14,80 @@ import SelectFormGroup from "./components/form/SelectFormGroup.jsx";
 
 const statusesRest = new StatusesRest();
 
+const StatusItem = ({ status, onEdit, onDelete }) => {
+    return (
+        <div className="btn-group dropup col-auto">
+            <span
+                type="button"
+                className="btn btn-sm btn-white d-flex gap-2 align-items-center"
+                style={{
+                    cursor: "default",
+                    ...(status.require &&
+                        status.action_required === "product" && {
+                            backgroundColor: `color-mix(in srgb, ${status.color} 20%, transparent)`,
+                        }),
+                }}
+            >
+                <h4 className="my-0">{status.order}</h4>
+                <div className="flex-1">
+                    <div>
+                        <i
+                            className="mdi mdi-circle me-1"
+                            style={{
+                                color: status.color,
+                            }}
+                        ></i>
+                        {status.name}
+                        {status.require && (
+                            <span className="text-danger ms-1">*</span>
+                        )}
+                        <span className="badge rounded-pill bg-secondary ms-1">
+                            {status.children_count}
+                        </span>
+                    </div>
+                    <small
+                        className="text-muted"
+                        style={{
+                            fontSize: "10px",
+                        }}
+                    >
+                        Ult. uso: {status.last_used_at}
+                    </small>
+                </div>
+            </span>
+            <button
+                type="button"
+                className="btn btn-sm btn-white dropdown-toggle"
+                data-bs-toggle="dropdown"
+                aria-haspopup="true"
+                aria-expanded="false"
+            >
+                <i className="mdi mdi-dots-vertical"></i>
+            </button>
+            <div className="dropdown-menu">
+                <span
+                    className="dropdown-item"
+                    style={{
+                        cursor: "pointer",
+                    }}
+                    onClick={() => onEdit(status)}
+                >
+                    Editar
+                </span>
+                <span
+                    className="dropdown-item"
+                    style={{
+                        cursor: "pointer",
+                    }}
+                    onClick={() => onDelete(status.id)}
+                >
+                    Eliminar
+                </span>
+            </div>
+        </div>
+    );
+};
+
 const Statuses = ({ statuses: statusesFromDB, tables }) => {
     const [statuses, setStatuses] = useState(statusesFromDB);
 
@@ -45,7 +119,8 @@ const Statuses = ({ statuses: statusesFromDB, tables }) => {
                 data?.table?.id == "a8367789-666e-4929-aacb-7cbc2fbf74de",
         );
         setShowChildren(
-            data?.table?.id == "e05a43e5-b3a6-46ce-8d1f-381a73498f33",
+            data?.table?.id == "e05a43e5-b3a6-46ce-8d1f-381a73498f33" ||
+                data?.table?.id == "a8367789-666e-4929-aacb-7cbc2fbf74de",
         );
         setPipeline(data?.pipeline ?? false);
         idRef.current.value = data?.id || null;
@@ -255,103 +330,123 @@ const Statuses = ({ statuses: statusesFromDB, tables }) => {
                                         overflowY: "auto",
                                     }}
                                 >
-                                    {statuses
-                                        .filter(
-                                            (status) =>
-                                                status.table_id === table.id,
-                                        )
-                                        .sort((a, b) => a.order - b.order)
-                                        .map((status, index) => (
-                                            <div
-                                                key={index}
-                                                className="btn-group dropup col-auto"
-                                            >
-                                                <span
-                                                    type="button"
-                                                    className="btn btn-sm btn-white d-flex gap-2 align-items-center"
-                                                    style={{
-                                                        cursor: "default",
-                                                        ...(status.require &&
-                                                            status.action_required ===
-                                                                "product" && {
-                                                                backgroundColor: `color-mix(in srgb, ${status.color} 20%, transparent)`,
-                                                            }),
-                                                    }}
-                                                >
-                                                    <h4 className="my-0">
-                                                        {status.order}
-                                                    </h4>
-                                                    <div className="flex-1">
-                                                        <div>
-                                                            <i
-                                                                className="mdi mdi-circle me-1"
-                                                                style={{
-                                                                    color: status.color,
-                                                                }}
-                                                            ></i>
-                                                            {status.name}
-                                                            {status.require && (
-                                                                <span className="text-danger ms-1">
-                                                                    *
-                                                                </span>
-                                                            )}
-                                                            <span className="badge rounded-pill bg-secondary ms-1">
-                                                                {
-                                                                    status.children_count
-                                                                }
-                                                            </span>
-                                                        </div>
-                                                        <small
-                                                            className="text-muted"
-                                                            style={{
-                                                                fontSize:
-                                                                    "10px",
-                                                            }}
+                                    {table.id ==
+                                    "9c27e649-574a-47eb-82af-851c5d425434" ? (
+                                        <div className="w-100">
+                                            {statuses
+                                                .filter(
+                                                    (s) =>
+                                                        s.table_id ==
+                                                            "e05a43e5-b3a6-46ce-8d1f-381a73498f33" ||
+                                                        s.table_id ==
+                                                            "a8367789-666e-4929-aacb-7cbc2fbf74de",
+                                                )
+                                                .sort(
+                                                    (a, b) => a.order - b.order,
+                                                )
+                                                .map((parent) => {
+                                                    const children = statuses.filter(
+                                                        (s) =>
+                                                            s.table_id ==
+                                                                table.id &&
+                                                            parent.children?.includes(
+                                                                s.id,
+                                                            ),
+                                                    );
+                                                    if (children.length == 0)
+                                                        return null;
+                                                    return (
+                                                        <div
+                                                            key={parent.id}
+                                                            className="mb-3"
                                                         >
-                                                            Ult. uso:{" "}
-                                                            {
-                                                                status.last_used_at
+                                                            <h6 className="text-muted border-bottom pb-1 mb-2">
+                                                                <i
+                                                                    className="mdi mdi-circle me-1"
+                                                                    style={{
+                                                                        color: parent.color,
+                                                                    }}
+                                                                ></i>
+                                                                {parent.name} (
+                                                                {
+                                                                    parent
+                                                                        .table
+                                                                        ?.name
+                                                                }
+                                                                )
+                                                            </h6>
+                                                            <div className="d-flex flex-wrap gap-2">
+                                                                {children.map(
+                                                                    (
+                                                                        status,
+                                                                        idx,
+                                                                    ) => (
+                                                                        <StatusItem
+                                                                            key={
+                                                                                idx
+                                                                            }
+                                                                            status={
+                                                                                status
+                                                                            }
+                                                                            onEdit={
+                                                                                onModalOpen
+                                                                            }
+                                                                            onDelete={
+                                                                                onDeleteClicked
+                                                                            }
+                                                                        />
+                                                                    ),
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })}
+                                            {/* Mostrar etiquetas huérfanas */}
+                                            <h6 className="text-muted border-bottom pb-1 mb-2">
+                                                Sin asignar
+                                            </h6>
+                                            <div className="d-flex flex-wrap gap-2">
+                                                {statuses
+                                                    .filter(
+                                                        (s) =>
+                                                            s.table_id ==
+                                                                table.id &&
+                                                            !statuses.some(
+                                                                (p) =>
+                                                                    p.children?.includes(
+                                                                        s.id,
+                                                                    ),
+                                                            ),
+                                                    )
+                                                    .map((status, idx) => (
+                                                        <StatusItem
+                                                            key={idx}
+                                                            status={status}
+                                                            onEdit={onModalOpen}
+                                                            onDelete={
+                                                                onDeleteClicked
                                                             }
-                                                        </small>
-                                                    </div>
-                                                </span>
-                                                <button
-                                                    type="button"
-                                                    className="btn btn-sm btn-white dropdown-toggle"
-                                                    data-bs-toggle="dropdown"
-                                                    aria-haspopup="true"
-                                                    aria-expanded="false"
-                                                >
-                                                    <i className="mdi mdi-dots-vertical"></i>
-                                                </button>
-                                                <div className="dropdown-menu">
-                                                    <span
-                                                        className="dropdown-item"
-                                                        style={{
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() =>
-                                                            onModalOpen(status)
-                                                        }
-                                                    >
-                                                        Editar
-                                                    </span>
-                                                    <span
-                                                        className="dropdown-item"
-                                                        style={{
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() =>
-                                                            onDeleteClicked(
-                                                                status.id,
-                                                            )
-                                                        }
-                                                    >
-                                                        Eliminar
-                                                    </span>
-                                                </div>
+                                                        />
+                                                    ))}
                                             </div>
-                                        ))}
+                                        </div>
+                                    ) : (
+                                        statuses
+                                            .filter(
+                                                (status) =>
+                                                    status.table_id ===
+                                                    table.id,
+                                            )
+                                            .sort((a, b) => a.order - b.order)
+                                            .map((status, index) => (
+                                                <StatusItem
+                                                    key={index}
+                                                    status={status}
+                                                    onEdit={onModalOpen}
+                                                    onDelete={onDeleteClicked}
+                                                />
+                                            ))
+                                    )}
                                 </div>
                             </div>
                         </div>

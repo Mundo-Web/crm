@@ -9,12 +9,15 @@ import 'react-date-range/dist/theme/default.css'
 import Tippy from '@tippyjs/react'
 import ArrayJoin from '../Utils/ArrayJoin'
 
-const Table = ({ title, filter = [], gridRef, rest, columns, toolBar, masterDetail, filterValue = [], defaultRows, selection, cardClass = '', className = '', allowedPageSizes, pageSize, exportable = false, customizeCell, reloadWith, height, cardStyle, keyExpr, onSelectionChanged, massiveActions, showDatePicker = true }) => {
+const Table = ({ title, filter = [], gridRef, rest, columns, toolBar, masterDetail, filterValue = [], defaultRows, selection, cardClass = '', className = '', allowedPageSizes, pageSize, exportable = false, customizeCell, reloadWith, height, cardStyle, keyExpr, onSelectionChanged, massiveActions, showDatePicker = true, dateFilterOptions = [
+  { value: 'created_at', label: 'Fecha creación' },
+  { value: 'updated_at', label: 'Fecha actualización' }
+] }) => {
   const html = renderToString(<div>{title}</div>)
   const text = $(html).text().trim().replace('-', '')
   const [range, setRange] = useState([{ startDate: new Date(), endDate: new Date(), key: 'selection', }])
   const [dateFilter, setDateFilter] = useState([]);
-  const [dateFilterType, setDateFilterType] = useState('updated_at')
+  const [dateFilterType, setDateFilterType] = useState(dateFilterOptions[0]?.value || 'created_at')
   const [filtering, setFiltering] = useState(false)
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false)
   const [selectionCount, setSelectionCount] = useState(0)
@@ -284,27 +287,20 @@ const Table = ({ title, filter = [], gridRef, rest, columns, toolBar, masterDeta
                                 data-bs-toggle="dropdown"
                                 aria-expanded="false"
                               >
-                                {dateFilterType === 'created_at' ? 'Fecha creación' : 'Fecha actualización'}
+                                {dateFilterOptions.find(x => x.value === dateFilterType)?.label || 'Seleccionar...'}
                               </button>
                               <ul className="dropdown-menu">
-                                <li>
-                                  <button
-                                    className="dropdown-item"
-                                    type="button"
-                                    onClick={() => setDateFilterType('created_at')}
-                                  >
-                                    Fecha creación
-                                  </button>
-                                </li>
-                                <li>
-                                  <button
-                                    className="dropdown-item"
-                                    type="button"
-                                    onClick={() => setDateFilterType('updated_at')}
-                                  >
-                                    Fecha actualización
-                                  </button>
-                                </li>
+                                {dateFilterOptions.map((option, index) => (
+                                  <li key={index}>
+                                    <button
+                                      className="dropdown-item"
+                                      type="button"
+                                      onClick={() => setDateFilterType(option.value)}
+                                    >
+                                      {option.label}
+                                    </button>
+                                  </li>
+                                ))}
                               </ul>
                             </div>
                             <button className="btn btn-sm btn-danger" onClick={handleResetDateFilter}>

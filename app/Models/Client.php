@@ -189,4 +189,36 @@ class Client extends Model
             ->where('business_id', $this->business_id)
             ->where('seen', false);
     }
+
+    public function traces()
+    {
+        return $this->hasMany(ClientStatusTrace::class, 'client_id', 'id');
+    }
+
+    public function latest_status_trace()
+    {
+        return $this->hasOne(ClientStatusTrace::class, 'client_id', 'id')
+            ->select('client_status_traces.*')
+            ->join('statuses', 'statuses.id', 'client_status_traces.status_id')
+            ->where('statuses.table_id', 'a8367789-666e-4929-aacb-7cbc2fbf74de')
+            ->latest('client_status_traces.created_at');
+    }
+
+    public function latest_manage_status_trace()
+    {
+        return $this->hasOne(ClientStatusTrace::class, 'client_id', 'id')
+            ->select('client_status_traces.*')
+            ->join('statuses', 'statuses.id', 'client_status_traces.status_id')
+            ->where('statuses.table_id', '9c27e649-574a-47eb-82af-851c5d425434')
+            ->latest('client_status_traces.created_at');
+    }
+
+    public function conversion_trace()
+    {
+        return $this->hasOne(ClientStatusTrace::class, 'client_id', 'id')
+            ->select('client_status_traces.*')
+            ->join('statuses', 'statuses.id', 'client_status_traces.status_id')
+            ->where('statuses.table_id', 'a8367789-666e-4929-aacb-7cbc2fbf74de')
+            ->oldest('client_status_traces.created_at');
+    }
 }

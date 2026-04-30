@@ -10,6 +10,7 @@ use App\Models\View;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use SoDe\Extend\Response;
 use SoDe\Extend\Trace;
 
@@ -75,11 +76,12 @@ class ClientController extends BasicController
 
     public function setPaginationInstance(Request $request, string $model)
     {
-        return $model::select('clients.*')
+        return $model::select('clients.*', 'latest_traces.latest_trace_date')
+            ->leftJoin(DB::raw('(SELECT client_id, MAX(client_status_traces.created_at) as latest_trace_date FROM client_status_traces JOIN statuses ON statuses.id = client_status_traces.status_id WHERE statuses.table_id = "a8367789-666e-4929-aacb-7cbc2fbf74de" GROUP BY client_id) as latest_traces'), 'latest_traces.client_id', '=', 'clients.id')
             ->withCount(['notes', 'tasks', 'pendingTasks', 'projects'])
-            ->with(['status', 'assigned', 'manageStatus'])
+            ->with(['status', 'assigned', 'manageStatus', 'latest_status_trace', 'conversion_trace'])
             ->leftJoin('statuses AS status', 'status.id', 'status_id')
-            ->leftJoin('statuses AS manage_status', 'status.id', 'manage_status_id')
+            ->leftJoin('statuses AS manage_status', 'manage_status.id', 'manage_status_id')
             ->where('status.table_id', 'a8367789-666e-4929-aacb-7cbc2fbf74de')
             ->where('clients.status', true)
             ->where('clients.business_id', Auth::user()->business_id);

@@ -108,12 +108,21 @@ class KPILeadsController extends BasicController
             $totalSum = Client::byMonth($year, $month)
                 ->join('client_has_products AS chp', 'chp.client_id', 'clients.id')
                 ->sum('chp.price');
-            $clientsCount = Client::byMonth($year, $month)
-                ->whereIn('status_id', $clientStatusesIds)
-                ->whereNotNull('status')
-                ->count();
-            $clientsSum = Client::byMonth($year, $month)
-                ->whereIn('status_id', $clientStatusesIds)
+            $clientsQuery = Client::where('clients.business_id', Auth::user()->business_id)
+                ->whereIn('clients.status_id', $clientStatusesIds)
+                ->whereNotNull('clients.status')
+                ->whereExists(function ($query) use ($year, $month) {
+                    $query->select(DB::raw(1))
+                        ->from('client_status_traces')
+                        ->join('statuses', 'statuses.id', '=', 'client_status_traces.status_id')
+                        ->where('statuses.table_id', 'a8367789-666e-4929-aacb-7cbc2fbf74de')
+                        ->whereColumn('client_status_traces.client_id', 'clients.id')
+                        ->whereYear('client_status_traces.created_at', $year)
+                        ->whereMonth('client_status_traces.created_at', $month);
+                });
+
+            $clientsCount = (clone $clientsQuery)->count();
+            $clientsSum = (clone $clientsQuery)
                 ->join('client_has_products AS chp', 'chp.client_id', 'clients.id')
                 ->sum('chp.price');
             $archivedCount = Client::byMonth($year, $month)

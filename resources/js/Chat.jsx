@@ -5,6 +5,7 @@ import Tippy from '@tippyjs/react';
 import Global from './Utils/Global.js';
 import { useEffect, useRef, useState } from 'react';
 import LeadsRest from './actions/LeadsRest.js';
+import Swal from 'sweetalert2';
 import useWebSocket from './Reutilizables/CustomHooks/useWebSocket.jsx';
 import ChatContent from './Reutilizables/Chat/ChatContent.jsx';
 import ArrayJoin from './Utils/ArrayJoin.js';
@@ -12,11 +13,21 @@ import LaravelSession from './Utils/LaravelSession.js';
 import useCrossTabSelectedUsers from './Reutilizables/CustomHooks/useCrossTabSelectedUsers.jsx';
 import ContactDetails from './Reutilizables/Chat/ContactDetails.jsx';
 import getTextFromReactNode from './Utils/getTextFromReactNode.js';
+import DetailLeadModal from './Reutilizables/Leads/DetailLeadModal.jsx';
+import TasksRest from './actions/TasksRest.js';
+import { Local } from 'sode-extend-react';
+import Modal from './components/Modal.jsx';
+import InputFormGroup from './components/form/InputFormGroup.jsx';
+import SelectAPIFormGroup from './components/form/SelectAPIFormGroup.jsx';
+import TextareaFormGroup from './components/form/TextareaFormGroup.jsx';
+import SetSelectValue from './Utils/SetSelectValue.jsx';
+
+const tasksRest = new TasksRest();
 
 const leadsRest = new LeadsRest()
 leadsRest.paginateSufix = null
 
-const Chat = ({ users = [], defaultMessages = [], activeLeadId: activeLeadIdDB, ...properties }) => {
+const Chat = ({ users = [], defaultMessages = [], activeLeadId: activeLeadIdDB, statuses = [], manageStatuses = [], noteTypes = [], processes = [], session = {}, signs = [], projectTypes = [], convertedLeadStatus, defaultClientStatus, ...properties }) => {
   const settings = Local.get('adminto_settings') ?? {}
   const [theme, setTheme] = useState(settings.theme ?? 'light');
 
@@ -28,10 +39,63 @@ const Chat = ({ users = [], defaultMessages = [], activeLeadId: activeLeadIdDB, 
   const [searchTerm, setSearchTerm] = useState('');
   const [searchTimeout, setSearchTimeout] = useState(null);
   const [contactDetails, setContactDetails] = useState(null);
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const [detailLead, setDetailLead] = useState(null);
+
+  const onOpenModal = (data = {}) => {
+    if (idRef.current) idRef.current.value = data?.id ?? "";
+    if (contactNameRef.current) contactNameRef.current.value = data?.contact_name ?? "";
+    if (contactEmailRef.current) contactEmailRef.current.value = data?.contact_email ?? "";
+    if (contactPhoneRef.current) contactPhoneRef.current.value = data?.contact_phone ?? "";
+    if (nameRef.current) nameRef.current.value = data?.name ?? "";
+    if (rucRef.current) rucRef.current.value = data?.ruc ?? "";
+    if (workersRef.current) workersRef.current.value = data?.workers ?? "";
+    if (webUrlRef.current) webUrlRef.current.value = data?.web_url ?? "";
+    if (sectorRef.current) SetSelectValue(sectorRef.current, data?.business_sector_id ?? "");
+    if (messageRef.current) messageRef.current.value = data?.message ?? "";
+
+    $(newLeadModalRef.current).modal("show");
+  };
+
+  const onModalSubmit = async (e) => {
+    e.preventDefault();
+    const request = {
+      id: idRef.current.value,
+      contact_name: contactNameRef.current.value || "Lead anonimo",
+      contact_email: contactEmailRef.current.value,
+      contact_phone: contactPhoneRef.current.value.replace(/[^0-9]/g, ""),
+      name: nameRef.current.value || "Lead anonimo",
+      ruc: rucRef.current.value,
+      workers: workersRef.current.value,
+      web_url: webUrlRef.current.value,
+      business_sector_id: sectorRef.current.value,
+      message: messageRef.current.value || "Sin mensaje",
+    };
+
+    const result = await leadsRest.save(request);
+    if (!result) return;
+
+    if (detailLead?.id == result.id) setDetailLead(result);
+    $(newLeadModalRef.current).modal("hide");
+    getLeads();
+  };
 
   const { socket } = useWebSocket()
   const messagesContainerRef = useRef()
   const leadsContainerRef = useRef()
+  const detailModalRef = useRef()
+  const newLeadModalRef = useRef()
+
+  const idRef = useRef()
+  const contactNameRef = useRef()
+  const contactEmailRef = useRef()
+  const contactPhoneRef = useRef()
+  const nameRef = useRef()
+  const webUrlRef = useRef()
+  const messageRef = useRef()
+  const rucRef = useRef()
+  const workersRef = useRef()
+  const sectorRef = useRef()
 
   const getLeads = async (loadMore = false) => {
     if (loading) return;
@@ -132,6 +196,58 @@ const Chat = ({ users = [], defaultMessages = [], activeLeadId: activeLeadIdDB, 
     return () => el.removeEventListener('scroll', handleScroll);
   }, [leads, loading, selectedUsersId, totalCount, searchTerm]);
 
+  const onAssignLead = async (leadId, userId) => {
+    const { isConfirmed } = await Swal.fire({
+      title: '¿Estás seguro?',
+      text: "El lead será asignado a otro usuario.",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, asignar',
+      cancelButtonText: 'Cancelar'
+    });
+
+    if (!isConfirmed) return;
+
+    const success = await leadsRest.massiveAssign({ leadsId: [leadId], userId });
+    if (success) {
+      getLeads(false);
+      const updatedContact = await leadsRest.get(leadId);
+      if (contactDetails && contactDetails.id === leadId) {
+        setContactDetails(updatedContact);
+      }
+      if (detailLead && detailLead.id === leadId) {
+        setDetailLead(updatedContact);
+      }
+    }
+  };
+
+  const onOpenDetails = (contact) => {
+    setDetailLead(contact);
+    $(detailModalRef.current).modal('show');
+  };
+
+  const onLeadUpdate = async (leadId, value, type) => {
+    let success = false;
+    const targetLeadId = leadId || detailLead?.id;
+
+    if (type === 'status') {
+      success = await leadsRest.leadStatus({ lead: targetLeadId, status: value });
+    } else if (type === 'manage_status') {
+      success = await leadsRest.manageStatus({ lead: targetLeadId, status: value });
+    } else {
+      // General update (e.g. after saving a note)
+      success = true;
+    }
+
+    if (success) {
+      const updated = await leadsRest.get(targetLeadId);
+      if (detailLead && detailLead.id === targetLeadId) setDetailLead(updated);
+      if (contactDetails && contactDetails.id === targetLeadId) setContactDetails(updated);
+      getLeads(false);
+    }
+  };
+
+
   useEffect(() => {
     if (activeLeadId) {
       history.pushState({}, '', `/chat/${activeLeadId}`);
@@ -140,7 +256,7 @@ const Chat = ({ users = [], defaultMessages = [], activeLeadId: activeLeadIdDB, 
     }
   }, [activeLeadId])
 
-  return <Adminto {...properties} title='Chat' showTitle={false} setThemeParent={setTheme}>
+  return <Adminto {...properties} session={session} title='Chat' showTitle={false} setThemeParent={setTheme}>
     <div className="row">
       <div className="col-xl-3 col-lg-4">
         <div className="card chat-list-card mb-xl-0">
@@ -341,12 +457,57 @@ const Chat = ({ users = [], defaultMessages = [], activeLeadId: activeLeadIdDB, 
         <div className="col-xl-3 col-lg-12">
           <div className="card contact-details-card mb-xl-0">
             <div className="card-body scroll-hidden" style={{ height: 'calc(100vh - 186px)', overflowY: 'auto' }}>
-              <ContactDetails {...contactDetails} />
+              <ContactDetails {...contactDetails} users={users} onAssign={onAssignLead} onOpenDetails={onOpenDetails} />
             </div>
           </div>
         </div>
       )}
     </div >
+      <DetailLeadModal
+        modalRef={detailModalRef}
+        lead={detailLead}
+        statuses={statuses}
+        manageStatuses={manageStatuses}
+        noteTypes={noteTypes}
+        users={users}
+        processes={processes}
+        session={session}
+        onLeadUpdate={onLeadUpdate}
+        onOpenEditModal={onOpenModal}
+        defaultMessages={defaultMessages}
+        signs={signs}
+        projectTypes={projectTypes}
+        convertedLeadStatus={convertedLeadStatus}
+        defaultClientStatus={defaultClientStatus}
+      />
+
+      <Modal
+        modalRef={newLeadModalRef}
+        title="Editar lead"
+        btnSubmitText="Guardar"
+        onSubmit={onModalSubmit}
+        zIndex={1060}
+      >
+        <div className="row mb-0">
+          <input ref={idRef} type="hidden" />
+          <InputFormGroup eRef={contactNameRef} label="Nombre completo" />
+          <InputFormGroup eRef={contactEmailRef} label="Correo electronico" type="email" col="col-md-6" />
+          <InputFormGroup eRef={contactPhoneRef} label="Telefono" type="tel" col="col-md-6" required />
+          <InputFormGroup eRef={nameRef} label="Razón Social" col="col-md-6" />
+          <InputFormGroup eRef={webUrlRef} label="Link de WEB" col="col-md-6" />
+          <InputFormGroup eRef={rucRef} label="RUC" col="col-md-6" />
+          <InputFormGroup eRef={workersRef} label="N° Trabajadores" col="col-md-6" />
+          <SelectAPIFormGroup
+            eRef={sectorRef}
+            label="Rubro de Negocio"
+            col="col-md-12"
+            searchAPI="/api/business-sectors/paginate"
+            searchBy="name"
+            dropdownParent={newLeadModalRef.current}
+          />
+          <TextareaFormGroup eRef={messageRef} label="Mensaje" placeholder="Ingresa tu mensaje" rows={4} />
+        </div>
+      </Modal>
   </Adminto>
 };
 

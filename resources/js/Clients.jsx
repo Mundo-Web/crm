@@ -203,6 +203,10 @@ const Clients = ({ projectStatuses, finishedProjectStatus, clientStatuses, produ
 
   return (<>
     <Table gridRef={gridRef} title='Clientes' rest={clientsRest}
+      dateFilterOptions={[
+        { value: 'created_at', label: 'Fecha creación' },
+        { value: 'latest_traces.latest_trace_date', label: 'Fecha actualización' }
+      ]}
       toolBar={(container) => {
         container.unshift(DxPanelButton({
           className: 'btn btn-xs btn-soft-dark',
@@ -329,12 +333,27 @@ const Clients = ({ projectStatuses, finishedProjectStatus, clientStatuses, produ
           caption: 'Fecha actualización',
           dataType: 'date',
           cellTemplate: (container, { data }) => {
+            const date = data.latest_status_trace?.created_at || data.updated_at;
+            if (!date) return container.html(renderToString(<i className='text-muted'>- Sin datos -</i>));
             container.html(renderToString(<>
               <i className="mdi mdi-calendar-blank text-blue me-1"></i>
-              {moment(data.updated_at.replace('Z', '+05:00')).format('lll')}
+              {moment(date.replace('Z', '+05:00')).format('lll')}
             </>))
           },
           sortOrder: 'desc',
+        },
+        {
+          dataField: 'conversion_trace.created_at',
+          caption: 'Fecha conversión',
+          dataType: 'date',
+          cellTemplate: (container, { data }) => {
+            const date = data.conversion_trace?.created_at;
+            if (!date) return container.html(renderToString(<i className='text-muted'>- Sin datos -</i>))
+            container.html(renderToString(<>
+              <i className="mdi mdi-calendar-check text-success me-1"></i>
+              {moment(date.replace('Z', '+05:00')).format('lll')}
+            </>))
+          },
         },
         can('clients', 'root', 'all', 'list', 'update', 'changestatus', 'delete') ? {
           caption: 'Acciones',

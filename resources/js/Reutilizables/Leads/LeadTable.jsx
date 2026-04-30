@@ -113,21 +113,37 @@ const LeadTable = ({
 
         const isUnassigning = userId === null;
         const selectedUser = !isUnassigning
-            ? users.find((user) => user.id === userId)
+            ? users.find((user) => user.service_user.id === userId || user.id === userId)
             : null;
+
+        const selectedRowsData = $(gridRef.current).dxDataGrid("instance").getSelectedRowsData();
+        const allAssigned = selectedRowsData.every(l => l.assigned_to);
+        const noneAssigned = selectedRowsData.every(l => !l.assigned_to);
+
+        let actionLabel = "Asignar";
+        let actionTitle = "Asignación";
+        if (allAssigned) {
+            actionLabel = "Reasignar";
+            actionTitle = "Reasignación";
+        } else if (!noneAssigned) {
+            actionLabel = "Asignar / Reasignar";
+            actionTitle = "Asignación / Reasignación";
+        }
+
+        const userName = selectedUser ? `${selectedUser.name || ''} ${selectedUser.lastname || ''}`.trim() : 'el usuario';
 
         const { isConfirmed } = await Swal.fire({
             icon: "question",
             title: isUnassigning
                 ? "Confirmar Desasignación"
-                : "Confirmar Asignación",
+                : `Confirmar ${actionTitle}`,
             text: isUnassigning
                 ? `¿Está seguro que desea quitar la asignación de ${selectedRows.length} lead(s)?`
-                : `¿Está seguro que desea asignar ${selectedRows.length} lead(s) a ${selectedUser?.name}?`,
+                : `¿Está seguro que desea ${actionLabel.toLowerCase()} ${selectedRows.length} lead(s) a ${userName}?`,
             showCancelButton: true,
             confirmButtonText: isUnassigning
                 ? "Sí, quitar asignación"
-                : "Sí, asignar",
+                : `Sí, ${actionLabel.toLowerCase()}`,
             cancelButtonText: "Cancelar",
         });
         if (!isConfirmed) return;
@@ -141,10 +157,10 @@ const LeadTable = ({
 
         Swal.fire({
             icon: "success",
-            title: isUnassigning ? "Asignación Removida" : "Leads Asignados",
+            title: isUnassigning ? "Asignación Removida" : `Leads ${actionLabel}s`,
             text: isUnassigning
                 ? "Se ha quitado la asignación de los leads exitosamente"
-                : "Los leads han sido asignados exitosamente",
+                : `Los leads han sido ${actionLabel.toLowerCase()}s exitosamente`,
         });
 
         const grid = $(gridRef.current).dxDataGrid("instance");
@@ -375,7 +391,7 @@ const LeadTable = ({
                                 <div className="d-flex justify-content-between gap-1">
                                     <span>
                                         <i className="mdi mdi-account me-1"></i>
-                                        Asignar a
+                                        Asignar / Reasignar a
                                     </span>
                                     <i className="mdi mdi-chevron-right"></i>
                                 </div>

@@ -51,6 +51,7 @@ class StatusController extends BasicController
     static function updateStatus4Lead(Client $leadJpa, bool $assign, ?string $assignedTo = null)
     {
         try {
+            $isReassigning = $assign && !empty($leadJpa->assigned_to);
             $status = [];
             if ($assign) {
                 $userJpa = User::find($assignedTo ? $assignedTo : Auth::user()->service_user->id);
@@ -99,17 +100,20 @@ class StatusController extends BasicController
                 $status = JSON::parse(Setting::get('revertion-lead-status') ?? '{}');
                 $leadJpa->assigned_to = null;
             }
-            if (!Text::nullOrEmpty($status['lead'] ?? '')) $leadJpa->status_id = $status['lead'];
-            if (!Text::nullOrEmpty($status['manage'] ?? '')) $leadJpa->manage_status_id = $status['manage'];
-            if (!Text::nullOrEmpty($status['task'] ?? '')) Task::join('client_notes AS cn', 'cn.id', 'tasks.note_id')
-                ->join('clients AS c', 'c.id', 'cn.client_id')
-                ->where('model_id', ClientNote::class)
-                ->where('c.business_id', Auth::user()->business_id)
-                ->where('c.id', $leadJpa->id)
-                ->where('tasks.asignable', true)
-                ->update([
-                    'tasks.status' => $status['task']
-                ]);
+
+            if (!$isReassigning) {
+                if (!Text::nullOrEmpty($status['lead'] ?? '')) $leadJpa->status_id = $status['lead'];
+                if (!Text::nullOrEmpty($status['manage'] ?? '')) $leadJpa->manage_status_id = $status['manage'];
+                if (!Text::nullOrEmpty($status['task'] ?? '')) Task::join('client_notes AS cn', 'cn.id', 'tasks.note_id')
+                    ->join('clients AS c', 'c.id', 'cn.client_id')
+                    ->where('model_id', ClientNote::class)
+                    ->where('c.business_id', Auth::user()->business_id)
+                    ->where('c.id', $leadJpa->id)
+                    ->where('tasks.asignable', true)
+                    ->update([
+                        'tasks.status' => $status['task']
+                    ]);
+            }
 
             if ($assignedTo) {
                 Notification::create([
