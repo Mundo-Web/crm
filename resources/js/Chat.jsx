@@ -83,6 +83,7 @@ const Chat = ({ users = [], defaultMessages = [], activeLeadId: activeLeadIdDB, 
   const { socket } = useWebSocket()
   const messagesContainerRef = useRef()
   const leadsContainerRef = useRef()
+  const usersContainerRef = useRef()
   const detailModalRef = useRef()
   const newLeadModalRef = useRef()
 
@@ -96,6 +97,16 @@ const Chat = ({ users = [], defaultMessages = [], activeLeadId: activeLeadIdDB, 
   const rucRef = useRef()
   const workersRef = useRef()
   const sectorRef = useRef()
+
+  const scrollUsers = (direction) => {
+    if (usersContainerRef.current) {
+      const scrollAmount = 150;
+      usersContainerRef.current.scrollBy({
+        left: direction === 'left' ? -scrollAmount : scrollAmount,
+        behavior: 'smooth'
+      });
+    }
+  }
 
   const getLeads = async (loadMore = false) => {
     if (loading) return;
@@ -261,8 +272,15 @@ const Chat = ({ users = [], defaultMessages = [], activeLeadId: activeLeadIdDB, 
       <div className="col-xl-3 col-lg-4">
         <div className="card chat-list-card mb-xl-0">
           <div className="card-body p-0">
-            <div className="p-2">
-              <div className="d-flex w-100 gap-0 align-items-center scroll-hidden" style={{ overflowX: 'auto' }}>
+            <div className="p-2 position-relative">
+              <button
+                className="btn btn-xs btn-white position-absolute start-0 top-50 translate-middle-y z-1 shadow-sm border-0 rounded-circle"
+                style={{ marginLeft: '4px' }}
+                onClick={() => scrollUsers('left')}
+              >
+                <i className="mdi mdi-chevron-left"></i>
+              </button>
+              <div ref={usersContainerRef} className="d-flex w-100 gap-0 align-items-center scroll-hidden" style={{ overflowX: 'auto', padding: '0 25px' }}>
                 {users.map(user => (
                   <Tippy
                     key={user.id}
@@ -307,6 +325,13 @@ const Chat = ({ users = [], defaultMessages = [], activeLeadId: activeLeadIdDB, 
                   </Tippy>
                 }
               </div>
+              <button
+                className="btn btn-xs btn-white position-absolute end-0 top-50 translate-middle-y z-1 shadow-sm border-0 rounded-circle"
+                style={{ marginRight: '4px' }}
+                onClick={() => scrollUsers('right')}
+              >
+                <i className="mdi mdi-chevron-right"></i>
+              </button>
             </div>
             <div className='p-2 border-top'>
               <div className="search-box chat-search-box">
