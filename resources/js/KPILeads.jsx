@@ -584,8 +584,12 @@ const KPILeads = ({ months = [], currentMonth, currentYear }) => {
                     </div>
                     <div className="col-lg-4">
                         <div
-                            className="card border-0 shadow-sm h-100"
-                            style={{ borderRadius: "16px" }}
+                            className="card border-0 shadow-sm"
+                            style={{
+                                borderRadius: "16px",
+                                maxHeight: "min-content",
+                                paddingBottom: "0px !important",
+                            }}
                         >
                             <div className="card-body">
                                 <h5 className="card-title mb-4">
@@ -759,19 +763,31 @@ const KPILeads = ({ months = [], currentMonth, currentYear }) => {
                             </div>
                         </div>
                     </div>
-                    <div className="col-lg-8">
+                    <div className="col-lg-8 position-relative">
                         <div
-                            className="card border-0 shadow-sm h-100"
-                            style={{ borderRadius: "16px" }}
+                            className="card border-0 shadow-sm position-absolute top-0 start-0 h-100"
+                            style={{
+                                borderRadius: "16px",
+                                left: "1.5rem",
+                                right: "1.5rem",
+                                width: "calc(100% - 3rem)",
+                                maxHeight: "min-content",
+                            }}
                         >
-                            <div className="card-body">
+                            <div className="card-body d-flex flex-column h-100">
                                 <h5 className="card-title mb-4">
                                     <i className="mdi mdi-table me-2 text-success"></i>
                                     Detalle de Ventas Cerradas
                                 </h5>
-                                <div className="table-responsive">
+                                <div
+                                    className="table-responsive flex-grow-1"
+                                    style={{ overflowY: "auto" }}
+                                >
                                     <table className="table table-hover mb-0">
-                                        <thead className="table-light">
+                                        <thead
+                                            className="table-light sticky-top"
+                                            style={{ top: "-1px", zIndex: 10 }}
+                                        >
                                             <tr>
                                                 <th className="border-0">
                                                     Cliente

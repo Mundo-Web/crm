@@ -304,6 +304,17 @@ const KPICampaigns = ({ months = [], currentMonth, currentYear }) => {
 
     const [topUsers, setTopUsers] = useState([]);
     const [hierarchy, setHierarchy] = useState([]);
+    const [usersRanking, setUsersRanking] = useState([]);
+    const [campaignsRanking, setCampaignsRanking] = useState([]);
+    const [clientsList, setClientsList] = useState([]);
+
+    const [winningCampaign, setWinningCampaign] = useState(null);
+    const [winningAdset, setWinningAdset] = useState(null);
+    const [winningAd, setWinningAd] = useState(null);
+
+    const [leadWinningCampaign, setLeadWinningCampaign] = useState(null);
+    const [leadWinningAdset, setLeadWinningAdset] = useState(null);
+    const [leadWinningAd, setLeadWinningAd] = useState(null);
 
     const [modalLeads, setModalLeads] = useState([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -380,6 +391,17 @@ const KPICampaigns = ({ months = [], currentMonth, currentYear }) => {
 
             setTopUsers(summary.usersAssignation ?? []);
             setHierarchy(summary.hierarchy ?? []);
+            setUsersRanking(summary.usersRanking ?? []);
+            setCampaignsRanking(summary.campaignsRanking ?? []);
+            setClientsList(summary.clientsList ?? []);
+
+            setWinningCampaign(summary.winningCampaign ?? null);
+            setWinningAdset(summary.winningAdset ?? null);
+            setWinningAd(summary.winningAd ?? null);
+
+            setLeadWinningCampaign(summary.leadWinningCampaign ?? null);
+            setLeadWinningAdset(summary.leadWinningAdset ?? null);
+            setLeadWinningAd(summary.leadWinningAd ?? null);
         });
     };
 
@@ -749,6 +771,334 @@ const KPICampaigns = ({ months = [], currentMonth, currentYear }) => {
                     </div>
                 );
             })()}
+            {clientsList.length > 0 && (
+                <div className="row g-4 mb-5">
+                    <div className="col-12">
+                        <div
+                            className="card border-0 shadow-lg"
+                            style={{ borderRadius: "20px", overflow: "hidden" }}
+                        >
+                            <div className="card-header bg-white border-0 py-4 px-4">
+                                <div className="d-flex align-items-center justify-content-between">
+                                    <div>
+                                        <h4 className="mb-1 fw-bold text-dark">
+                                            <i className="mdi mdi-rocket-launch text-primary me-2"></i>
+                                            Rendimiento Publicitario (Cierres)
+                                        </h4>
+                                        <p className="text-muted small mb-0">
+                                            Detalle granular de ventas agrupado
+                                            por estructura de pauta
+                                        </p>
+                                    </div>
+                                    <div className="badge bg-soft-success text-success p-2 px-3 rounded-pill">
+                                        <i className="mdi mdi-check-decagram me-1"></i>
+                                        Datos Sincronizados
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="card-body p-0">
+                                <div
+                                    className="table-responsive"
+                                    style={{
+                                        maxHeight: "800px",
+                                        overflowY: "auto",
+                                    }}
+                                >
+                                    <table className="table table-hover align-middle mb-0">
+                                        <thead
+                                            className="table-light sticky-top"
+                                            style={{
+                                                top: "0",
+                                                zIndex: 10,
+                                                boxShadow:
+                                                    "0 2px 4px rgba(0,0,0,0.05)",
+                                            }}
+                                        >
+                                            <tr
+                                                className="text-uppercase"
+                                                style={{
+                                                    fontSize: "11px",
+                                                    letterSpacing: "1px",
+                                                }}
+                                            >
+                                                <th className="border-0 px-4 py-3 text-muted">
+                                                    Lead / Cliente
+                                                </th>
+                                                <th className="border-0 py-3 text-muted">
+                                                    Asesor Responsable
+                                                </th>
+                                                <th className="border-0 py-3 text-muted">
+                                                    Productos & Servicios
+                                                </th>
+                                                <th className="border-0 text-end px-4 py-3 text-muted">
+                                                    Total Venta
+                                                </th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {clientsList.map((campaign, ci) => (
+                                                <React.Fragment key={`c-${ci}`}>
+                                                    {campaign.adsets.map(
+                                                        (adset, ai) => (
+                                                            <React.Fragment
+                                                                key={`as-${ci}-${ai}`}
+                                                            >
+                                                                {adset.ads.map(
+                                                                    (
+                                                                        ad,
+                                                                        adi,
+                                                                    ) => (
+                                                                        <React.Fragment
+                                                                            key={`ad-${ci}-${ai}-${adi}`}
+                                                                        >
+                                                                            {/* Fila de Jerarquía con Fondo Opaco */}
+                                                                            <tr
+                                                                                style={{
+                                                                                    background:
+                                                                                        "rgba(85, 110, 230, 0.08)", // Un azul primario muy suave y opaco
+                                                                                }}
+                                                                            >
+                                                                                <td
+                                                                                    colSpan="4"
+                                                                                    className="py-2 px-4 shadow-sm"
+                                                                                >
+                                                                                    <div className="d-flex align-items-center flex-wrap gap-4">
+                                                                                        <div className="d-flex align-items-center">
+                                                                                            <div className="avatar-xs me-2">
+                                                                                                <span className="avatar-title rounded bg-soft-primary text-primary">
+                                                                                                    <i className="mdi mdi-bullhorn-variant"></i>
+                                                                                                </span>
+                                                                                            </div>
+                                                                                            <div>
+                                                                                                <small
+                                                                                                    className="text-muted d-block"
+                                                                                                    style={{
+                                                                                                        fontSize:
+                                                                                                            "9px",
+                                                                                                        fontWeight: 800,
+                                                                                                    }}
+                                                                                                >
+                                                                                                    CAMPAÑA
+                                                                                                </small>
+                                                                                                <span className="fw-bold text-dark">
+                                                                                                    {
+                                                                                                        campaign.name
+                                                                                                    }
+                                                                                                </span>
+                                                                                            </div>
+                                                                                        </div>
+                                                                                        <div className="d-flex align-items-center">
+                                                                                            <div className="avatar-xs me-2">
+                                                                                                <span className="avatar-title rounded bg-soft-info text-info">
+                                                                                                    <i className="mdi mdi-layers-triple"></i>
+                                                                                                </span>
+                                                                                            </div>
+                                                                                            <div>
+                                                                                                <small
+                                                                                                    className="text-muted d-block"
+                                                                                                    style={{
+                                                                                                        fontSize:
+                                                                                                            "9px",
+                                                                                                        fontWeight: 800,
+                                                                                                    }}
+                                                                                                >
+                                                                                                    ADSET
+                                                                                                </small>
+                                                                                                <span className="fw-semibold text-dark">
+                                                                                                    {
+                                                                                                        adset.name
+                                                                                                    }
+                                                                                                </span>
+                                                                                            </div>
+                                                                                        </div>
+                                                                                        <div className="d-flex align-items-center">
+                                                                                            <div className="avatar-xs me-2">
+                                                                                                <span className="avatar-title rounded bg-soft-success text-success">
+                                                                                                    <i className="mdi mdi-advertisements"></i>
+                                                                                                </span>
+                                                                                            </div>
+                                                                                            <div>
+                                                                                                <small
+                                                                                                    className="text-muted d-block"
+                                                                                                    style={{
+                                                                                                        fontSize:
+                                                                                                            "9px",
+                                                                                                        fontWeight: 800,
+                                                                                                    }}
+                                                                                                >
+                                                                                                    ANUNCIO
+                                                                                                    (ADS)
+                                                                                                </small>
+                                                                                                <span className="fw-medium text-dark">
+                                                                                                    {
+                                                                                                        ad.name
+                                                                                                    }
+                                                                                                </span>
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                </td>
+                                                                            </tr>
+                                                                            {/* Leads con Estética Premium */}
+                                                                            {ad.leads.map(
+                                                                                (
+                                                                                    client,
+                                                                                    li,
+                                                                                ) => {
+                                                                                    const totalClient =
+                                                                                        client.products?.reduce(
+                                                                                            (
+                                                                                                sum,
+                                                                                                p,
+                                                                                            ) =>
+                                                                                                sum +
+                                                                                                Number(
+                                                                                                    p
+                                                                                                        .pivot
+                                                                                                        .price,
+                                                                                                ),
+                                                                                            0,
+                                                                                        ) ||
+                                                                                        0;
+                                                                                    return (
+                                                                                        <tr
+                                                                                            key={`l-${ci}-${ai}-${adi}-${li}`}
+                                                                                            className="animate__animated animate__fadeIn"
+                                                                                        >
+                                                                                            <td className="px-4 py-3">
+                                                                                                <div className="d-flex align-items-center">
+                                                                                                    <div className="flex-grow-1">
+                                                                                                        <h6
+                                                                                                            className="mb-0 fw-bold text-dark"
+                                                                                                            style={{
+                                                                                                                fontSize:
+                                                                                                                    "16px",
+                                                                                                            }}
+                                                                                                        >
+                                                                                                            {
+                                                                                                                client.name
+                                                                                                            }
+                                                                                                        </h6>
+                                                                                                        <div className="text-muted small d-flex align-items-center mt-1">
+                                                                                                            <span className="badge bg-soft-success text-success p-1 rounded me-2 fs-6">
+                                                                                                                <i className="mdi mdi-whatsapp me-1"></i>
+                                                                                                                {
+                                                                                                                    client.contact_phone
+                                                                                                                }
+                                                                                                            </span>
+                                                                                                        </div>
+                                                                                                    </div>
+                                                                                                </div>
+                                                                                            </td>
+                                                                                            <td className="py-3">
+                                                                                                <div className="d-flex align-items-center">
+                                                                                                    <div className="position-relative">
+                                                                                                        <img
+                                                                                                            src={`//${Global.APP_DOMAIN}/api/profile/thumbnail/${client.assigned?.relative_id}`}
+                                                                                                            className="rounded-circle avatar-sm me-2 shadow-sm border border-2 border-white"
+                                                                                                            onError={(
+                                                                                                                e,
+                                                                                                            ) => {
+                                                                                                                e.target.src = `//${Global.APP_DOMAIN}/assets/img/user-404.svg`;
+                                                                                                            }}
+                                                                                                        />
+                                                                                                    </div>
+                                                                                                    <div>
+                                                                                                        <span
+                                                                                                            className="fw-semibold text-dark d-block"
+                                                                                                            style={{
+                                                                                                                fontSize:
+                                                                                                                    "16px",
+                                                                                                            }}
+                                                                                                        >
+                                                                                                            {
+                                                                                                                client
+                                                                                                                    .assigned
+                                                                                                                    ?.name
+                                                                                                            }
+                                                                                                        </span>
+                                                                                                    </div>
+                                                                                                </div>
+                                                                                            </td>
+                                                                                            <td className="py-3">
+                                                                                                <div className="d-flex flex-wrap gap-2">
+                                                                                                    {client.products?.map(
+                                                                                                        (
+                                                                                                            p,
+                                                                                                            pi,
+                                                                                                        ) => (
+                                                                                                            <div
+                                                                                                                key={
+                                                                                                                    pi
+                                                                                                                }
+                                                                                                                className="d-flex align-items-center bg-soft-primary border border-primary border-opacity-10 rounded px-2 py-1 shadow-sm"
+                                                                                                                style={{
+                                                                                                                    fontSize:
+                                                                                                                        "14px",
+                                                                                                                }}
+                                                                                                            >
+                                                                                                                <i className="mdi mdi-package-variant-closed text-primary me-1"></i>
+                                                                                                                <span className="text-dark fw-medium">
+                                                                                                                    {
+                                                                                                                        p.name
+                                                                                                                    }
+                                                                                                                </span>
+                                                                                                                {/**        <span className="mx-1 text-muted">|</span>
+                                                                                                <span className="text-primary fw-bold">S/.{Number(p.pivot.price).toLocaleString("es-PE")}</span> */}
+                                                                                                            </div>
+                                                                                                        ),
+                                                                                                    )}
+                                                                                                </div>
+                                                                                            </td>
+                                                                                            <td className="text-end px-4 py-3">
+                                                                                                <div className="d-flex flex-column align-items-end">
+                                                                                                    <span
+                                                                                                        className="text-success fw-bold fs-5"
+                                                                                                        style={{
+                                                                                                            letterSpacing:
+                                                                                                                "-0.5px",
+                                                                                                        }}
+                                                                                                    >
+                                                                                                        S/.{" "}
+                                                                                                        {totalClient.toLocaleString(
+                                                                                                            "es-PE",
+                                                                                                            {
+                                                                                                                minimumFractionDigits: 2,
+                                                                                                            },
+                                                                                                        )}
+                                                                                                    </span>
+                                                                                                    <small
+                                                                                                        className="text-muted"
+                                                                                                        style={{
+                                                                                                            fontSize:
+                                                                                                                "9px",
+                                                                                                        }}
+                                                                                                    >
+                                                                                                        TOTAL
+                                                                                                        LIQUIDADO
+                                                                                                    </small>
+                                                                                                </div>
+                                                                                            </td>
+                                                                                        </tr>
+                                                                                    );
+                                                                                },
+                                                                            )}
+                                                                        </React.Fragment>
+                                                                    ),
+                                                                )}
+                                                            </React.Fragment>
+                                                        ),
+                                                    )}
+                                                </React.Fragment>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {hierarchy.map((campaign, cIdx) => (
                 <div key={cIdx} className="mb-5">

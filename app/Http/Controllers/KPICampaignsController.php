@@ -83,14 +83,23 @@ class KPICampaignsController extends BasicController
             $leadStatusesIds = array_map(fn($status) => $status['id'], $leadStatuses->toArray());
             $clientStatusesIds = array_map(fn($status) => $status['id'], $clientStatuses->toArray());
 
-            $query = fn() => Client::byMonth($year, $month)
+            $queryBase = fn() => Client::where('clients.business_id', Auth::user()->business_id)
+                ->select('clients.*')
                 ->join('campaigns as campaign', 'campaign.id', '=', 'clients.campaign_id')
-                ->where('clients.business_id', Auth::user()->business_id)
-                ->whereRaw('LENGTH(clients.campaign_id) > 10')
+                ->whereRaw('LENGTH(clients.campaign_id) > 10');
+
+            $query = fn() => $queryBase()
                 ->whereNotNull('clients.adset_name')
                 ->where('clients.adset_name', '<>', '')
                 ->whereNotNull('clients.ad_name')
-                ->where('clients.ad_name', '<>', '');
+                ->where('clients.ad_name', '<>', '')
+                ->whereYear('clients.created_at', $year)
+                ->whereMonth('clients.created_at', $month);
+
+            $totalCount = (clone $query())->count();
+            $totalSum = (clone $query())
+                ->join('client_has_products AS chp', 'chp.client_id', 'clients.id')
+                ->sum('chp.price');
 
             $grouped = $query()
                 ->select([
@@ -111,18 +120,22 @@ class KPICampaignsController extends BasicController
                 ->whereIn('clients.status_id', $leadStatusesIds)
                 ->where('clients.status_id', '<>', $defaultLeadStatus);
 
-            $totalCount = $query()->count();
-            $totalSum = $query()
-                ->join('client_has_products AS chp', 'chp.client_id', 'clients.id')
-                ->sum('chp.price');
+            // Lógica de clientes basada en trazas (Nueva Fórmula)
+            $clientsQuery = $queryBase()
+                ->whereIn('clients.status_id', $clientStatusesIds)
+                ->whereNotNull('clients.status')
+                ->whereExists(function ($query) use ($year, $month) {
+                    $query->select(DB::raw(1))
+                        ->from('client_status_traces')
+                        ->join('statuses', 'statuses.id', '=', 'client_status_traces.status_id')
+                        ->where('statuses.table_id', 'a8367789-666e-4929-aacb-7cbc2fbf74de')
+                        ->whereColumn('client_status_traces.client_id', 'clients.id')
+                        ->whereYear('client_status_traces.created_at', $year)
+                        ->whereMonth('client_status_traces.created_at', $month);
+                });
 
-            $clientsCount = $query()
-                ->where('clients.status', true)
-                ->whereIn('clients.status_id', $clientStatusesIds)
-                ->count();
-            $clientsSum = $query()
-                ->where('clients.status', true)
-                ->whereIn('clients.status_id', $clientStatusesIds)
+            $clientsCount = (clone $clientsQuery)->count();
+            $clientsSum = (clone $clientsQuery)
                 ->join('client_has_products AS chp', 'chp.client_id', 'clients.id')
                 ->sum('chp.price');
 
@@ -398,6 +411,127 @@ class KPICampaignsController extends BasicController
 
             $totalConversionPercent = $totalCount > 0 ? round(($clientsCount / $totalCount) * 100, 1) : 0;
 
+            // Ranking de Asesores (Basado en la nueva fórmula)
+            $usersRanking = (clone $clientsQuery)
+                ->select([
+                    'assigned_to',
+                    DB::raw('count(distinct clients.id) as count'),
+                    DB::raw('SUM(chp.price) as total_amount')
+                ])
+                ->leftJoin('client_has_products as chp', 'chp.client_id', 'clients.id')
+                ->with('assigned')
+                ->whereNotNull('assigned_to')
+                ->groupBy('assigned_to')
+                ->orderBy('count', 'desc')
+                ->get();
+
+            $clientsListRaw = (clone $clientsQuery)
+                ->with(['products', 'assigned', 'campaign'])
+                ->get();
+
+            $groupedClients = [];
+            foreach ($clientsListRaw as $client) {
+                $campaignName = $client->campaign->title ?? 'Sin Campaña';
+                $adsetName = $client->adset_name ?? 'Sin Adset';
+                $adName = $client->ad_name ?? 'Sin Anuncio';
+
+                if (!isset($groupedClients[$campaignName])) {
+                    $groupedClients[$campaignName] = [];
+                }
+                if (!isset($groupedClients[$campaignName][$adsetName])) {
+                    $groupedClients[$campaignName][$adsetName] = [];
+                }
+                if (!isset($groupedClients[$campaignName][$adsetName][$adName])) {
+                    $groupedClients[$campaignName][$adsetName][$adName] = [];
+                }
+
+                $groupedClients[$campaignName][$adsetName][$adName][] = $client;
+            }
+
+            // Convertir a formato de array para facilitar el mapeo en JS
+            $clientsList = [];
+            foreach ($groupedClients as $cName => $adsets) {
+                $cData = ['name' => $cName, 'adsets' => []];
+                foreach ($adsets as $asName => $ads) {
+                    $asData = ['name' => $asName, 'ads' => []];
+                    foreach ($ads as $aName => $leads) {
+                        $asData['ads'][] = [
+                            'name' => $aName,
+                            'leads' => $leads
+                        ];
+                    }
+                    $cData['adsets'][] = $asData;
+                }
+                $clientsList[] = $cData;
+            }
+
+            // Análisis de Ganadores (Basado en la nueva fórmula)
+            $winningCampaign = (clone $clientsQuery)
+                ->leftJoin('client_has_products as chp', 'chp.client_id', 'clients.id')
+                ->select('campaign.title as name', 'clients.campaign_id', DB::raw('count(distinct clients.id) as count'), DB::raw('SUM(chp.price) as total_amount'))
+                ->groupBy('campaign.title', 'clients.campaign_id')
+                ->orderByDesc('count')
+                ->first();
+
+            $winningAdset = null;
+            $winningAd = null;
+
+            if ($winningCampaign) {
+                $winningAdset = (clone $clientsQuery)
+                    ->where('clients.campaign_id', $winningCampaign->campaign_id)
+                    ->leftJoin('client_has_products as chp', 'chp.client_id', 'clients.id')
+                    ->select('clients.adset_name as name', DB::raw('count(distinct clients.id) as count'), DB::raw('SUM(chp.price) as total_amount'))
+                    ->groupBy('clients.adset_name')
+                    ->orderByDesc('count')
+                    ->first();
+
+                if ($winningAdset) {
+                    $winningAd = (clone $clientsQuery)
+                        ->where('clients.campaign_id', $winningCampaign->campaign_id)
+                        ->where('clients.adset_name', $winningAdset->name)
+                        ->leftJoin('client_has_products as chp', 'chp.client_id', 'clients.id')
+                        ->select('clients.ad_name as name', DB::raw('count(distinct clients.id) as count'), DB::raw('SUM(chp.price) as total_amount'))
+                        ->groupBy('clients.ad_name')
+                        ->orderByDesc('count')
+                        ->first();
+                }
+            }
+
+            $campaignsRanking = $query()
+                ->select('campaign.title as name', DB::raw('count(*) as count'))
+                ->groupBy('campaign.title')
+                ->orderByDesc('count')
+                ->get();
+
+            // Ganadores por Leads Totales (Captación)
+            $leadWinningCampaign = (clone $query())
+                ->select('campaign.title as name', 'clients.campaign_id', DB::raw('count(*) as count'))
+                ->groupBy('campaign.title', 'clients.campaign_id')
+                ->orderByDesc('count')
+                ->first();
+
+            $leadWinningAdset = null;
+            $leadWinningAd = null;
+
+            if ($leadWinningCampaign) {
+                $leadWinningAdset = (clone $query())
+                    ->where('clients.campaign_id', $leadWinningCampaign->campaign_id)
+                    ->select('clients.adset_name as name', DB::raw('count(*) as count'))
+                    ->groupBy('clients.adset_name')
+                    ->orderByDesc('count')
+                    ->first();
+
+                if ($leadWinningAdset) {
+                    $leadWinningAd = (clone $query())
+                        ->where('clients.campaign_id', $leadWinningCampaign->campaign_id)
+                        ->where('clients.adset_name', $leadWinningAdset->name)
+                        ->select('clients.ad_name as name', DB::raw('count(*) as count'))
+                        ->groupBy('clients.ad_name')
+                        ->orderByDesc('count')
+                        ->first();
+                }
+            }
+
             $response->summary = [
                 'hierarchy' => $finalHierarchy,
                 'grouped' => $grouped,
@@ -422,6 +556,15 @@ class KPICampaignsController extends BasicController
                 'totalArchivedCounts' => $totalArchivedCounts,
                 'archivedLabelsCount' => $archivedLabelsCount,
                 'archivedBreakdown' => $archivedBreakdown,
+                'winningCampaign' => $winningCampaign,
+                'winningAdset' => $winningAdset,
+                'winningAd' => $winningAd,
+                'usersRanking' => $usersRanking,
+                'campaignsRanking' => $campaignsRanking,
+                'leadWinningCampaign' => $leadWinningCampaign,
+                'leadWinningAdset' => $leadWinningAdset,
+                'leadWinningAd' => $leadWinningAd,
+                'clientsList' => $clientsList
             ];
             $response->data = $groupedByManageStatus;
         });
@@ -460,6 +603,9 @@ class KPICampaignsController extends BasicController
                 }
                 if ($request->adset_name) {
                     $query->where('clients.adset_name', $request->adset_name);
+                }
+                if ($request->ad_name) {
+                    $query->where('clients.ad_name', $request->ad_name);
                 }
             });
     }
