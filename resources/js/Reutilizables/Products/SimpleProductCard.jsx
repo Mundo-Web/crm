@@ -8,10 +8,14 @@ const SimpleProductCard = ({ onChange = () => { }, onDelete = () => { }, ...prod
   const inputRef = useRef(null)
 
   useEffect(() => {
+    setPrice(product.pivot_price)
+  }, [product.pivot_price])
+
+  useEffect(() => {
     const handleClickOutside = (event) => {
       if (inputRef.current && !inputRef.current.contains(event.target)) {
         setIsEditing(false)
-        if (price !== product.price) {
+        if (price !== product.pivot_price) {
           console.log('cambio a:', price)
           onChange({ ...product, price })
         }
@@ -32,7 +36,7 @@ const SimpleProductCard = ({ onChange = () => { }, onDelete = () => { }, ...prod
     if (e.key === 'Enter') {
       e.preventDefault();
       setIsEditing(false)
-      if (price !== product.price) {
+      if (price !== product.pivot_price) {
         console.log('cambio a:', price)
         onChange({ ...product, price })
       }

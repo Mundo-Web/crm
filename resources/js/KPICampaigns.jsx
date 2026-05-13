@@ -773,326 +773,584 @@ const KPICampaigns = ({ months = [], currentMonth, currentYear }) => {
             })()}
             {clientsList.length > 0 && (
                 <div className="row g-4 mb-5">
-                    <div className="col-12">
+                    {/* Columna Principal (70%) */}
+                    <div className="col-lg-8 col-xl-9">
                         <div
-                            className="card border-0 shadow-lg"
-                            style={{ borderRadius: "20px", overflow: "hidden" }}
+                            className="card border-0 shadow-sm mb-0"
+                            style={{ borderRadius: "16px" }}
                         >
-                            <div className="card-header bg-white border-0 py-4 px-4">
-                                <div className="d-flex align-items-center justify-content-between">
+                            <div className="card-header bg-white border-0 pt-4 px-4 pb-0">
+                                <div className="d-flex align-items-center justify-content-between mb-3">
                                     <div>
-                                        <h4 className="mb-1 fw-bold text-dark">
-                                            <i className="mdi mdi-rocket-launch text-primary me-2"></i>
+                                        <h4
+                                            className="mb-0 fw-bold text-dark"
+                                            style={{
+                                                fontSize: "20px",
+                                                letterSpacing: "-0.5px",
+                                            }}
+                                        >
                                             Rendimiento Publicitario (Cierres)
                                         </h4>
                                         <p className="text-muted small mb-0">
-                                            Detalle granular de ventas agrupado
-                                            por estructura de pauta
+                                            Rendimiento de Ventas por Campaña
                                         </p>
                                     </div>
-                                    <div className="badge bg-soft-success text-success p-2 px-3 rounded-pill">
-                                        <i className="mdi mdi-check-decagram me-1"></i>
+                                    <div
+                                        className="badge bg-soft-success text-success p-2 px-3 rounded-pill"
+                                        style={{ fontSize: "11px" }}
+                                    >
+                                        <i className="mdi mdi-check-all me-1"></i>
                                         Datos Sincronizados
                                     </div>
                                 </div>
-                            </div>
-                            <div className="card-body p-0">
-                                <div
-                                    className="table-responsive"
-                                    style={{
-                                        maxHeight: "800px",
-                                        overflowY: "auto",
-                                    }}
-                                >
-                                    <table className="table table-hover align-middle mb-0">
-                                        <thead
-                                            className="table-light sticky-top"
-                                            style={{
-                                                top: "0",
-                                                zIndex: 10,
-                                                boxShadow:
-                                                    "0 2px 4px rgba(0,0,0,0.05)",
-                                            }}
+
+                                <div className="d-flex align-items-center gap-2 mb-4">
+                                    <span className="text-muted small fw-medium">
+                                        Filtro Activo:
+                                    </span>
+                                    <div className="dropdown">
+                                        <button
+                                            className="btn btn-sm btn-white border shadow-sm rounded-pill px-3 py-1 d-flex align-items-center gap-2 bg-light bg-opacity-25"
+                                            type="button"
                                         >
-                                            <tr
-                                                className="text-uppercase"
-                                                style={{
-                                                    fontSize: "11px",
-                                                    letterSpacing: "1px",
-                                                }}
+                                            <i className="mdi mdi-bullhorn text-primary"></i>
+                                            <span
+                                                className="fw-bold"
+                                                style={{ fontSize: "10px" }}
                                             >
-                                                <th className="border-0 px-4 py-3 text-muted">
-                                                    Lead / Cliente
-                                                </th>
-                                                <th className="border-0 py-3 text-muted">
-                                                    Asesor Responsable
-                                                </th>
-                                                <th className="border-0 py-3 text-muted">
-                                                    Productos & Servicios
-                                                </th>
-                                                <th className="border-0 text-end px-4 py-3 text-muted">
-                                                    Total Venta
-                                                </th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {clientsList.map((campaign, ci) => (
-                                                <React.Fragment key={`c-${ci}`}>
-                                                    {campaign.adsets.map(
-                                                        (adset, ai) => (
-                                                            <React.Fragment
-                                                                key={`as-${ci}-${ai}`}
-                                                            >
-                                                                {adset.ads.map(
-                                                                    (
-                                                                        ad,
-                                                                        adi,
-                                                                    ) => (
-                                                                        <React.Fragment
-                                                                            key={`ad-${ci}-${ai}-${adi}`}
+                                                CAMPAÑA: {clientsList[0]?.name}{" "}
+                                                | {selectedMonth}
+                                            </span>
+                                            <i className="mdi mdi-chevron-down text-muted"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div className="d-flex align-items-center justify-content-between mb-3">
+                                    <h5
+                                        className="mb-0 fw-bold text-dark"
+                                        style={{ fontSize: "15px" }}
+                                    >
+                                        Detalle de Cierres de Ventas (70%)
+                                    </h5>
+                                </div>
+                            </div>
+
+                            <div className="card-body pt-0 px-4 pb-4">
+                                {clientsList.map((campaign, ci) => (
+                                    <React.Fragment key={`c-${ci}`}>
+                                        {campaign.adsets.map((adset, ai) => (
+                                            <React.Fragment
+                                                key={`as-${ci}-${ai}`}
+                                            >
+                                                {adset.ads.map((ad, adi) => {
+                                                    const totalAdSales =
+                                                        ad.leads.reduce(
+                                                            (sum, client) => {
+                                                                return (
+                                                                    sum +
+                                                                    (client.products?.reduce(
+                                                                        (
+                                                                            s,
+                                                                            p,
+                                                                        ) =>
+                                                                            s +
+                                                                            Number(
+                                                                                p
+                                                                                    .pivot
+                                                                                    .price,
+                                                                            ),
+                                                                        0,
+                                                                    ) || 0)
+                                                                );
+                                                            },
+                                                            0,
+                                                        );
+
+                                                    return (
+                                                        <div
+                                                            key={`ad-${ci}-${ai}-${adi}`}
+                                                            className="mb-4 border border-light shadow-sm"
+                                                            style={{
+                                                                borderRadius:
+                                                                    "12px",
+                                                                overflow:
+                                                                    "hidden",
+                                                            }}
+                                                        >
+                                                            <div className="bg-light bg-opacity-25 px-3 py-2 d-flex align-items-center justify-content-between border-bottom border-light">
+                                                                <div className="d-flex align-items-center">
+                                                                    <div
+                                                                        className="avatar-xs me-2"
+                                                                        style={{
+                                                                            width: "28px",
+                                                                            height: "28px",
+                                                                        }}
+                                                                    >
+                                                                        <span
+                                                                            className="avatar-title rounded bg-soft-warning text-warning"
+                                                                            style={{
+                                                                                fontSize:
+                                                                                    "14px",
+                                                                            }}
                                                                         >
-                                                                            {/* Fila de Jerarquía con Fondo Opaco */}
-                                                                            <tr
-                                                                                style={{
-                                                                                    background:
-                                                                                        "rgba(85, 110, 230, 0.08)", // Un azul primario muy suave y opaco
-                                                                                }}
-                                                                            >
-                                                                                <td
-                                                                                    colSpan="4"
-                                                                                    className="py-2 px-4 shadow-sm"
-                                                                                >
-                                                                                    <div className="d-flex align-items-center flex-wrap gap-4">
-                                                                                        <div className="d-flex align-items-center">
-                                                                                            <div className="avatar-xs me-2">
-                                                                                                <span className="avatar-title rounded bg-soft-primary text-primary">
-                                                                                                    <i className="mdi mdi-bullhorn-variant"></i>
-                                                                                                </span>
-                                                                                            </div>
-                                                                                            <div>
-                                                                                                <small
-                                                                                                    className="text-muted d-block"
+                                                                            <i className="mdi mdi-package-variant"></i>
+                                                                        </span>
+                                                                    </div>
+                                                                    <h6
+                                                                        className="mb-0 fw-bold text-dark"
+                                                                        style={{
+                                                                            fontSize:
+                                                                                "13px",
+                                                                        }}
+                                                                    >
+                                                                        {
+                                                                            adset.name
+                                                                        }{" "}
+                                                                        |{" "}
+                                                                        <span className="text-muted fw-normal">
+                                                                            {
+                                                                                ad.name
+                                                                            }
+                                                                        </span>
+                                                                    </h6>
+                                                                </div>
+                                                                <div
+                                                                    className="text-muted"
+                                                                    style={{
+                                                                        fontSize:
+                                                                            "11px",
+                                                                    }}
+                                                                >
+                                                                    Total de
+                                                                    Cierres:{" "}
+                                                                    <span className="text-dark fw-bold">
+                                                                        {
+                                                                            ad
+                                                                                .leads
+                                                                                .length
+                                                                        }
+                                                                    </span>
+                                                                    <span className="mx-2 text-light">
+                                                                        |
+                                                                    </span>
+                                                                    Venta Total:{" "}
+                                                                    <span className="text-dark fw-bold">
+                                                                        S/{" "}
+                                                                        {totalAdSales.toLocaleString(
+                                                                            "es-PE",
+                                                                            {
+                                                                                minimumFractionDigits: 2,
+                                                                            },
+                                                                        )}
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+
+                                                            <div className="table-responsive">
+                                                                <table className="table table-hover align-middle mb-0">
+                                                                    <thead>
+                                                                        <tr
+                                                                            className="bg-white"
+                                                                            style={{
+                                                                                fontSize:
+                                                                                    "11px",
+                                                                                color: "#6c757d",
+                                                                            }}
+                                                                        >
+                                                                            <th className="border-0 px-3 py-3 fw-bold text-uppercase">
+                                                                                Lead
+                                                                                /
+                                                                                Cliente
+                                                                            </th>
+                                                                            <th className="border-0 py-3 fw-bold text-uppercase">
+                                                                                Contacto
+                                                                            </th>
+                                                                            <th className="border-0 py-3 fw-bold text-uppercase">
+                                                                                Asesor
+                                                                            </th>
+                                                                            <th className="border-0 py-3 fw-bold text-uppercase">
+                                                                                Producto
+                                                                            </th>
+                                                                            <th className="border-0 text-end px-3 py-3 fw-bold text-uppercase">
+                                                                                Venta
+                                                                            </th>
+                                                                        </tr>
+                                                                    </thead>
+                                                                    <tbody>
+                                                                        {ad.leads.map(
+                                                                            (
+                                                                                client,
+                                                                                li,
+                                                                            ) => {
+                                                                                const totalClient =
+                                                                                    client.products?.reduce(
+                                                                                        (
+                                                                                            sum,
+                                                                                            p,
+                                                                                        ) =>
+                                                                                            sum +
+                                                                                            Number(
+                                                                                                p
+                                                                                                    .pivot
+                                                                                                    .price,
+                                                                                            ),
+                                                                                        0,
+                                                                                    ) ||
+                                                                                    0;
+                                                                                return (
+                                                                                    <tr
+                                                                                        key={`l-${ci}-${ai}-${adi}-${li}`}
+                                                                                        className="border-top border-light"
+                                                                                    >
+                                                                                        <td className="px-3 py-3">
+                                                                                            <span
+                                                                                                className="fw-bold text-dark"
+                                                                                                style={{
+                                                                                                    fontSize:
+                                                                                                        "13px",
+                                                                                                }}
+                                                                                            >
+                                                                                                {
+                                                                                                    client.name
+                                                                                                }
+                                                                                            </span>
+                                                                                        </td>
+                                                                                        <td className="py-3">
+                                                                                            <div className="d-flex align-items-center gap-2">
+                                                                                                <i className="mdi mdi-whatsapp text-success fs-5"></i>
+                                                                                                <span
+                                                                                                    className="text-muted small"
                                                                                                     style={{
                                                                                                         fontSize:
-                                                                                                            "9px",
-                                                                                                        fontWeight: 800,
+                                                                                                            "11px",
                                                                                                     }}
                                                                                                 >
-                                                                                                    CAMPAÑA
-                                                                                                </small>
-                                                                                                <span className="fw-bold text-dark">
                                                                                                     {
-                                                                                                        campaign.name
+                                                                                                        client.contact_phone
                                                                                                     }
                                                                                                 </span>
                                                                                             </div>
-                                                                                        </div>
-                                                                                        <div className="d-flex align-items-center">
-                                                                                            <div className="avatar-xs me-2">
-                                                                                                <span className="avatar-title rounded bg-soft-info text-info">
-                                                                                                    <i className="mdi mdi-layers-triple"></i>
-                                                                                                </span>
-                                                                                            </div>
-                                                                                            <div>
-                                                                                                <small
-                                                                                                    className="text-muted d-block"
+                                                                                        </td>
+                                                                                        <td className="py-3">
+                                                                                            <div className="d-flex align-items-center">
+                                                                                                <img
+                                                                                                    src={`//${Global.APP_DOMAIN}/api/profile/thumbnail/${client.assigned?.relative_id}`}
+                                                                                                    className="rounded-circle avatar-xs me-2 border border-white shadow-sm"
+                                                                                                    style={{
+                                                                                                        width: "24px",
+                                                                                                        height: "24px",
+                                                                                                    }}
+                                                                                                    onError={(
+                                                                                                        e,
+                                                                                                    ) => {
+                                                                                                        e.target.src = `//${Global.APP_DOMAIN}/assets/img/user-404.svg`;
+                                                                                                    }}
+                                                                                                />
+                                                                                                <span
+                                                                                                    className="text-dark fw-medium"
                                                                                                     style={{
                                                                                                         fontSize:
-                                                                                                            "9px",
-                                                                                                        fontWeight: 800,
+                                                                                                            "12px",
                                                                                                     }}
                                                                                                 >
-                                                                                                    ADSET
-                                                                                                </small>
-                                                                                                <span className="fw-semibold text-dark">
                                                                                                     {
-                                                                                                        adset.name
+                                                                                                        client
+                                                                                                            .assigned
+                                                                                                            ?.name
                                                                                                     }
                                                                                                 </span>
                                                                                             </div>
-                                                                                        </div>
-                                                                                        <div className="d-flex align-items-center">
-                                                                                            <div className="avatar-xs me-2">
-                                                                                                <span className="avatar-title rounded bg-soft-success text-success">
-                                                                                                    <i className="mdi mdi-advertisements"></i>
-                                                                                                </span>
-                                                                                            </div>
-                                                                                            <div>
-                                                                                                <small
-                                                                                                    className="text-muted d-block"
-                                                                                                    style={{
-                                                                                                        fontSize:
-                                                                                                            "9px",
-                                                                                                        fontWeight: 800,
-                                                                                                    }}
-                                                                                                >
-                                                                                                    ANUNCIO
-                                                                                                    (ADS)
-                                                                                                </small>
-                                                                                                <span className="fw-medium text-dark">
-                                                                                                    {
-                                                                                                        ad.name
-                                                                                                    }
-                                                                                                </span>
-                                                                                            </div>
-                                                                                        </div>
-                                                                                    </div>
-                                                                                </td>
-                                                                            </tr>
-                                                                            {/* Leads con Estética Premium */}
-                                                                            {ad.leads.map(
-                                                                                (
-                                                                                    client,
-                                                                                    li,
-                                                                                ) => {
-                                                                                    const totalClient =
-                                                                                        client.products?.reduce(
-                                                                                            (
-                                                                                                sum,
-                                                                                                p,
-                                                                                            ) =>
-                                                                                                sum +
-                                                                                                Number(
-                                                                                                    p
-                                                                                                        .pivot
-                                                                                                        .price,
-                                                                                                ),
-                                                                                            0,
-                                                                                        ) ||
-                                                                                        0;
-                                                                                    return (
-                                                                                        <tr
-                                                                                            key={`l-${ci}-${ai}-${adi}-${li}`}
-                                                                                            className="animate__animated animate__fadeIn"
-                                                                                        >
-                                                                                            <td className="px-4 py-3">
-                                                                                                <div className="d-flex align-items-center">
-                                                                                                    <div className="flex-grow-1">
-                                                                                                        <h6
-                                                                                                            className="mb-0 fw-bold text-dark"
-                                                                                                            style={{
-                                                                                                                fontSize:
-                                                                                                                    "16px",
-                                                                                                            }}
-                                                                                                        >
-                                                                                                            {
-                                                                                                                client.name
-                                                                                                            }
-                                                                                                        </h6>
-                                                                                                        <div className="text-muted small d-flex align-items-center mt-1">
-                                                                                                            <span className="badge bg-soft-success text-success p-1 rounded me-2 fs-6">
-                                                                                                                <i className="mdi mdi-whatsapp me-1"></i>
-                                                                                                                {
-                                                                                                                    client.contact_phone
-                                                                                                                }
-                                                                                                            </span>
-                                                                                                        </div>
-                                                                                                    </div>
-                                                                                                </div>
-                                                                                            </td>
-                                                                                            <td className="py-3">
-                                                                                                <div className="d-flex align-items-center">
-                                                                                                    <div className="position-relative">
-                                                                                                        <img
-                                                                                                            src={`//${Global.APP_DOMAIN}/api/profile/thumbnail/${client.assigned?.relative_id}`}
-                                                                                                            className="rounded-circle avatar-sm me-2 shadow-sm border border-2 border-white"
-                                                                                                            onError={(
-                                                                                                                e,
-                                                                                                            ) => {
-                                                                                                                e.target.src = `//${Global.APP_DOMAIN}/assets/img/user-404.svg`;
-                                                                                                            }}
-                                                                                                        />
-                                                                                                    </div>
-                                                                                                    <div>
+                                                                                        </td>
+                                                                                        <td className="py-3">
+                                                                                            <div className="d-flex flex-wrap gap-1">
+                                                                                                {client.products?.map(
+                                                                                                    (
+                                                                                                        p,
+                                                                                                        pi,
+                                                                                                    ) => (
                                                                                                         <span
-                                                                                                            className="fw-semibold text-dark d-block"
+                                                                                                            key={
+                                                                                                                pi
+                                                                                                            }
+                                                                                                            className="badge bg-soft-success text-success rounded-pill px-2 py-1"
                                                                                                             style={{
                                                                                                                 fontSize:
-                                                                                                                    "16px",
+                                                                                                                    "9px",
+                                                                                                                textTransform:
+                                                                                                                    "uppercase",
                                                                                                             }}
                                                                                                         >
                                                                                                             {
-                                                                                                                client
-                                                                                                                    .assigned
-                                                                                                                    ?.name
+                                                                                                                p.name
                                                                                                             }
                                                                                                         </span>
-                                                                                                    </div>
-                                                                                                </div>
-                                                                                            </td>
-                                                                                            <td className="py-3">
-                                                                                                <div className="d-flex flex-wrap gap-2">
-                                                                                                    {client.products?.map(
-                                                                                                        (
-                                                                                                            p,
-                                                                                                            pi,
-                                                                                                        ) => (
-                                                                                                            <div
-                                                                                                                key={
-                                                                                                                    pi
-                                                                                                                }
-                                                                                                                className="d-flex align-items-center bg-soft-primary border border-primary border-opacity-10 rounded px-2 py-1 shadow-sm"
-                                                                                                                style={{
-                                                                                                                    fontSize:
-                                                                                                                        "14px",
-                                                                                                                }}
-                                                                                                            >
-                                                                                                                <i className="mdi mdi-package-variant-closed text-primary me-1"></i>
-                                                                                                                <span className="text-dark fw-medium">
-                                                                                                                    {
-                                                                                                                        p.name
-                                                                                                                    }
-                                                                                                                </span>
-                                                                                                                {/**        <span className="mx-1 text-muted">|</span>
-                                                                                                <span className="text-primary fw-bold">S/.{Number(p.pivot.price).toLocaleString("es-PE")}</span> */}
-                                                                                                            </div>
-                                                                                                        ),
-                                                                                                    )}
-                                                                                                </div>
-                                                                                            </td>
-                                                                                            <td className="text-end px-4 py-3">
-                                                                                                <div className="d-flex flex-column align-items-end">
-                                                                                                    <span
-                                                                                                        className="text-success fw-bold fs-5"
-                                                                                                        style={{
-                                                                                                            letterSpacing:
-                                                                                                                "-0.5px",
-                                                                                                        }}
-                                                                                                    >
-                                                                                                        S/.{" "}
-                                                                                                        {totalClient.toLocaleString(
-                                                                                                            "es-PE",
-                                                                                                            {
-                                                                                                                minimumFractionDigits: 2,
-                                                                                                            },
-                                                                                                        )}
-                                                                                                    </span>
-                                                                                                    <small
-                                                                                                        className="text-muted"
-                                                                                                        style={{
-                                                                                                            fontSize:
-                                                                                                                "9px",
-                                                                                                        }}
-                                                                                                    >
-                                                                                                        TOTAL
-                                                                                                        LIQUIDADO
-                                                                                                    </small>
-                                                                                                </div>
-                                                                                            </td>
-                                                                                        </tr>
-                                                                                    );
-                                                                                },
-                                                                            )}
-                                                                        </React.Fragment>
-                                                                    ),
-                                                                )}
-                                                            </React.Fragment>
-                                                        ),
-                                                    )}
-                                                </React.Fragment>
-                                            ))}
-                                        </tbody>
-                                    </table>
+                                                                                                    ),
+                                                                                                )}
+                                                                                            </div>
+                                                                                        </td>
+                                                                                        <td className="text-end px-3 py-3">
+                                                                                            <span
+                                                                                                className="fw-bold text-dark"
+                                                                                                style={{
+                                                                                                    fontSize:
+                                                                                                        "13px",
+                                                                                                }}
+                                                                                            >
+                                                                                                S/{" "}
+                                                                                                {totalClient.toLocaleString(
+                                                                                                    "es-PE",
+                                                                                                    {
+                                                                                                        minimumFractionDigits: 2,
+                                                                                                    },
+                                                                                                )}
+                                                                                            </span>
+                                                                                        </td>
+                                                                                    </tr>
+                                                                                );
+                                                                            },
+                                                                        )}
+                                                                    </tbody>
+                                                                </table>
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </React.Fragment>
+                                        ))}
+                                    </React.Fragment>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Columna Lateral (30%) */}
+                    <div className="col-lg-4 col-xl-3">
+                        <div className="sticky-top" style={{ top: "100px" }}>
+                            <div className="mb-4">
+                                {/* Top Asesores */}
+                                <div
+                                    className="card border-0 shadow-sm mb-4"
+                                    style={{ borderRadius: "16px" }}
+                                >
+                                    <div className="card-body p-4">
+                                        <h5
+                                            className="card-title mb-4 fw-bold text-dark d-flex align-items-center"
+                                            style={{ fontSize: "14px" }}
+                                        >
+                                            <i className="mdi mdi-trophy text-warning me-2 fs-4"></i>
+                                            Top Asesores (Venta Total)
+                                        </h5>
+                                        <div className="vstack gap-3">
+                                            {usersRanking
+                                                .slice(0, 5)
+                                                .map((user, idx) => {
+                                                    const percentage =
+                                                        Math.round(
+                                                            ((user.total || 0) /
+                                                                (usersRanking[0]
+                                                                    ?.total ||
+                                                                    1)) *
+                                                                100,
+                                                        );
+                                                    const advisor =
+                                                        user.assigned || {};
+                                                    return (
+                                                        <div
+                                                            key={idx}
+                                                            className="d-flex align-items-center"
+                                                        >
+                                                            <span
+                                                                className="fw-bold text-dark me-2"
+                                                                style={{
+                                                                    width: "10px",
+                                                                    fontSize:
+                                                                        "12px",
+                                                                }}
+                                                            >
+                                                                {idx + 1}
+                                                            </span>
+                                                            <img
+                                                                src={`//${Global.APP_DOMAIN}/api/profile/thumbnail/${advisor.relative_id}`}
+                                                                className="rounded-circle avatar-xs me-2 shadow-sm"
+                                                                onError={(
+                                                                    e,
+                                                                ) => {
+                                                                    e.target.src = `//${Global.APP_DOMAIN}/assets/img/user-404.svg`;
+                                                                }}
+                                                            />
+                                                            <div className="flex-grow-1">
+                                                                <div className="d-flex justify-content-between align-items-center mb-1">
+                                                                    <span
+                                                                        className="fw-bold text-dark"
+                                                                        style={{
+                                                                            fontSize:
+                                                                                "11px",
+                                                                        }}
+                                                                    >
+                                                                        {advisor.name ||
+                                                                            "Sin nombre"}{" "}
+                                                                        <span className="text-muted fw-normal">
+                                                                            ·{" "}
+                                                                            {user.count ||
+                                                                                0}{" "}
+                                                                            cierres
+                                                                        </span>
+                                                                    </span>
+                                                                    <span
+                                                                        className="text-muted"
+                                                                        style={{
+                                                                            fontSize:
+                                                                                "10px",
+                                                                        }}
+                                                                    >
+                                                                        {
+                                                                            percentage
+                                                                        }
+                                                                        %
+                                                                    </span>
+                                                                </div>
+                                                                <div
+                                                                    className="progress rounded-pill"
+                                                                    style={{
+                                                                        height: "5px",
+                                                                    }}
+                                                                >
+                                                                    <div
+                                                                        className="progress-bar bg-primary"
+                                                                        role="progressbar"
+                                                                        style={{
+                                                                            width: `${percentage}%`,
+                                                                        }}
+                                                                    ></div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Top Anuncios */}
+                                <div
+                                    className="card border-0 shadow-sm mb-4"
+                                    style={{ borderRadius: "16px" }}
+                                >
+                                    <div className="card-body p-4">
+                                        <h5
+                                            className="card-title mb-4 fw-bold text-dark d-flex align-items-center"
+                                            style={{ fontSize: "14px" }}
+                                        >
+                                            <i className="mdi mdi-fire text-danger me-2 fs-4"></i>
+                                            Top Anuncios (Ads)
+                                        </h5>
+                                        <div className="vstack gap-3">
+                                            {campaignsRanking
+                                                .slice(0, 5)
+                                                .map((ad, idx) => (
+                                                    <div
+                                                        key={idx}
+                                                        className="d-flex justify-content-between align-items-center"
+                                                    >
+                                                        <div>
+                                                            <span
+                                                                className="fw-bold text-dark d-block"
+                                                                style={{
+                                                                    fontSize:
+                                                                        "11px",
+                                                                }}
+                                                            >
+                                                                {idx + 1}.{" "}
+                                                                {ad.ad_name ||
+                                                                    "Sin nombre"}
+                                                            </span>
+                                                            <small
+                                                                className="text-muted"
+                                                                style={{
+                                                                    fontSize:
+                                                                        "10px",
+                                                                }}
+                                                            >
+                                                                {ad.adset_name ||
+                                                                    "Sin conjunto"}
+                                                            </small>
+                                                        </div>
+                                                        <span
+                                                            className="fw-bold text-dark"
+                                                            style={{
+                                                                fontSize:
+                                                                    "12px",
+                                                            }}
+                                                        >
+                                                            S/{" "}
+                                                            {(
+                                                                ad.total_liquidated ||
+                                                                0
+                                                            ).toLocaleString(
+                                                                "es-PE",
+                                                                {
+                                                                    minimumFractionDigits: 2,
+                                                                },
+                                                            )}
+                                                        </span>
+                                                    </div>
+                                                ))}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Resumen */}
+                                <div
+                                    className="card border-0 shadow-sm"
+                                    style={{ borderRadius: "16px" }}
+                                >
+                                    <div className="card-body p-4">
+                                        <h5
+                                            className="card-title mb-4 fw-bold text-dark d-flex align-items-center"
+                                            style={{ fontSize: "14px" }}
+                                        >
+                                            <i className="mdi mdi-package-variant text-warning me-2 fs-4"></i>
+                                            Resumen de la Campaña
+                                        </h5>
+                                        <div className="vstack gap-2">
+                                            <div className="d-flex justify-content-between align-items-center">
+                                                <span className="text-muted small">
+                                                    Total Liquidado:
+                                                </span>
+                                                <span className="fw-bold text-dark">
+                                                    S/{" "}
+                                                    {(
+                                                        clientsSum || 0
+                                                    ).toLocaleString("es-PE", {
+                                                        minimumFractionDigits: 2,
+                                                    })}
+                                                </span>
+                                            </div>
+                                            <div className="d-flex justify-content-between align-items-center">
+                                                <span className="text-muted small">
+                                                    Leads Cerrados:
+                                                </span>
+                                                <span className="fw-bold text-dark">
+                                                    {clientsCount || 0}
+                                                </span>
+                                            </div>
+                                            <div className="d-flex justify-content-between align-items-center">
+                                                <span className="text-muted small">
+                                                    Ticket Promedio:
+                                                </span>
+                                                <span className="fw-bold text-dark">
+                                                    S/{" "}
+                                                    {(
+                                                        (clientsSum || 0) /
+                                                        (clientsCount || 1)
+                                                    ).toLocaleString("es-PE", {
+                                                        minimumFractionDigits: 2,
+                                                    })}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>

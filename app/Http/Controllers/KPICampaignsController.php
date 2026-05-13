@@ -416,13 +416,13 @@ class KPICampaignsController extends BasicController
                 ->select([
                     'assigned_to',
                     DB::raw('count(distinct clients.id) as count'),
-                    DB::raw('SUM(chp.price) as total_amount')
+                    DB::raw('SUM(chp.price) as total')
                 ])
                 ->leftJoin('client_has_products as chp', 'chp.client_id', 'clients.id')
                 ->with('assigned')
                 ->whereNotNull('assigned_to')
                 ->groupBy('assigned_to')
-                ->orderBy('count', 'desc')
+                ->orderBy('total', 'desc')
                 ->get();
 
             $clientsListRaw = (clone $clientsQuery)
@@ -497,10 +497,16 @@ class KPICampaignsController extends BasicController
                 }
             }
 
-            $campaignsRanking = $query()
-                ->select('campaign.title as name', DB::raw('count(*) as count'))
-                ->groupBy('campaign.title')
-                ->orderByDesc('count')
+            $campaignsRanking = (clone $clientsQuery)
+                ->select([
+                    'clients.adset_name',
+                    'clients.ad_name',
+                    DB::raw('count(distinct clients.id) as count'),
+                    DB::raw('SUM(chp.price) as total_liquidated')
+                ])
+                ->leftJoin('client_has_products as chp', 'chp.client_id', 'clients.id')
+                ->groupBy('clients.adset_name', 'clients.ad_name')
+                ->orderByDesc('total_liquidated')
                 ->get();
 
             // Ganadores por Leads Totales (Captación)

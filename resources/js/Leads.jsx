@@ -1020,6 +1020,14 @@ const Leads = (properties) => {
             price: product.price,
         });
         if (!result) return;
+        setClientProducts((old) =>
+            old.map((p) => {
+                if (p.pivot_id == product.pivot_id) {
+                    return { ...p, price: product.price, pivot_price: product.price };
+                }
+                return p;
+            }),
+        );
     };
 
     const tasks = [];

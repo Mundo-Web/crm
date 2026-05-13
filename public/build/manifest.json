@@ -305,8 +305,8 @@
       "default.css"
     ]
   },
-  "_google-b8d90-ta.js": {
-    "file": "assets/google-b8d90-ta.js",
+  "_google-DGUI7LE-.js": {
+    "file": "assets/google-DGUI7LE-.js",
     "name": "google",
     "imports": [
       "_CreateReactScript-B9q8xlEF.js",
@@ -526,7 +526,7 @@
     ]
   },
   "resources/js/Chat.jsx": {
-    "file": "assets/Chat-CrsDwgpM.js",
+    "file": "assets/Chat-BGAM4ass.js",
     "name": "Chat",
     "src": "resources/js/Chat.jsx",
     "isEntry": true,
@@ -536,7 +536,7 @@
       "_LeadsRest-BAJijWLi.js",
       "_sweetalert2.esm.all-K5_XibIh.js",
       "_ProductsByClientsRest-QaqN4Gfu.js",
-      "_google-b8d90-ta.js",
+      "_google-DGUI7LE-.js",
       "_ArrayJoin-2k6ba35P.js",
       "_Modal-jeZ5O76w.js",
       "_QuillFormGroup-BhJ2WEty.js",
@@ -666,7 +666,7 @@
     ]
   },
   "resources/js/KPICampaigns.jsx": {
-    "file": "assets/KPICampaigns-DhNL67Er.js",
+    "file": "assets/KPICampaigns-DuCeaC6z.js",
     "name": "KPICampaigns",
     "src": "resources/js/KPICampaigns.jsx",
     "isEntry": true,
@@ -720,7 +720,7 @@
     ]
   },
   "resources/js/Leads.jsx": {
-    "file": "assets/Leads-D5rWhp83.js",
+    "file": "assets/Leads-BQq5SyOw.js",
     "name": "Leads",
     "src": "resources/js/Leads.jsx",
     "isEntry": true,
@@ -742,7 +742,7 @@
       "_Dropdown-CFu6Eu1a.js",
       "_DropdownItem-CLupnF3C.js",
       "_Number2Currency-e57Tgsuk.js",
-      "_google-b8d90-ta.js",
+      "_google-DGUI7LE-.js",
       "_Table-BoRsFHNi.js",
       "_server.browser-DjOKvAOf.js",
       "_ReactAppend-D-mCyJ_O.js",
