@@ -4,18 +4,18 @@ import Number2Currency from "../../Utils/Number2Currency"
 
 const SimpleProductCard = ({ onChange = () => { }, onDelete = () => { }, ...product }) => {
   const [isEditing, setIsEditing] = useState(false)
-  const [price, setPrice] = useState(product.pivot_price)
+  const [price, setPrice] = useState(product.pivot_price ?? product.price)
   const inputRef = useRef(null)
 
   useEffect(() => {
-    setPrice(product.pivot_price)
-  }, [product.pivot_price])
+    setPrice(product.pivot_price ?? product.price)
+  }, [product.pivot_price, product.price])
 
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (inputRef.current && !inputRef.current.contains(event.target)) {
         setIsEditing(false)
-        if (price !== product.pivot_price) {
+        if (price !== (product.pivot_price ?? product.price)) {
           console.log('cambio a:', price)
           onChange({ ...product, price })
         }
@@ -36,7 +36,7 @@ const SimpleProductCard = ({ onChange = () => { }, onDelete = () => { }, ...prod
     if (e.key === 'Enter') {
       e.preventDefault();
       setIsEditing(false)
-      if (price !== product.pivot_price) {
+      if (price !== (product.pivot_price ?? product.price)) {
         console.log('cambio a:', price)
         onChange({ ...product, price })
       }

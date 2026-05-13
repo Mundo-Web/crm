@@ -2425,7 +2425,11 @@ const Leads = (properties) => {
                                     {Number2Currency(
                                         clientProducts.reduce(
                                             (total, product) =>
-                                                total + Number(product.price),
+                                                total +
+                                                Number(
+                                                    product.pivot_price ??
+                                                        product.price,
+                                                ),
                                             0,
                                         ),
                                     )}
