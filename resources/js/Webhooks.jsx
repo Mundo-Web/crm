@@ -153,17 +153,18 @@ const IntegrationWizardModal = ({ service, setService, editingIntegration, apike
       account_type: 'página',
       permissions: 'leads_retrieval, ads_read, pages_read_engagement, business_management',
       steps: [
-        'Abrir el <strong>Panel de Desarrolladores</strong> de Meta',
-        'Crear una nueva aplicación o <em>seleccionar una existente</em>',
-        'Agregar el producto <code>"Webhooks"</code> a tu aplicación',
-        'Configurar webhook con la URL proporcionada',
-        'Generar token de página con <span style="color: #0084FF; font-weight: 600;">permisos de leads</span>'
+        '<strong>Crear una App en Meta:</strong> Entra a <a href="https://developers.facebook.com" target="_blank" style="color: #1877f2; font-weight: 500;">Meta for Developers</a>. Arriba a la derecha dice "Mis aplicaciones", haz clic ahí y luego en el botón azul "Crear aplicación". Elige el tipo "Negocios" u "Otros" y completa el nombre.',
+        '<strong>Añadir el producto Webhooks:</strong> Una vez dentro de tu aplicación, en la columna de la izquierda busca "Añadir producto". En la lista que aparece, busca "Webhooks" y haz clic en el botón "Configurar".',
+        '<strong>Configurar la URL de Callback:</strong> En la pantalla de Webhooks, verás un menú desplegable que dice "User". Cámbialo a <strong>"Page"</strong> y haz clic en el botón que dice "Suscribirse a este objeto". Pega la URL de Callback y el Token de Verificación que te damos abajo.',
+        '<strong>Suscribirse al campo de Leads:</strong> Verás una lista larga de opciones. Busca la que dice <code>leadgen</code> y haz clic en el botón "Suscribirse" a su derecha. Esto permitirá que Atalaya reciba tus leads.',
+        '<strong>Vincular la App a la Página (¡MUY IMPORTANTE!):</strong> Si no haces esto, Meta no enviará ningún lead. Entra al <a href="https://developers.facebook.com/tools/explorer/" target="_blank" style="color: #1877f2; font-weight: 500;">Explorador de la Graph API</a>. 1. Selecciona tu página en el campo "Usuario o página". 2. En la barra donde dice la URL (ej: `me?fields=id,name`), bórrala y escribe el ID de tu página seguido de `/subscribed_apps` (ejemplo: `123456789/subscribed_apps`). 3. Cambia el método de `GET` a `POST` (en el desplegable al lado de la barra). 4. Haz clic en el botón azul "Submit". Debe responderte <code>{"success": true}</code>.'
       ],
       authSteps: [
-        '<strong>🔑 Access Token</strong> (para recibir leads del formulario)<br/><span style="color:#555">Ve a <strong>Meta for Developers</strong> → tu app → <strong>Herramientas</strong> → <em>Explorador de la Graph API</em>. Genera un <strong>Page Access Token</strong> de larga duración con los permisos:</span><br/><code style="display:inline-block;margin-top:4px;background:#f1f5f9;padding:2px 8px;border-radius:4px">leads_retrieval &nbsp;·&nbsp; pages_read_engagement &nbsp;·&nbsp; pages_manage_metadata &nbsp;·&nbsp; business_management &nbsp;·&nbsp; pages_show_list</code>',
-        '<strong>⚡ App Token</strong> (para sincronizar campañas / adsets / ads)<br/><span style="color:#555">Desde <strong>Business Manager</strong> → <em>Usuarios del sistema</em>, genera un token de usuario del sistema con los permisos:</span><br/><code style="display:inline-block;margin-top:4px;background:#f1f5f9;padding:2px 8px;border-radius:4px">ads_management &nbsp;·&nbsp; ads_read &nbsp;·&nbsp; pages_manage_ads</code><br/><span style="color:#888;font-size:0.85em">Este token va en el campo <em>"App Token"</em> del formulario de abajo.</span>',
-        'Copia el <code>Page ID</code> de la página de Facebook conectada a tus formularios de leads',
-        'Pega el <strong>Access Token</strong> (leads) y el <strong>App Token</strong> (campañas) en los campos correspondientes del formulario'
+        '<strong>Obtener el ID de la Página (Account ID):</strong><br/><span style="color:#555">Entra a tu página de Facebook. Haz clic en la pestaña "Información" (debajo de la foto de portada). Desplázate hacia abajo hasta encontrar el número largo que dice "Identificador de la página". Cópialo y pégalo abajo.</span>',
+        '<strong>Obtener el Access Token (Token de Leads):</strong><br/><span style="color:#555">Entra a <a href="https://developers.facebook.com/tools/explorer/" target="_blank" style="color: #1877f2; font-weight: 500;">este enlace del Explorador</a>. En la columna derecha, en el campo "Usuario o página", selecciona tu página de Facebook. Luego, en la sección "Permisos", busca y añade: <code>leads_retrieval</code> y <code>pages_read_engagement</code>. Haz clic en el botón azul "Generate Access Token". Copia el texto largo que sale y pégalo abajo.<br/><strong>⚠️ Nota:</strong> El token del Explorador dura solo unas horas. Para convertirlo en uno de 60 días, guarda la integración y luego usa el botón de rayo ⚡ que aparecerá al lado del campo de token.</span>',
+        '<strong>Obtener Meta App ID y Meta App Secret:</strong><br/><span style="color:#555">En Meta for Developers, entra a tu App. En el menú de la izquierda ve a <strong>Configuración</strong> -> <strong>Básica</strong>. Verás el "Identificador de la aplicación" y abajo la "Clave secreta" (haz clic en "Mostrar" para verla). Cópialos y pégalos abajo.</span>',
+        '<strong>Obtener App Token (Para campañas - Opcional):</strong><br/><span style="color:#555">Entra a la Configuración del Negocio en Meta. Ve a <strong>Usuarios</strong> -> <strong>Usuarios del sistema</strong>. Selecciona tu usuario y haz clic en "Generar nuevo token". Selecciona tu App y marca los permisos <code>ads_management</code> y <code>ads_read</code>. Genera el token, cópialo y pégalo abajo.</span>',
+        '<strong>Nota sobre los campos del Formulario:</strong><br/><span style="color:#555">Para que Atalaya guarde los datos automáticamente, asegúrate de que los campos de tu formulario en Facebook se llamen exactamente: <code>full_name</code> (o nombre), <code>phone_number</code> (o telefono) y <code>email</code> (o correo). Si usas nombres personalizados, el sistema no podrá identificarlos.</span>'
       ]
     },
     messenger: {
@@ -175,18 +176,16 @@ const IntegrationWizardModal = ({ service, setService, editingIntegration, apike
       account_type: 'página de Facebook',
       permissions: 'pages_messaging, pages_read_engagement',
       steps: [
-        'Abrir el <strong>Panel de Desarrolladores</strong> de Meta',
-        'Crear una nueva aplicación o <em>seleccionar una existente</em>',
-        'Agregar el producto <code>"Messenger"</code> a tu aplicación',
-        'Configurar webhook con la URL proporcionada',
-        'Generar token de página con <span style="color: #0084FF; font-weight: 600;">permisos de mensajería</span>'
+        '<strong>Crear una App en Meta:</strong> Entra a <a href="https://developers.facebook.com" target="_blank" style="color: #0084FF; font-weight: 500;">Meta for Developers</a> y crea o selecciona tu app.',
+        '<strong>Añadir Messenger:</strong> En la columna izquierda, ve a "Añadir producto" y selecciona <strong>Messenger</strong>.',
+        '<strong>Configurar Webhook:</strong> En la configuración de Messenger, añade la URL de Callback y el Token de Verificación que aparecen abajo.',
+        '<strong>Suscribirse a Mensajes:</strong> En la sección de Webhooks de Messenger, suscríbete a los campos <code>messages</code> y <code>messaging_postbacks</code>.'
       ],
       authSteps: [
-        'Ve a la configuración de tu aplicación en <strong>Meta for Developers</strong>',
-        'Navega a <code>"Messenger"</code> → <em>"Settings"</em> en el menú lateral',
-        'Selecciona la <span style="color: #0084FF; font-weight: 600;">página de Facebook</span> que deseas conectar',
-        'Genera un <strong>Page Access Token</strong> con permisos de mensajería',
-        'Copia el <code>Page ID</code> y el <code>Access Token</code> generados'
+        '<strong>Ir a la configuración de Messenger:</strong> En el menú lateral de tu app en Meta for Developers, busca Messenger y haz clic en Configuración.',
+        '<strong>Seleccionar Página:</strong> En la sección "Configuración de acceso", busca tu página de Facebook en el selector.',
+        '<strong>Generar Token:</strong> Haz clic en el botón "Generar token" al lado de tu página. Cópialo y pégalo en el campo <strong>Access Token</strong> de abajo.',
+        '<strong>Obtener ID de la Página:</strong> Copia el número de identificación que aparece al lado de la página y pégalo en <strong>ID de la cuenta</strong>.'
       ]
     },
     instagram: {
@@ -198,18 +197,15 @@ const IntegrationWizardModal = ({ service, setService, editingIntegration, apike
       account_type: 'cuenta de Instagram Business',
       permissions: 'instagram_basic, instagram_manage_messages',
       steps: [
-        'Acceder al <strong>Panel de Desarrolladores</strong> de Meta',
-        'Crear aplicación y agregar <code>"Instagram Basic Display"</code>',
-        'Conectar <em>cuenta de Instagram Business</em>',
-        'Configurar webhook para recibir mensajes',
-        'Obtener <span style="color: #E4405F; font-weight: 600;">token de acceso</span> de la cuenta'
+        '<strong>Tener cuenta Business:</strong> Asegúrate de que tu cuenta de Instagram sea Profesional (Empresa o Creador) y esté vinculada a una página de Facebook.',
+        '<strong>Añadir producto:</strong> En Meta for Developers, busca "Añadir producto" y añade "Instagram Graph API" o "Instagram Basic Display".',
+        '<strong>Configurar Webhook:</strong> Pega la URL de Callback y el Token de Verificación abajo para recibir los mensajes de Instagram.'
       ],
       authSteps: [
-        'Accede a <a href="https://developers.facebook.com/apps" target="_blank" style="color: #E4405F; text-decoration: underline;">Meta for Developers</a>',
-        'Ve a <code>"Instagram Basic Display"</code> → <em>"Basic Display"</em>',
-        'Conecta tu <strong>cuenta de Instagram Business</strong>',
-        'Genera un <span style="color: #E4405F; font-weight: 600;">User Access Token</span>',
-        'Obtén el <code>Instagram User ID</code> de tu cuenta'
+        '<strong>Ir a Instagram Basic Display:</strong> En el menú izquierdo de tu app en Meta for Developers, ve a Instagram Basic Display -> Basic Display.',
+        '<strong>Añadir Probador:</strong> Desplázate hasta el final de la página y añade tu cuenta de Instagram como tester (probador).',
+        '<strong>Aceptar Invitación:</strong> Abre Instagram.com en tu navegador, ve a Configuración -> Aplicaciones y sitios web -> Invitaciones de probador y acepta la invitación.',
+        '<strong>Generar Token:</strong> Vuelve a la pantalla de Meta for Developers y ahora podrás generar el token de usuario. Cópialo y pégalo abajo junto con tu ID.'
       ]
     },
     whatsapp: {
@@ -221,18 +217,16 @@ const IntegrationWizardModal = ({ service, setService, editingIntegration, apike
       account_type: 'Cuenta de WhatsApp',
       permissions: 'messages',
       steps: [
-        'Abrir el <strong>Panel de Desarrolladores</strong> de Meta',
-        'Crear una nueva aplicación o <em>seleccionar una existente</em>',
-        'Agregar el producto <code>"WhatsApp"</code> a tu aplicación',
-        'Configurar webhook con la URL proporcionada',
-        'Generar token de página con <span style="color: #25D366; font-weight: 600;">permisos de mensajería</span>'
+        '<strong>Añadir WhatsApp:</strong> En Meta for Developers, busca "Añadir producto" y selecciona <strong>WhatsApp</strong> para añadirlo a tu app.',
+        '<strong>Configurar Webhook:</strong> En la configuración de WhatsApp, introduce la URL de Callback y el Token de Verificación que te damos abajo.',
+        '<strong>Suscribirse a Mensajes:</strong> En la sección de Webhook, marca la casilla de <code>messages</code> para que Atalaya pueda recibir los mensajes.',
+        '<strong>Vincular la App al Negocio (Opcional):</strong> Si los mensajes no llegan, entra al <a href="https://developers.facebook.com/tools/explorer/" target="_blank" style="color: #25D366; font-weight: 500;">Explorador de la Graph API</a>. 1. Escribe tu <code>WhatsApp Business Account ID</code> seguido de `/subscribed_apps` en la barra de URL. 2. Cambia el método a `POST` y haz clic en "Submit".'
       ],
       authSteps: [
-        'Ve a la configuración de tu aplicación en <strong>Meta for Developers</strong>',
-        'Navega a <code>"WhatsApp"</code> → <em>"Settings"</em> en el menú lateral',
-        'Selecciona la <span style="color: #25D366; font-weight: 600;">cuenta de WhatsApp</span> que deseas conectar',
-        'Genera un <strong>WhatsApp Access Token</strong> con permisos de mensajería',
-        'Copia el <code>Phone Number ID</code> y el <code>Access Token</code> generados'
+        '<strong>Ir a WhatsApp -> Configuración:</strong> En el menú lateral de tu app en Meta for Developers, entra en WhatsApp y luego en Configuración.',
+        '<strong>Obtener Phone Number ID:</strong> Busca el campo que dice <code>Phone Number ID</code> (ID de número de teléfono), cópialo y pégalo abajo.',
+        '<strong>Obtener WhatsApp Business Account ID:</strong> Busca ese ID en la misma pantalla y pégalo en el campo <strong>ID de la cuenta</strong> abajo.',
+        '<strong>Generar Token:</strong> Para uso real, genera un token permanente en la Configuración del Negocio (Usuarios del sistema). Para pruebas rápidas, puedes usar el token temporal que sale en esa pantalla.'
       ]
     },
     whatsappevo: {
@@ -914,7 +908,7 @@ const IntegrationWizardModal = ({ service, setService, editingIntegration, apike
                         color: 'var(--bs-body-color)'
                       }}
                     />
-                    {service === 'forms' && editingIntegration && (
+                    {service === 'forms' && (
                       <Tippy content="Convertir a token de 60 días">
                         <button
                           type="button"

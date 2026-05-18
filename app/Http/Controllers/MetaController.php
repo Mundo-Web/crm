@@ -698,13 +698,12 @@ class MetaController extends Controller
     public function exchangeToken(Request $request)
     {
         $request->validate([
-            'integration_id' => 'required',
             'short_token' => 'required',
             'app_id' => 'required',
             'app_secret' => 'required'
         ]);
 
-        $integration = Integration::findOrFail($request->integration_id);
+        $integration = $request->integration_id ? Integration::find($request->integration_id) : null;
         
         $facebookGraphUrl = env('FACEBOOK_GRAPH_URL', 'https://graph.facebook.com/v20.0');
         
@@ -720,14 +719,16 @@ class MetaController extends Controller
             $data = json_decode($response, true);
 
             if (isset($data['access_token'])) {
-                $integration->update([
-                    'meta_access_token' => $data['access_token'],
-                    'meta_app_id' => $request->app_id,
-                    'meta_app_secret' => $request->app_secret
-                ]);
+                if ($integration) {
+                    $integration->update([
+                        'meta_access_token' => $data['access_token'],
+                        'meta_app_id' => $request->app_id,
+                        'meta_app_secret' => $request->app_secret
+                    ]);
+                }
                 return response()->json([
                     'status' => 'success', 
-                    'message' => 'Token de larga duración generado y guardado correctamente', 
+                    'message' => $integration ? 'Token de larga duración generado y guardado correctamente' : 'Token de larga duración generado correctamente', 
                     'token' => $data['access_token']
                 ]);
             }
