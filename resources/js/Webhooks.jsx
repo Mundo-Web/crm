@@ -965,10 +965,9 @@ const IntegrationWizardModal = ({ service, setService, editingIntegration, apike
                         value={appToken}
                         onChange={e => setAppToken(e.target.value)}
                         placeholder="Token con permisos: ads_management, ads_read, pages_manage_ads"
-                        disabled={!!accountVerified}
                         style={{
-                          borderColor: accountVerified ? '#28a745' : 'var(--bs-border-color)',
-                          backgroundColor: accountVerified ? '#d4edda' : 'var(--bs-body-bg)',
+                          borderColor: 'var(--bs-border-color)',
+                          backgroundColor: 'var(--bs-body-bg)',
                           color: 'var(--bs-body-color)'
                         }}
                       />
@@ -988,10 +987,9 @@ const IntegrationWizardModal = ({ service, setService, editingIntegration, apike
                         value={adAccountId}
                         onChange={e => setAdAccountId(e.target.value)}
                         placeholder="Ej: 1960065440840205"
-                        disabled={!!accountVerified}
                         style={{
-                          borderColor: accountVerified ? '#28a745' : 'var(--bs-border-color)',
-                          backgroundColor: accountVerified ? '#d4edda' : 'var(--bs-body-bg)',
+                          borderColor: 'var(--bs-border-color)',
+                          backgroundColor: 'var(--bs-body-bg)',
                           color: 'var(--bs-body-color)'
                         }}
                       />
