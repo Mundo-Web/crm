@@ -136,6 +136,40 @@ class IntegrationController extends BasicController
             }
         }
 
+        if ($request->service === 'forms') {
+            $pageId = $jpa->meta_business_id;
+            $accessToken = $jpa->meta_access_token;
+
+            $facebookGraphUrl = config('services.meta.facebook_graph_url', env('FACEBOOK_GRAPH_URL', 'https://graph.facebook.com/v20.0'));
+
+            $res = new \SoDe\Extend\Fetch("{$facebookGraphUrl}/{$pageId}/subscribed_apps", [
+                'method' => 'POST',
+                'headers' => [
+                    'Authorization' => "Bearer {$accessToken}",
+                    'Content-Type'  => 'application/json'
+                ],
+                'body' => ['subscribed_fields' => 'leadgen']
+            ]);
+
+            $data = $res->json();
+
+            \Illuminate\Support\Facades\Log::info('Meta Forms subscribed_apps response', [
+                'page_id' => $pageId,
+                'response' => $data
+            ]);
+
+            if (!($data['success'] ?? false)) {
+                $errorMsg = $data['error']['message'] ?? 'Error al vincular la App a la Página';
+                $errorCode = $data['error']['code'] ?? 0;
+                \Illuminate\Support\Facades\Log::warning('Meta Forms subscribed_apps failed', [
+                    'code' => $errorCode,
+                    'message' => $errorMsg
+                ]);
+                // No eliminamos la integración, solo avisamos. El token puede no tener permisos de suscripción
+                // pero la integración puede seguir funcionando si el webhook ya estaba suscrito antes.
+            }
+        }
+
         return $jpa;
     }
 }
