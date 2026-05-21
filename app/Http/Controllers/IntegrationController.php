@@ -138,14 +138,44 @@ class IntegrationController extends BasicController
 
         if ($request->service === 'forms') {
             $pageId = $jpa->meta_business_id;
-            $accessToken = $jpa->meta_access_token;
+            $systemUserToken = $jpa->meta_access_token;
 
             $facebookGraphUrl = config('services.meta.facebook_graph_url', env('FACEBOOK_GRAPH_URL', 'https://graph.facebook.com/v20.0'));
+
+            // PASO 1: Obtener el Page Access Token usando el System User Token
+            \Illuminate\Support\Facades\Log::info('Meta Forms: Getting page access token', [
+                'page_id' => $pageId
+            ]);
+
+            $getPageTokenUrl = "{$facebookGraphUrl}/{$pageId}?fields=access_token&access_token={$systemUserToken}";
+            $pageTokenRes = new \SoDe\Extend\Fetch($getPageTokenUrl);
+            $pageTokenData = $pageTokenRes->json();
+
+            if (!isset($pageTokenData['access_token'])) {
+                $errorMsg = $pageTokenData['error']['message'] ?? 'No se pudo obtener el Page Access Token';
+                $errorCode = $pageTokenData['error']['code'] ?? 0;
+                
+                \Illuminate\Support\Facades\Log::error('Meta Forms: Failed to get page access token', [
+                    'page_id' => $pageId,
+                    'code' => $errorCode,
+                    'message' => $errorMsg
+                ]);
+
+                // No eliminamos la integración, solo avisamos
+                return $jpa;
+            }
+
+            $pageAccessToken = $pageTokenData['access_token'];
+
+            // PASO 2: Vincular la App a la Página usando el Page Access Token
+            \Illuminate\Support\Facades\Log::info('Meta Forms: Subscribing app to page', [
+                'page_id' => $pageId
+            ]);
 
             $res = new \SoDe\Extend\Fetch("{$facebookGraphUrl}/{$pageId}/subscribed_apps", [
                 'method' => 'POST',
                 'headers' => [
-                    'Authorization' => "Bearer {$accessToken}",
+                    'Authorization' => "Bearer {$pageAccessToken}",
                     'Content-Type'  => 'application/json'
                 ],
                 'body' => ['subscribed_fields' => 'leadgen']
