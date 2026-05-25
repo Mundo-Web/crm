@@ -34,6 +34,10 @@ return [
     'meta' => [
         'facebook_graph_url' => env('FACEBOOK_GRAPH_URL', 'https://graph.facebook.com/v22.0'),
         'instagram_graph_url' => env('INSTAGRAM_GRAPH_URL', 'https://graph.instagram.com/v22.0'),
+        'client_id' => env('META_CLIENT_ID'),
+        'client_secret' => env('META_CLIENT_SECRET'),
+        'redirect_uri' => env('META_REDIRECT_URI'),
+        'webhook_verify_token' => env('META_WEBHOOK_VERIFY_TOKEN'),
     ],
 
     'gemini' => [

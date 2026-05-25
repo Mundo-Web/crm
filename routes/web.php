@@ -15,6 +15,7 @@ use App\Http\Controllers\KPIProjectsController;
 use App\Http\Controllers\LeadController;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\PixelController;
+use App\Http\Controllers\MetaController;
 use App\Http\Controllers\PlanController;
 use App\Http\Controllers\ProcessController;
 use App\Http\Controllers\ProductController;
@@ -100,12 +101,17 @@ Route::middleware(['auth', 'firstTime', 'hasPlan'])->group(function () {
     Route::get('/apikeys', [ApikeyController::class, 'reactView'])->name('Apikeys.jsx');
     Route::get('/pixels', [PixelController::class, 'reactView'])->name('Pixels.jsx');
     Route::get('/webhooks', [WebhookController::class, 'reactView'])->name('Webhooks.jsx');
+    Route::get('/meta/connect', [MetaController::class, 'redirectToMeta'])->name('meta.connect');
     Route::get('/types', [TypeController::class, 'reactView'])->name('Types.jsx');
     Route::get('/settings', [SettingController::class, 'reactView'])->name('Settings.jsx');
     Route::get('/business-sectors', [BusinessSectorController::class, 'reactView'])->name('BusinessSectors.jsx');
 
     Route::get('/chatrucho', [ChatruchoController::class, 'reactView'])->name('Chatrucho.jsx');
 });
+
+// Callback public route to allow Meta redirect via ngrok without requiring active session
+Route::get('/meta/callback', [MetaController::class, 'handleMetaCallback']);
+
 
 if (env('APP_ENV') === 'local') {
     Route::get('/cloud/{uuid}', [RepositoryController::class, 'media']);

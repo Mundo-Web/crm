@@ -31,6 +31,58 @@ class MetaController extends Controller
 {
     public static function getInstagramProfile(string $id, string $accessToken, bool $external = false)
     {
+        $facebookGraphUrl = env('FACEBOOK_GRAPH_URL', 'https://graph.facebook.com/v22.0');
+        
+        // 1. Try querying via Facebook Graph API (which works with Page Access Tokens)
+        try {
+            if ($external) {
+                // For webhook sender profiles, query graph.facebook.com directly
+                $igRest = new Fetch("{$facebookGraphUrl}/{$id}?fields=id,name,username,profile_pic&access_token={$accessToken}");
+                $igData = $igRest->json();
+                
+                if (isset($igData['id'])) {
+                    // For compatibility with webhook handling that joins first_name and last_name:
+                    $parts = explode(' ', $igData['name'] ?? '', 2);
+                    $igData['first_name'] = $parts[0] ?? ($igData['username'] ?? 'Instagram');
+                    $igData['last_name'] = $parts[1] ?? 'User';
+                    return $igData;
+                }
+            } else {
+                // For integration profiles (Facebook Page -> Instagram Business Account)
+                $pageRes = new Fetch("{$facebookGraphUrl}/{$id}?fields=instagram_business_account&access_token={$accessToken}");
+                $pageData = $pageRes->json();
+                
+                $instagramBusinessAccountId = null;
+                if (isset($pageData['instagram_business_account']['id'])) {
+                    $instagramBusinessAccountId = $pageData['instagram_business_account']['id'];
+                } else {
+                    $instagramBusinessAccountId = $id;
+                }
+                
+                $igRes = new Fetch("{$facebookGraphUrl}/{$instagramBusinessAccountId}?fields=id,name,username,profile_picture_url&access_token={$accessToken}");
+                $igData = $igRes->json();
+                
+                if (isset($igData['id'])) {
+                    $profile = [
+                        'id' => $igData['id'],
+                        'name' => $igData['name'] ?? ($igData['username'] ?? 'Instagram Account'),
+                        'username' => $igData['username'] ?? ''
+                    ];
+                    if (isset($igData['profile_picture_url'])) {
+                        $profile['picture'] = [
+                            'data' => [
+                                'url' => $igData['profile_picture_url']
+                            ]
+                        ];
+                    }
+                    return $profile;
+                }
+            }
+        } catch (\Throwable $e) {
+            Log::error('Instagram profile query via Facebook Graph failed: ' . $e->getMessage());
+        }
+
+        // 2. Original Fallback (Basic Display API)
         if ($external) {
             $igRest = new Fetch(env('INSTAGRAM_GRAPH_URL') . "/{$id}?fields=id,name,username&access_token={$accessToken}");
             $igData = $igRest->json();
@@ -258,20 +310,25 @@ class MetaController extends Controller
                     'source' => strtolower($originName)
                 ]);
 
-                // Registrar AdSet para Formularios
+                // Registrar AdSet para Formularios (solo si viene un ID válido)
+                $adSetJpa = null;
                 $adSetId = preg_replace('/^[a-z]+:/i', '', $leadData['adset_id'] ?? '');
-                $adSetJpa = \App\Models\AdSet::updateOrCreate([
-                    'campaign_id' => $campaignJpa->id,
-                    'meta_id' => $adSetId
-                ], [
-                    'name' => $leadData['adset_name'] ?? 'Conjunto de anuncios Form',
-                    'status' => 'ACTIVE',
-                    'business_id' => $businessJpa->id
-                ]);
+                $adSetId = trim($adSetId);
+                if (!empty($adSetId) && is_numeric($adSetId)) {
+                    $adSetJpa = \App\Models\AdSet::updateOrCreate([
+                        'campaign_id' => $campaignJpa->id,
+                        'meta_id' => $adSetId
+                    ], [
+                        'name' => $leadData['adset_name'] ?? 'Conjunto de anuncios Form',
+                        'status' => 'ACTIVE',
+                        'business_id' => $businessJpa->id
+                    ]);
+                }
 
-                // Registrar Ad para Formularios
+                // Registrar Ad para Formularios (solo si viene un ID válido y se creó el AdSet)
                 $adIdClean = preg_replace('/^[a-z]+:/i', '', $leadData['ad_id'] ?? '');
-                if ($adIdClean) {
+                $adIdClean = trim($adIdClean);
+                if (!empty($adIdClean) && is_numeric($adIdClean) && $adSetJpa) {
                     \App\Models\Ad::updateOrCreate([
                         'ad_set_id' => $adSetJpa->id,
                         'meta_id' => $adIdClean
@@ -290,8 +347,8 @@ class MetaController extends Controller
                     // Actualizar atribución para lead existente sin campaña
                     $clientJpa->update([
                         'campaign_id' => $campaignJpa->id,
-                        'adset_name' => $adSetJpa->name,
-                        'ad_name' => $leadData['ad_name'] ?? $adIdClean,
+                        'adset_name' => $adSetJpa ? $adSetJpa->name : null,
+                        'ad_name' => ($leadData['ad_name'] ?? $adIdClean) ?: null,
                         'source' => 'Meta',
                         'origin' => $originName,
                         'lead_origin' => $originName,
@@ -320,8 +377,8 @@ class MetaController extends Controller
                         'lead_origin' => $originName,
                         'triggered_by' => "Formulario {$originName}",
                         'campaign_id' => $campaignJpa->id,
-                        'adset_name' => $adSetJpa->name,
-                        'ad_name' => $leadData['ad_name'] ?? $adIdClean,
+                        'adset_name' => $adSetJpa ? $adSetJpa->name : null,
+                        'ad_name' => ($leadData['ad_name'] ?? $adIdClean) ?: null,
                         'status' => true,
                         'complete_registration' => true,
                         'source_channel' => "{$originName} Form"
@@ -563,20 +620,25 @@ class MetaController extends Controller
                     'source' => strtolower($origin)
                 ]);
 
-                // Registrar AdSet
+                // Registrar AdSet (solo si viene un ID válido)
+                $adSetJpa = null;
                 $adSetId = preg_replace('/^[a-z]+:/i', '', $referralData['adset']['id'] ?? '');
-                $adSetJpa = \App\Models\AdSet::updateOrCreate([
-                    'campaign_id' => $campaignJpa->id,
-                    'meta_id' => $adSetId
-                ], [
-                    'name' => $referralData['adset']['name'] ?? 'Conjunto de anuncios WhatsApp',
-                    'status' => 'ACTIVE',
-                    'business_id' => $businessJpa->id
-                ]);
+                $adSetId = trim($adSetId);
+                if (!empty($adSetId) && is_numeric($adSetId)) {
+                    $adSetJpa = \App\Models\AdSet::updateOrCreate([
+                        'campaign_id' => $campaignJpa->id,
+                        'meta_id' => $adSetId
+                    ], [
+                        'name' => $referralData['adset']['name'] ?? 'Conjunto de anuncios WhatsApp',
+                        'status' => 'ACTIVE',
+                        'business_id' => $businessJpa->id
+                    ]);
+                }
 
-                // Registrar Ad
+                // Registrar Ad (solo si viene un ID válido y se creó el AdSet)
                 $adIdClean = preg_replace('/^[a-z]+:/i', '', $referralData['id'] ?? $referralData['ad_id'] ?? '');
-                if ($adIdClean) {
+                $adIdClean = trim($adIdClean);
+                if (!empty($adIdClean) && is_numeric($adIdClean) && $adSetJpa) {
                     \App\Models\Ad::updateOrCreate([
                         'ad_set_id' => $adSetJpa->id,
                         'meta_id' => $adIdClean
@@ -588,8 +650,8 @@ class MetaController extends Controller
                 }
 
                 $preClient['campaign_id'] = $campaignJpa->id;
-                $preClient['adset_name'] = $referralData['adset']['name'] ?? null;
-                $preClient['ad_name'] = $referralData['name'] ?? null;
+                $preClient['adset_name'] = $adSetJpa ? $adSetJpa->name : ($referralData['adset']['name'] ?? null);
+                $preClient['ad_name'] = $referralData['name'] ?? ($adIdClean ?: null);
                 $preClient['triggered_by'] = 'Click to WhatsApp';
                 $preClient['source'] = 'Meta';
                 
@@ -1557,4 +1619,272 @@ class MetaController extends Controller
             return null;
         }
     }
+
+    public function redirectToMeta(Request $request)
+    {
+        $clientId = config('services.meta.client_id');
+        $redirectUri = config('services.meta.redirect_uri');
+        $configId = env('META_CONFIG_ID');
+        
+        $scopes = [
+            'pages_show_list',
+            'pages_manage_metadata',
+            'pages_read_engagement',
+            'leads_retrieval',
+            'whatsapp_business_messaging',
+            'whatsapp_business_management'
+        ];
+        
+        $queryParams = [
+            'client_id' => $clientId,
+            'redirect_uri' => $redirectUri,
+            'scope' => implode(',', $scopes),
+            'response_type' => 'code'
+        ];
+        
+        if ($configId) {
+            $queryParams['config_id'] = $configId;
+        }
+        
+        $url = "https://www.facebook.com/v22.0/dialog/oauth?" . http_build_query($queryParams);
+        return redirect($url);
+    }
+
+    public function handleMetaCallback(Request $request)
+    {
+        try {
+            $code = $request->query('code');
+            if (!$code) {
+                throw new Exception('Falta el código de autorización de Meta');
+            }
+
+            $clientId = config('services.meta.client_id');
+            $clientSecret = config('services.meta.client_secret');
+            $redirectUri = config('services.meta.redirect_uri');
+            $graphUrl = config('services.meta.facebook_graph_url', 'https://graph.facebook.com/v22.0');
+
+            // 1. Obtener User Access Token (corta duración)
+            $tokenRes = new Fetch("{$graphUrl}/oauth/access_token?" . http_build_query([
+                'client_id' => $clientId,
+                'client_secret' => $clientSecret,
+                'redirect_uri' => $redirectUri,
+                'code' => $code
+            ]));
+            $tokenData = $tokenRes->json();
+            if (isset($tokenData['error'])) {
+                throw new Exception('Error obteniendo token de usuario: ' . ($tokenData['error']['message'] ?? 'Error desconocido'));
+            }
+            $userToken = $tokenData['access_token'];
+
+            // 2. Intercambiar por User Access Token de larga duración
+            $longTokenRes = new Fetch("{$graphUrl}/oauth/access_token?" . http_build_query([
+                'grant_type' => 'fb_exchange_token',
+                'client_id' => $clientId,
+                'client_secret' => $clientSecret,
+                'fb_exchange_token' => $userToken
+            ]));
+            $longTokenData = $longTokenRes->json();
+            if (isset($longTokenData['error'])) {
+                throw new Exception('Error obteniendo token de larga duración: ' . ($longTokenData['error']['message'] ?? 'Error desconocido'));
+            }
+            $longLivedUserToken = $longTokenData['access_token'];
+
+            // 3. Obtener Páginas de Facebook (con tokens de página eternos)
+            $pagesRes = new Fetch("{$graphUrl}/me/accounts?fields=id,name,access_token&limit=100", [
+                'headers' => ['Authorization' => 'Bearer ' . $longLivedUserToken]
+            ]);
+            $pagesData = $pagesRes->json();
+            $pages = $pagesData['data'] ?? [];
+
+            // 4. Obtener Cuentas de WhatsApp Business (WABA)
+            $wabaRes = new Fetch("{$graphUrl}/me/whatsapp_business_accounts?fields=id,name&limit=100", [
+                'headers' => ['Authorization' => 'Bearer ' . $longLivedUserToken]
+            ]);
+            $wabaData = $wabaRes->json();
+            $wabas = $wabaData['data'] ?? [];
+
+            // 5. Obtener números de teléfono para cada WABA
+            $wabaPhones = [];
+            foreach ($wabas as $waba) {
+                $wabaId = $waba['id'];
+                $phoneRes = new Fetch("{$graphUrl}/{$wabaId}/phone_numbers?fields=id,display_phone_number,verified_name&limit=100", [
+                    'headers' => ['Authorization' => 'Bearer ' . $longLivedUserToken]
+                ]);
+                $phoneData = $phoneRes->json();
+                if (isset($phoneData['data'])) {
+                    foreach ($phoneData['data'] as $phone) {
+                        $wabaPhones[] = [
+                            'id' => $phone['id'],
+                            'name' => ($phone['verified_name'] ?? '') . ' (' . ($phone['display_phone_number'] ?? '') . ')',
+                            'display_phone_number' => $phone['display_phone_number'] ?? '',
+                            'waba_id' => $wabaId
+                        ];
+                    }
+                }
+            }
+
+            // Consolidar payload y codificar en Base64
+            $payload = base64_encode(json_encode([
+                'pages' => $pages,
+                'waba_phones' => $wabaPhones,
+                'user_token' => $longLivedUserToken
+            ]));
+
+            return view('meta_callback', ['payload' => $payload]);
+
+        } catch (\Throwable $th) {
+            Log::error('Error en callback de Meta: ' . $th->getMessage(), [
+                'trace' => $th->getTraceAsString()
+            ]);
+            return response('Error durante la autenticación con Meta: ' . $th->getMessage(), 500);
+        }
+    }
+
+    public function verifyGlobalWebhook(Request $request)
+    {
+        $mode = $request->query('hub_mode');
+        $token = $request->query('hub_verify_token');
+        $challenge = $request->query('hub_challenge');
+
+        Log::info('Global Meta Webhook verification attempt', [
+            'mode' => $mode,
+            'verify_token' => $token
+        ]);
+
+        $expectedToken = config('services.meta.webhook_verify_token');
+
+        if ($mode === 'subscribe' && $token === $expectedToken) {
+            Log::info('Global Webhook verification successful');
+            return response($challenge, 200)->header('Content-Type', 'text/plain');
+        }
+
+        Log::warning('Global Webhook verification failed: token mismatch or invalid mode');
+        return response('Forbidden', 403);
+    }
+
+    public function handleGlobalWebhook(Request $request)
+    {
+        $data = $request->all();
+        Log::info('Global Meta Webhook received', ['payload' => $data]);
+
+        if (empty($data['entry'][0])) {
+            Log::warning('Global Webhook: Empty entry in payload');
+            return response()->json(['status' => 'empty_entry'], 200);
+        }
+
+        $object = $data['object'] ?? '';
+        $entry = $data['entry'][0];
+
+        // 1. WhatsApp Business Account Webhook
+        if ($object === 'whatsapp_business_account') {
+            $phoneId = $entry['changes'][0]['value']['metadata']['phone_number_id'] ?? null;
+            $wabaId = $entry['id'] ?? null;
+
+            $integration = null;
+            if ($phoneId) {
+                $integration = Integration::query()
+                    ->where('meta_service', 'whatsapp')
+                    ->where('meta_number_id', $phoneId)
+                    ->where('status', true)
+                    ->first();
+            }
+            if (!$integration && $wabaId) {
+                $integration = Integration::query()
+                    ->where('meta_service', 'whatsapp')
+                    ->where('meta_business_id', $wabaId)
+                    ->where('status', true)
+                    ->first();
+            }
+
+            if ($integration) {
+                $business = Business::find($integration->business_id);
+                if ($business) {
+                    Log::info("Global Webhook routing WhatsApp to business {$business->uuid}");
+                    return $this->webhook($request, 'whatsapp', $business->uuid);
+                }
+            }
+            Log::warning('Global Webhook: No active WhatsApp integration found for payload', ['phone_id' => $phoneId, 'waba_id' => $wabaId]);
+            return response()->json(['status' => 'integration_not_found'], 200);
+        }
+
+        // 2. Page Webhook (Leads or Messenger)
+        if ($object === 'page') {
+            $pageId = isset($entry['id']) ? (string)$entry['id'] : null;
+
+            if ($pageId === null || $pageId === '') {
+                Log::warning('Global Webhook: Missing page_id in page object payload');
+                return response()->json(['status' => 'missing_page_id'], 200);
+            }
+
+            // Check if it is a leadgen event (Forms)
+            $isLeadgen = false;
+            if (isset($entry['changes'][0]['field']) && $entry['changes'][0]['field'] === 'leadgen') {
+                $isLeadgen = true;
+            }
+
+            if ($isLeadgen) {
+                $integration = Integration::query()
+                    ->where('meta_service', 'forms')
+                    ->where('meta_business_id', $pageId)
+                    ->where('status', true)
+                    ->first();
+
+                if ($integration) {
+                    $business = Business::find($integration->business_id);
+                    if ($business) {
+                        Log::info("Global Webhook routing Forms to business {$business->uuid}");
+                        return $this->webhook($request, 'forms', $business->uuid);
+                    }
+                }
+                Log::warning('Global Webhook: No active Forms integration found for page_id', ['page_id' => $pageId]);
+                return response()->json(['status' => 'integration_not_found'], 200);
+            }
+
+            // Check if it is a Messenger event
+            if (isset($entry['messaging'])) {
+                $integration = Integration::query()
+                    ->where('meta_service', 'messenger')
+                    ->where('meta_business_id', $pageId)
+                    ->where('status', true)
+                    ->first();
+
+                if ($integration) {
+                    $business = Business::find($integration->business_id);
+                    if ($business) {
+                        Log::info("Global Webhook routing Messenger to business {$business->uuid}");
+                        return $this->webhook($request, 'messenger', $business->uuid);
+                    }
+                }
+                Log::warning('Global Webhook: No active Messenger integration found for page_id', ['page_id' => $pageId]);
+                return response()->json(['status' => 'integration_not_found'], 200);
+            }
+        }
+
+        // 3. Instagram Webhook
+        if ($object === 'instagram') {
+            $pageId = $entry['id'] ?? null;
+
+            if ($pageId) {
+                $integration = Integration::query()
+                    ->where('meta_service', 'instagram')
+                    ->where('meta_business_id', $pageId)
+                    ->where('status', true)
+                    ->first();
+
+                if ($integration) {
+                    $business = Business::find($integration->business_id);
+                    if ($business) {
+                        Log::info("Global Webhook routing Instagram to business {$business->uuid}");
+                        return $this->webhook($request, 'instagram', $business->uuid);
+                    }
+                }
+                Log::warning('Global Webhook: No active Instagram integration found for page_id', ['page_id' => $pageId]);
+                return response()->json(['status' => 'integration_not_found'], 200);
+            }
+        }
+
+        Log::warning('Global Webhook: Unknown object type or unhandled field', ['object' => $object]);
+        return response()->json(['status' => 'unhandled_event'], 200);
+    }
 }
+
