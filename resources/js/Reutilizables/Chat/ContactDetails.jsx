@@ -25,7 +25,7 @@ const ContactDetails = ({ users = [], onAssign = () => { }, onOpenDetails = () =
     return <>
         <div className="contact-details d-flex flex-column gap-2 flex-md-row flex-xl-row align-items-center  rounded-4 shadow-sm mb-2 overflow-hidden">
             <img
-                src={`/api/whatsapp/profile/${contact.contact_phone}`}
+                src={`/api/whatsapp/profile/${contact.integration_user_id || contact.contact_phone}`}
                 className="rounded-circle avatar-lg bg-light border-0 mb-3 mb-md-0 mb-xl-0 flex-shrink-0"
                 alt={contact.contact_name}
                 style={{ objectFit: 'cover' }}

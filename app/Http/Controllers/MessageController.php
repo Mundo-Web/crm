@@ -54,9 +54,12 @@ class MessageController extends BasicController
             ->update(['seen' => true]);
         if ($request->summary && $updated > 0) {
             try {
-                $clientJpa = Client::select('id', 'contact_name', 'contact_phone', 'last_message', 'last_message_microtime')
+                $clientJpa = Client::select('id', 'contact_name', 'contact_phone', 'integration_user_id', 'last_message', 'last_message_microtime')
                     ->where('business_id', Auth::user()->business_id)
-                    ->where('contact_phone', $request->summary['contact_phone'])
+                    ->where(function ($query) use ($request) {
+                        $query->where('contact_phone', $request->summary['contact_phone'])
+                              ->orWhere('integration_user_id', $request->summary['contact_phone']);
+                    })
                     ->orderBy('updated_at', 'DESC')
                     ->first();
                 $clientJpa->loadCount(['unSeenMessages']);

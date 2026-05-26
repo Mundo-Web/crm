@@ -113,9 +113,9 @@ const Chat = ({ users = [], defaultMessages = [], activeLeadId: activeLeadIdDB, 
     setLoading(true);
 
     const request = {
-      fields: ['clients.id', 'clients.contact_name', 'clients.contact_phone', 'clients.last_message', 'clients.last_message_microtime', 'clients.assigned_to', 'clients.status_id', 'clients.manage_status_id'],
+      fields: ['clients.id', 'clients.contact_name', 'clients.contact_phone', 'clients.last_message', 'clients.last_message_microtime', 'clients.assigned_to', 'clients.status_id', 'clients.manage_status_id', 'clients.integration_user_id', 'clients.integration_id', 'clients.origin'],
       withCount: ['unSeenMessages'],
-      with: ['assigned', 'status', 'manageStatus'],
+      with: ['assigned', 'status', 'manageStatus', 'integration'],
       sort: [{ selector: 'last_message_microtime', desc: true }],
       skip: 0,
       take: 40,
@@ -396,7 +396,32 @@ const Chat = ({ users = [], defaultMessages = [], activeLeadId: activeLeadIdDB, 
                       <a onClick={(e) => { setActiveLeadId(lead.id); e.stopPropagation() }} style={{ cursor: 'pointer' }}>
                         <div className="d-flex">
                           <div className={`position-relative flex-shrink-0 chat-user-img ${lead.online ? 'active' : ''} align-self-center me-2`}>
-                            <img src={`/api/whatsapp/profile/${lead.contact_phone}`}
+                            {/* Origin badge aligned to the top-left of the avatar */}
+                            <div className="position-absolute" style={{ left: '-4px', top: '-4px', zIndex: 2 }}>
+                              {(() => {
+                                const service = lead.integration?.meta_service || lead.origin?.toLowerCase();
+                                if (service === 'messenger') {
+                                  return (
+                                    <span className="badge rounded-circle p-1 d-flex align-items-center justify-content-center" style={{ backgroundColor: '#0084FF', width: '18px', height: '18px', boxShadow: '0 1px 3px rgba(0,0,0,0.2)' }}>
+                                      <i className="mdi mdi-facebook-messenger text-white" style={{ fontSize: '10px' }}></i>
+                                    </span>
+                                  );
+                                } else if (service === 'instagram') {
+                                  return (
+                                    <span className="badge rounded-circle p-1 d-flex align-items-center justify-content-center" style={{ backgroundColor: '#E1306C', width: '18px', height: '18px', boxShadow: '0 1px 3px rgba(0,0,0,0.2)' }}>
+                                      <i className="mdi mdi-instagram text-white" style={{ fontSize: '10px' }}></i>
+                                    </span>
+                                  );
+                                } else {
+                                  return (
+                                    <span className="badge rounded-circle p-1 d-flex align-items-center justify-content-center" style={{ backgroundColor: '#25D366', width: '18px', height: '18px', boxShadow: '0 1px 3px rgba(0,0,0,0.2)' }}>
+                                      <i className="mdi mdi-whatsapp text-white" style={{ fontSize: '10px' }}></i>
+                                    </span>
+                                  );
+                                }
+                              })()}
+                            </div>
+                            <img src={`/api/whatsapp/profile/${lead.integration_user_id || lead.contact_phone}`}
                               className="rounded-circle avatar-sm bg-light" alt={lead.name} style={{ padding: 0, border: 'none' }}
                               onError={(e) => { e.target.src = `//${Global.APP_DOMAIN}/assets/img/user-404.svg`; }} />
                             {

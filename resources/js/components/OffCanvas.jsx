@@ -195,7 +195,7 @@ const OffCanvas = ({ offCanvasRef, dataLoaded, setDataLoaded, defaultMessages, s
         <div className="d-flex gap-2 align-items-center w-100" onClick={() => onLeadClicked(dataLoaded)} style={{ cursor: 'pointer' }}>
           <img
             className="avatar-sm rounded-circle border"
-            src={`${Global.WA_URL}/api/profile/${LaravelSession.business_uuid}/${dataLoaded?.contact_phone}`}
+            src={`/api/whatsapp/profile/${dataLoaded?.integration_user_id || dataLoaded?.contact_phone}`}
             onError={(e) => {
               e.target.onerror = null
               e.target.src = `//${Global.APP_DOMAIN}/api/profile/thumbnail/undefined`;
@@ -256,8 +256,8 @@ const OffCanvas = ({ offCanvasRef, dataLoaded, setDataLoaded, defaultMessages, s
                       className="border"
                       style={{ aspectRatio: 1 }}
                       src={fromMe
-                        ? `${Global.WA_URL}/api/profile/${LaravelSession.business_uuid}/${waPhone}`
-                        : `${Global.WA_URL}/api/profile/${LaravelSession.business_uuid}/${message.wa_id}`}
+                        ? `/api/whatsapp/profile/${waPhone}`
+                        : `/api/whatsapp/profile/${message.wa_id}`}
                       onError={(e) => {
                         e.target.onerror = null
                         e.target.src = `//${Global.APP_DOMAIN}/api/profile/thumbnail/undefined`;

@@ -498,17 +498,17 @@ const LeadTable = ({
                             switch (data?.integration?.meta_service) {
                                 case "messenger":
                                     integrationIcon = (
-                                        <i className="mdi mdi-facebook-messenger text-blue"></i>
+                                        <i className="mdi mdi-facebook-messenger" style={{ color: "#0084FF" }}></i>
                                     );
                                     break;
                                 case "instagram":
                                     integrationIcon = (
-                                        <i className="mdi mdi-instagram text-red"></i>
+                                        <i className="mdi mdi-instagram" style={{ color: "#E1306C" }}></i>
                                     );
                                     break;
                                 default:
                                     integrationIcon = (
-                                        <i className="mdi mdi-whatsapp text-success"></i>
+                                        <i className="mdi mdi-whatsapp" style={{ color: "#25D366" }}></i>
                                     );
                                     break;
                             }

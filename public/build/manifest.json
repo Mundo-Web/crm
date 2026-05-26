@@ -298,16 +298,16 @@
       "default.css"
     ]
   },
-  "_google-CUCEUU00.js": {
-    "file": "assets/google-CUCEUU00.js",
+  "_google-Bi0FCQM7.js": {
+    "file": "assets/google-Bi0FCQM7.js",
     "name": "google",
     "imports": [
       "_CreateReactScript-O8CnAKlo.js",
+      "_Adminto-CQ34dpp6.js",
       "_QuillFormGroup-kYcFuSyJ.js",
       "_TextareaFormGroup-DRD66m9B.js",
       "_Modal-DG1u0r1V.js",
       "_SelectFormGroup-DjC50kLp.js",
-      "_Adminto-CQ34dpp6.js",
       "_server.browser-BeyiAzUm.js",
       "_RepositoryDropzone-C6L2T3kq.js",
       "_sweetalert2.esm.all-DRdUGm82.js",
@@ -519,7 +519,7 @@
     ]
   },
   "resources/js/Chat.jsx": {
-    "file": "assets/Chat-DS7CzY9I.js",
+    "file": "assets/Chat-DZjxx_Q0.js",
     "name": "Chat",
     "src": "resources/js/Chat.jsx",
     "isEntry": true,
@@ -528,8 +528,8 @@
       "_Adminto-CQ34dpp6.js",
       "_LeadsRest-Dfg8KBZI.js",
       "_sweetalert2.esm.all-DRdUGm82.js",
+      "_google-Bi0FCQM7.js",
       "_ProductsByClientsRest-D1kQ69Ic.js",
-      "_google-CUCEUU00.js",
       "_ArrayJoin-2k6ba35P.js",
       "_Modal-DG1u0r1V.js",
       "_QuillFormGroup-kYcFuSyJ.js",
@@ -719,7 +719,7 @@
     ]
   },
   "resources/js/Leads.jsx": {
-    "file": "assets/Leads-CS8mfxVD.js",
+    "file": "assets/Leads--bbGGm7T.js",
     "name": "Leads",
     "src": "resources/js/Leads.jsx",
     "isEntry": true,
@@ -741,7 +741,7 @@
       "_DropDown-DSdWMm19.js",
       "_DropdownItem-BWWxC9kw.js",
       "_Number2Currency-e57Tgsuk.js",
-      "_google-CUCEUU00.js",
+      "_google-Bi0FCQM7.js",
       "_Table-DeHzclGZ.js",
       "_server.browser-BeyiAzUm.js",
       "_ReactAppend-BdN5hwYm.js",

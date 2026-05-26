@@ -128,6 +128,17 @@ class WhatsAppController extends Controller
     public function profile(Request $request)
     {
         try {
+            $remoteJid = $request->remoteJid;
+
+            // Paso 0: Verificar si existe en caché local
+            if (\Illuminate\Support\Facades\Storage::exists("whatsapp/{$remoteJid}.jpg")) {
+                $imageContent = \Illuminate\Support\Facades\Storage::get("whatsapp/{$remoteJid}.jpg");
+                return FacadesResponse::make($imageContent, 200, [
+                    'Content-Type' => 'image/jpeg',
+                    'Cache-Control' => 'public, max-age=86400',
+                ]);
+            }
+
             $business = Business::with(['person'])->find(Auth::user()->business_id);
 
             if (!$business) {

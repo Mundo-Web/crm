@@ -640,7 +640,7 @@ const LeadDetailContent = ({
                     <img
                         className="flex-shrink-0 me-3 rounded-circle avatar-md"
                         alt={leadLoaded?.contact_name}
-                        src={`/api/whatsapp/profile/${leadLoaded?.contact_phone}`}
+                        src={`/api/whatsapp/profile/${leadLoaded?.integration_user_id || leadLoaded?.contact_phone}`}
                         onError={(e) => {
                             e.target.src = `//${Global.APP_DOMAIN}/assets/img/user-404.svg`;
                         }}

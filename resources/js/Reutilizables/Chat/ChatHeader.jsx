@@ -10,7 +10,7 @@ const ChatHeader = ({ contact, contactDetails, setContactDetails, loading, theme
             {/* Avatar */}
             {!loading && contact && (
                 <img
-                    src={`/api/whatsapp/profile/${contact.contact_phone}`}
+                    src={`/api/whatsapp/profile/${contact.integration_user_id || contact.contact_phone}`}
                     className="rounded-circle avatar-sm bg-light me-2"
                     alt={contact.contact_name}
                     style={{ padding: 0, border: 'none' }}

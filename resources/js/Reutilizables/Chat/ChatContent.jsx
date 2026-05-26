@@ -1,5 +1,6 @@
 import { useRef, useState, useEffect } from "react"
 import WhatsAppRest from "../../actions/WhatsAppRest"
+import MetaRest from "../../actions/MetaRest"
 import LeadsRest from "../../actions/LeadsRest"
 import MessagesRest from "../../actions/MessagesRest"
 import useWebSocket from "../CustomHooks/useWebSocket"
@@ -14,6 +15,7 @@ import HtmlContent from "../../Utils/HtmlContent"
 import Global from "../../Utils/Global"
 
 const whatsAppRest = new WhatsAppRest()
+const metaRest = new MetaRest()
 const messagesRest = new MessagesRest()
 const leadsRest = new LeadsRest()
 
@@ -87,7 +89,7 @@ const ChatContent = ({ leadId, setLeadId, theme, contactDetails, setContactDetai
   useEffect(() => {
     if (!socket || !contact) return
     socket.on('message.created', (props) => {
-      if (props.wa_id != contact?.contact_phone) return
+      if (props.wa_id != (contact?.integration_user_id || contact?.contact_phone)) return
       const { id, microtime } = props;
       setMessages(prev => {
         const exists = prev.find(m => m.id === id);
@@ -187,22 +189,27 @@ const ChatContent = ({ leadId, setLeadId, theme, contactDetails, setContactDetai
     if (!text && !audioBlob && !attachment) return
 
     setIsSending(true)
+
+    const service = contact.integration?.meta_service || contact.origin?.toLowerCase();
+    const isMetaIntegration = service === 'messenger' || service === 'instagram';
+    const activeRest = isMetaIntegration ? metaRest : whatsAppRest;
+
     if (attachment) {
       switch (attachmentType) {
         case 'audio':
-          await whatsAppRest.sendAudio(contact.id, audioBlob);
+          await activeRest.sendAudio(contact.id, audioBlob);
           break;
         case 'image':
-          await whatsAppRest.sendImage(contact.id, attachment, text);
+          await activeRest.sendImage(contact.id, attachment, text);
           break;
         default:
-          await whatsAppRest.sendDocument(contact.id, attachment, text);
+          await activeRest.sendDocument(contact.id, attachment, text);
           break;
       }
       setAttachment(null)
       setAttachmentType(null)
     } else {
-      await whatsAppRest.send(contact.id, text)
+      await activeRest.send(contact.id, text)
     }
     setMessageText('')
     setIsSending(false)
@@ -248,16 +255,16 @@ const ChatContent = ({ leadId, setLeadId, theme, contactDetails, setContactDetai
     const el = containerRef.current
     const prevScrollHeight = el ? el.scrollHeight : 0
     const oldestMessage = messages
-      .filter(m => m.wa_id == contact.contact_phone)
+      .filter(m => m.wa_id == (contact.integration_user_id || contact.contact_phone))
       .sort((a, b) => a.microtime - b.microtime)[0] ?? { microtime: (Date.now() + 5 * 60 * 60 * 1000) * 1000 }
     setMessagesLoading(true)
     const result = await messagesRest.paginate({
       summary: {
-        'contact_phone': contact.contact_phone
+        'contact_phone': contact.integration_user_id || contact.contact_phone
       },
       filter: [
         ["microtime", "<", oldestMessage.microtime], "and",
-        ["wa_id", "contains", contact.contact_phone]
+        ["wa_id", "contains", contact.integration_user_id || contact.contact_phone]
       ],
       sort: [{ selector: 'microtime', desc: true }],
       skip: 0,
@@ -284,11 +291,11 @@ const ChatContent = ({ leadId, setLeadId, theme, contactDetails, setContactDetai
     if (!contact) return
     await messagesRest.paginate({
       summary: {
-        'contact_phone': contact.contact_phone
+        'contact_phone': contact.integration_user_id || contact.contact_phone
       },
       filter: [
         ["microtime", "<=", sinceMicrotime], "and",
-        ["wa_id", "contains", contact.contact_phone]
+        ["wa_id", "contains", contact.integration_user_id || contact.contact_phone]
       ],
       sort: [{ selector: 'microtime', desc: true }],
       skip: 0,
@@ -569,14 +576,17 @@ const ChatContent = ({ leadId, setLeadId, theme, contactDetails, setContactDetai
                                     setIsDMOpen(false)
                                     setMessageText('')
                                     setIsSending(true)
+                                    const dmService = contact?.integration?.meta_service || contact?.origin?.toLowerCase()
+                                    const isMetaDM = dmService === 'messenger' || dmService === 'instagram'
+                                    const dmRest = isMetaDM ? metaRest : whatsAppRest
                                     if (message.attachments.length > 0) {
                                       const attachment = message.attachments[0]
                                       const attachmentURL = `${Global.APP_URL}/cloud/${attachment.file}`
-                                      await whatsAppRest.send(leadId, `/attachment:${attachmentURL}\n${content.html()}`)
+                                      await dmRest.send(leadId, `/attachment:${attachmentURL}\n${content.html()}`)
                                       setIsSending(false)
                                       return
                                     }
-                                    await whatsAppRest.send(leadId, content.html())
+                                    await dmRest.send(leadId, content.html())
                                     setIsSending(false)
                                   }}>
                                     <span className="d-block text-truncate">/{message.name}</span>

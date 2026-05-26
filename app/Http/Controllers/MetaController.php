@@ -106,7 +106,7 @@ class MetaController extends Controller
     public static function getFacebookProfile(string $id, string $accessToken, bool $external = false)
     {
         if ($external) {
-            $fbRest = new Fetch(env('FACEBOOK_GRAPH_URL') . "/{$id}?access_token={$accessToken}");
+            $fbRest = new Fetch(env('FACEBOOK_GRAPH_URL') . "/{$id}?fields=first_name,last_name,profile_pic&access_token={$accessToken}");
             $fbData = $fbRest->json();
 
             if (isset($fbData['error'])) throw new Exception('Error, token de acceso inválido');
@@ -541,8 +541,30 @@ class MetaController extends Controller
                     break;
                 default:
                     $profileData = MetaController::getFacebookProfile($messaging['sender']['id'], $integrationJpa->meta_access_token, true);
-                    $profileData['fullname'] = $profileData['first_name'] . ' ' . $profileData['last_name'];
-                    break;
+            }
+
+            // CACHE PROFILE PICTURE FOR METADATA ORIGINS
+            if (($origin === 'messenger' || $origin === 'instagram') && !empty($profileData['id'])) {
+                $profilePicUrl = null;
+                if (!empty($profileData['profile_pic'])) {
+                    if (is_string($profileData['profile_pic'])) {
+                        $profilePicUrl = $profileData['profile_pic'];
+                    } elseif (is_array($profileData['profile_pic']) && isset($profileData['profile_pic']['data']['url'])) {
+                        $profilePicUrl = $profileData['profile_pic']['data']['url'];
+                    }
+                }
+                
+                if ($profilePicUrl) {
+                    try {
+                        $imgResponse = \Illuminate\Support\Facades\Http::get($profilePicUrl);
+                        if ($imgResponse->ok()) {
+                            \Illuminate\Support\Facades\Storage::put("whatsapp/{$profileData['id']}.jpg", $imgResponse->body());
+                            Log::info("Profile picture cached successfully for Meta user: " . $profileData['id']);
+                        }
+                    } catch (\Throwable $ex) {
+                        Log::error("Failed to download/cache profile picture for Meta user: " . $profileData['id'] . " - " . $ex->getMessage());
+                    }
+                }
             }
 
             $referralData = null;
@@ -969,17 +991,131 @@ class MetaController extends Controller
             if (!$integrationJpa) throw new Exception('Integration not found');
             if (!$integrationJpa->meta_access_token) throw new Exception('Access token not found');
 
-            // Determine API URL based on meta service
-            $baseUrl = $integrationJpa->meta_service === 'instagram'
-                ? env('INSTAGRAM_GRAPH_URL')
-                : env('FACEBOOK_GRAPH_URL');
+            // Handle file uploads
+            if ($request->hasFile('audio')) {
+                $file = $request->file('audio');
+                $filename = 'audio-' . Crypto::short() . '.mp3';
+                $file->storeAs('images/whatsapp', $filename, 'local');
+                $message = '/audio:' . $filename;
+            } else if ($request->hasFile('image')) {
+                $file = $request->file('image');
+                $filename = 'image-' . Crypto::short() . '.jpeg';
+                $file->storeAs('images/whatsapp', $filename, 'local');
+                $message = trim('/image:' . $filename . Text::lineBreak() . $message);
+            } else if ($request->hasFile('document')) {
+                $file = $request->file('document');
+                $filename = 'document-' . Crypto::short() . '.' . $file->getClientOriginalExtension();
+                $file->storeAs('images/whatsapp', $filename, 'local');
+                $message = trim('/document:' . $filename . Text::lineBreak() . $message);
+            }
 
-            // Send message
-            $messageEndpoint = "{$baseUrl}/me/messages";
+            // Messenger and Instagram both send messages via Facebook Graph API
+            $messageEndpoint = env('FACEBOOK_GRAPH_URL') . "/me/messages";
+            
             $messageData = [
-                'recipient' => ['id' => $clientJpa->integration_user_id],
-                'message' => ['text' => $message]
+                'recipient' => ['id' => $clientJpa->integration_user_id]
             ];
+
+            if (Text::startsWith($message, '/attachment:')) {
+                [$attachment] = explode(Text::lineBreak(), $message);
+                $caption = trim(str_replace($attachment, '', $message) ?: '');
+                $attachmentUrl = str_replace('/attachment:', '', $attachment);
+
+                $mediaType = 'file';
+                if (preg_match('/\.(jpg|jpeg|png|gif|webp)/i', $attachmentUrl)) {
+                    $mediaType = 'image';
+                } else if (preg_match('/\.(mp4|mov|avi|wmv)/i', $attachmentUrl)) {
+                    $mediaType = 'video';
+                } else if (preg_match('/\.(mp3|ogg|wav|m4a|aac)/i', $attachmentUrl)) {
+                    $mediaType = 'audio';
+                }
+
+                $messageData['message'] = [
+                    'attachment' => [
+                        'type' => $mediaType,
+                        'payload' => [
+                            'url' => $attachmentUrl,
+                            'is_reusable' => true
+                        ]
+                    ]
+                ];
+
+                if ($caption) {
+                    new Fetch($messageEndpoint, [
+                        'method' => 'POST',
+                        'headers' => [
+                            'Content-Type' => 'application/json',
+                            'Authorization' => "Bearer {$integrationJpa->meta_access_token}"
+                        ],
+                        'body' => [
+                            'recipient' => ['id' => $clientJpa->integration_user_id],
+                            'message' => ['text' => Text::html2wa($caption)]
+                        ]
+                    ]);
+                    Message::create([
+                        'wa_id' => $clientJpa->integration_user_id,
+                        'role' => 'User',
+                        'message' => Text::html2wa($caption),
+                        'microtime' => (int) (microtime(true) * 1_000_000) - 1000,
+                        'business_id' => $clientJpa->business_id
+                    ]);
+                }
+            } else if (Text::startsWith($message, '/audio:')) {
+                $audioUrl = str_replace('/audio:', env('APP_URL') . '/storage/images/whatsapp/', $message);
+                $messageData['message'] = [
+                    'attachment' => [
+                        'type' => 'audio',
+                        'payload' => [
+                            'url' => $audioUrl,
+                            'is_reusable' => true
+                        ]
+                    ]
+                ];
+            } else if (Text::startsWith($message, '/image:') || Text::startsWith($message, '/document:')) {
+                [$fileTag] = explode(Text::lineBreak(), $message);
+                $caption = trim(str_replace($fileTag, '', $message) ?: '');
+
+                if (Text::startsWith($message, '/image:')) {
+                    $mediaType = 'image';
+                    $filePath = str_replace('/image:', env('APP_URL') . '/storage/images/whatsapp/', $fileTag);
+                } else {
+                    $mediaType = 'file';
+                    $filePath = str_replace('/document:', env('APP_URL') . '/storage/images/whatsapp/', $fileTag);
+                }
+
+                $messageData['message'] = [
+                    'attachment' => [
+                        'type' => $mediaType,
+                        'payload' => [
+                            'url' => $filePath,
+                            'is_reusable' => true
+                        ]
+                    ]
+                ];
+
+                if ($caption) {
+                    new Fetch($messageEndpoint, [
+                        'method' => 'POST',
+                        'headers' => [
+                            'Content-Type' => 'application/json',
+                            'Authorization' => "Bearer {$integrationJpa->meta_access_token}"
+                        ],
+                        'body' => [
+                            'recipient' => ['id' => $clientJpa->integration_user_id],
+                            'message' => ['text' => Text::html2wa($caption)]
+                        ]
+                    ]);
+                    Message::create([
+                        'wa_id' => $clientJpa->integration_user_id,
+                        'role' => 'User',
+                        'message' => Text::html2wa($caption),
+                        'microtime' => (int) (microtime(true) * 1_000_000) - 1000,
+                        'business_id' => $clientJpa->business_id
+                    ]);
+                }
+            } else {
+                $messageData['message'] = ['text' => Text::html2wa($message)];
+            }
 
             $sendRest = new Fetch($messageEndpoint, [
                 'method' => 'POST',
@@ -999,8 +1135,8 @@ class MetaController extends Controller
             // Store message in database
             Message::create([
                 'wa_id' => $clientJpa->integration_user_id,
-                'role' => 'AI',
-                'message' => $message,
+                'role' => 'User',
+                'message' => Text::html2wa($message),
                 'microtime' => (int) (microtime(true) * 1_000_000),
                 'business_id' => $clientJpa->business_id
             ]);
@@ -1061,19 +1197,15 @@ class MetaController extends Controller
                         'text' => ['body' => Text::html2wa($message)]
                     ];
                 } else {
-                    // Messenger / Instagram
-                    $baseUrl = $integrationJpa->meta_service === 'instagram'
-                        ? env('INSTAGRAM_GRAPH_URL')
-                        : env('FACEBOOK_GRAPH_URL');
-
-                    $messageEndpoint = "{$baseUrl}/me/messages";
+                    // Messenger / Instagram direct messages both go through facebook graph API
+                    $messageEndpoint = env('FACEBOOK_GRAPH_URL') . "/me/messages";
                     $messageData = [
                         'recipient' => ['id' => $clientJpa->integration_user_id],
                         'message' => ['text' => Text::html2wa($message)]
                     ];
                 }
 
-                new Fetch($messageEndpoint, [
+                $fetchRes = new Fetch($messageEndpoint, [
                     'method' => 'POST',
                     'headers' => [
                         'Content-Type' => 'application/json',
@@ -1081,6 +1213,15 @@ class MetaController extends Controller
                     ],
                     'body' => $messageData
                 ]);
+
+                if (!$fetchRes->ok) {
+                    Log::error('Meta API message delivery failed in sendWithOrigin', [
+                        'status' => $fetchRes->status,
+                        'response' => $fetchRes->json(),
+                        'client_id' => $clientJpa->id,
+                        'endpoint' => $messageEndpoint
+                    ]);
+                }
             }
         }
 

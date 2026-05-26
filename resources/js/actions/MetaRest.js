@@ -1,4 +1,4 @@
-import { Fetch, Notify } from "sode-extend-react";
+import { Cookies, Fetch, Notify } from "sode-extend-react";
 import BasicRest from "./BasicRest";
 
 class MetaRest extends BasicRest {
@@ -14,6 +14,86 @@ class MetaRest extends BasicRest {
       return result
     } catch (error) {
       console.error(error.message)
+      Notify.add({
+        icon: '/assets/img/icon.svg',
+        title: 'Error',
+        body: error.message,
+        type: 'danger'
+      })
+      return false
+    }
+  }
+
+  sendAudio = async (client_id, audio) => {
+    try {
+      const formData = new FormData()
+      formData.append('client_id', client_id)
+      formData.append('audio', audio)
+      const response = await fetch(`/api/${this.path}/send`, {
+        method: 'POST',
+        headers: {
+          'X-Xsrf-Token': decodeURIComponent(Cookies.get('XSRF-TOKEN'))
+        },
+        body: formData
+      })
+      const result = await response.json()
+      if (!response.ok) throw new Error(result?.message ?? 'Ocurrio un error al enviar el mensaje')
+      return result
+    } catch (error) {
+      Notify.add({
+        icon: '/assets/img/icon.svg',
+        title: 'Error',
+        body: error.message,
+        type: 'danger'
+      })
+      return false
+    }
+  }
+
+  sendImage = async (client_id, image, message) => {
+    try {
+      const formData = new FormData()
+      formData.append('client_id', client_id)
+      formData.append('image', image)
+      if (message?.trim()) formData.append('message', message)
+      const response = await fetch(`/api/${this.path}/send`, {
+        method: 'POST',
+        headers: {
+          'X-Xsrf-Token': decodeURIComponent(Cookies.get('XSRF-TOKEN'))
+        },
+        body: formData
+      })
+      const result = await response.json()
+      if (!response.ok) throw new Error(result?.message ?? 'Ocurrio un error al enviar el mensaje')
+      return result
+    } catch (error) {
+      Notify.add({
+        icon: '/assets/img/icon.svg',
+        title: 'Error',
+        body: error.message,
+        type: 'danger'
+      })
+      return false
+    }
+  }
+
+  sendDocument = async (client_id, document, message) => {
+    try {
+      const formData = new FormData()
+      formData.append('client_id', client_id)
+      formData.append('document', document)
+      if (message?.trim()) formData.append('message', message)
+      const response = await fetch(`/api/${this.path}/send`, {
+        method: 'POST',
+        headers: {
+          'X-Xsrf-Token': decodeURIComponent(Cookies.get('XSRF-TOKEN'))
+        },
+        body: formData
+      })
+      const result = await response.json()
+      if (!response.ok) throw new Error(result?.message ?? 'Ocurrio un error al enviar el mensaje')
+      return result
+    } catch (error) {
       Notify.add({
         icon: '/assets/img/icon.svg',
         title: 'Error',
