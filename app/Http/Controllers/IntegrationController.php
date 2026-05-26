@@ -17,17 +17,6 @@ class IntegrationController extends BasicController
 
     public function beforeSave(Request $request)
     {
-        $currentIntegration = Integration::query()
-            ->where('meta_service', $request->service)
-            ->where('business_id', Auth::user()->business_id)
-            ->where('status', true);
-
-        if ($request->id) {
-            $currentIntegration->where('id', '!=', $request->id);
-        }
-
-        if ($currentIntegration->exists()) throw new Exception('Ya tienes una integración activa con este servicio');
-
         $metaBusiness = ['error' => 'No se pudo obtener el perfil del negocio'];
         if ($request->service == 'messenger') {
             $metaBusiness = MetaController::getFacebookProfile($request->accountId, $request->accessToken);
@@ -37,6 +26,32 @@ class IntegrationController extends BasicController
             $metaBusiness = MetaController::getWhatsAppProfile($request->accountId, $request->accessToken);
         } else if ($request->service == 'forms') {
             $metaBusiness = MetaController::getMetaProfile($request->accountId, $request->accessToken);
+        }
+
+        if (!isset($metaBusiness['id'])) {
+            $errorMsg = $metaBusiness['error'] ?? 'No se pudo obtener el perfil del negocio';
+            throw new Exception($errorMsg);
+        }
+
+        $metaBusinessId = $metaBusiness['id'];
+
+        $currentIntegration = Integration::query()
+            ->where('meta_service', $request->service)
+            ->where('business_id', Auth::user()->business_id)
+            ->where('status', true);
+
+        if ($request->id) {
+            $currentIntegration->where('id', '!=', $request->id);
+        }
+
+        if ($request->service === 'whatsapp') {
+            $currentIntegration->where('meta_number_id', '!=', $request->phoneId);
+        } else {
+            $currentIntegration->where('meta_business_id', '!=', $metaBusinessId);
+        }
+
+        if ($currentIntegration->exists()) {
+            throw new Exception('Ya tienes una integración activa con este servicio');
         }
 
         $metaBusinessProfile = null;
