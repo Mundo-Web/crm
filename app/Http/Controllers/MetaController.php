@@ -37,13 +37,13 @@ class MetaController extends Controller
         try {
             if ($external) {
                 // For webhook sender profiles, query graph.facebook.com directly
-                $igRest = new Fetch("{$facebookGraphUrl}/{$id}?fields=id,name,username,profile_pic&access_token={$accessToken}");
+                $igRest = new Fetch("{$facebookGraphUrl}/{$id}?fields=id,name,profile_pic&access_token={$accessToken}");
                 $igData = $igRest->json();
                 
                 if (isset($igData['id'])) {
                     // For compatibility with webhook handling that joins first_name and last_name:
                     $parts = explode(' ', $igData['name'] ?? '', 2);
-                    $igData['first_name'] = $parts[0] ?? ($igData['username'] ?? 'Instagram');
+                    $igData['first_name'] = $parts[0] ?? 'Instagram';
                     $igData['last_name'] = $parts[1] ?? 'User';
                     return $igData;
                 }

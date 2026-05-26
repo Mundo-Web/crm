@@ -76,7 +76,9 @@ class IntegrationController extends BasicController
         $integration = [
             'meta_service' => $request->service,
             'meta_business_id' => $metaBusiness['id'],
-            'meta_number_id' => $request->service  === 'whatsapp' ? $request->phoneId : null,
+            'meta_number_id' => $request->service  === 'whatsapp' 
+                ? $request->phoneId 
+                : ($request->service === 'instagram' ? $request->accountId : null),
             'meta_business_name' => $metaBusiness['name'] . (isset($metaBusiness['username']) ? ' (@' . $metaBusiness['username'] . ')' : ''),
             'meta_business_profile' => $metaBusinessProfile,
             'meta_access_token' => $request->accessToken,
@@ -190,7 +192,7 @@ class IntegrationController extends BasicController
         }
 
         if ($request->service === 'instagram') {
-            $pageId      = $jpa->meta_business_id;
+            $pageId      = $jpa->meta_number_id ?? $request->accountId ?? $jpa->meta_business_id;
             $accessToken = $jpa->meta_access_token;
             $graphUrl    = config('services.meta.facebook_graph_url', 'https://graph.facebook.com/v22.0');
 
