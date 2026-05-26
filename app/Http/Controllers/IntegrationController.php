@@ -51,7 +51,7 @@ class IntegrationController extends BasicController
         }
 
         if ($currentIntegration->exists()) {
-            throw new Exception('Ya tienes una integración activa con este servicio');
+            $currentIntegration->update(['status' => null]);
         }
 
         $metaBusinessProfile = null;
