@@ -461,7 +461,19 @@ class MetaController extends Controller
                 }
                 $referral = $message['referral'] ?? null;
             } else {
-                $inOut = $entry['id'] == $messaging['sender']['id'] ? 'out' : 'in';
+                // Detect outgoing echo-backs from Messenger/Instagram
+                // Priority 1: official Meta 'is_echo' flag on the message
+                $isEcho = $messaging['message']['is_echo'] ?? false;
+
+                // Priority 2: compare sender to the page/business ID
+                // For Messenger: entry['id'] === page ID === sender ID on echo
+                // For Instagram: entry['id'] is the FB Page ID, but the Instagram Business
+                //   Account ID (stored in meta_business_id) may differ — use it as fallback
+                $pageId = $entry['id'] ?? '';
+                $senderId = $messaging['sender']['id'] ?? '';
+                $igBusinessId = $integrationJpa?->meta_business_id ?? $pageId;
+
+                $inOut = ($isEcho || $senderId === $pageId || $senderId === $igBusinessId) ? 'out' : 'in';
                 $waId = $inOut == 'in' ? $messaging['sender']['id'] : $messaging['recipient']['id'];
                 $messageId = $messaging['message']['mid'] ?? null;
                 $messageContent = $messaging['message']['text'] ?? '';
@@ -490,20 +502,23 @@ class MetaController extends Controller
                 'messageContent' => $messageContent
             ]);
 
+            // For Messenger/Instagram echo-backs, sendWithOrigin already saved the message to DB.
+            // Creating it again here would duplicate the AI message in the history, causing Gemini
+            // to repeat it. For WhatsApp, the echo-back never arrives here (handled separately).
+            if ($inOut == 'out') {
+                Log::info('Outgoing echo-back received, skipping duplicate DB record.');
+                return;
+            }
+
             $messageJpa = Message::create([
                 'wa_id' => $waId,
-                'role' => $inOut == 'in' ? 'Human' : 'AI',
+                'role' => 'Human',
                 'message' => $messageContent,
                 'mask' => $mask,
                 'message_id' => $messageId,
                 'microtime' => (int) (microtime(true) * 1_000_000),
                 'business_id' => $businessJpa->id
             ]);
-
-            if ($inOut == 'out') {
-                Log::info('Outgoing message recorded, processing finished');
-                return;
-            }
 
             if (!$integrationJpa) {
                 $integrationJpa = Integration::updateOrCreate([
