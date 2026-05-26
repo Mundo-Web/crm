@@ -1622,36 +1622,34 @@ class MetaController extends Controller
 
     public function redirectToMeta(Request $request)
     {
-        $clientId = config('services.meta.client_id');
+        $clientId   = config('services.meta.client_id');
         $redirectUri = config('services.meta.redirect_uri');
-        $configId = env('META_CONFIG_ID');
-        
-        $scopes = [
-            'pages_show_list',
-            'pages_manage_metadata',
-            'pages_read_engagement',
-            'leads_retrieval',
-            'whatsapp_business_messaging',
-            'whatsapp_business_management',
-            // Messenger
-            'pages_messaging',
-           
-            // Instagram DMs (requiere cuenta IG Business vinculada a la página)
-            'instagram_basic',
-            'instagram_manage_messages',
+        $configId   = env('META_CONFIG_ID');
+        $service    = $request->query('service', 'forms');
+
+        // Scopes específicos por servicio — solo pedimos lo que cada canal necesita
+        $scopesMap = [
+            'forms'     => ['pages_show_list', 'pages_manage_metadata', 'pages_read_engagement', 'leads_retrieval'],
+            'messenger' => ['pages_show_list', 'pages_read_engagement', 'pages_messaging'],
+            'instagram' => ['pages_show_list', 'instagram_basic', 'instagram_manage_messages'],
+            'whatsapp'  => ['whatsapp_business_messaging', 'whatsapp_business_management'],
         ];
-        
+
+        $scopes = $scopesMap[$service] ?? $scopesMap['forms'];
+
         $queryParams = [
-            'client_id' => $clientId,
-            'redirect_uri' => $redirectUri,
-            'scope' => implode(',', $scopes),
-            'response_type' => 'code'
+            'client_id'     => $clientId,
+            'redirect_uri'  => $redirectUri,
+            'scope'         => implode(',', $scopes),
+            'response_type' => 'code',
+            // Pasamos el servicio en state para recuperarlo en el callback
+            'state'         => base64_encode(json_encode(['service' => $service])),
         ];
-        
+
         if ($configId) {
             $queryParams['config_id'] = $configId;
         }
-        
+
         $url = "https://www.facebook.com/v22.0/dialog/oauth?" . http_build_query($queryParams);
         return redirect($url);
     }
@@ -1695,45 +1693,57 @@ class MetaController extends Controller
             }
             $longLivedUserToken = $longTokenData['access_token'];
 
-            // 3. Obtener Páginas de Facebook (con tokens de página eternos)
-            $pagesRes = new Fetch("{$graphUrl}/me/accounts?fields=id,name,access_token&limit=100", [
-                'headers' => ['Authorization' => 'Bearer ' . $longLivedUserToken]
-            ]);
-            $pagesData = $pagesRes->json();
-            $pages = $pagesData['data'] ?? [];
+            // Recuperar el servicio desde el state param
+            $stateRaw = $request->query('state', '');
+            $stateData = [];
+            try {
+                $stateData = json_decode(base64_decode($stateRaw), true) ?? [];
+            } catch (\Throwable $e) {}
+            $service = $stateData['service'] ?? 'forms';
 
-            // 4. Obtener Cuentas de WhatsApp Business (WABA)
-            $wabaRes = new Fetch("{$graphUrl}/me/whatsapp_business_accounts?fields=id,name&limit=100", [
-                'headers' => ['Authorization' => 'Bearer ' . $longLivedUserToken]
-            ]);
-            $wabaData = $wabaRes->json();
-            $wabas = $wabaData['data'] ?? [];
-
-            // 5. Obtener números de teléfono para cada WABA
+            $pages      = [];
             $wabaPhones = [];
-            foreach ($wabas as $waba) {
-                $wabaId = $waba['id'];
-                $phoneRes = new Fetch("{$graphUrl}/{$wabaId}/phone_numbers?fields=id,display_phone_number,verified_name&limit=100", [
+
+            if ($service === 'whatsapp') {
+                // Solo necesitamos cuentas WABA y sus números
+                $wabaRes  = new Fetch("{$graphUrl}/me/whatsapp_business_accounts?fields=id,name&limit=100", [
                     'headers' => ['Authorization' => 'Bearer ' . $longLivedUserToken]
                 ]);
-                $phoneData = $phoneRes->json();
-                if (isset($phoneData['data'])) {
-                    foreach ($phoneData['data'] as $phone) {
-                        $wabaPhones[] = [
-                            'id' => $phone['id'],
-                            'name' => ($phone['verified_name'] ?? '') . ' (' . ($phone['display_phone_number'] ?? '') . ')',
-                            'display_phone_number' => $phone['display_phone_number'] ?? '',
-                            'waba_id' => $wabaId
-                        ];
+                $wabaData = $wabaRes->json();
+                $wabas    = $wabaData['data'] ?? [];
+
+                foreach ($wabas as $waba) {
+                    $wabaId   = $waba['id'];
+                    $phoneRes = new Fetch("{$graphUrl}/{$wabaId}/phone_numbers?fields=id,display_phone_number,verified_name&limit=100", [
+                        'headers' => ['Authorization' => 'Bearer ' . $longLivedUserToken]
+                    ]);
+                    $phoneData = $phoneRes->json();
+                    if (isset($phoneData['data'])) {
+                        foreach ($phoneData['data'] as $phone) {
+                            $wabaPhones[] = [
+                                'id'                   => $phone['id'],
+                                'name'                 => ($phone['verified_name'] ?? '') . ' (' . ($phone['display_phone_number'] ?? '') . ')',
+                                'display_phone_number' => $phone['display_phone_number'] ?? '',
+                                'waba_id'              => $wabaId,
+                            ];
+                        }
                     }
                 }
+            } else {
+                // Forms, Messenger, Instagram — todos usan Páginas de Facebook
+                $pagesRes  = new Fetch("{$graphUrl}/me/accounts?fields=id,name,access_token&limit=100", [
+                    'headers' => ['Authorization' => 'Bearer ' . $longLivedUserToken]
+                ]);
+                $pagesData = $pagesRes->json();
+                $pages     = $pagesData['data'] ?? [];
             }
 
             // Consolidar payload y codificar en Base64
             $payload = base64_encode(json_encode([
-                'pages' => $pages,
+                'service'     => $service,
+                'pages'       => $pages,
                 'waba_phones' => $wabaPhones,
-                'user_token' => $longLivedUserToken
+                'user_token'  => $longLivedUserToken,
             ]));
 
             return view('meta_callback', ['payload' => $payload]);
