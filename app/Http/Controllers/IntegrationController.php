@@ -136,6 +136,82 @@ class IntegrationController extends BasicController
             }
         }
 
+        if ($request->service === 'messenger') {
+            $pageId      = $jpa->meta_business_id;
+            $accessToken = $jpa->meta_access_token;
+            $graphUrl    = config('services.meta.facebook_graph_url', 'https://graph.facebook.com/v22.0');
+
+            \Illuminate\Support\Facades\Log::info('Meta Messenger: subscribing page to app', ['page_id' => $pageId]);
+
+            // Primero obtener el Page Access Token permanente usando el User Access Token
+            $pageTokenRes  = new \SoDe\Extend\Fetch("{$graphUrl}/{$pageId}?fields=access_token&access_token={$accessToken}");
+            $pageTokenData = $pageTokenRes->json();
+            $pageToken     = $pageTokenData['access_token'] ?? $accessToken;
+
+            $res  = new \SoDe\Extend\Fetch("{$graphUrl}/{$pageId}/subscribed_apps", [
+                'method'  => 'POST',
+                'headers' => [
+                    'Authorization' => "Bearer {$pageToken}",
+                    'Content-Type'  => 'application/json',
+                ],
+                'body' => ['subscribed_fields' => 'messages,messaging_postbacks,messaging_optins'],
+            ]);
+            $data = $res->json();
+
+            \Illuminate\Support\Facades\Log::info('Meta Messenger: subscribed_apps response', [
+                'page_id'  => $pageId,
+                'response' => $data,
+            ]);
+
+            if (!($data['success'] ?? false)) {
+                $errorMsg  = $data['error']['message'] ?? 'Error al vincular la App a la Página de Messenger';
+                $errorCode = $data['error']['code'] ?? 0;
+                \Illuminate\Support\Facades\Log::warning('Meta Messenger: subscribed_apps failed', [
+                    'code'    => $errorCode,
+                    'message' => $errorMsg,
+                ]);
+                // No eliminamos la integración — puede seguir funcionando si ya estaba suscrita.
+            }
+        }
+
+        if ($request->service === 'instagram') {
+            $pageId      = $jpa->meta_business_id;
+            $accessToken = $jpa->meta_access_token;
+            $graphUrl    = config('services.meta.facebook_graph_url', 'https://graph.facebook.com/v22.0');
+
+            \Illuminate\Support\Facades\Log::info('Meta Instagram: subscribing page to app', ['page_id' => $pageId]);
+
+            // Usar el Page Access Token permanente
+            $pageTokenRes  = new \SoDe\Extend\Fetch("{$graphUrl}/{$pageId}?fields=access_token&access_token={$accessToken}");
+            $pageTokenData = $pageTokenRes->json();
+            $pageToken     = $pageTokenData['access_token'] ?? $accessToken;
+
+            $res  = new \SoDe\Extend\Fetch("{$graphUrl}/{$pageId}/subscribed_apps", [
+                'method'  => 'POST',
+                'headers' => [
+                    'Authorization' => "Bearer {$pageToken}",
+                    'Content-Type'  => 'application/json',
+                ],
+                'body' => ['subscribed_fields' => 'messages,messaging_postbacks'],
+            ]);
+            $data = $res->json();
+
+            \Illuminate\Support\Facades\Log::info('Meta Instagram: subscribed_apps response', [
+                'page_id'  => $pageId,
+                'response' => $data,
+            ]);
+
+            if (!($data['success'] ?? false)) {
+                $errorMsg  = $data['error']['message'] ?? 'Error al vincular la App a la Página de Instagram';
+                $errorCode = $data['error']['code'] ?? 0;
+                \Illuminate\Support\Facades\Log::warning('Meta Instagram: subscribed_apps failed', [
+                    'code'    => $errorCode,
+                    'message' => $errorMsg,
+                ]);
+                // No eliminamos la integración — puede seguir funcionando si ya estaba suscrita.
+            }
+        }
+
         if ($request->service === 'forms') {
             $pageId = $jpa->meta_business_id;
             $systemUserToken = $jpa->meta_access_token;

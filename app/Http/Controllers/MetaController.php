@@ -1632,7 +1632,13 @@ class MetaController extends Controller
             'pages_read_engagement',
             'leads_retrieval',
             'whatsapp_business_messaging',
-            'whatsapp_business_management'
+            'whatsapp_business_management',
+            // Messenger
+            'pages_messaging',
+            'messaging_optins',
+            // Instagram DMs (requiere cuenta IG Business vinculada a la página)
+            'instagram_basic',
+            'instagram_manage_messages',
         ];
         
         $queryParams = [
