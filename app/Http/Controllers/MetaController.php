@@ -1635,7 +1635,7 @@ class MetaController extends Controller
             'whatsapp_business_management',
             // Messenger
             'pages_messaging',
-            'messaging_optins',
+           
             // Instagram DMs (requiere cuenta IG Business vinculada a la página)
             'instagram_basic',
             'instagram_manage_messages',
