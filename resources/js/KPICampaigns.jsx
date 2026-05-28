@@ -1714,6 +1714,33 @@ const KPICampaigns = ({ months = [], currentMonth, currentYear }) => {
                                             );
                                         },
                                     },
+                                    {
+                                        dataField: "manage_status_name",
+                                        caption: "Etiqueta",
+                                        width: 130,
+                                        cellTemplate: (container, { data }) => {
+                                            if (!data.manage_status_name) {
+                                                container.html(
+                                                    '<span class="badge rounded-pill px-2" style="background-color: #f1f5f9; color: #64748b; border: 1px solid #cbd5e1; font-size: 10px;">Sin etiqueta</span>'
+                                                );
+                                                return;
+                                            }
+                                            ReactAppend(
+                                                container,
+                                                <span
+                                                    className="badge rounded-pill px-2"
+                                                    style={{
+                                                        backgroundColor: `${data.manage_status_color}15`,
+                                                        color: data.manage_status_color,
+                                                        border: `1px solid ${data.manage_status_color}33`,
+                                                        fontSize: "10px",
+                                                    }}
+                                                >
+                                                    {data.manage_status_name}
+                                                </span>,
+                                            );
+                                        },
+                                    },
                                 ]}
                             />
                         </div>

@@ -595,10 +595,13 @@ class KPICampaignsController extends BasicController
             'clients.created_at',
             'statuses.name as status_name',
             'statuses.color as status_color',
+            'manage_status.name as manage_status_name',
+            'manage_status.color as manage_status_color',
             'users.name as assigned_name',
             'users.relative_id as assigned_relative_id'
         ])
             ->leftJoin('statuses', 'statuses.id', '=', 'clients.status_id')
+            ->leftJoin('statuses as manage_status', 'manage_status.id', '=', 'clients.manage_status_id')
             ->leftJoin('users', 'users.id', '=', 'clients.assigned_to')
             ->where(function ($query) use ($request) {
                 if ($request->month) {
