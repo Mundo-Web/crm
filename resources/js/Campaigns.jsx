@@ -408,7 +408,11 @@ const CampaignItem = ({ campaign, onEdit, onDelete, onSync }) => {
                                     }}
                                 >
                                     <i
-                                        className={`fab fa-${source.id === "ig" ? "instagram" : "facebook"} text-primary`}
+                                        className={
+                                            source.id === "tiktok" ? "fab fa-tiktok text-dark" :
+                                            (source.id === "ig" || source.id === "instagram") ? "fab fa-instagram text-danger" :
+                                            "fab fa-facebook text-primary"
+                                        }
                                     ></i>{" "}
                                     {source.label}
                                 </span>
@@ -587,7 +591,7 @@ const CampaignItem = ({ campaign, onEdit, onDelete, onSync }) => {
     );
 };
 
-const Campaigns = ({ can, hasFormsIntegration }) => {
+const Campaigns = ({ can, hasFormsIntegration, hasTikTokIntegration }) => {
     const modalRef = useRef();
     const idRef = useRef();
     const codeRef = useRef();
@@ -695,6 +699,51 @@ const Campaigns = ({ can, hasFormsIntegration }) => {
         }
     };
 
+    const onSyncTikTokClicked = async () => {
+        const { isConfirmed } = await Swal.fire({
+            title: "Sincronizar con TikTok",
+            text: "Se buscarán actualizaciones de campañas y anuncios en TikTok.",
+            icon: "question",
+            showCancelButton: true,
+            confirmButtonText: "Sincronizar ahora",
+            cancelButtonText: "Cancelar",
+        });
+        if (isConfirmed) {
+            Swal.fire({
+                title: "Sincronizando...",
+                didOpen: () => Swal.showLoading(),
+            });
+            try {
+                const res = await fetch('/api/tiktok/sync-campaigns', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+                    }
+                });
+                const data = await res.json();
+                Swal.close();
+                if (data.status === true || data.status === 200) {
+                    fetchCampaigns();
+                    Swal.fire(
+                        "Sincronizado",
+                        "La estructura y reportes de TikTok se han actualizado.",
+                        "success",
+                    );
+                } else {
+                    throw new Error(data.message || "Error al sincronizar campañas");
+                }
+            } catch (err) {
+                Swal.close();
+                Swal.fire(
+                    "Error",
+                    err.message || "Ocurrió un error al sincronizar con TikTok.",
+                    "error"
+                );
+            }
+        }
+    };
+
     return (
         <div className="container-fluid py-4">
             <div className="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
@@ -715,6 +764,16 @@ const Campaigns = ({ can, hasFormsIntegration }) => {
                         >
                             <i className="fab fa-facebook-messenger"></i>{" "}
                             Obtener Jerarquía Meta
+                        </button>
+                    )}
+                    {can("campaigns", "all", "sync") && hasTikTokIntegration && (
+                        <button
+                            className="btn btn-dark rounded-pill px-3 shadow-sm d-flex align-items-center gap-2"
+                            onClick={onSyncTikTokClicked}
+                            style={{ backgroundColor: "#111111", borderColor: "#111111" }}
+                        >
+                            <i className="fab fa-tiktok"></i>{" "}
+                            Obtener Jerarquía TikTok
                         </button>
                     )}
                     {can("campaigns", "all", "create") && (

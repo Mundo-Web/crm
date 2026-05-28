@@ -111,6 +111,7 @@ Route::middleware(['auth', 'firstTime', 'hasPlan'])->group(function () {
 
 // Callback public route to allow Meta redirect via ngrok without requiring active session
 Route::get('/meta/callback', [MetaController::class, 'handleMetaCallback']);
+Route::get('/tiktok/callback', [\App\Http\Controllers\TikTokController::class, 'handleTikTokCallback']);
 
 
 if (env('APP_ENV') === 'local') {

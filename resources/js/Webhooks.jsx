@@ -48,7 +48,7 @@ const icons = {
         <img
             src="/assets/img/tiktok.svg"
             alt="TikTok"
-            style={{ height: "200px", width: "auto", opacity: 0.5 }}
+            style={{ height: "200px", width: "auto" }}
         />
     ),
     gmail: (
@@ -81,8 +81,9 @@ const ServiceCard = ({
     integration,
     onIntegrate,
     onUnlink,
+    onSyncTikTok,
 }) => {
-    const isComingSoon = service === "tiktok" || service === "google-calendar";
+    const isComingSoon = service === "google-calendar";
 
     return (
         <div className="col-xxl-3 col-xl-4 col-lg-6 col-md-6 ">
@@ -123,6 +124,17 @@ const ServiceCard = ({
                                 </div>
                             </div>
                             <div className="d-flex gap-1 ms-2">
+                                {service === 'tiktok' && (
+                                    <Tippy content="Sincronizar Campañas y Reportes">
+                                        <button
+                                            className="btn btn-link text-success p-0"
+                                            type="button"
+                                            onClick={() => onSyncTikTok(integration)}
+                                        >
+                                            <i className="mdi mdi-sync font-18 animate-hover"></i>
+                                        </button>
+                                    </Tippy>
+                                )}
                                 <Tippy content="Editar Configuración">
                                     <button
                                         className="btn btn-link text-primary p-0"
@@ -422,6 +434,75 @@ const IntegrationWizardModal = ({
         setPollingActive(false);
     };
 
+    const handleConnectTikTok = async () => {
+        if (!metaAppId || !metaAppSecret) {
+            toast.error("Por favor, ingresa el Client Key y Client Secret primero.");
+            return;
+        }
+
+        setVerifying(true);
+        try {
+            // Guardar credenciales provisionales en la base de datos
+            const saveRes = await fetch('/api/tiktok/save-credentials', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+                },
+                body: JSON.stringify({
+                    client_key: metaAppId,
+                    client_secret: metaAppSecret
+                })
+            });
+            const saveJson = await saveRes.json();
+            if (saveJson.status === false || saveJson.code === 500) {
+                throw new Error(saveJson.message || "Error al guardar credenciales");
+            }
+
+            clearPolling();
+            localStorage.removeItem('meta_auth_result');
+            
+            const width = 600;
+            const height = 650;
+            const left = window.screen.width / 2 - width / 2;
+            const top = window.screen.height / 2 - height / 2;
+            
+            const redirectUri = encodeURIComponent(window.location.origin + '/tiktok/callback');
+            const authUrl = `https://business-api.tiktok.com/portal/auth?app_id=${metaAppId}&state=${apikey}&redirect_uri=${redirectUri}`;
+            
+            window.open(
+                authUrl,
+                'TikTokAuthPopup',
+                `width=${width},height=${height},top=${top},left=${left},scrollbars=yes,status=yes`
+            );
+            
+            setPollingActive(true);
+            pollingIntervalRef.current = setInterval(() => {
+                const rawPayload = localStorage.getItem('meta_auth_result');
+                if (rawPayload) {
+                    try {
+                        const decoded = JSON.parse(atob(rawPayload));
+                        if (decoded.service === 'tiktok') {
+                            setAuthPayload(decoded);
+                            localStorage.removeItem('meta_auth_result');
+                            clearPolling();
+                            toast.success("Conexión con TikTok establecida exitosamente");
+                        }
+                    } catch (e) {
+                        console.error("Error decoding meta_auth_result:", e);
+                        toast.error("Error al procesar la respuesta de autenticación");
+                        clearPolling();
+                    }
+                }
+            }, 500);
+        } catch (err) {
+            console.error(err);
+            toast.error(err.message || "Error al conectar con TikTok");
+        } finally {
+            setVerifying(false);
+        }
+    };
+
     const handleConnectMeta = () => {
         clearPolling();
         localStorage.removeItem('meta_auth_result');
@@ -480,7 +561,14 @@ const IntegrationWizardModal = ({
         let targetAccessToken = "";
         let targetPhoneId = "";
 
-        if (service === 'whatsapp') {
+        if (service === 'tiktok') {
+            const selectedAdv = authPayload?.advertisers?.find(a => a.id === assetId);
+            if (selectedAdv) {
+                targetAccountId = selectedAdv.id;
+                targetAccessToken = authPayload.user_token;
+                targetPhoneId = "";
+            }
+        } else if (service === 'whatsapp') {
             const selectedPhone = authPayload?.waba_phones?.find(p => p.id === assetId);
             if (selectedPhone) {
                 targetAccountId = selectedPhone.waba_id;
@@ -593,19 +681,19 @@ const IntegrationWizardModal = ({
             accountId,
             accessToken,
             appToken:
-                service === "forms" || service === "whatsapp"
+                service === "forms" || service === "whatsapp" || service === "tiktok"
                     ? appToken
                     : undefined,
             adAccountId:
-                service === "forms" || service === "whatsapp"
+                service === "forms" || service === "whatsapp" || service === "tiktok"
                     ? adAccountId
                     : undefined,
             meta_app_id:
-                service === "forms" || service === "whatsapp"
+                service === "forms" || service === "whatsapp" || service === "tiktok"
                     ? metaAppId
                     : undefined,
             meta_app_secret:
-                service === "forms" || service === "whatsapp"
+                service === "forms" || service === "whatsapp" || service === "tiktok"
                     ? metaAppSecret
                     : undefined,
         });
@@ -1283,7 +1371,159 @@ const IntegrationWizardModal = ({
                             service !== "gmail" &&
                             service !== "formularios" && (
                                 <>
-                                    {isMetaService ? (
+                                    {service === "tiktok" ? (
+                                        <div className="row g-3">
+                                            {/* Caso 1: No conectado ni verificado */}
+                                            {!authPayload && !accountVerified && (
+                                                <>
+                                                    <div className="col-md-6">
+                                                        <label className="form-label fw-semibold text-dark">
+                                                            Client Key (App ID):
+                                                        </label>
+                                                        <input
+                                                            type="text"
+                                                            className="form-control border-2"
+                                                            value={metaAppId}
+                                                            onChange={(e) => setMetaAppId(e.target.value)}
+                                                            placeholder="Ej: 71923458923485"
+                                                        />
+                                                    </div>
+                                                    <div className="col-md-6">
+                                                        <label className="form-label fw-semibold text-dark">
+                                                            Client Secret:
+                                                        </label>
+                                                        <input
+                                                            type="password"
+                                                            className="form-control border-2"
+                                                            value={metaAppSecret}
+                                                            onChange={(e) => setMetaAppSecret(e.target.value)}
+                                                            placeholder="••••••••••••••••"
+                                                        />
+                                                    </div>
+                                                    <div className="col-12 text-center py-4">
+                                                        <button
+                                                            type="button"
+                                                            className="btn btn-lg px-5 py-3 text-white fw-bold d-inline-flex align-items-center justify-content-center border-0 shadow"
+                                                            style={{
+                                                                backgroundColor: "#FF0050",
+                                                                borderRadius: "10px",
+                                                                transition: "all 0.3s ease",
+                                                            }}
+                                                            onClick={handleConnectTikTok}
+                                                            disabled={verifying}
+                                                            onMouseOver={(e) => e.currentTarget.style.filter = "brightness(1.1)"}
+                                                            onMouseOut={(e) => e.currentTarget.style.filter = "none"}
+                                                        >
+                                                            {verifying ? (
+                                                                <i className="mdi mdi-loading mdi-spin me-2 fs-5"></i>
+                                                            ) : (
+                                                                <i className="mdi mdi-music-note me-2 fs-5"></i>
+                                                            )}
+                                                            Conectar con TikTok
+                                                        </button>
+                                                        <p className="text-muted mt-3 mb-0 small">
+                                                            Se guardarán tus credenciales y se abrirá una ventana de TikTok para autorizar la integración.
+                                                        </p>
+                                                    </div>
+                                                </>
+                                            )}
+
+                                            {/* Caso 2: Conectado pero no verificado/seleccionado todavía */}
+                                            {authPayload && !accountVerified && (
+                                                <div className="col-12">
+                                                    <div>
+                                                        <label className="form-label fw-semibold text-dark">
+                                                            <i className="mdi mdi-music-note text-danger me-2 fs-5"></i>
+                                                            Selecciona tu Cuenta de TikTok Business (Advertiser ID):
+                                                        </label>
+                                                        <select
+                                                            className="form-select border-2 p-2"
+                                                            value={selectedAssetId}
+                                                            onChange={(e) => handleAssetSelect(e.target.value)}
+                                                            style={{ borderRadius: "8px" }}
+                                                            disabled={verifying}
+                                                        >
+                                                            <option value="">-- Selecciona una cuenta --</option>
+                                                            {authPayload?.advertisers?.map((adv) => (
+                                                                <option key={adv.id} value={adv.id}>
+                                                                    {adv.name} (ID: {adv.id})
+                                                                </option>
+                                                            ))}
+                                                        </select>
+                                                        {(!authPayload?.advertisers || authPayload.advertisers.length === 0) && (
+                                                            <div className="alert alert-warning border-0 mt-3 small">
+                                                                <i className="mdi mdi-alert-circle me-1"></i>
+                                                                No se encontraron cuentas publicitarias autorizadas en esta cuenta de TikTok.
+                                                            </div>
+                                                        )}
+                                                    </div>
+
+                                                    {verifying && (
+                                                        <div className="text-center py-3 mt-3">
+                                                            <i className="mdi mdi-loading mdi-spin me-2 fs-4 text-primary"></i>
+                                                            Verificando perfil seleccionado...
+                                                        </div>
+                                                    )}
+
+                                                    <div className="text-end mt-4">
+                                                        <button
+                                                            type="button"
+                                                            className="btn btn-outline-danger btn-sm"
+                                                            onClick={handleDisconnectMeta}
+                                                            disabled={verifying}
+                                                        >
+                                                            <i className="mdi mdi-logout me-1"></i>
+                                                            Cancelar / Desconectar
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            {/* Caso 3: Cuenta verificada exitosamente */}
+                                            {accountVerified && (
+                                                <div className="col-12">
+                                                    <div className="card shadow-sm border rounded-3 overflow-hidden mb-3">
+                                                        <div className="card-body bg-light p-3">
+                                                            <div className="d-flex align-items-center justify-content-between">
+                                                                <div className="d-flex align-items-center">
+                                                                    <img
+                                                                        className="avatar-md rounded-circle me-3 border border-2 border-danger"
+                                                                        src={
+                                                                            accountVerified.picture?.data?.url ||
+                                                                            accountVerified.profile_pic ||
+                                                                            "/assets/img/default-avatar.png"
+                                                                        }
+                                                                        alt={accountVerified.name}
+                                                                        onError={(e) => {
+                                                                            e.target.src = `//${Global.APP_DOMAIN}/api/logo/thumbnail/null`;
+                                                                        }}
+                                                                        style={{ width: "56px", height: "56px", objectFit: "cover" }}
+                                                                    />
+                                                                    <div>
+                                                                        <h5 className="mb-1 text-dark fw-bold">{accountVerified.name}</h5>
+                                                                        <span className="badge bg-danger-lighten text-danger p-1 fs-7">
+                                                                            <i className="mdi mdi-check-circle me-1"></i>
+                                                                            Conectado y verificado
+                                                                        </span>
+                                                                        <div className="text-muted small mt-1">
+                                                                            Advertiser ID: {accountVerified.id}
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                                <button
+                                                                    type="button"
+                                                                    className="btn btn-outline-secondary btn-sm"
+                                                                    onClick={handleDisconnectMeta}
+                                                                >
+                                                                    Cambiar cuenta
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    ) : isMetaService ? (
                                         <div className="row g-3">
                                             {/* Caso 1: No conectado ni verificado */}
                                             {!authPayload && !accountVerified && (
@@ -2193,6 +2433,30 @@ const Webhooks = ({ apikey, auth_token, integrations: integrationsDB }) => {
         }
     };
 
+    const handleSyncCampaignsTikTok = async (integration) => {
+        const loadingToast = toast.loading("Sincronizando campañas y reportes de TikTok...");
+        try {
+            const res = await fetch('/api/tiktok/sync-campaigns', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+                }
+            });
+            const data = await res.json();
+            if (data.status === true || data.status === 200) {
+                toast.success("Campañas de TikTok sincronizadas exitosamente");
+            } else {
+                throw new Error(data.message || "Error al sincronizar campañas");
+            }
+        } catch (err) {
+            console.error(err);
+            toast.error(err.message || "Error al sincronizar campañas");
+        } finally {
+            toast.dismiss(loadingToast);
+        }
+    };
+
     const ibms = integrations.reduce((acc, integration) => {
         if (!acc[integration.meta_service]) {
             acc[integration.meta_service] = integration;
@@ -2213,6 +2477,7 @@ const Webhooks = ({ apikey, auth_token, integrations: integrationsDB }) => {
                             integration={ibms[service]}
                             onIntegrate={handleOpenWizard}
                             onUnlink={onUnlinkClicked}
+                            onSyncTikTok={handleSyncCampaignsTikTok}
                         />
                     ))}
                 </div>

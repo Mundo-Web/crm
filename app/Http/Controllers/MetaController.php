@@ -1196,6 +1196,26 @@ class MetaController extends Controller
                     'delay' => self::timeToSleep($message)
                 ]
             ]);
+        } else if ($origin == 'tiktok') {
+            $integrationJpa = Integration::find($clientJpa->integration_id);
+            if ($integrationJpa && $integrationJpa->meta_access_token) {
+                $advertiserId = $integrationJpa->meta_ad_account_id ?? $integrationJpa->meta_business_id;
+                $recipientOpenId = $clientJpa->integration_user_id;
+
+                new Fetch("https://business-api.tiktok.com/open_api/v1.3/business/im/message/send/", [
+                    'method' => 'POST',
+                    'headers' => [
+                        'Content-Type' => 'application/json',
+                        'Access-Token' => $integrationJpa->meta_access_token
+                    ],
+                    'body' => [
+                        'advertiser_id' => $advertiserId,
+                        'open_id' => $recipientOpenId,
+                        'msg_type' => 'TEXT',
+                        'content' => json_encode(['text' => $message])
+                    ]
+                ]);
+            }
         } else {
             // Send message through Meta integration
             $integrationJpa = Integration::find($clientJpa->integration_id);

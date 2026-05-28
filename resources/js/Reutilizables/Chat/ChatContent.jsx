@@ -1,6 +1,7 @@
 import { useRef, useState, useEffect } from "react"
 import WhatsAppRest from "../../actions/WhatsAppRest"
 import MetaRest from "../../actions/MetaRest"
+import TikTokRest from "../../actions/TikTokRest"
 import LeadsRest from "../../actions/LeadsRest"
 import MessagesRest from "../../actions/MessagesRest"
 import useWebSocket from "../CustomHooks/useWebSocket"
@@ -16,6 +17,7 @@ import Global from "../../Utils/Global"
 
 const whatsAppRest = new WhatsAppRest()
 const metaRest = new MetaRest()
+const tiktokRest = new TikTokRest()
 const messagesRest = new MessagesRest()
 const leadsRest = new LeadsRest()
 
@@ -192,7 +194,8 @@ const ChatContent = ({ leadId, setLeadId, theme, contactDetails, setContactDetai
 
     const service = contact.integration?.meta_service || contact.origin?.toLowerCase();
     const isMetaIntegration = service === 'messenger' || service === 'instagram';
-    const activeRest = isMetaIntegration ? metaRest : whatsAppRest;
+    const isTikTokIntegration = service === 'tiktok';
+    const activeRest = isTikTokIntegration ? tiktokRest : (isMetaIntegration ? metaRest : whatsAppRest);
 
     if (attachment) {
       switch (attachmentType) {
@@ -578,7 +581,8 @@ const ChatContent = ({ leadId, setLeadId, theme, contactDetails, setContactDetai
                                     setIsSending(true)
                                     const dmService = contact?.integration?.meta_service || contact?.origin?.toLowerCase()
                                     const isMetaDM = dmService === 'messenger' || dmService === 'instagram'
-                                    const dmRest = isMetaDM ? metaRest : whatsAppRest
+                                    const isTikTokDM = dmService === 'tiktok'
+                                    const dmRest = isTikTokDM ? tiktokRest : (isMetaDM ? metaRest : whatsAppRest)
                                     if (message.attachments.length > 0) {
                                       const attachment = message.attachments[0]
                                       const attachmentURL = `${Global.APP_URL}/cloud/${attachment.file}`

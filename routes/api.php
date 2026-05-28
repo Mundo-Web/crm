@@ -79,6 +79,10 @@ Route::middleware('auth')->group(function () {
     Route::post('/meta/sync-hierarchy', [MetaController::class, 'syncMetaHierarchy']);
     Route::post('/meta/exchange-token', [MetaController::class, 'exchangeToken']);
 
+    Route::post('/tiktok/save-credentials', [\App\Http\Controllers\TikTokController::class, 'saveAppCredentials']);
+    Route::post('/tiktok/send', [\App\Http\Controllers\TikTokController::class, 'send']);
+    Route::post('/tiktok/sync-campaigns', [\App\Http\Controllers\TikTokController::class, 'syncTikTokCampaigns']);
+
     Route::get('/dashboard/{range}', [DashboardController::class, 'revenue']);
     Route::get('/dashboard/leads/kpi/{month}', [KPILeadsController::class, 'kpi']);
     Route::get('/dashboard/campaigns/kpi/{month}', [KPICampaignsController::class, 'kpi']);

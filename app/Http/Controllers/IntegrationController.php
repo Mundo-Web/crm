@@ -26,6 +26,8 @@ class IntegrationController extends BasicController
             $metaBusiness = MetaController::getWhatsAppProfile($request->accountId, $request->accessToken);
         } else if ($request->service == 'forms') {
             $metaBusiness = MetaController::getMetaProfile($request->accountId, $request->accessToken);
+        } else if ($request->service == 'tiktok') {
+            $metaBusiness = \App\Http\Controllers\TikTokController::getAdvertiserProfile($request->accountId, $request->accessToken);
         }
 
         if (!isset($metaBusiness['id'])) {
@@ -118,6 +120,8 @@ class IntegrationController extends BasicController
                 $profile = MetaController::getWhatsAppProfile($request->accountId, $request->accessToken);
             } else if ($request->service == 'forms') {
                 $profile = MetaController::getMetaProfile($request->accountId, $request->accessToken);
+            } else if ($request->service == 'tiktok') {
+                $profile = \App\Http\Controllers\TikTokController::getAdvertiserProfile($request->accountId, $request->accessToken);
             } else {
                 throw new Exception('Invalid service type');
             }

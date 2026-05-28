@@ -506,6 +506,11 @@ const LeadTable = ({
                                         <i className="mdi mdi-instagram" style={{ color: "#E1306C" }}></i>
                                     );
                                     break;
+                                case "tiktok":
+                                    integrationIcon = (
+                                        <i className="mdi mdi-music-note" style={{ color: "#FF0050" }}></i>
+                                    );
+                                    break;
                                 default:
                                     integrationIcon = (
                                         <i className="mdi mdi-whatsapp" style={{ color: "#25D366" }}></i>

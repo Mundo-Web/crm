@@ -21,5 +21,9 @@ Route::post('/evoapi/{business_uuid}', [WebhookController::class, 'webhook']);
 Route::get('/webhook', [MetaController::class, 'verifyGlobalWebhook']);
 Route::post('/webhook', [MetaController::class, 'handleGlobalWebhook']);
 
+Route::get('/tiktok/{business_uuid}', [\App\Http\Controllers\TikTokController::class, 'verify']);
+Route::post('/tiktok/{business_uuid}', [\App\Http\Controllers\TikTokController::class, 'webhook']);
+
 Route::get('/{origin}/{business_uuid}', [MetaController::class, 'verify']);
 Route::post('/{origin}/{business_uuid}', [MetaController::class, 'webhook']);
+

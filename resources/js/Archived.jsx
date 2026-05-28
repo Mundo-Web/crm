@@ -194,6 +194,95 @@ const Archived = ({ projectStatuses, finishedProjectStatus, archived, can, sessi
           // visible: false
         },
         {
+            dataField: "source_channel",
+            caption: "Donde nos vio?",
+            dataType: "string",
+            visible: false,
+        },
+        {
+            dataField: "campaign.source",
+            caption: "RS Campaña",
+            dataType: "string",
+            width: 100,
+            visible: false,
+        },
+        {
+            dataField: "campaign.title",
+            caption: "Campaña",
+            dataType: "string",
+            width: 200,
+            cellTemplate: (container, { data }) => {
+                if (!data.campaign) return;
+                const campaignTitle = data.campaign.title;
+                const campaignLink = data.campaign.link;
+                container.html(
+                    renderToString(
+                        campaignLink ? (
+                            <a
+                                className="text-truncate d-flex align-items-center text-decoration-none"
+                                style={{
+                                    maxWidth: "100%",
+                                    color: "inherit",
+                                }}
+                                href={campaignLink}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                            >
+                                <code
+                                    style={{
+                                        color: "#ff8acc",
+                                        maxWidth: "50px",
+                                    }}
+                                    className="d-inline-block text-truncate"
+                                >
+                                    {data.campaign.code || "---"}
+                                </code>
+                                <small className="ms-1">
+                                    {campaignTitle}
+                                </small>
+                            </a>
+                        ) : (
+                            <div
+                                className="text-truncate d-flex align-items-center"
+                                style={{ maxWidth: "100%" }}
+                            >
+                                <code
+                                    style={{ maxWidth: "50px" }}
+                                    className="d-inline-block text-truncate"
+                                >
+                                    {data.campaign.code || "---"}
+                                </code>
+                                <small className="ms-1">
+                                    {campaignTitle}
+                                </small>
+                            </div>
+                        ),
+                    ),
+                );
+            },
+        },
+        {
+            dataField: "adset_name",
+            caption: "Grupo de anuncios",
+            dataType: "string",
+            width: 150,
+        },
+        {
+            dataField: "ad_name",
+            caption: "Anuncio",
+            dataType: "string",
+            width: 150,
+        },
+        {
+            dataField: "business_sector.name",
+            caption: "Rubro",
+            dataType: "string",
+            width: 150,
+            cellTemplate: (container, { data }) => {
+                container.text(data.business_sector?.name || "-");
+            },
+        },
+        {
           dataField: 'created_at',
           caption: 'Fecha creacion',
           dataType: 'date',

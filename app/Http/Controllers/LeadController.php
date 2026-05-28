@@ -187,6 +187,8 @@ class LeadController extends BasicController
             ->leftJoin('statuses AS status', 'status.id', 'status_id')
             ->leftJoin('statuses AS manage_status', 'manage_status.id', 'manage_status_id')
             ->leftJoin('users AS assigned', 'assigned.id', 'clients.assigned_to')
+            ->leftJoin('campaigns AS campaign', 'campaign.id', 'clients.campaign_id')
+            ->leftJoin('business_sectors AS business_sector', 'business_sector.id', 'clients.business_sector_id')
             ->where(function ($q) use ($request) {
                 if ($request->includeClients) {
                     $q->whereIn('status.table_id', ['e05a43e5-b3a6-46ce-8d1f-381a73498f33', 'a8367789-666e-4929-aacb-7cbc2fbf74de']);

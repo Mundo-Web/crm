@@ -18,9 +18,15 @@ class CampaignController extends BasicController
             ->whereNotNull('meta_access_token')
             ->where('status', true)
             ->exists();
+        $hasTikTokIntegration = \App\Models\Integration::where('business_id', $businessId)
+            ->where('meta_service', 'tiktok')
+            ->whereNotNull('meta_access_token')
+            ->where('status', true)
+            ->exists();
 
         return [
-            'hasFormsIntegration' => $hasFormsIntegration
+            'hasFormsIntegration' => $hasFormsIntegration,
+            'hasTikTokIntegration' => $hasTikTokIntegration
         ];
     }
 
