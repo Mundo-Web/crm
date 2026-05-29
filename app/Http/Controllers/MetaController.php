@@ -1808,7 +1808,7 @@ class MetaController extends Controller
             'forms'     => ['pages_show_list', 'pages_manage_metadata', 'pages_read_engagement', 'leads_retrieval'],
             'messenger' => ['pages_show_list', 'pages_read_engagement', 'pages_messaging'],
             'instagram' => ['pages_show_list', 'instagram_basic', 'instagram_manage_messages'],
-            'whatsapp'  => ['whatsapp_business_messaging', 'whatsapp_business_management'],
+            'whatsapp'  => ['whatsapp_business_messaging', 'whatsapp_business_management', 'business_management'],
         ];
 
         $scopes = $scopesMap[$service] ?? $scopesMap['forms'];
@@ -1882,12 +1882,64 @@ class MetaController extends Controller
 
             if ($service === 'whatsapp') {
                 // Solo necesitamos cuentas WABA y sus números
+                $wabas = [];
+
+                // Intento 1: Directo a /me/whatsapp_business_accounts
                 $wabaRes  = new Fetch("{$graphUrl}/me/whatsapp_business_accounts?fields=id,name&limit=100", [
                     'headers' => ['Authorization' => 'Bearer ' . $longLivedUserToken]
                 ]);
                 $wabaData = $wabaRes->json();
-                \Illuminate\Support\Facades\Log::info('WABA data response', ['wabaData' => $wabaData]);
-                $wabas    = $wabaData['data'] ?? [];
+                \Illuminate\Support\Facades\Log::info('WABA Try 1 response', ['wabaData' => $wabaData]);
+                if (isset($wabaData['data'])) {
+                    $wabas = $wabaData['data'];
+                }
+
+                // Intento 2: Si no funcionó, probar /me?fields=whatsapp_business_accounts
+                if (empty($wabas)) {
+                    $wabaRes2  = new Fetch("{$graphUrl}/me?fields=whatsapp_business_accounts{id,name}&limit=100", [
+                        'headers' => ['Authorization' => 'Bearer ' . $longLivedUserToken]
+                    ]);
+                    $wabaData2 = $wabaRes2->json();
+                    \Illuminate\Support\Facades\Log::info('WABA Try 2 response', ['wabaData2' => $wabaData2]);
+                    if (isset($wabaData2['whatsapp_business_accounts']['data'])) {
+                        $wabas = $wabaData2['whatsapp_business_accounts']['data'];
+                    }
+                }
+
+                // Intento 3: Si no funcionó, buscar por negocios /me/businesses
+                if (empty($wabas)) {
+                    $businessRes = new Fetch("{$graphUrl}/me/businesses?fields=id,name&limit=100", [
+                        'headers' => ['Authorization' => 'Bearer ' . $longLivedUserToken]
+                    ]);
+                    $businessData = $businessRes->json();
+                    \Illuminate\Support\Facades\Log::info('WABA Try 3 businesses response', ['businessData' => $businessData]);
+                    $businesses = $businessData['data'] ?? [];
+
+                    foreach ($businesses as $biz) {
+                        $bizId = $biz['id'];
+                        $bizWabaRes = new Fetch("{$graphUrl}/{$bizId}/whatsapp_business_accounts?fields=id,name&limit=100", [
+                            'headers' => ['Authorization' => 'Bearer ' . $longLivedUserToken]
+                        ]);
+                        $bizWabaData = $bizWabaRes->json();
+                        \Illuminate\Support\Facades\Log::info('WABA Try 3 Business WABAs response', ['business_id' => $bizId, 'bizWabaData' => $bizWabaData]);
+                        if (isset($bizWabaData['data'])) {
+                            foreach ($bizWabaData['data'] as $bw) {
+                                $wabas[] = $bw;
+                            }
+                        }
+                    }
+                }
+
+                // Eliminar duplicados
+                $uniqueWabas = [];
+                $wabaIds = [];
+                foreach ($wabas as $w) {
+                    if (!in_array($w['id'], $wabaIds)) {
+                        $wabaIds[] = $w['id'];
+                        $uniqueWabas[] = $w;
+                    }
+                }
+                $wabas = $uniqueWabas;
 
                 foreach ($wabas as $waba) {
                     $wabaId   = $waba['id'];
