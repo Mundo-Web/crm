@@ -1886,6 +1886,7 @@ class MetaController extends Controller
                     'headers' => ['Authorization' => 'Bearer ' . $longLivedUserToken]
                 ]);
                 $wabaData = $wabaRes->json();
+                \Illuminate\Support\Facades\Log::info('WABA data response', ['wabaData' => $wabaData]);
                 $wabas    = $wabaData['data'] ?? [];
 
                 foreach ($wabas as $waba) {
@@ -1894,6 +1895,7 @@ class MetaController extends Controller
                         'headers' => ['Authorization' => 'Bearer ' . $longLivedUserToken]
                     ]);
                     $phoneData = $phoneRes->json();
+                    \Illuminate\Support\Facades\Log::info('WABA phone numbers response', ['waba_id' => $wabaId, 'phoneData' => $phoneData]);
                     if (isset($phoneData['data'])) {
                         foreach ($phoneData['data'] as $phone) {
                             $wabaPhones[] = [
