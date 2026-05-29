@@ -1917,13 +1917,27 @@ class MetaController extends Controller
 
                     foreach ($businesses as $biz) {
                         $bizId = $biz['id'];
-                        $bizWabaRes = new Fetch("{$graphUrl}/{$bizId}/whatsapp_business_accounts?fields=id,name&limit=100", [
+                        
+                        // Cuentas WABA de las que es propietario
+                        $bizWabaRes = new Fetch("{$graphUrl}/{$bizId}/owned_whatsapp_business_accounts?fields=id,name&limit=100", [
                             'headers' => ['Authorization' => 'Bearer ' . $longLivedUserToken]
                         ]);
                         $bizWabaData = $bizWabaRes->json();
-                        \Illuminate\Support\Facades\Log::info('WABA Try 3 Business WABAs response', ['business_id' => $bizId, 'bizWabaData' => $bizWabaData]);
+                        \Illuminate\Support\Facades\Log::info('WABA Try 3 Business Owned WABAs response', ['business_id' => $bizId, 'bizWabaData' => $bizWabaData]);
                         if (isset($bizWabaData['data'])) {
                             foreach ($bizWabaData['data'] as $bw) {
+                                $wabas[] = $bw;
+                            }
+                        }
+
+                        // Cuentas WABA compartidas por clientes
+                        $clientWabaRes = new Fetch("{$graphUrl}/{$bizId}/client_whatsapp_business_accounts?fields=id,name&limit=100", [
+                            'headers' => ['Authorization' => 'Bearer ' . $longLivedUserToken]
+                        ]);
+                        $clientWabaData = $clientWabaRes->json();
+                        \Illuminate\Support\Facades\Log::info('WABA Try 3 Business Client WABAs response', ['business_id' => $bizId, 'clientWabaData' => $clientWabaData]);
+                        if (isset($clientWabaData['data'])) {
+                            foreach ($clientWabaData['data'] as $bw) {
                                 $wabas[] = $bw;
                             }
                         }
