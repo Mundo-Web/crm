@@ -271,8 +271,8 @@ class MetaController extends Controller
                 }
 
                 $fullName = $fieldData['full_name'] ?? $fieldData['nombre_completo'] ?? $fieldData['nombre'] ?? 'Sin nombre';
-                $phone = Text::keep($fieldData['phone_number'] ?? $fieldData['telefono'] ?? $fieldData['movil'] ?? '', '0123456789');
-                $email = $fieldData['email'] ?? $fieldData['correo'] ?? null;
+                $phone = Text::keep($fieldData['phone_number'] ?? $fieldData['work_phone_number'] ?? $fieldData['telefono'] ?? $fieldData['movil'] ?? '', '0123456789');
+                $email = $fieldData['email'] ?? $fieldData['work_email'] ?? $fieldData['correo'] ?? null;
 
                 // Check if client already exists (By Phone or Email, since lead_id is unique per form)
                 $clientJpa = Client::query()
@@ -344,8 +344,8 @@ class MetaController extends Controller
                 $email = $fieldData['email'] ?? $fieldData['correo'] ?? null;
 
                 if ($clientJpa) {
-                    // Actualizar atribución para lead existente sin campaña
-                    $clientJpa->update([
+                    // Actualizar atribución para lead existente
+                    $updateData = [
                         'campaign_id' => $campaignJpa->id,
                         'adset_name' => $adSetJpa ? $adSetJpa->name : null,
                         'ad_name' => ($leadData['ad_name'] ?? $adIdClean) ?: null,
@@ -354,7 +354,16 @@ class MetaController extends Controller
                         'lead_origin' => $originName,
                         'triggered_by' => "Formulario {$originName}",
                         'source_channel' => "{$originName} Form"
-                    ]);
+                    ];
+                    // Si el cliente existía pero no tenía email/teléfono, se lo agregamos ahora que llenó el form
+                    if ($email && !$clientJpa->contact_email) $updateData['contact_email'] = $email;
+                    if ($phone && !$clientJpa->contact_phone) $updateData['contact_phone'] = $phone;
+                    if ($fullName && $fullName !== 'Sin nombre' && (!$clientJpa->contact_name || $clientJpa->contact_name == $clientJpa->contact_phone)) {
+                        $updateData['contact_name'] = $fullName;
+                        $updateData['name'] = $fullName;
+                    }
+
+                    $clientJpa->update($updateData);
                     Log::info('Existing lead updated via Form', ['client_id' => $clientJpa->id]);
                 } else {
                     // Create new client
@@ -392,7 +401,7 @@ class MetaController extends Controller
                 foreach ($leadData['field_data'] ?? [] as $field) {
                     $fieldName = $field['name'] ?? '';
                     // Skip ignored fields
-                    if (in_array($fieldName, ['full_name', 'phone_number', 'email'])) {
+                    if (in_array($fieldName, ['full_name', 'phone_number', 'work_phone_number', 'email', 'work_email'])) {
                         continue;
                     }
                     $fieldValue = $field['values'][0] ?? '';
@@ -685,7 +694,19 @@ class MetaController extends Controller
                         'business_id' => $businessJpa->id
                     ]);
                 }
+            } else if (isset($referral['source_id'])) {
+                // Fallback si la API de Ads falla por permisos: Creamos la campaña usando el source_id (ad_id)
+                $cleanCampaignId = trim(preg_replace('/^[a-z]+:/i', '', $referral['source_id']));
+                $campaignJpa = Campaign::updateOrCreate([
+                    'business_id' => $businessJpa->id,
+                    'code' => $cleanCampaignId
+                ], [
+                    'title' => 'Campaña WhatsApp Ads (' . $cleanCampaignId . ')',
+                    'source' => strtolower($origin)
+                ]);
+            }
 
+            if (isset($campaignJpa)) {
                 $preClient['campaign_id'] = $campaignJpa->id;
                 $preClient['adset_name'] = $adSetJpa ? $adSetJpa->name : ($referralData['adset']['name'] ?? null);
                 $preClient['ad_name'] = $referralData['name'] ?? ($adIdClean ?: null);
@@ -1808,7 +1829,7 @@ class MetaController extends Controller
             'forms'     => ['pages_show_list', 'pages_manage_metadata', 'pages_read_engagement', 'leads_retrieval'],
             'messenger' => ['pages_show_list', 'pages_read_engagement', 'pages_messaging'],
             'instagram' => ['pages_show_list', 'instagram_basic', 'instagram_manage_messages'],
-            'whatsapp'  => ['whatsapp_business_messaging', 'whatsapp_business_management', 'business_management'],
+            'whatsapp'  => ['whatsapp_business_messaging', 'whatsapp_business_management', 'business_management', 'ads_read'],
         ];
 
         $scopes = $scopesMap[$service] ?? $scopesMap['forms'];
