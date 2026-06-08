@@ -14,6 +14,7 @@ import CameraModal from "./CameraModal"
 import wa2html from "../../Utils/wa2html"
 import HtmlContent from "../../Utils/HtmlContent"
 import Global from "../../Utils/Global"
+import Modal from "../../components/Modal"
 
 const whatsAppRest = new WhatsAppRest()
 const metaRest = new MetaRest()
@@ -51,6 +52,102 @@ const ChatContent = ({ leadId, setLeadId, theme, contactDetails, setContactDetai
   const [isOpenCamera, setIsOpenCamera] = useState(false)
 
   const [isDMOpen, setIsDMOpen] = useState(false)
+
+  const templatesModalRef = useRef()
+  const [templates, setTemplates] = useState([])
+  const [selectedTemplate, setSelectedTemplate] = useState(null)
+  const [templateParams, setTemplateParams] = useState({})
+  const [isTemplatesLoading, setIsTemplatesLoading] = useState(false)
+  const [isSendingTemplate, setIsSendingTemplate] = useState(false)
+
+  const openTemplatesModal = async () => {
+    setIsTemplatesLoading(true)
+    $(templatesModalRef.current).modal('show')
+    const data = await whatsAppRest.getTemplates()
+    setTemplates(data || [])
+    setIsTemplatesLoading(false)
+  }
+
+  const handleTemplateChange = (e) => {
+    const templateName = e.target.value
+    const template = templates.find(t => t.name === templateName)
+    setSelectedTemplate(template)
+
+    if (template) {
+      const bodyComponent = template.components?.find(c => c.type === 'BODY')
+      const bodyText = bodyComponent?.text || ''
+      const matches = [...bodyText.matchAll(/\{\{(\d+)\}\}/g)]
+      const paramsCount = matches.length
+
+      const initialParams = {}
+      const clientName = contact?.contact_name || ''
+      if (paramsCount >= 1) {
+        initialParams['1'] = clientName
+      }
+      for (let i = 2; i <= paramsCount; i++) {
+        initialParams[String(i)] = ''
+      }
+      setTemplateParams(initialParams)
+    } else {
+      setTemplateParams({})
+    }
+  }
+
+  const getReplacedTemplateText = () => {
+    if (!selectedTemplate) return ''
+    const bodyComponent = selectedTemplate.components?.find(c => c.type === 'BODY')
+    let text = bodyComponent?.text || ''
+    Object.keys(templateParams).forEach(key => {
+      text = text.replaceAll(`{{${key}}}`, templateParams[key] || `{{${key}}}`)
+    })
+    return text
+  }
+
+  const onSendTemplateSubmit = async (e) => {
+    e.preventDefault()
+    if (!selectedTemplate) return
+
+    setIsSendingTemplate(true)
+    const clientId = contact?.id
+    const templateName = selectedTemplate.name
+    const languageCode = selectedTemplate.language?.code || selectedTemplate.language || 'es'
+    const parameters = Object.keys(templateParams)
+      .sort((a, b) => Number(a) - Number(b))
+      .map(key => templateParams[key])
+    const templateText = getReplacedTemplateText()
+
+    const result = await whatsAppRest.sendTemplate(
+      clientId,
+      templateName,
+      languageCode,
+      parameters,
+      templateText
+    )
+
+    setIsSendingTemplate(false)
+    if (result) {
+      $(templatesModalRef.current).modal('hide')
+      setSelectedTemplate(null)
+      setTemplateParams({})
+      loadMessages()
+    }
+  }
+
+  const service = contact?.integration?.meta_service || contact?.origin?.toLowerCase();
+  const isWhatsApp = !['messenger', 'instagram', 'tiktok'].includes(service);
+
+  const is24HourWindowOpen = () => {
+    if (!messages || messages.length === 0) return false;
+    const humanMessages = messages.filter(m => m.role === 'Human');
+    if (humanMessages.length === 0) return false;
+
+    const maxMicrotime = Math.max(...humanMessages.map(m => Number(m.microtime)));
+    const latestTimestamp = maxMicrotime / 1000;
+    const currentTimestamp = Date.now();
+
+    const diffHours = (currentTimestamp - latestTimestamp) / (1000 * 60 * 60);
+    return diffHours < 24;
+  };
 
   // Preview states
   const [previewBlob, setPreviewBlob] = useState(null)
@@ -482,252 +579,274 @@ const ChatContent = ({ leadId, setLeadId, theme, contactDetails, setContactDetai
                 })}
               </ul>
               {
-                can('chats', 'create') &&
-                <form className="p-2 pt-0 conversation-input position-relative" onSubmit={onMessageSubmit}>
-                  <label className={`row g-0 align-items-end p-1 ${theme == 'dark' ? 'bg-light' : 'bg-white'}`} htmlFor="message-input" style={{
-                    borderRadius: '24px'
-                  }}>
-                    <div className="col-auto mt-0">
-                      <div className="dropup" ref={dropdownRef}>
-                        <button
-                          type="button"
-                          className="btn btn-light btn-sm dropdown-toggle"
-                          data-bs-toggle="dropdown"
-                          aria-expanded={isDropdownOpen}
-                          onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                          disabled={isSending || isRecording}
-                          title="Adjuntar archivo"
-                          style={{ borderRadius: '50%', width: '38px', height: '38px', padding: 0 }}
-                        >
-                          <i className={`mdi ${isDropdownOpen ? 'mdi-close' : 'mdi-plus'}`}></i>
+                can('chats', 'create') && (
+                  isWhatsApp && !is24HourWindowOpen() ? (
+                    <div className="alert alert-warning m-3 text-start small border-0 shadow-sm" style={{ borderRadius: '8px', zIndex: 2 }}>
+                      <i className="mdi mdi-alert-circle-outline me-1"></i>
+                      <strong>Ventana de 24 horas cerrada.</strong> No se pueden enviar mensajes de texto libre. Utiliza una plantilla de WhatsApp autorizada por Meta para reanudar la conversación.
+                      <div className="mt-2 text-end">
+                        <button type="button" className="btn btn-xs btn-warning" onClick={openTemplatesModal}>
+                          <i className="mdi mdi-whatsapp me-1"></i> Enviar plantilla
                         </button>
-                        <div ref={dropdownContainerRef} className="dropdown-menu mb-1">
-                          <button className="dropdown-item" href="#" onClick={(e) => {
-                            e.preventDefault()
-                            fileInputRef.current?.setAttribute('accept', '*')
-                            fileInputRef.current?.click()
-                          }}>
-                            <i className="mdi mdi-file-document me-2" style={{ color: '#7F66FF' }} />
-                            Documentos
-                          </button>
-                          <button className="dropdown-item" href="#" onClick={(e) => {
-                            e.preventDefault()
-                            fileInputRef.current?.setAttribute('accept', 'image/*,video/*')
-                            fileInputRef.current?.click()
-                          }}>
-                            <i className="mdi mdi-image me-2" style={{ color: '#007BFC' }} />
-                            Fotos y videos
-                          </button>
-                          <button className="dropdown-item" href="#" onClick={(e) => {
-                            e.preventDefault()
-                            setIsOpenCamera(true)
-                          }}>
-                            <i className="mdi mdi-camera me-2" style={{ color: '#FF2E74' }} />
-                            Cámara
-                          </button>
-                          <button className="dropdown-item" href="#" onClick={(e) => {
-                            e.preventDefault()
-                            fileInputRef.current?.setAttribute('accept', 'audio/*')
-                            fileInputRef.current?.click()
-                          }}>
-                            <i className="mdi mdi-headphones me-2" style={{ color: '#FB6533' }} />
-                            Audio
-                          </button>
-                        </div>
                       </div>
-                      <input
-                        ref={fileInputRef}
-                        type="file"
-                        className="d-none"
-                        onChange={handleFileChange}
-                      />
                     </div>
-                    <div className="col mt-0">
-                      {isRecording ? (
-                        <div className="d-flex align-items-center justify-content-center bg-light rounded-pill" style={{ minHeight: '38px' }}>
-                          <span className="text-danger me-2">●</span> Grabando...
-                        </div>
-                      ) : audioBlob ? (
-                        <div className="d-flex align-items-center bg-light rounded-pill px-2" style={{ minHeight: '38px' }}>
-                          <audio ref={audioRef} src={audioUrl} className="me-2" controls controlsList="nodownload" style={{ height: '30px' }} />
-                        </div>
-                      ) : (
-                        <div className="dropup">
-                          <div className={`dropdown-menu mb-1 ${isDMOpen ? 'show' : ''}`}
-                            data-popper-placement="top-start"
-                            style={{
-                              position: 'absolute',
-                              inset: 'auto auto 0px 0px',
-                              margin: '0px',
-                              transform: 'translateY(-44px)',
-                              maxHeight: '200px',
-                              overflowY: 'auto'
-                            }}>
-                            {
-                              defaultMessages
-                                .filter(dm => `/${dm.name}`.toLowerCase().startsWith(messageText.toLowerCase()))
-                                .sort((a, b) => a.name.localeCompare(b.name))
-                                .map((message, idx) => {
-                                  const content = $(`<div>${message.description}</div>`)
-                                  content.find('.mention').each((_, element) => {
-                                    const mention = $(element)
-                                    const mentionId = mention.attr('data-id')
-                                    mention.removeClass('mention')
-                                    mention.text(contact?.[mentionId])
-                                  })
-                                  return <div key={idx} className="dropdown-item" type="button" style={{ width: '300px' }} onClick={async () => {
-                                    setIsDMOpen(false)
-                                    setMessageText('')
-                                    setIsSending(true)
-                                    const dmService = contact?.integration?.meta_service || contact?.origin?.toLowerCase()
-                                    const isMetaDM = dmService === 'messenger' || dmService === 'instagram'
-                                    const isTikTokDM = dmService === 'tiktok'
-                                    const dmRest = isTikTokDM ? tiktokRest : (isMetaDM ? metaRest : whatsAppRest)
-                                    if (message.attachments.length > 0) {
-                                      const attachment = message.attachments[0]
-                                      const attachmentURL = `${Global.APP_URL}/cloud/${attachment.file}`
-                                      await dmRest.send(leadId, `/attachment:${attachmentURL}\n${content.html()}`)
-                                      setIsSending(false)
-                                      return
-                                    }
-                                    await dmRest.send(leadId, content.html())
-                                    setIsSending(false)
-                                  }}>
-                                    <span className="d-block text-truncate">/{message.name}</span>
-                                    <small className="d-block text-muted text-truncate">{content.text()}</small>
-                                  </div>
-                                })
-                            }
-                          </div>
-                          <textarea
-                            ref={inputMessageRef}
-                            id="message-input"
-                            className="form-control w-100"
-                            placeholder="Ingrese su mensaje aquí"
-                            rows={1}
-                            style={{ minHeight: '38px', maxHeight: '188px', fieldSizing: 'content', resize: 'none', border: 'none', backgroundColor: 'transparent' }}
-                            disabled={isSending || !!audioBlob || !!cameraBlob || !!previewBlob}
-                            value={messageText}
-                            onChange={(e) => {
-                              const newValue = e.target.value
-                              if (String(newValue).trim().startsWith('/') && defaultMessages.some(({ name }) => (`/${name}`.toLowerCase()).startsWith(newValue.toLowerCase()))) {
-                                setIsDMOpen(true)
-                              } else {
-                                setIsDMOpen(false)
-                              }
-                              setMessageText(newValue)
-                            }}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter' && !e.shiftKey) {
-                                e.preventDefault()
-                                if (hasContent()) onMessageSubmit(e)
-                              }
-                            }}
-                          />
-                        </div>
-                      )}
-                    </div>
-                    <div className="col-auto mt-0">
-                      {(cameraBlob || previewBlob) && !isOpenCamera ? (
-                        <>
-                          <button
-                            type="button"
-                            className="btn btn-danger btn-sm me-1"
-                            onClick={() => {
-                              setCameraBlob(null)
-                              setPreviewBlob(null)
-                              setPreviewType(null)
-                              setPreviewName('')
-                            }}
-                            style={{ borderRadius: '50%', width: '38px', height: '38px', padding: 0 }}
-                            title="Descartar adjunto"
-                          >
-                            <i className="mdi mdi-delete"></i>
-                          </button>
-                          <button
-                            type="submit"
-                            className="btn btn-success btn-sm"
-                            disabled={isSending}
-                            style={{ borderRadius: '50%', width: '38px', height: '38px', padding: 0 }}
-                            title="Enviar adjunto"
-                          >
-                            <i className="mdi mdi-send"></i>
-                          </button>
-                        </>
-                      ) : audioBlob && !isRecording ? (
-                        <>
-                          <button
-                            type="button"
-                            className="btn btn-danger btn-sm me-1"
-                            onClick={discardAudio}
-                            style={{ borderRadius: '50%', width: '38px', height: '38px', padding: 0 }}
-                            title="Descartar audio"
-                          >
-                            <i className="mdi mdi-delete"></i>
-                          </button>
-                          <button
-                            type="submit"
-                            className="btn btn-success btn-sm"
-                            disabled={isSending}
-                            style={{ borderRadius: '50%', width: '38px', height: '38px', padding: 0 }}
-                            title="Enviar audio"
-                          >
-                            <i className="mdi mdi-send"></i>
-                          </button>
-                        </>
-                      ) : isRecording ? (
-                        <>
-                          <button
-                            type="button"
-                            className="btn btn-warning btn-sm me-1"
-                            onClick={stopRecording}
-                            style={{ borderRadius: '50%', width: '38px', height: '38px', padding: 0 }}
-                            title="Pausar grabación"
-                          >
-                            <i className="mdi mdi-pause"></i>
-                          </button>
-                          <button
-                            type="button"
-                            className="btn btn-danger btn-sm"
-                            onClick={discardAudio}
-                            style={{ borderRadius: '50%', width: '38px', height: '38px', padding: 0 }}
-                            title="Descartar grabación"
-                          >
-                            <i className="mdi mdi-delete"></i>
-                          </button>
-                        </>
-                      ) : (
-                        <>
-                          {messageText.trim() ? (
-                            <button
-                              type="submit"
-                              className="btn btn-primary btn-sm"
-                              disabled={isSending}
-                              style={{ borderRadius: '50%', width: '38px', height: '38px', padding: 0 }}
-                            >
-                              {isSending ? (
-                                <i className="mdi mdi-spin mdi-loading"></i>
-                              ) : (
-                                <i className="mdi mdi-send"></i>
-                              )}
-                            </button>
-                          ) : (
+                  ) : (
+                    <form className="p-2 pt-0 conversation-input position-relative" onSubmit={onMessageSubmit}>
+                      <label className={`row g-0 align-items-end p-1 ${theme == 'dark' ? 'bg-light' : 'bg-white'}`} htmlFor="message-input" style={{
+                        borderRadius: '24px'
+                      }}>
+                        <div className="col-auto mt-0">
+                          <div className="dropup" ref={dropdownRef}>
                             <button
                               type="button"
-                              className="btn btn-outline-primary btn-sm"
-                              onClick={startRecording}
-                              disabled={isSending}
+                              className="btn btn-light btn-sm dropdown-toggle"
+                              data-bs-toggle="dropdown"
+                              aria-expanded={isDropdownOpen}
+                              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                              disabled={isSending || isRecording}
+                              title="Adjuntar archivo"
                               style={{ borderRadius: '50%', width: '38px', height: '38px', padding: 0 }}
-                              title="Grabar audio"
                             >
-                              <i className="mdi mdi-microphone"></i>
+                              <i className={`mdi ${isDropdownOpen ? 'mdi-close' : 'mdi-plus'}`}></i>
                             </button>
+                            <div ref={dropdownContainerRef} className="dropdown-menu mb-1">
+                              <button className="dropdown-item" href="#" onClick={(e) => {
+                                e.preventDefault()
+                                fileInputRef.current?.setAttribute('accept', '*')
+                                fileInputRef.current?.click()
+                              }}>
+                                <i className="mdi mdi-file-document me-2" style={{ color: '#7F66FF' }} />
+                                Documentos
+                              </button>
+                              <button className="dropdown-item" href="#" onClick={(e) => {
+                                e.preventDefault()
+                                fileInputRef.current?.setAttribute('accept', 'image/*,video/*')
+                                fileInputRef.current?.click()
+                              }}>
+                                <i className="mdi mdi-image me-2" style={{ color: '#007BFC' }} />
+                                Fotos y videos
+                              </button>
+                              <button className="dropdown-item" href="#" onClick={(e) => {
+                                e.preventDefault()
+                                setIsOpenCamera(true)
+                              }}>
+                                <i className="mdi mdi-camera me-2" style={{ color: '#FF2E74' }} />
+                                Cámara
+                              </button>
+                              <button className="dropdown-item" href="#" onClick={(e) => {
+                                e.preventDefault()
+                                fileInputRef.current?.setAttribute('accept', 'audio/*')
+                                fileInputRef.current?.click()
+                              }}>
+                                <i className="mdi mdi-headphones me-2" style={{ color: '#FB6533' }} />
+                                Audio
+                              </button>
+                              {isWhatsApp && (
+                                <button className="dropdown-item" href="#" onClick={(e) => {
+                                  e.preventDefault()
+                                  openTemplatesModal()
+                                }}>
+                                  <i className="mdi mdi-whatsapp me-2" style={{ color: '#25D366' }} />
+                                  Plantilla WhatsApp
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                          <input
+                            ref={fileInputRef}
+                            type="file"
+                            className="d-none"
+                            onChange={handleFileChange}
+                          />
+                        </div>
+                        <div className="col mt-0">
+                          {isRecording ? (
+                            <div className="d-flex align-items-center justify-content-center bg-light rounded-pill" style={{ minHeight: '38px' }}>
+                              <span className="text-danger me-2">●</span> Grabando...
+                            </div>
+                          ) : audioBlob ? (
+                            <div className="d-flex align-items-center bg-light rounded-pill px-2" style={{ minHeight: '38px' }}>
+                              <audio ref={audioRef} src={audioUrl} className="me-2" controls controlsList="nodownload" style={{ height: '30px' }} />
+                            </div>
+                          ) : (
+                            <div className="dropup">
+                              <div className={`dropdown-menu mb-1 ${isDMOpen ? 'show' : ''}`}
+                                data-popper-placement="top-start"
+                                style={{
+                                  position: 'absolute',
+                                  inset: 'auto auto 0px 0px',
+                                  margin: '0px',
+                                  transform: 'translateY(-44px)',
+                                  maxHeight: '200px',
+                                  overflowY: 'auto'
+                                }}>
+                                {
+                                  defaultMessages
+                                    .filter(dm => `/${dm.name}`.toLowerCase().startsWith(messageText.toLowerCase()))
+                                    .sort((a, b) => a.name.localeCompare(b.name))
+                                    .map((message, idx) => {
+                                      const content = $(`<div>${message.description}</div>`)
+                                      content.find('.mention').each((_, element) => {
+                                        const mention = $(element)
+                                        const mentionId = mention.attr('data-id')
+                                        mention.removeClass('mention')
+                                        mention.text(contact?.[mentionId])
+                                      })
+                                      return <div key={idx} className="dropdown-item" type="button" style={{ width: '300px' }} onClick={async () => {
+                                        setIsDMOpen(false)
+                                        setMessageText('')
+                                        setIsSending(true)
+                                        const dmService = contact?.integration?.meta_service || contact?.origin?.toLowerCase()
+                                        const isMetaDM = dmService === 'messenger' || dmService === 'instagram'
+                                        const isTikTokDM = dmService === 'tiktok'
+                                        const dmRest = isTikTokDM ? tiktokRest : (isMetaDM ? metaRest : whatsAppRest)
+                                        if (message.attachments.length > 0) {
+                                          const attachment = message.attachments[0]
+                                          const attachmentURL = `${Global.APP_URL}/cloud/${attachment.file}`
+                                          await dmRest.send(leadId, `/attachment:${attachmentURL}\n${content.html()}`)
+                                          setIsSending(false)
+                                          return
+                                        }
+                                        await dmRest.send(leadId, content.html())
+                                        setIsSending(false)
+                                      }}>
+                                        <span className="d-block text-truncate">/{message.name}</span>
+                                        <small className="d-block text-muted text-truncate">{content.text()}</small>
+                                      </div>
+                                    })
+                                }
+                              </div>
+                              <textarea
+                                ref={inputMessageRef}
+                                id="message-input"
+                                className="form-control w-100"
+                                placeholder="Ingrese su mensaje aquí"
+                                rows={1}
+                                style={{ minHeight: '38px', maxHeight: '188px', fieldSizing: 'content', resize: 'none', border: 'none', backgroundColor: 'transparent' }}
+                                disabled={isSending || !!audioBlob || !!cameraBlob || !!previewBlob}
+                                value={messageText}
+                                onChange={(e) => {
+                                  const newValue = e.target.value
+                                  if (String(newValue).trim().startsWith('/') && defaultMessages.some(({ name }) => (`/${name}`.toLowerCase()).startsWith(newValue.toLowerCase()))) {
+                                    setIsDMOpen(true)
+                                  } else {
+                                    setIsDMOpen(false)
+                                  }
+                                  setMessageText(newValue)
+                                }}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter' && !e.shiftKey) {
+                                    e.preventDefault()
+                                    if (hasContent()) onMessageSubmit(e)
+                                  }
+                                }}
+                              />
+                            </div>
                           )}
-                        </>
-                      )}
-                    </div>
-                  </label>
-                </form>
+                        </div>
+                        <div className="col-auto mt-0">
+                          {(cameraBlob || previewBlob) && !isOpenCamera ? (
+                            <>
+                              <button
+                                type="button"
+                                className="btn btn-danger btn-sm me-1"
+                                onClick={() => {
+                                  setCameraBlob(null)
+                                  setPreviewBlob(null)
+                                  setPreviewType(null)
+                                  setPreviewName('')
+                                }}
+                                style={{ borderRadius: '50%', width: '38px', height: '38px', padding: 0 }}
+                                title="Descartar adjunto"
+                              >
+                                <i className="mdi mdi-delete"></i>
+                              </button>
+                              <button
+                                type="submit"
+                                className="btn btn-success btn-sm"
+                                disabled={isSending}
+                                style={{ borderRadius: '50%', width: '38px', height: '38px', padding: 0 }}
+                                title="Enviar adjunto"
+                              >
+                                <i className="mdi mdi-send"></i>
+                              </button>
+                            </>
+                          ) : audioBlob && !isRecording ? (
+                            <>
+                              <button
+                                type="button"
+                                className="btn btn-danger btn-sm me-1"
+                                onClick={discardAudio}
+                                style={{ borderRadius: '50%', width: '38px', height: '38px', padding: 0 }}
+                                title="Descartar audio"
+                              >
+                                <i className="mdi mdi-delete"></i>
+                              </button>
+                              <button
+                                type="submit"
+                                className="btn btn-success btn-sm"
+                                disabled={isSending}
+                                style={{ borderRadius: '50%', width: '38px', height: '38px', padding: 0 }}
+                                title="Enviar audio"
+                              >
+                                <i className="mdi mdi-send"></i>
+                              </button>
+                            </>
+                          ) : isRecording ? (
+                            <>
+                              <button
+                                type="button"
+                                className="btn btn-warning btn-sm me-1"
+                                onClick={stopRecording}
+                                style={{ borderRadius: '50%', width: '38px', height: '38px', padding: 0 }}
+                                title="Pausar grabación"
+                              >
+                                <i className="mdi mdi-pause"></i>
+                              </button>
+                              <button
+                                type="button"
+                                className="btn btn-danger btn-sm"
+                                onClick={discardAudio}
+                                style={{ borderRadius: '50%', width: '38px', height: '38px', padding: 0 }}
+                                title="Descartar grabación"
+                              >
+                                <i className="mdi mdi-delete"></i>
+                              </button>
+                            </>
+                          ) : (
+                            <>
+                              {messageText.trim() ? (
+                                <button
+                                  type="submit"
+                                  className="btn btn-primary btn-sm"
+                                  disabled={isSending}
+                                  style={{ borderRadius: '50%', width: '38px', height: '38px', padding: 0 }}
+                                >
+                                  {isSending ? (
+                                    <i className="mdi mdi-spin mdi-loading"></i>
+                                  ) : (
+                                    <i className="mdi mdi-send"></i>
+                                  )}
+                                </button>
+                              ) : (
+                                <button
+                                  type="button"
+                                  className="btn btn-outline-primary btn-sm"
+                                  onClick={startRecording}
+                                  disabled={isSending}
+                                  style={{ borderRadius: '50%', width: '38px', height: '38px', padding: 0 }}
+                                  title="Grabar audio"
+                                >
+                                  <i className="mdi mdi-microphone"></i>
+                                </button>
+                              )}
+                            </>
+                          )}
+                        </div>
+                      </label>
+                    </form>
+                  )
+                )
               }
             </section>
           </>
@@ -741,6 +860,74 @@ const ChatContent = ({ leadId, setLeadId, theme, contactDetails, setContactDetai
           setAttachment(blob)
         }}
       />
+
+      <Modal modalRef={templatesModalRef} title="Enviar Plantilla de WhatsApp" hideFooter zIndex={1055}>
+        {isTemplatesLoading ? (
+          <div className="text-center py-4">
+            <div className="spinner-border text-primary" role="status">
+              <span className="visually-hidden">Cargando plantillas...</span>
+            </div>
+            <div className="mt-2 text-muted">Obteniendo plantillas autorizadas desde Meta...</div>
+          </div>
+        ) : (
+          <div className="text-start">
+            <div className="mb-3">
+              <label className="form-label fw-bold">Seleccionar Plantilla</label>
+              <select className="form-select" onChange={handleTemplateChange} defaultValue="" required>
+                <option value="" disabled>-- Seleccione una plantilla --</option>
+                {(Array.isArray(templates) ? templates : []).map((tpl, i) => (
+                  <option key={i} value={tpl.name}>{tpl.name} ({tpl.language})</option>
+                ))}
+              </select>
+            </div>
+
+            {selectedTemplate && (
+              <>
+                {/* Variable inputs */}
+                {Object.keys(templateParams).length > 0 && (
+                  <div className="mb-3 p-3 bg-light rounded">
+                    <h6 className="fw-bold mb-2">Variables de la plantilla:</h6>
+                    {Object.keys(templateParams).map((key) => (
+                      <div className="mb-2" key={key}>
+                        <label className="form-label small mb-1">Variable {'{{' + key + '}}'}</label>
+                        <input
+                          type="text"
+                          className="form-control form-control-sm"
+                          value={templateParams[key]}
+                          onChange={(e) => {
+                            setTemplateParams(prev => ({ ...prev, [key]: e.target.value }))
+                          }}
+                          placeholder={`Valor para {{${key}}}`}
+                          required
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Template Preview */}
+                <div className="mb-3">
+                  <label className="form-label fw-bold">Vista previa del mensaje:</label>
+                  <div className="p-3 border rounded bg-white font-13" style={{ whiteSpace: 'pre-wrap', borderLeft: '4px solid #25D366' }}>
+                    {getReplacedTemplateText()}
+                  </div>
+                </div>
+
+                <div className="d-flex justify-content-end gap-2 pt-2 border-top">
+                  <button type="button" className="btn btn-sm btn-danger" data-bs-dismiss="modal">Cancelar</button>
+                  <button type="button" className="btn btn-sm btn-success" onClick={onSendTemplateSubmit} disabled={isSendingTemplate}>
+                    {isSendingTemplate ? (
+                      <><i className="mdi mdi-spin mdi-loading me-1"></i>Enviando...</>
+                    ) : (
+                      <><i className="mdi mdi-send me-1"></i>Enviar plantilla</>
+                    )}
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        )}
+      </Modal>
     </div>
   </>
 }

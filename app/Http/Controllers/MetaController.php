@@ -1211,27 +1211,7 @@ class MetaController extends Controller
             }
         }
 
-        // Route through Evolution API if connected
-        if (in_array($origin, ['whatsapp', 'forms', 'evoapi'])) {
-            $isEvoConnected = false;
-            try {
-                $sessionRes = new Fetch(env('EVOAPI_URL') . '/instance/fetchInstances?instanceName=' . $businessJpa->person->document_number, [
-                    'headers' => ['apikey' => $businessJpa->uuid]
-                ]);
-                if ($sessionRes->ok) {
-                    $sessions = $sessionRes->json();
-                    if (!empty($sessions) && ($sessions[0]['connectionStatus'] ?? '') === 'open') {
-                        $isEvoConnected = true;
-                    }
-                }
-            } catch (\Throwable $th) {
-                Log::error('Error checking Evolution API session in MetaController: ' . $th->getMessage());
-            }
 
-            if ($isEvoConnected) {
-                $origin = 'evoapi';
-            }
-        }
 
         if ($origin == 'evoapi') {
             new Fetch(env('EVOAPI_URL') . '/message/sendText/' . $businessJpa->person->document_number, [

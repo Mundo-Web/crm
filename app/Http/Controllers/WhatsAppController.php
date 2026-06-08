@@ -361,245 +361,133 @@ class WhatsAppController extends Controller
 
             $isDummy = in_array($number, explode(',', env('WA_DUMMY')), true);
 
-            // Send message via active API (Evolution API if connected, otherwise Meta Graph API)
+            // Send message via Meta Graph API
             if (!$isDummy) {
-                $isEvoConnected = false;
-                try {
-                    $sessionRes = new Fetch(env('EVOAPI_URL') . '/instance/fetchInstances?instanceName=' . $businessJpa->person->document_number, [
-                        'headers' => ['apikey' => $businessJpa->uuid]
-                    ]);
-                    if ($sessionRes->ok) {
-                        $sessions = $sessionRes->json();
-                        if (!empty($sessions) && ($sessions[0]['connectionStatus'] ?? '') === 'open') {
-                            $isEvoConnected = true;
-                        }
-                    }
-                } catch (\Throwable $th) {
-                    Log::error('Error checking Evolution API session in WhatsAppController: ' . $th->getMessage());
+                $integration = $clientJpa->integration ?? Integration::where('business_id', Auth::user()->business_id)
+                    ->where('meta_service', 'whatsapp')
+                    ->where('status', true)
+                    ->first();
+
+                if (!$integration) {
+                    Log::error('Meta integration not found', ['business_id' => Auth::user()->business_id]);
+                    throw new Exception('No hay credenciales de Meta configuradas');
                 }
 
-                if ($isEvoConnected) {
-                    $endpoint = '';
-                    $payload = [];
+                $url = env('FACEBOOK_GRAPH_URL') . '/' . $integration->meta_number_id . '/messages';
 
-                    if (Text::startsWith($message, '/signature:')) {
-                        $mediaPath = str_replace('/signature:', '', $message);
-                        $payload = [
-                            'number' => $number,
-                            'media' => $mediaPath,
-                            'mediaType' => 'image',
-                            'caption' => ''
-                        ];
-                        $endpoint = "/message/sendMedia/";
-                    } else if (Text::startsWith($message, '/attachment:')) {
-                        [$attachment] = explode(Text::lineBreak(), $message);
-                        $caption = trim(str_replace($attachment, '', $message) ?: '');
-                        $attachmentUrl = str_replace('/attachment:', '', $attachment);
+                Log::info('Preparing Meta request', [
+                    'url' => $url,
+                    'is_custom_integration' => !!$clientJpa->integration,
+                    'integration_id' => $integration->id
+                ]);
 
-                        $mimeType = 'application/octet-stream';
-                        try {
-                            $head = Http::head($attachmentUrl);
-                            if ($head->ok()) {
-                                $mimeType = $head->header('Content-Type') ?? $mimeType;
-                            }
-                        } catch (\Throwable $th) {}
-
-                        $mediaType = 'document';
-                        if (strpos($mimeType, 'image/') === 0) {
-                            $mediaType = 'image';
-                        } else if (strpos($mimeType, 'video/') === 0) {
-                            $mediaType = 'video';
-                        } else if (strpos($mimeType, 'audio/') === 0) {
-                            $mediaType = 'audio';
-                        }
-
-                        $payload = [
-                            'number' => $number,
-                            'media' => $attachmentUrl,
-                            'mediaType' => $mediaType,
-                        ];
-                        if ($caption) {
-                            $payload['caption'] = Text::html2wa($caption);
-                        }
-                        $endpoint = "/message/sendMedia/";
-                    } else if (Text::startsWith($message, '/audio:')) {
-                        $audioUrl = str_replace('/audio:', env('APP_URL') . '/storage/images/whatsapp/', $message);
-                        $payload = [
-                            'number' => $number,
-                            'media' => $audioUrl,
-                            'mediaType' => 'audio'
-                        ];
-                        $endpoint = "/message/sendMedia/";
-                    } else if (Text::startsWith($message, '/image:') || Text::startsWith($message, '/document:')) {
-                        [$fileTag] = explode(Text::lineBreak(), $message);
-                        $caption = trim(str_replace($fileTag, '', $message) ?: '');
-
-                        if (Text::startsWith($message, '/image:')) {
-                            $mediaType = 'image';
-                            $filePath = str_replace('/image:', env('APP_URL') . '/storage/images/whatsapp/', $fileTag);
-                        } else {
-                            $mediaType = 'document';
-                            $filePath = str_replace('/document:', env('APP_URL') . '/storage/images/whatsapp/', $fileTag);
-                        }
-
-                        $payload = [
-                            'number' => $number,
-                            'media' => $filePath,
-                            'mediaType' => $mediaType,
-                        ];
-                        if ($caption) {
-                            $payload['caption'] = Text::html2wa($caption);
-                        }
-                        $endpoint = "/message/sendMedia/";
-                    } else {
-                        $payload = [
-                            'number' => $number,
-                            'text' => Text::html2wa($message)
-                        ];
-                        $endpoint = "/message/sendText/";
-                    }
-
-                    $res = new Fetch(env('EVOAPI_URL') . $endpoint . $businessJpa->person->document_number, [
-                        'method' => 'POST',
-                        'headers' => [
-                            'Content-Type' => 'application/json',
-                            'apikey' => $businessJpa->uuid
-                        ],
-                        'body' => $payload
-                    ]);
-
-                    if (!$res->ok) {
-                        throw new Exception('Ocurrió un error al enviar el mensaje por Evolution API: ' . $res->body());
-                    }
-
-                    Log::info('Message sent successfully via Evolution API', ['number' => $number]);
-                } else {
-                    $integration = $clientJpa->integration ?? Integration::where('business_id', Auth::user()->business_id)
-                        ->where('meta_service', 'whatsapp')
-                        ->where('status', true)
-                        ->first();
-
-                    if (!$integration) {
-                        Log::error('Meta integration not found', ['business_id' => Auth::user()->business_id]);
-                        throw new Exception('No hay credenciales de Meta configuradas');
-                    }
-
-                    $url = env('FACEBOOK_GRAPH_URL') . '/' . $integration->meta_number_id . '/messages';
-
-                    Log::info('Preparing Meta request', [
-                        'url' => $url,
-                        'is_custom_integration' => !!$clientJpa->integration,
-                        'integration_id' => $integration->id
-                    ]);
-
-                    if (Text::startsWith($message, '/signature:')) {
-                        $mediaPath = str_replace('/signature:', '', $message);
-                        $res = Http::withToken($integration->meta_access_token)
-                            ->post($url, [
-                                'messaging_product' => 'whatsapp',
-                                'recipient_type' => 'individual',
-                                'to' => $number,
-                                'type' => 'image',
-                                'image' => [
-                                    'link' => $mediaPath,
-                                    'caption' => '',
-                                ],
-                            ]);
-                    } else if (Text::startsWith($message, '/attachment:')) {
-                        [$attachment] = explode(Text::lineBreak(), $message);
-                        $caption = trim(str_replace($attachment, '', $message) ?: '');
-                        $attachment = str_replace('/attachment:', '', $attachment);
-
-                        // Determine mime type
-                        $mimeType = 'application/octet-stream';
-                        $head = Http::head($attachment);
-                        if ($head->ok()) {
-                            $mimeType = $head->header('Content-Type') ?? $mimeType;
-                        }
-
-                        $mediaType = 'document';
-                        if (strpos($mimeType, 'image/') === 0) {
-                            $mediaType = 'image';
-                        } else if (strpos($mimeType, 'video/') === 0) {
-                            $mediaType = 'video';
-                        } else if (strpos($mimeType, 'audio/') === 0) {
-                            $mediaType = 'audio';
-                        }
-
-                        $payload = [
+                if (Text::startsWith($message, '/signature:')) {
+                    $mediaPath = str_replace('/signature:', '', $message);
+                    $res = Http::withToken($integration->meta_access_token)
+                        ->post($url, [
                             'messaging_product' => 'whatsapp',
                             'recipient_type' => 'individual',
                             'to' => $number,
-                            'type' => $mediaType,
-                            $mediaType => [
-                                'link' => $attachment,
+                            'type' => 'image',
+                            'image' => [
+                                'link' => $mediaPath,
+                                'caption' => '',
                             ],
-                        ];
-                        if ($caption) {
-                            $payload[$mediaType]['caption'] = Text::html2wa($caption);
-                        }
-
-                        $res = Http::withToken($integration->meta_access_token)->post($url, $payload);
-                    } else if (Text::startsWith($message, '/audio:')) {
-                        $audio = str_replace('/audio:', env('APP_URL') . '/storage/images/whatsapp/', $message);
-                        $res = Http::withToken($integration->meta_access_token)
-                            ->post($url, [
-                                'messaging_product' => 'whatsapp',
-                                'recipient_type' => 'individual',
-                                'to' => $number,
-                                'type' => 'audio',
-                                'audio' => ['link' => $audio],
-                            ]);
-                    } else if (Text::startsWith($message, '/image:') || Text::startsWith($message, '/document:')) {
-                        [$fileTag] = explode(Text::lineBreak(), $message);
-                        $caption = trim(str_replace($fileTag, '', $message) ?: '');
-
-                        if (Text::startsWith($message, '/image:')) {
-                            $mediaType = 'image';
-                            $filePath = str_replace('/image:', env('APP_URL') . '/storage/images/whatsapp/', $fileTag);
-                            $mimeType = 'image/jpeg';
-                        } else {
-                            $mediaType = 'document';
-                            $filePath = str_replace('/document:', env('APP_URL') . '/storage/images/whatsapp/', $fileTag);
-                            $mimeType = $request->file('document')?->getMimeType() ?? 'application/octet-stream';
-                        }
-
-                        $payload = [
-                            'messaging_product' => 'whatsapp',
-                            'recipient_type' => 'individual',
-                            'to' => $number,
-                            'type' => $mediaType,
-                            $mediaType => [
-                                'link' => $filePath,
-                            ],
-                        ];
-                        if ($caption) {
-                            $payload[$mediaType]['caption'] = Text::html2wa($caption);
-                        }
-
-                        $res = Http::withToken($integration->meta_access_token)->post($url, $payload);
-                    } else {
-                        $res = Http::withToken($integration->meta_access_token)
-                            ->post($url, [
-                                'messaging_product' => 'whatsapp',
-                                'recipient_type' => 'individual',
-                                'to' => $number,
-                                'type' => 'text',
-                                'text' => ['body' => Text::html2wa($request->message)],
-                            ]);
-                    }
-
-                    if (!$res->ok()) {
-                        Log::error('Meta API response error', [
-                            'status' => $res->status(),
-                            'body' => $res->json(),
-                            'number' => $number
                         ]);
-                        throw new Exception('Ocurrió un error al enviar el mensaje: ' . $res->body());
+                } else if (Text::startsWith($message, '/attachment:')) {
+                    [$attachment] = explode(Text::lineBreak(), $message);
+                    $caption = trim(str_replace($attachment, '', $message) ?: '');
+                    $attachment = str_replace('/attachment:', '', $attachment);
+
+                    // Determine mime type
+                    $mimeType = 'application/octet-stream';
+                    $head = Http::head($attachment);
+                    if ($head->ok()) {
+                        $mimeType = $head->header('Content-Type') ?? $mimeType;
                     }
 
-                    Log::info('Meta message sent successfully', ['number' => $number]);
+                    $mediaType = 'document';
+                    if (strpos($mimeType, 'image/') === 0) {
+                        $mediaType = 'image';
+                    } else if (strpos($mimeType, 'video/') === 0) {
+                        $mediaType = 'video';
+                    } else if (strpos($mimeType, 'audio/') === 0) {
+                        $mediaType = 'audio';
+                    }
+
+                    $payload = [
+                        'messaging_product' => 'whatsapp',
+                        'recipient_type' => 'individual',
+                        'to' => $number,
+                        'type' => $mediaType,
+                        $mediaType => [
+                            'link' => $attachment,
+                        ],
+                    ];
+                    if ($caption) {
+                        $payload[$mediaType]['caption'] = Text::html2wa($caption);
+                    }
+
+                    $res = Http::withToken($integration->meta_access_token)->post($url, $payload);
+                } else if (Text::startsWith($message, '/audio:')) {
+                    $audio = str_replace('/audio:', env('APP_URL') . '/storage/images/whatsapp/', $message);
+                    $res = Http::withToken($integration->meta_access_token)
+                        ->post($url, [
+                            'messaging_product' => 'whatsapp',
+                            'recipient_type' => 'individual',
+                            'to' => $number,
+                            'type' => 'audio',
+                            'audio' => ['link' => $audio],
+                        ]);
+                } else if (Text::startsWith($message, '/image:') || Text::startsWith($message, '/document:')) {
+                    [$fileTag] = explode(Text::lineBreak(), $message);
+                    $caption = trim(str_replace($fileTag, '', $message) ?: '');
+
+                    if (Text::startsWith($message, '/image:')) {
+                        $mediaType = 'image';
+                        $filePath = str_replace('/image:', env('APP_URL') . '/storage/images/whatsapp/', $fileTag);
+                        $mimeType = 'image/jpeg';
+                    } else {
+                        $mediaType = 'document';
+                        $filePath = str_replace('/document:', env('APP_URL') . '/storage/images/whatsapp/', $fileTag);
+                        $mimeType = $request->file('document')?->getMimeType() ?? 'application/octet-stream';
+                    }
+
+                    $payload = [
+                        'messaging_product' => 'whatsapp',
+                        'recipient_type' => 'individual',
+                        'to' => $number,
+                        'type' => $mediaType,
+                        $mediaType => [
+                            'link' => $filePath,
+                        ],
+                    ];
+                    if ($caption) {
+                        $payload[$mediaType]['caption'] = Text::html2wa($caption);
+                    }
+
+                    $res = Http::withToken($integration->meta_access_token)->post($url, $payload);
+                } else {
+                    $res = Http::withToken($integration->meta_access_token)
+                        ->post($url, [
+                            'messaging_product' => 'whatsapp',
+                            'recipient_type' => 'individual',
+                            'to' => $number,
+                            'type' => 'text',
+                            'text' => ['body' => Text::html2wa($request->message)],
+                        ]);
                 }
+
+                if (!$res->ok()) {
+                    Log::error('Meta API response error', [
+                        'status' => $res->status(),
+                        'body' => $res->json(),
+                        'number' => $number
+                    ]);
+                    throw new Exception('Ocurrió un error al enviar el mensaje: ' . $res->body());
+                }
+
+                Log::info('Meta message sent successfully', ['number' => $number]);
             }
 
             Log::debug('Storing message in database');
@@ -614,6 +502,225 @@ class WhatsAppController extends Controller
             ]);
             Log::info('Message stored in database');
         });
+        return response($response->toArray(), $response->status);
+    }
+
+    public function getTemplates()
+    {
+        $response = Response::simpleTryCatch(function () {
+            $integration = Integration::where('business_id', Auth::user()->business_id)
+                ->where('meta_service', 'whatsapp')
+                ->where('status', true)
+                ->first();
+
+            if (!$integration) {
+                throw new Exception('No hay credenciales de Meta configuradas');
+            }
+
+            $url = env('FACEBOOK_GRAPH_URL', 'https://graph.facebook.com/v22.0') . '/' . $integration->meta_business_id . '/message_templates';
+
+            $res = Http::withToken($integration->meta_access_token)->get($url);
+
+            if (!$res->ok()) {
+                throw new Exception('Error al obtener plantillas desde Meta: ' . $res->body());
+            }
+
+            $data = $res->json();
+            return $data['data'] ?? [];
+        });
+
+        return response($response->toArray(), $response->status);
+    }
+
+    public function createTemplate(Request $request)
+    {
+        $response = Response::simpleTryCatch(function () use ($request) {
+            $integration = Integration::where('business_id', Auth::user()->business_id)
+                ->where('meta_service', 'whatsapp')
+                ->where('status', true)
+                ->first();
+
+            if (!$integration) {
+                throw new Exception('No hay credenciales de Meta configuradas');
+            }
+
+            // Clean template name: lowercase alphanumeric and underscores
+            $name = strtolower(preg_replace('/[^a-zA-Z0-9_]/', '', $request->name));
+
+            $url = env('FACEBOOK_GRAPH_URL', 'https://graph.facebook.com/v22.0') . '/' . $integration->meta_business_id . '/message_templates';
+
+            $payload = [
+                'name' => $name,
+                'category' => strtoupper($request->category ?? 'UTILITY'),
+                'language' => $request->language ?? 'es',
+                'components' => [
+                    [
+                        'type' => 'BODY',
+                        'text' => $request->text
+                    ]
+                ]
+            ];
+
+            Log::info('Creating template in Meta WABA', ['payload' => $payload, 'url' => $url]);
+
+            $res = Http::withToken($integration->meta_access_token)->post($url, $payload);
+
+            if (!$res->ok()) {
+                Log::error('Meta API create template error', [
+                    'status' => $res->status(),
+                    'body' => $res->json()
+                ]);
+                $errorData = $res->json();
+                throw new Exception('Error al crear plantilla en Meta: ' . ($errorData['error']['message'] ?? $res->body()));
+            }
+
+            return $res->json();
+        });
+
+        return response($response->toArray(), $response->status);
+    }
+
+    public function deleteTemplate($name)
+    {
+        $response = Response::simpleTryCatch(function () use ($name) {
+            $integration = Integration::where('business_id', Auth::user()->business_id)
+                ->where('meta_service', 'whatsapp')
+                ->where('status', true)
+                ->first();
+
+            if (!$integration) {
+                throw new Exception('No hay credenciales de Meta configuradas');
+            }
+
+            $url = env('FACEBOOK_GRAPH_URL', 'https://graph.facebook.com/v22.0') . '/' . $integration->meta_business_id . '/message_templates?name=' . urlencode($name);
+
+            Log::info('Deleting template in Meta WABA', ['name' => $name, 'url' => $url]);
+
+            $res = Http::withToken($integration->meta_access_token)->delete($url);
+
+            if (!$res->ok()) {
+                Log::error('Meta API delete template error', [
+                    'status' => $res->status(),
+                    'body' => $res->json()
+                ]);
+                $errorData = $res->json();
+                throw new Exception('Error al eliminar plantilla en Meta: ' . ($errorData['error']['message'] ?? $res->body()));
+            }
+
+            return $res->json();
+        });
+
+        return response($response->toArray(), $response->status);
+    }
+
+    public function sendTemplate(Request $request)
+    {
+        $response = Response::simpleTryCatch(function () use ($request) {
+            Log::info('WhatsApp sendTemplate started', [
+                'client_id' => $request->client_id,
+                'phone' => $request->phone,
+                'template_name' => $request->template_name,
+                'user_id' => Auth::user()->id,
+                'business_id' => Auth::user()->business_id,
+            ]);
+
+            $clientJpa = Client::with('integration')->find($request->client_id);
+
+            if (!$clientJpa) {
+                Log::warning('Client not found', ['client_id' => $request->client_id]);
+                throw new Exception('Cliente no encontrado');
+            }
+
+            $number = $clientJpa->contact_phone ?? null;
+            if ($request->phone) $number = $request->phone;
+            if (!$number) {
+                Log::warning('WhatsApp number not found for client', ['client_id' => $request->client_id]);
+                throw new Exception('Número no encontrado');
+            }
+
+            // Clean and format phone number for Peru
+            $number = preg_replace('/[^0-9]/', '', $number);
+            if (strlen($number) === 9 && strpos($number, '9') === 0) {
+                $number = '51' . $number;
+            }
+
+            $integration = $clientJpa->integration ?? Integration::where('business_id', Auth::user()->business_id)
+                ->where('meta_service', 'whatsapp')
+                ->where('status', true)
+                ->first();
+
+            if (!$integration) {
+                Log::error('Meta integration not found', ['business_id' => Auth::user()->business_id]);
+                throw new Exception('No hay credenciales de Meta configuradas');
+            }
+
+            $url = env('FACEBOOK_GRAPH_URL', 'https://graph.facebook.com/v22.0') . '/' . $integration->meta_number_id . '/messages';
+
+            $templatePayload = [
+                'name' => $request->template_name,
+                'language' => [
+                    'code' => $request->language_code ?? 'es'
+                ]
+            ];
+
+            if ($request->has('parameters') && is_array($request->parameters) && count($request->parameters) > 0) {
+                $parameters = [];
+                foreach ($request->parameters as $param) {
+                    $parameters[] = [
+                        'type' => 'text',
+                        'text' => $param
+                    ];
+                }
+                $templatePayload['components'] = [
+                    [
+                        'type' => 'body',
+                        'parameters' => $parameters
+                    ]
+                ];
+            }
+
+            $payload = [
+                'messaging_product' => 'whatsapp',
+                'recipient_type' => 'individual',
+                'to' => $number,
+                'type' => 'template',
+                'template' => $templatePayload
+            ];
+
+            Log::info('Preparing Meta template request', [
+                'url' => $url,
+                'integration_id' => $integration->id,
+                'payload' => $payload
+            ]);
+
+            $res = Http::withToken($integration->meta_access_token)->post($url, $payload);
+
+            if (!$res->ok()) {
+                Log::error('Meta API template response error', [
+                    'status' => $res->status(),
+                    'body' => $res->json(),
+                    'number' => $number
+                ]);
+                throw new Exception('Ocurrió un error al enviar la plantilla: ' . $res->body());
+            }
+
+            Log::info('Meta template message sent successfully', ['number' => $number]);
+
+            // Save in DB
+            $dbMessage = $request->template_text ?? ('[Plantilla: ' . $request->template_name . ']');
+
+            Log::debug('Storing template message in database');
+            Message::create([
+                'wa_id' => $number,
+                'role' => 'User',
+                'message' => Text::html2wa($dbMessage),
+                'microtime' => (int) (microtime(true) * 1_000_000),
+                'business_id' => Auth::user()->business_id,
+                'seen' => true
+            ]);
+            Log::info('Template message stored in database');
+        });
+
         return response($response->toArray(), $response->status);
     }
 }

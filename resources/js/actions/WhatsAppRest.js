@@ -120,6 +120,82 @@ class WhatsAppRest extends BasicRest {
       return false
     }
   }
+
+  getTemplates = async () => {
+    try {
+      const { status, result } = await Fetch(`/api/${this.path}/templates`)
+      if (!status) throw new Error(result?.message ?? 'Ocurrio un error al obtener las plantillas')
+      return result.data ?? []
+    } catch (error) {
+      console.error(error.message)
+      Notify.add({
+        icon: '/assets/img/icon.svg',
+        title: 'Error',
+        body: error.message,
+        type: 'danger'
+      })
+      return []
+    }
+  }
+
+  sendTemplate = async (client_id, template_name, language_code, parameters, template_text) => {
+    try {
+      const { status, result } = await Fetch(`/api/${this.path}/send-template`, {
+        method: 'POST',
+        body: JSON.stringify({ client_id, template_name, language_code, parameters, template_text })
+      })
+      if (!status) throw new Error(result?.message ?? 'Ocurrio un error al enviar la plantilla')
+      return result
+    } catch (error) {
+      console.error(error.message)
+      Notify.add({
+        icon: '/assets/img/icon.svg',
+        title: 'Error',
+        body: error.message,
+        type: 'danger'
+      })
+      return false
+    }
+  }
+
+  createTemplate = async (name, category, language, text) => {
+    try {
+      const { status, result } = await Fetch(`/api/${this.path}/templates`, {
+        method: 'POST',
+        body: JSON.stringify({ name, category, language, text })
+      })
+      if (!status) throw new Error(result?.message ?? 'Ocurrio un error al crear la plantilla en Meta')
+      return result
+    } catch (error) {
+      console.error(error.message)
+      Notify.add({
+        icon: '/assets/img/icon.svg',
+        title: 'Error',
+        body: error.message,
+        type: 'danger'
+      })
+      return false
+    }
+  }
+
+  deleteTemplate = async (name) => {
+    try {
+      const { status, result } = await Fetch(`/api/${this.path}/templates/${name}`, {
+        method: 'DELETE'
+      })
+      if (!status) throw new Error(result?.message ?? 'Ocurrio un error al eliminar la plantilla de Meta')
+      return result
+    } catch (error) {
+      console.error(error.message)
+      Notify.add({
+        icon: '/assets/img/icon.svg',
+        title: 'Error',
+        body: error.message,
+        type: 'danger'
+      })
+      return false
+    }
+  }
 }
 
 export default WhatsAppRest

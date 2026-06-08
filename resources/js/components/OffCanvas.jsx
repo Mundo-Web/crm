@@ -24,6 +24,7 @@ const OffCanvas = ({ offCanvasRef, dataLoaded, setDataLoaded, defaultMessages, s
   const defaultMessagesRef = useRef()
   const defaultMessagesButtonRef = useRef()
   const signsModalRef = useRef()
+  const templatesModalRef = useRef()
   const messagesContainerRef = useRef()
 
   const [messages, setMessages] = useState([])
@@ -179,6 +180,98 @@ const OffCanvas = ({ offCanvasRef, dataLoaded, setDataLoaded, defaultMessages, s
       }
     })
   }, [null]);
+
+  const [templates, setTemplates] = useState([])
+  const [selectedTemplate, setSelectedTemplate] = useState(null)
+  const [templateParams, setTemplateParams] = useState({})
+  const [isTemplatesLoading, setIsTemplatesLoading] = useState(false)
+  const [isSendingTemplate, setIsSendingTemplate] = useState(false)
+
+  const openTemplatesModal = async () => {
+    setIsTemplatesLoading(true)
+    $(templatesModalRef.current).modal('show')
+    const data = await whatsAppRest.getTemplates()
+    setTemplates(data || [])
+    setIsTemplatesLoading(false)
+  }
+
+  const handleTemplateChange = (e) => {
+    const templateName = e.target.value
+    const template = templates.find(t => t.name === templateName)
+    setSelectedTemplate(template)
+
+    if (template) {
+      const bodyComponent = template.components?.find(c => c.type === 'BODY')
+      const bodyText = bodyComponent?.text || ''
+      const matches = [...bodyText.matchAll(/\{\{(\d+)\}\}/g)]
+      const paramsCount = matches.length
+
+      const initialParams = {}
+      const clientName = dataLoaded?.contact_name || ''
+      if (paramsCount >= 1) {
+        initialParams['1'] = clientName
+      }
+      for (let i = 2; i <= paramsCount; i++) {
+        initialParams[String(i)] = ''
+      }
+      setTemplateParams(initialParams)
+    } else {
+      setTemplateParams({})
+    }
+  }
+
+  const getReplacedTemplateText = () => {
+    if (!selectedTemplate) return ''
+    const bodyComponent = selectedTemplate.components?.find(c => c.type === 'BODY')
+    let text = bodyComponent?.text || ''
+    Object.keys(templateParams).forEach(key => {
+      text = text.replaceAll(`{{${key}}}`, templateParams[key] || `{{${key}}}`)
+    })
+    return text
+  }
+
+  const onSendTemplateSubmit = async (e) => {
+    e.preventDefault()
+    if (!selectedTemplate) return
+
+    setIsSendingTemplate(true)
+    const clientId = dataLoaded?.id
+    const templateName = selectedTemplate.name
+    const languageCode = selectedTemplate.language?.code || selectedTemplate.language || 'es'
+    const parameters = Object.keys(templateParams)
+      .sort((a, b) => Number(a) - Number(b))
+      .map(key => templateParams[key])
+    const templateText = getReplacedTemplateText()
+
+    const result = await whatsAppRest.sendTemplate(
+      clientId,
+      templateName,
+      languageCode,
+      parameters,
+      templateText
+    )
+
+    setIsSendingTemplate(false)
+    if (result) {
+      $(templatesModalRef.current).modal('hide')
+      setSelectedTemplate(null)
+      setTemplateParams({})
+      getMessages()
+    }
+  }
+
+  const is24HourWindowOpen = () => {
+    if (!messages || messages.length === 0) return false;
+    const humanMessages = messages.filter(m => m.role === 'Human');
+    if (humanMessages.length === 0) return false;
+
+    const maxMicrotime = Math.max(...humanMessages.map(m => Number(m.microtime)));
+    const latestTimestamp = maxMicrotime / 1000;
+    const currentTimestamp = Date.now();
+
+    const diffHours = (currentTimestamp - latestTimestamp) / (1000 * 60 * 60);
+    return diffHours < 24;
+  };
 
   const finalDefaultMessages = defaultMessages.filter(({ type }) => type === 'whatsapp')
 
@@ -344,114 +437,122 @@ const OffCanvas = ({ offCanvasRef, dataLoaded, setDataLoaded, defaultMessages, s
       </div>
 
       <div className="offcanvas-footer">
-
-        <div ref={defaultMessagesRef} className="p-2" onClick={(e) => e.stopPropagation()} hidden={!defaultMessagesVisible} style={{
-          transition: 'all .125s'
-        }}>
-          <div className="d-flex gap-2">
-            {
-              finalDefaultMessages.map((message, i) => {
-                return <span key={i}
-                  className="badge bg-light text-dark"
-                  style={{ cursor: 'pointer' }}
-                  onClick={async () => {
-                    setDefaultMessagesVisible(false)
-                    setIsSending(true)
-                    if (message.attachments.length > 0) {
-                      const attachment = message.attachments[0]
-                      const attachmentURL = `${Global.APP_URL}/cloud/${attachment.file}`
-
-                      const content = $(`<div>${message.description}</div>`)
-                      content.find('.mention').each((_, element) => {
-                        const mention = $(element)
-                        const mentionId = mention.attr('data-id')
-                        mention.removeClass('mention')
-                        mention.text(dataLoaded[mentionId])
-                      })
-
-                      await whatsAppRest.send(dataLoaded?.id, `/attachment:${attachmentURL}\n${content.html()}`)
-                      setIsSending(false)
-                      return
-                    }
-                    await whatsAppRest.send(dataLoaded?.id, message.description)
-                    setIsSending(false)
-                    // setDefaultMessagesVisible(false)
-                    // inputMessageRef.current.value = message.description
-                  }}
-                  title={message.description}>
-                  {message.name}
-                </span>
-              })
-            }
-          </div>
-        </div>
-        <div className="d-flex gap-2 p-2 align-items-end">
-          <textarea ref={inputMessageRef}
-            className='form-control w-100'
-            placeholder='Ingrese su mensaje aqui'
-            rows={1}
-            style={{ minHeight: 27, fieldSizing: 'content' }}
-            disabled={isSending}
-            required
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                if (inputMessageRef.current.value.trim()) {
-                  onMessageSubmit(e);
-                }
-              }
-            }}
-          />
-          <div className="d-flex gap-1">
-
-            <div className="dropdown">
-              <button className="btn btn-white dropdown-toggle px-1" type="button" id="message-options" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                <i className="mdi mdi-plus"></i>
+        {medio === 'whatsapp' && !is24HourWindowOpen() ? (
+          <div className="alert alert-warning m-2 text-start small border-0 shadow-sm" style={{ borderRadius: '8px' }}>
+            <i className="mdi mdi-alert-circle-outline me-1"></i>
+            <strong>Ventana de 24 horas cerrada.</strong> No se pueden enviar mensajes de texto libre. Utiliza una plantilla de WhatsApp autorizada por Meta para reanudar la conversación.
+            <div className="mt-2 text-end">
+              <button type="button" className="btn btn-xs btn-warning" onClick={openTemplatesModal}>
+                <i className="mdi mdi-whatsapp me-1"></i> Enviar plantilla
               </button>
-              <div className="dropdown-menu" aria-labelledby="message-options">
+            </div>
+          </div>
+        ) : (
+          <>
+            <div ref={defaultMessagesRef} className="p-2" onClick={(e) => e.stopPropagation()} hidden={!defaultMessagesVisible} style={{
+              transition: 'all .125s'
+            }}>
+              <div className="d-flex gap-2">
                 {
-                  defaultSign
-                    ? <span className="dropdown-item" style={{ cursor: 'pointer' }} onClick={sendSignature}>
-                      <i className="fa fa-signature me-1" style={{ width: '20px' }}></i>
-                      Enviar firma
+                  finalDefaultMessages.map((message, i) => {
+                    return <span key={i}
+                      className="badge bg-light text-dark"
+                      style={{ cursor: 'pointer' }}
+                      onClick={async () => {
+                        setDefaultMessagesVisible(false)
+                        setIsSending(true)
+                        if (message.attachments.length > 0) {
+                          const attachment = message.attachments[0]
+                          const attachmentURL = `${Global.APP_URL}/cloud/${attachment.file}`
+
+                          const content = $(`<div>${message.description}</div>`)
+                          content.find('.mention').each((_, element) => {
+                            const mention = $(element)
+                            const mentionId = mention.attr('data-id')
+                            mention.removeClass('mention')
+                            mention.text(dataLoaded[mentionId])
+                          })
+
+                          await whatsAppRest.send(dataLoaded?.id, `/attachment:${attachmentURL}\n${content.html()}`)
+                          setIsSending(false)
+                          return
+                        }
+                        await whatsAppRest.send(dataLoaded?.id, message.description)
+                        setIsSending(false)
+                        // setDefaultMessagesVisible(false)
+                        // inputMessageRef.current.value = message.description
+                      }}
+                      title={message.description}>
+                      {message.name}
                     </span>
-                    : <Tippy content="Selecciona una firma por defecto">
-                      <span className="dropdown-item" style={{ cursor: 'pointer' }} onClick={onModalSignatureClicked}>
-                        <i className="fa fa-signature me-1" style={{ width: '20px' }}></i>
-                        Enviar firma
-                      </span>
-                    </Tippy>
-                }
-                {
-                  finalDefaultMessages?.length > 0 &&
-                  <span ref={defaultMessagesButtonRef} className="dropdown-item" style={{ cursor: 'pointer' }} onClick={() => setDefaultMessagesVisible(true)}>
-                    <i className="mdi mdi-message-bulleted me-1" style={{ width: '20px' }}></i>
-                    Mensajes predeterminados
-                  </span>
+                  })
                 }
               </div>
             </div>
-            <button className="btn btn-dark waves-effect waves-light" type="submit" disabled={isSending}>
-              {
-                isSending
-                  ? <i className="mdi mdi-spin mdi-loading"></i>
-                  : <i className="mdi mdi-arrow-top-right"></i>
-              }
-            </button>
-          </div>
-        </div>
-        {/* <div className="form-group p-2">
-        <div className="input-group">
-          <input ref={inputMessageRef} type="text" className="form-control" placeholder="Ingrese su mensaje aqui" required disabled={isSending} />
-          <button className="btn input-group-text btn-dark waves-effect waves-light" type="submit" disabled={isSending}>
-            {
-              isSending
-                ? <i className="mdi mdi-spinner "></i>
-                : <i className="mdi mdi-arrow-top-right"></i>
-            }
-          </button>
-        </div>
-      </div> */}
+            <div className="d-flex gap-2 p-2 align-items-end">
+              <textarea ref={inputMessageRef}
+                className='form-control w-100'
+                placeholder='Ingrese su mensaje aqui'
+                rows={1}
+                style={{ minHeight: 27, fieldSizing: 'content' }}
+                disabled={isSending}
+                required
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    if (inputMessageRef.current.value.trim()) {
+                      onMessageSubmit(e);
+                    }
+                  }
+                }}
+              />
+              <div className="d-flex gap-1">
+
+                <div className="dropdown">
+                  <button className="btn btn-white dropdown-toggle px-1" type="button" id="message-options" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <i className="mdi mdi-plus"></i>
+                  </button>
+                  <div className="dropdown-menu" aria-labelledby="message-options">
+                    {
+                      defaultSign
+                        ? <span className="dropdown-item" style={{ cursor: 'pointer' }} onClick={sendSignature}>
+                          <i className="fa fa-signature me-1" style={{ width: '20px' }}></i>
+                          Enviar firma
+                        </span>
+                        : <Tippy content="Selecciona una firma por defecto">
+                          <span className="dropdown-item" style={{ cursor: 'pointer' }} onClick={onModalSignatureClicked}>
+                            <i className="fa fa-signature me-1" style={{ width: '20px' }}></i>
+                            Enviar firma
+                          </span>
+                        </Tippy>
+                    }
+                    {
+                      finalDefaultMessages?.length > 0 &&
+                      <span ref={defaultMessagesButtonRef} className="dropdown-item" style={{ cursor: 'pointer' }} onClick={() => setDefaultMessagesVisible(true)}>
+                        <i className="mdi mdi-message-bulleted me-1" style={{ width: '20px' }}></i>
+                        Mensajes predeterminados
+                      </span>
+                    }
+                    {
+                      medio === 'whatsapp' &&
+                      <span className="dropdown-item" style={{ cursor: 'pointer' }} onClick={openTemplatesModal}>
+                        <i className="mdi mdi-whatsapp me-1" style={{ width: '20px' }}></i>
+                        Plantilla de WhatsApp
+                      </span>
+                    }
+                  </div>
+                </div>
+                <button className="btn btn-dark waves-effect waves-light" type="submit" disabled={isSending}>
+                  {
+                    isSending
+                      ? <i className="mdi mdi-spin mdi-loading"></i>
+                      : <i className="mdi mdi-arrow-top-right"></i>
+                  }
+                </button>
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </form>
     <Modal modalRef={signsModalRef} title="Tus firmas" hideFooter>
@@ -489,6 +590,74 @@ const OffCanvas = ({ offCanvasRef, dataLoaded, setDataLoaded, defaultMessages, s
           </div>
         ))}
       </div>
+    </Modal>
+
+    <Modal modalRef={templatesModalRef} title="Enviar Plantilla de WhatsApp" hideFooter zIndex={1055}>
+      {isTemplatesLoading ? (
+        <div className="text-center py-4">
+          <div className="spinner-border text-primary" role="status">
+            <span className="visually-hidden">Cargando plantillas...</span>
+          </div>
+          <div className="mt-2 text-muted">Obteniendo plantillas autorizadas desde Meta...</div>
+        </div>
+      ) : (
+        <div className="text-start">
+          <div className="mb-3">
+            <label className="form-label fw-bold">Seleccionar Plantilla</label>
+            <select className="form-select" onChange={handleTemplateChange} defaultValue="" required>
+              <option value="" disabled>-- Seleccione una plantilla --</option>
+              {(Array.isArray(templates) ? templates : []).map((tpl, i) => (
+                <option key={i} value={tpl.name}>{tpl.name} ({tpl.language})</option>
+              ))}
+            </select>
+          </div>
+
+          {selectedTemplate && (
+            <>
+              {/* Variable inputs */}
+              {Object.keys(templateParams).length > 0 && (
+                <div className="mb-3 p-3 bg-light rounded">
+                  <h6 className="fw-bold mb-2">Variables de la plantilla:</h6>
+                  {Object.keys(templateParams).map((key) => (
+                    <div className="mb-2" key={key}>
+                      <label className="form-label small mb-1">Variable {'{{' + key + '}}'}</label>
+                      <input
+                        type="text"
+                        className="form-control form-control-sm"
+                        value={templateParams[key]}
+                        onChange={(e) => {
+                          setTemplateParams(prev => ({ ...prev, [key]: e.target.value }))
+                        }}
+                        placeholder={`Valor para {{${key}}}`}
+                        required
+                      />
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Template Preview */}
+              <div className="mb-3">
+                <label className="form-label fw-bold">Vista previa del mensaje:</label>
+                <div className="p-3 border rounded bg-white font-13" style={{ whiteSpace: 'pre-wrap', borderLeft: '4px solid #25D366' }}>
+                  {getReplacedTemplateText()}
+                </div>
+              </div>
+
+              <div className="d-flex justify-content-end gap-2 pt-2 border-top">
+                <button type="button" className="btn btn-sm btn-danger" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" className="btn btn-sm btn-success" onClick={onSendTemplateSubmit} disabled={isSendingTemplate}>
+                  {isSendingTemplate ? (
+                    <><i className="mdi mdi-spin mdi-loading me-1"></i>Enviando...</>
+                  ) : (
+                    <><i className="mdi mdi-send me-1"></i>Enviar plantilla</>
+                  )}
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+      )}
     </Modal>
   </>
 }
