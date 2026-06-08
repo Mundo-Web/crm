@@ -33,7 +33,7 @@ const OffCanvas = ({ offCanvasRef, dataLoaded, setDataLoaded, defaultMessages, s
   const [defaultMessagesVisible, setDefaultMessagesVisible] = useState(false)
   const [defaultSign, setDefaultSign] = useState(LaravelSession.service_user.whatsapp_sign)
 
-  let medio = dataLoaded?.integration ? dataLoaded?.integration?.meta_service : 'whatsapp';
+  let medio = ['messenger', 'instagram'].includes(dataLoaded?.integration?.meta_service) ? dataLoaded?.integration?.meta_service : 'whatsapp';
 
   const getMessages = async () => {
     const lastMessage = await getLastMessage()
