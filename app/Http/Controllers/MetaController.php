@@ -209,11 +209,11 @@ class MetaController extends Controller
 
                 $entry = $data['entry'][0] ?? [];
 
-                Log::info('Meta webhook received', [
+                Log::info('Meta webhook received: ' . json_encode([
                     'origin' => $origin,
                     'business_uuid' => $business_uuid,
                     'payload' => $data
-                ]);
+                ]));
 
                 $businessJpa = Business::query()
                     ->where('uuid', $business_uuid)
@@ -272,6 +272,9 @@ class MetaController extends Controller
 
                     $fullName = $fieldData['full_name'] ?? $fieldData['nombre_completo'] ?? $fieldData['nombre'] ?? 'Sin nombre';
                     $phone = Text::keep($fieldData['phone_number'] ?? $fieldData['work_phone_number'] ?? $fieldData['telefono'] ?? $fieldData['movil'] ?? '', '0123456789');
+                    if (strlen($phone) === 9 && strpos($phone, '9') === 0) {
+                        $phone = '51' . $phone;
+                    }
                     $email = $fieldData['email'] ?? $fieldData['correo_electrónico'] ?? $fieldData['work_email'] ?? $fieldData['correo'] ?? null;
 
                     // Check if client already exists (By Phone or Email, since lead_id is unique per form)
@@ -340,8 +343,6 @@ class MetaController extends Controller
                     }
 
                     $fullName = $fieldData['full_name'] ?? $fieldData['nombre_completo'] ?? $fieldData['nombre'] ?? 'Sin nombre';
-                    $phone = $fieldData['phone_number'] ?? $fieldData['telefono'] ?? $fieldData['movil'] ?? '';
-                    $email = $fieldData['email'] ?? $fieldData['correo'] ?? null;
 
                     if ($clientJpa) {
                         // Actualizar atribución para lead existente
@@ -1200,9 +1201,38 @@ class MetaController extends Controller
 
         return $tiempo;
     }
-
     public static function sendWithOrigin(Business $businessJpa, Client $clientJpa, string $message, string $prompt2save, ?string $origin = null)
     {
+        $number = $clientJpa->contact_phone;
+        if ($number) {
+            $number = preg_replace('/[^0-9]/', '', $number);
+            if (strlen($number) === 9 && strpos($number, '9') === 0) {
+                $number = '51' . $number;
+            }
+        }
+
+        // Route through Evolution API if connected
+        if (in_array($origin, ['whatsapp', 'forms', 'evoapi'])) {
+            $isEvoConnected = false;
+            try {
+                $sessionRes = new Fetch(env('EVOAPI_URL') . '/instance/fetchInstances?instanceName=' . $businessJpa->person->document_number, [
+                    'headers' => ['apikey' => $businessJpa->uuid]
+                ]);
+                if ($sessionRes->ok) {
+                    $sessions = $sessionRes->json();
+                    if (!empty($sessions) && ($sessions[0]['connectionStatus'] ?? '') === 'open') {
+                        $isEvoConnected = true;
+                    }
+                }
+            } catch (\Throwable $th) {
+                Log::error('Error checking Evolution API session in MetaController: ' . $th->getMessage());
+            }
+
+            if ($isEvoConnected) {
+                $origin = 'evoapi';
+            }
+        }
+
         if ($origin == 'evoapi') {
             new Fetch(env('EVOAPI_URL') . '/message/sendText/' . $businessJpa->person->document_number, [
                 'method' => 'POST',
@@ -1211,7 +1241,7 @@ class MetaController extends Controller
                     'apikey' => $businessJpa->uuid
                 ],
                 'body' => [
-                    'number' => $clientJpa->contact_phone,
+                    'number' => $number,
                     'text' => Text::html2wa($message),
                     'delay' => self::timeToSleep($message)
                 ]
@@ -1247,7 +1277,7 @@ class MetaController extends Controller
                     $messageData = [
                         'messaging_product' => 'whatsapp',
                         'recipient_type' => 'individual',
-                        'to' => $clientJpa->contact_phone,
+                        'to' => $number,
                         'type' => 'text',
                         'text' => ['body' => Text::html2wa($message)]
                     ];
@@ -1280,9 +1310,14 @@ class MetaController extends Controller
             }
         }
 
+        $waId = $clientJpa->integration_user_id;
+        if ($origin === 'evoapi' || (isset($integrationJpa) && $integrationJpa->meta_service === 'whatsapp')) {
+            $waId = $number;
+        }
+
         // Store message in database
         Message::create([
-            'wa_id' => $origin == 'evoapi' ? $clientJpa->contact_phone : $clientJpa->integration_user_id,
+            'wa_id' => $waId,
             'role' => 'AI',
             'message' => Text::html2wa($message),
             'prompt' => $prompt2save,
@@ -2045,7 +2080,7 @@ class MetaController extends Controller
     public function handleGlobalWebhook(Request $request)
     {
         $data = $request->all();
-        Log::info('Global Meta Webhook received', ['payload' => $data]);
+        Log::info('Global Meta Webhook received: ' . json_encode($data));
 
         if (empty($data['entry'][0])) {
             Log::warning('Global Webhook: Empty entry in payload');
