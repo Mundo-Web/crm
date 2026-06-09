@@ -223,6 +223,25 @@ const DefaultMessages = ({ title, clientFields, can }) => {
           </ul>
         </div>
         <div className="card-body pt-2">
+          <div className="alert alert-info border-0 shadow-sm mb-4" style={{ borderRadius: '12px', backgroundColor: 'rgba(59, 130, 246, 0.05)', borderLeft: '4px solid #3b82f6', padding: '16px' }}>
+            <div className="d-flex align-items-start">
+              <i className="mdi mdi-information-outline font-20 text-primary me-2 mt-0"></i>
+              <div>
+                <h6 className="alert-heading fw-bold mb-1 text-primary" style={{ fontSize: '13px' }}>
+                  Guía de Canales de Envío (WhatsApp)
+                </h6>
+                <div className="mb-0 text-muted small" style={{ lineHeight: '1.6', fontSize: '12.5px' }}>
+                  <p className="mb-2">
+                    <strong>Respuestas Predeterminadas (Locales):</strong> Son textos y archivos guardados localmente en tu CRM. Su envío es **totalmente gratuito e ilimitado**, pero solo pueden usarse cuando tienes una ventana de chat activa con el cliente (las primeras 24 horas desde su último mensaje, o 72 horas si el cliente llegó a través de una campaña de anuncios).
+                  </p>
+                  <p className="mb-0">
+                    <strong>Plantillas de Meta (WhatsApp):</strong> Son mensajes oficiales autorizados y validados por Meta. Su uso tiene un **costo por conversación cobrado directamente por Meta**. Son obligatorias para iniciar el contacto con un lead por primera vez o para reanudar la comunicación si la ventana de chat gratuito (24h o 72h) ya ha expirado.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
           {activeTab === 'local' ? (
             <Table
               gridRef={gridRef}
