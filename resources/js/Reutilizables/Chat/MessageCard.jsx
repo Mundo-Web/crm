@@ -53,6 +53,67 @@ const MessageCard = ({ index, forceAfter, message, isLast = false, fromMe, margi
                 </span>
             </div>
         )
+    } else if (content.startsWith('/location:')) {
+        const parts = content.replace('/location:', '').split(',');
+        const latitude = parts[0] || '';
+        const longitude = parts[1] || '';
+        const label = parts.slice(2).join(',') || 'Ubicación compartida';
+        
+        messageCard = (
+            <div className={`ctext-wrap d-flex flex-column ${fromMe ? `message-out-${theme}` : `message-in-${theme}`}`} style={{ minWidth: '240px', maxWidth: '320px', padding: '10px', borderRadius: '8px', boxShadow: 'rgba(11, 20, 26, 0.13) 0px 1px 0.5px 0px' }}>
+                <div className="d-flex align-items-center mb-2">
+                    <span className="badge rounded-circle p-2 me-2 d-flex align-items-center justify-content-center" style={{ backgroundColor: '#ea5455', width: '36px', height: '36px', flexShrink: 0 }}>
+                        <i className="mdi mdi-map-marker text-white" style={{ fontSize: '18px' }}></i>
+                    </span>
+                    <div style={{ minWidth: 0, textAlign: 'left' }}>
+                        <h6 className="my-0 fw-bold text-truncate" style={{ fontSize: '13px', color: theme === 'dark' ? '#fff' : '#495057' }}>Ubicación</h6>
+                        <small className="text-muted text-truncate d-block" style={{ fontSize: '11px' }}>{label}</small>
+                    </div>
+                </div>
+                <a 
+                    href={`https://www.google.com/maps?q=${latitude},${longitude}`}
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="btn btn-xs btn-outline-danger w-100 rounded-pill d-flex align-items-center justify-content-center gap-1"
+                    style={{ fontSize: '11px', padding: '4px 0' }}
+                >
+                    <i className="mdi mdi-google-maps"></i> Ver en Google Maps
+                </a>
+                <span className="time mt-2 d-block text-muted text-end" style={{ fontSize: '10px' }}>
+                    {moment(message.created_at).subtract(5, 'hours').format('HH:mm')}
+                </span>
+            </div>
+        );
+    } else if (content.startsWith('/contact:')) {
+        const parts = content.replace('/contact:', '').split(',');
+        const name = parts[0] || 'Contacto';
+        const phone = parts.slice(1).join(',') || '';
+        
+        messageCard = (
+            <div className={`ctext-wrap d-flex flex-column ${fromMe ? `message-out-${theme}` : `message-in-${theme}`}`} style={{ minWidth: '240px', maxWidth: '320px', padding: '10px', borderRadius: '8px', boxShadow: 'rgba(11, 20, 26, 0.13) 0px 1px 0.5px 0px' }}>
+                <div className="d-flex align-items-center mb-2">
+                    <span className="badge rounded-circle p-2 me-2 d-flex align-items-center justify-content-center" style={{ backgroundColor: '#7F66FF', width: '36px', height: '36px', flexShrink: 0 }}>
+                        <i className="mdi mdi-account text-white" style={{ fontSize: '18px' }}></i>
+                    </span>
+                    <div style={{ minWidth: 0, textAlign: 'left' }}>
+                        <h6 className="my-0 fw-bold text-truncate" style={{ fontSize: '13px', color: theme === 'dark' ? '#fff' : '#495057' }}>{name}</h6>
+                        <small className="text-muted text-truncate d-block" style={{ fontSize: '11px' }}>{phone}</small>
+                    </div>
+                </div>
+                <a 
+                    href={`https://wa.me/${phone.replace(/[^0-9]/g, '')}`}
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="btn btn-xs btn-outline-primary w-100 rounded-pill d-flex align-items-center justify-content-center gap-1"
+                    style={{ fontSize: '11px', padding: '4px 0' }}
+                >
+                    <i className="mdi mdi-whatsapp"></i> Chatear por WhatsApp
+                </a>
+                <span className="time mt-2 d-block text-muted text-end" style={{ fontSize: '10px' }}>
+                    {moment(message.created_at).subtract(5, 'hours').format('HH:mm')}
+                </span>
+            </div>
+        );
     } else if (content.startsWith('/document:')) {
         messageCard = <DocumentMessage
             fromMe={fromMe}

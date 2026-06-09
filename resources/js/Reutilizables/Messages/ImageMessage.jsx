@@ -106,7 +106,7 @@ const ImageMessage = ({ fromMe, theme, url, time, caption }) => {
                         position: "fixed",
                         inset: 0,
                         backgroundColor: "rgba(0,0,0,0.8)",
-                        zIndex: 1002,
+                        zIndex: 99999,
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",

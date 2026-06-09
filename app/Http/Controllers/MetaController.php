@@ -484,21 +484,16 @@ class MetaController extends Controller
                         $name = $location['name'] ?? null;
                         $address = $location['address'] ?? null;
                         
-                        if ($latitude && $longitude) {
-                            $label = $name ?: ($address ?: 'Ubicación compartida');
-                            $messageContent = "📍 Ubicación: {$label}\nhttps://www.google.com/maps?q={$latitude},{$longitude}";
-                        } else {
-                            $messageContent = "📍 Ubicación compartida";
-                        }
+                        $label = $name ?: ($address ?: 'Ubicación compartida');
+                        $label = str_replace(',', ' ', $label);
+                        $messageContent = "/location:{$latitude},{$longitude},{$label}";
                     } elseif ($messageType == 'contacts') {
                         $contactsList = $message['contacts'] ?? [];
-                        $formattedContacts = [];
-                        foreach ($contactsList as $contactItem) {
-                            $name = $contactItem['name']['formatted_name'] ?? 'Contacto';
-                            $phone = $contactItem['phones'][0]['phone'] ?? ($contactItem['phones'][0]['wa_id'] ?? 'Sin número');
-                            $formattedContacts[] = "👤 {$name}: {$phone}";
-                        }
-                        $messageContent = implode("\n", $formattedContacts) ?: '👤 Contacto compartido';
+                        $contactItem = $contactsList[0] ?? [];
+                        $name = $contactItem['name']['formatted_name'] ?? 'Contacto';
+                        $phone = $contactItem['phones'][0]['phone'] ?? ($contactItem['phones'][0]['wa_id'] ?? 'Sin número');
+                        $name = str_replace(',', ' ', $name);
+                        $messageContent = "/contact:{$name},{$phone}";
                     } else {
                         $mediaId = $message[$messageType]['id'] ?? null;
                         $mask = $message[$messageType]['filename'] ?? null;
