@@ -388,21 +388,28 @@ const Chat = ({ users = [], defaultMessages = [], activeLeadId: activeLeadIdDB, 
                       }
                     }
 
-                    let last_message = lead.last_message
-                    if (last_message.startsWith('/audio:')) {
-                      last_message = <><i className='mdi mdi-microphone' /> Audio</>
-                    } else if (last_message.startsWith('/image:')) {
-                      const content = String(last_message.split('\n').slice(1).join('\n') || '').trim()
-                      last_message = <><i className='mdi mdi-image' /> {content || 'Foto'}</>
-                    } else if (last_message.startsWith('/sticker:')) {
-                      last_message = <><i className='mdi mdi-sticker-emoji' /> Sticker</>
-                    } else if (last_message.startsWith('/location:')) {
-                      last_message = <><i className='mdi mdi-map-marker' /> Ubicación</>
-                    } else if (last_message.startsWith('/contact:')) {
-                      last_message = <><i className='mdi mdi-account' /> Contacto</>
-                    } else if (last_message.startsWith('/document:')) {
-                      const content = String(last_message.split('\n').slice(1).join('\n') || '').trim()
-                      last_message = <><i className='mdi mdi-file-document' /> {content || 'Documento'}</>
+                    let last_message_raw = lead.last_message
+                    let last_message = null;
+                    if (last_message_raw) {
+                      if (last_message_raw.startsWith('/audio:')) {
+                        last_message = <><i className='mdi mdi-microphone' /> Audio</>
+                      } else if (last_message_raw.startsWith('/image:')) {
+                        const content = String(last_message_raw.split('\n').slice(1).join('\n') || '').trim()
+                        last_message = <><i className='mdi mdi-image' /> {content || 'Foto'}</>
+                      } else if (last_message_raw.startsWith('/sticker:')) {
+                        last_message = <><i className='mdi mdi-sticker-emoji' /> Sticker</>
+                      } else if (last_message_raw.startsWith('/location:')) {
+                        last_message = <><i className='mdi mdi-map-marker' /> Ubicación</>
+                      } else if (last_message_raw.startsWith('/contact:')) {
+                        last_message = <><i className='mdi mdi-account' /> Contacto</>
+                      } else if (last_message_raw.startsWith('/document:')) {
+                        const content = String(last_message_raw.split('\n').slice(1).join('\n') || '').trim()
+                        last_message = <><i className='mdi mdi-file-document' /> {content || 'Documento'}</>
+                      } else if (last_message_raw.startsWith('/unsupported:') || last_message_raw.startsWith('[Media no soportada:') || last_message_raw.startsWith('[Media recibida: unsupported')) {
+                        last_message = <><i className='mdi mdi-information-outline' /> Mensaje no soportado</>
+                      } else {
+                        last_message = last_message_raw
+                      }
                     }
 
 

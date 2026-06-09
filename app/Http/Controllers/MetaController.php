@@ -528,9 +528,9 @@ class MetaController extends Controller
                             if ($messageType === 'unsupported' && isset($message['errors'][0])) {
                                 $error = $message['errors'][0];
                                 $details = $error['error_data']['details'] ?? $error['message'] ?? 'Tipo de mensaje no soportado';
-                                $messageContent = "[Media no soportada: {$details}]";
+                                $messageContent = "/unsupported:{$details}";
                             } else {
-                                $messageContent = "[Media recibida: {$messageType}]";
+                                $messageContent = "/unsupported:{$messageType}";
                             }
                         }
                     }

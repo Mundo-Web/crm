@@ -123,6 +123,34 @@ const MessageCard = ({ index, forceAfter, message, isLast = false, fromMe, margi
             caption={content.split('\n').slice(1).join('\n') || ''}
             time={moment(message.created_at).subtract(5, 'hours').format('HH:mm')}
         />
+    } else if (content.startsWith('/unsupported:') || content.startsWith('[Media no soportada:') || content.startsWith('[Media recibida: unsupported')) {
+        let details = '';
+        if (content.startsWith('/unsupported:')) {
+            details = content.replace('/unsupported:', '');
+        } else if (content.startsWith('[Media no soportada:')) {
+            details = content.replace('[Media no soportada:', '').replace(/\]$/, '');
+        } else {
+            details = content.replace('[Media recibida:', '').replace(/\]$/, '');
+        }
+        
+        messageCard = (
+            <div className={`ctext-wrap d-flex align-items-center gap-2 ${fromMe ? `message-out-${theme}` : `message-in-${theme}`}`} 
+                 style={{ 
+                     boxShadow: 'rgba(11, 20, 26, 0.13) 0px 1px 0.5px 0px',
+                     padding: '8px 12px',
+                     minWidth: '240px'
+                 }}
+                 title={details || 'Mensaje no soportado por Meta'}
+            >
+                <i className="mdi mdi-information-outline text-warning" style={{ fontSize: '18px', flexShrink: 0 }}></i>
+                <div style={{ flexGrow: 1, textAlign: 'left', lineHeight: '1.4', fontStyle: 'italic', fontSize: '13px' }}>
+                    <span>Mensaje y/o archivo no soportado por Meta!</span>
+                </div>
+                <span className="time ms-2 text-muted" style={{ fontSize: '10px', alignSelf: 'flex-end', marginLeft: 'auto', flexShrink: 0 }}>
+                    {moment(message.created_at).subtract(5, 'hours').format('HH:mm')}
+                </span>
+            </div>
+        );
     } else {
         messageCard = <AnyMessage
             fromMe={fromMe}
