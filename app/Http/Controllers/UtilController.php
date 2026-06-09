@@ -117,6 +117,22 @@ class UtilController
     $content = Storage::get($path);
     $mimeType = Storage::mimeType($path);
 
+    // Override MIME type for audio/video/document files if detected incorrectly, especially on Windows
+    $extension = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+    $isAudioPrefix = strpos($filename, 'audio-') === 0 || strpos($filename, 'voice-') === 0;
+
+    if ($extension === 'ogg' || ($isAudioPrefix && $extension === 'bin')) {
+      $mimeType = 'audio/ogg';
+    } elseif ($extension === 'opus') {
+      $mimeType = 'audio/opus';
+    } elseif ($extension === 'mp3') {
+      $mimeType = 'audio/mpeg';
+    } elseif ($extension === 'wav') {
+      $mimeType = 'audio/wav';
+    } elseif ($isAudioPrefix && $mimeType === 'application/octet-stream') {
+      $mimeType = 'audio/ogg';
+    }
+
     return response($content, 200, [
       'Content-Type' => $mimeType,
       'Cache-Control' => 'public, max-age=86400',

@@ -408,13 +408,17 @@ const Chat = ({ users = [], defaultMessages = [], activeLeadId: activeLeadIdDB, 
                             <div className="position-absolute" style={{ left: '-4px', top: '-4px', zIndex: 2 }}>
                               {(() => {
                                 const service = lead.integration?.meta_service || lead.origin?.toLowerCase();
-                                if (service === 'messenger') {
+                                const isWhatsApp = service === 'whatsapp' || 
+                                                   service === 'forms' || 
+                                                   (!['messenger', 'instagram', 'tiktok'].includes(lead.integration?.meta_service) && lead.contact_phone);
+
+                                if (!isWhatsApp && service === 'messenger') {
                                   return (
                                     <span className="badge rounded-circle p-1 d-flex align-items-center justify-content-center" style={{ backgroundColor: '#0084FF', width: '18px', height: '18px', boxShadow: '0 1px 3px rgba(0,0,0,0.2)' }}>
                                       <i className="mdi mdi-facebook-messenger text-white" style={{ fontSize: '10px' }}></i>
                                     </span>
                                   );
-                                } else if (service === 'instagram') {
+                                } else if (!isWhatsApp && service === 'instagram') {
                                   return (
                                     <span className="badge rounded-circle p-1 d-flex align-items-center justify-content-center" style={{ backgroundColor: '#E1306C', width: '18px', height: '18px', boxShadow: '0 1px 3px rgba(0,0,0,0.2)' }}>
                                       <i className="mdi mdi-instagram text-white" style={{ fontSize: '10px' }}></i>
@@ -468,7 +472,9 @@ const Chat = ({ users = [], defaultMessages = [], activeLeadId: activeLeadIdDB, 
                               <span className="badge" style={{ backgroundColor: lead.manage_status?.color ?? '#6c757d' }}>{lead.manage_status?.name ?? 'Sin estado'}</span>
                               {(() => {
                                 const service = lead.integration?.meta_service || lead.origin?.toLowerCase();
-                                const isWhatsApp = service !== 'messenger' && service !== 'instagram';
+                                const isWhatsApp = service === 'whatsapp' || 
+                                                   service === 'forms' || 
+                                                   (!['messenger', 'instagram', 'tiktok'].includes(lead.integration?.meta_service) && lead.contact_phone);
                                 
                                 if (!isWhatsApp) return null;
 

@@ -21,27 +21,59 @@ const AudioMessage = ({ fromMe, theme, url, time }) => {
         const audio = audioRef.current;
         if (!audio) return;
 
-        const onLoadedMetadata = () => setDuration(Math.floor(audio.duration));
-        const onTimeUpdate = () => setCurrentTime(Math.floor(audio.currentTime));
+        const handleDurationUpdate = () => {
+            if (audio.duration && audio.duration !== Infinity) {
+                setDuration(Math.floor(audio.duration));
+            }
+        };
+
+        const onLoadedMetadata = () => {
+            handleDurationUpdate();
+            if (audio.duration === Infinity) {
+                // Seek hack for Chrome/Firefox to resolve OGG/Opus duration
+                audio.currentTime = 1e9;
+                const onSeeked = () => {
+                    handleDurationUpdate();
+                    audio.currentTime = 0;
+                    audio.removeEventListener('seeked', onSeeked);
+                };
+                audio.addEventListener('seeked', onSeeked);
+            }
+        };
+
+        const onTimeUpdate = () => {
+            setCurrentTime(Math.floor(audio.currentTime));
+            if (audio.duration && audio.duration !== Infinity) {
+                setDuration(Math.floor(audio.duration));
+            }
+        };
+
         const onEnded = () => {
             setPlaying(false);
             setCurrentTime(0);
         };
 
         audio.addEventListener('loadedmetadata', onLoadedMetadata);
+        audio.addEventListener('durationchange', handleDurationUpdate);
         audio.addEventListener('timeupdate', onTimeUpdate);
         audio.addEventListener('ended', onEnded);
 
+        if (audio.readyState >= 1) {
+            onLoadedMetadata();
+        }
+
         return () => {
             audio.removeEventListener('loadedmetadata', onLoadedMetadata);
+            audio.removeEventListener('durationchange', handleDurationUpdate);
             audio.removeEventListener('timeupdate', onTimeUpdate);
             audio.removeEventListener('ended', onEnded);
         };
-    }, []);
+    }, [url]);
 
-    const progress = duration ? (currentTime / duration) * 100 : 0;
+    const progress = duration && isFinite(duration) ? (currentTime / duration) * 100 : 0;
 
     const formatTime = (seconds) => {
+        if (isNaN(seconds) || !isFinite(seconds)) return '0:00';
         const m = Math.floor(seconds / 60);
         const s = seconds % 60;
         return `${m}:${s < 10 ? '0' : ''}${s}`;

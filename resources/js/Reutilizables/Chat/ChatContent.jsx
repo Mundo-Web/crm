@@ -139,7 +139,11 @@ const ChatContent = ({ leadId, setLeadId, theme, contactDetails, setContactDetai
   }
 
   const service = contact?.integration?.meta_service || contact?.origin?.toLowerCase();
-  const isWhatsApp = !['messenger', 'instagram', 'tiktok'].includes(service);
+  const isWhatsApp = service === 'whatsapp' || 
+                     service === 'forms' || 
+                     (!['messenger', 'instagram', 'tiktok'].includes(contact?.integration?.meta_service) && contact?.contact_phone);
+  const isMetaIntegration = !isWhatsApp && (service === 'messenger' || service === 'instagram');
+  const isTikTokIntegration = !isWhatsApp && service === 'tiktok';
 
   const is24HourWindowOpen = () => {
     if (!messages || messages.length === 0) return false;
@@ -305,9 +309,6 @@ const ChatContent = ({ leadId, setLeadId, theme, contactDetails, setContactDetai
 
     setIsSending(true)
 
-    const service = contact.integration?.meta_service || contact.origin?.toLowerCase();
-    const isMetaIntegration = service === 'messenger' || service === 'instagram';
-    const isTikTokIntegration = service === 'tiktok';
     const activeRest = isTikTokIntegration ? tiktokRest : (isMetaIntegration ? metaRest : whatsAppRest);
 
     if (attachment) {
@@ -720,10 +721,7 @@ const ChatContent = ({ leadId, setLeadId, theme, contactDetails, setContactDetai
                                         setIsDMOpen(false)
                                         setMessageText('')
                                         setIsSending(true)
-                                        const dmService = contact?.integration?.meta_service || contact?.origin?.toLowerCase()
-                                        const isMetaDM = dmService === 'messenger' || dmService === 'instagram'
-                                        const isTikTokDM = dmService === 'tiktok'
-                                        const dmRest = isTikTokDM ? tiktokRest : (isMetaDM ? metaRest : whatsAppRest)
+                                        const dmRest = isTikTokIntegration ? tiktokRest : (isMetaIntegration ? metaRest : whatsAppRest)
                                         if (message.attachments.length > 0) {
                                           const attachment = message.attachments[0]
                                           const attachmentURL = `${Global.APP_URL}/cloud/${attachment.file}`
