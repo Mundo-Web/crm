@@ -72,20 +72,20 @@ const MessageCard = ({ index, forceAfter, message, isLast = false, fromMe, margi
         <li className={`${fromMe ? 'odd' : ''} ${marginTop || forceAfter ? '' : 'hide-after'}`} style={{ marginBottom: isLast ? '0px' : '24px', marginTop: marginTop ? '12px' : '2px' }}>
             <div className="message-list">
                 <div className="conversation-text">{messageCard}</div>
-                {errorData && (
-                    <div className="text-danger small mt-1 d-flex flex-column align-items-end" style={{ fontSize: '11px', lineHeight: '1.3' }}>
-                        <div className="d-flex align-items-center gap-1">
-                            <i className="mdi mdi-alert-circle font-14"></i>
-                            <span>No enviado: {Number(errorData.error_code) === 131042 ? 'Falta método de pago en Meta' : errorData.error_message}</span>
-                        </div>
-                        {errorData.href && (
-                            <a href={errorData.href} target="_blank" rel="noopener noreferrer" className="text-decoration-underline text-danger mt-1 fw-bold" style={{ fontSize: '10px' }}>
-                                <i className="mdi mdi-credit-card-outline me-1"></i>Configurar pago en Meta
-                            </a>
-                        )}
-                    </div>
-                )}
             </div>
+            {errorData && (
+                <div className="text-danger small mt-1 d-flex flex-column align-items-end" style={{ fontSize: '11px', lineHeight: '1.3', paddingRight: fromMe ? '12px' : '0' }}>
+                    <div className="d-flex align-items-center gap-1">
+                        <i className="mdi mdi-alert-circle font-14"></i>
+                        <span>No enviado: {Number(errorData.error_code) === 131042 ? 'Falta método de pago en Meta' : errorData.error_message}</span>
+                    </div>
+                    {errorData.href && (
+                        <a href={errorData.href} target="_blank" rel="noopener noreferrer" className="text-decoration-underline text-danger mt-1 fw-bold" style={{ fontSize: '10px' }}>
+                            <i className="mdi mdi-credit-card-outline me-1"></i>Configurar pago en Meta
+                        </a>
+                    )}
+                </div>
+            )}
         </li>
     )
 }
