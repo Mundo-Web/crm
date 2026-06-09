@@ -443,6 +443,22 @@ class MetaController extends Controller
                             if ((int)$errorCode === 131042) {
                                 Log::error("=== DETECTADO ERROR DE PAGO EN META === La cuenta de WhatsApp Business (WABA) del negocio no tiene un método de pago configurado en Meta Business Manager, por lo que Meta ha bloqueado el envío de este mensaje/plantilla.");
                             }
+
+                            // Update message status in the database to reflect the failure
+                            $messageJpa = Message::where('message_id', $messageId)->first();
+                            if ($messageJpa) {
+                                Log::debug("Updating message in database with failure status", ['message_id' => $messageId]);
+                                $messageJpa->prompt = json_encode([
+                                    'status' => 'failed',
+                                    'error_code' => (int)$errorCode,
+                                    'error_message' => $errorMessage,
+                                    'error_details' => $errorDetails,
+                                    'href' => $error['href'] ?? ''
+                                ]);
+                                $messageJpa->save();
+                            } else {
+                                Log::warning("Could not find message in database with message_id: {$messageId} to update failure status");
+                            }
                         }
                         return;
                     }

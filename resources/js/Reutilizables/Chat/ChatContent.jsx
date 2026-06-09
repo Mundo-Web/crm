@@ -216,8 +216,18 @@ const ChatContent = ({ leadId, setLeadId, theme, contactDetails, setContactDetai
         setTimeout(() => scrollToBottom(true), 100)
       }
     })
+
+    socket.on('message.updated', (props) => {
+      if (props.wa_id != (contact?.integration_user_id || contact?.contact_phone)) return
+      const { id } = props;
+      setMessages(prev => {
+        return prev.map(m => m.id === id ? { ...m, ...props } : m);
+      });
+    })
+
     return () => {
       socket.off('message.created')
+      socket.off('message.updated')
     }
   }, [socket, contact, messages])
 
