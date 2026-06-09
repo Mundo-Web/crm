@@ -424,11 +424,34 @@ class MetaController extends Controller
                 $messaging = $entry['messaging'][0] ?? [];
 
                 if ($origin == 'whatsapp') {
-                    if (!isset($entry['changes'][0]['value']['messages'][0])) {
-                        Log::info('Whatsapp event without messages, skipping');
+                    $value = $entry['changes'][0]['value'] ?? [];
+                    if (isset($value['statuses'][0])) {
+                        $statusData = $value['statuses'][0];
+                        $messageId = $statusData['id'] ?? null;
+                        $status = $statusData['status'] ?? null;
+                        $recipientId = $statusData['recipient_id'] ?? null;
+
+                        if ($status === 'failed' && isset($statusData['errors'][0])) {
+                            $error = $statusData['errors'][0];
+                            $errorCode = $error['code'] ?? 'Desconocido';
+                            $errorTitle = $error['title'] ?? '';
+                            $errorMessage = $error['message'] ?? '';
+                            $errorDetails = $error['error_data']['details'] ?? '';
+
+                            Log::error("[ERROR DE FACTURACION META] El mensaje con ID {$messageId} para {$recipientId} falló. Código de error: {$errorCode}. Título: {$errorTitle}. Mensaje de Meta: {$errorMessage}. Detalles: {$errorDetails}");
+
+                            if ((int)$errorCode === 131042) {
+                                Log::error("=== DETECTADO ERROR DE PAGO EN META === La cuenta de WhatsApp Business (WABA) del negocio no tiene un método de pago configurado en Meta Business Manager, por lo que Meta ha bloqueado el envío de este mensaje/plantilla.");
+                            }
+                        }
                         return;
                     }
-                    $message = $entry['changes'][0]['value']['messages'][0];
+
+                    if (!isset($value['messages'][0])) {
+                        Log::info('Whatsapp event without messages and without statuses, skipping');
+                        return;
+                    }
+                    $message = $value['messages'][0];
                     $inOut = 'in';
                     $waId = $message['from'];
                     $messageId = $message['id'] ?? null;
@@ -1168,13 +1191,16 @@ class MetaController extends Controller
                 throw new Exception('Failed to send message: ' . $result['error']['message']);
             }
 
+            $messageId = $result['message_id'] ?? null;
+
             // Store message in database
             Message::create([
                 'wa_id' => $clientJpa->integration_user_id,
                 'role' => 'User',
                 'message' => Text::html2wa($message),
                 'microtime' => (int) (microtime(true) * 1_000_000),
-                'business_id' => $clientJpa->business_id
+                'business_id' => $clientJpa->business_id,
+                'message_id' => $messageId
             ]);
 
             return $result;
@@ -1290,6 +1316,16 @@ class MetaController extends Controller
             }
         }
 
+        $messageId = null;
+        if (isset($fetchRes) && $fetchRes->ok) {
+            $resData = $fetchRes->json();
+            if (isset($integrationJpa) && $integrationJpa->meta_service === 'whatsapp') {
+                $messageId = $resData['messages'][0]['id'] ?? null;
+            } else {
+                $messageId = $resData['message_id'] ?? null;
+            }
+        }
+
         $waId = $clientJpa->integration_user_id;
         if ($origin === 'evoapi' || (isset($integrationJpa) && $integrationJpa->meta_service === 'whatsapp')) {
             $waId = $number;
@@ -1302,7 +1338,8 @@ class MetaController extends Controller
             'message' => Text::html2wa($message),
             'prompt' => $prompt2save,
             'microtime' => (int) (microtime(true) * 1_000_000),
-            'business_id' => $clientJpa->business_id
+            'business_id' => $clientJpa->business_id,
+            'message_id' => $messageId
         ]);
     }
 

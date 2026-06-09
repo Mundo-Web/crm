@@ -490,6 +490,12 @@ class WhatsAppController extends Controller
                 Log::info('Meta message sent successfully', ['number' => $number]);
             }
 
+            $messageId = null;
+            if (!$isDummy && isset($res) && $res->ok()) {
+                $resData = $res->json();
+                $messageId = $resData['messages'][0]['id'] ?? null;
+            }
+
             Log::debug('Storing message in database');
             // Store message in DB
             Message::create([
@@ -498,7 +504,8 @@ class WhatsAppController extends Controller
                 'message' => Text::html2wa($message),
                 'microtime' => (int) (microtime(true) * 1_000_000),
                 'business_id' => Auth::user()->business_id,
-                'seen' => true
+                'seen' => true,
+                'message_id' => $messageId
             ]);
             Log::info('Message stored in database');
         });
@@ -735,6 +742,9 @@ class WhatsAppController extends Controller
 
             Log::info('Meta template message sent successfully', ['number' => $number]);
 
+            $resData = $res->json();
+            $messageId = $resData['messages'][0]['id'] ?? null;
+
             // Save in DB
             $dbMessage = $request->template_text ?? ('[Plantilla: ' . $request->template_name . ']');
 
@@ -745,7 +755,8 @@ class WhatsAppController extends Controller
                 'message' => Text::html2wa($dbMessage),
                 'microtime' => (int) (microtime(true) * 1_000_000),
                 'business_id' => Auth::user()->business_id,
-                'seen' => true
+                'seen' => true,
+                'message_id' => $messageId
             ]);
             Log::info('Template message stored in database');
         });
