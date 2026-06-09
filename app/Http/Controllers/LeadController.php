@@ -164,6 +164,14 @@ class LeadController extends BasicController
     {
         $response = Response::simpleTryCatch(function (Response $response) use ($lead) {
             $data = $this->model::select('clients.*')
+                ->addSelect([
+                    'last_human_message_microtime' => Message::select('microtime')
+                        ->whereColumn('messages.wa_id', 'clients.contact_phone')
+                        ->where('messages.role', 'Human')
+                        ->whereColumn('messages.business_id', 'clients.business_id')
+                        ->orderBy('microtime', 'desc')
+                        ->limit(1)
+                ])
                 ->withCount(['notes', 'tasks', 'pendingTasks', 'products'])
                 ->with(['status', 'assigned', 'manageStatus', 'creator', 'businessSector'])
                 ->join('statuses AS status', 'status.id', 'status_id')
@@ -182,6 +190,14 @@ class LeadController extends BasicController
         $suffix = $request->suffix;
         $defaultLeadStatus = Setting::get('default-lead-status');
         $query = $model::select($request->fields ?? 'clients.*')
+            ->addSelect([
+                'last_human_message_microtime' => Message::select('microtime')
+                    ->whereColumn('messages.wa_id', 'clients.contact_phone')
+                    ->where('messages.role', 'Human')
+                    ->whereColumn('messages.business_id', 'clients.business_id')
+                    ->orderBy('microtime', 'desc')
+                    ->limit(1)
+            ])
             ->withCount($request->withCount ?? ['notes', 'tasks', 'pendingTasks', 'products'])
             ->with($request->with ?? ['status', 'assigned', 'manageStatus', 'creator', 'integration', 'campaign', 'businessSector'])
             ->leftJoin('statuses AS status', 'status.id', 'status_id')

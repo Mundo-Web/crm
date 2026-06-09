@@ -270,7 +270,8 @@ const OffCanvas = ({ offCanvasRef, dataLoaded, setDataLoaded, defaultMessages, s
     const currentTimestamp = Date.now();
 
     const diffHours = (currentTimestamp - latestTimestamp) / (1000 * 60 * 60);
-    return diffHours < 24;
+    const windowHours = dataLoaded?.campaign_id ? 72 : 24;
+    return diffHours < windowHours;
   };
 
   const finalDefaultMessages = defaultMessages.filter(({ type }) => type === 'whatsapp')
@@ -438,12 +439,20 @@ const OffCanvas = ({ offCanvasRef, dataLoaded, setDataLoaded, defaultMessages, s
 
       <div className="offcanvas-footer">
         {medio === 'whatsapp' && !is24HourWindowOpen() ? (
-          <div className="alert alert-warning m-2 text-start small border-0 shadow-sm" style={{ borderRadius: '8px' }}>
-            <i className="mdi mdi-alert-circle-outline me-1"></i>
-            <strong>Ventana de 24 horas cerrada.</strong> No se pueden enviar mensajes de texto libre. Utiliza una plantilla de WhatsApp autorizada por Meta para reanudar la conversación.
-            <div className="mt-2 text-end">
-              <button type="button" className="btn btn-xs btn-warning" onClick={openTemplatesModal}>
-                <i className="mdi mdi-whatsapp me-1"></i> Enviar plantilla
+          <div className="alert m-2 text-start small border-0 shadow-sm" style={{ borderRadius: '12px', backgroundColor: 'rgba(240, 173, 78, 0.1)', color: '#d9534f', borderLeft: '4px solid #f0ad4e', padding: '16px' }}>
+            <div className="d-flex align-items-center mb-2">
+              <i className="mdi mdi-alert-circle-outline font-18 me-2 text-warning"></i>
+              <h6 className="alert-heading fw-bold mb-0 text-warning" style={{ fontSize: '13px' }}>
+                Ventana de conversación cerrada ({dataLoaded?.campaign_id ? '72h' : '24h'} expiradas)
+              </h6>
+            </div>
+            <p className="mb-0 text-muted small" style={{ lineHeight: '1.5' }}>
+              Para reiniciar la comunicación y poder chatear libremente, Meta exige el uso de una <strong>Plantilla de WhatsApp autorizada</strong>. 
+              Una vez que envíes la plantilla y el cliente responda, se reactivará una nueva ventana gratuita de conversación libre de cargos.
+            </p>
+            <div className="mt-3 text-end">
+              <button type="button" className="btn btn-xs btn-warning px-3 rounded-pill" onClick={openTemplatesModal}>
+                <i className="mdi mdi-whatsapp me-1"></i> Seleccionar plantilla
               </button>
             </div>
           </div>
@@ -599,6 +608,23 @@ const OffCanvas = ({ offCanvasRef, dataLoaded, setDataLoaded, defaultMessages, s
             <span className="visually-hidden">Cargando plantillas...</span>
           </div>
           <div className="mt-2 text-muted">Obteniendo plantillas autorizadas desde Meta...</div>
+        </div>
+      ) : (Array.isArray(templates) && templates.length === 0) ? (
+        <div className="text-center py-4">
+          <div className="text-warning mb-3">
+            <i className="mdi mdi-alert-circle-outline" style={{ fontSize: '32px' }}></i>
+          </div>
+          <h5 className="fw-bold">No hay plantillas de Meta aprobadas</h5>
+          <p className="text-muted small px-3">
+            No se han encontrado plantillas creadas y aprobadas en tu cuenta de WhatsApp Business. 
+            Puedes crear y registrar una plantilla nueva directamente desde la sección de 
+            <strong> Mensajes Predeterminados</strong> en el panel de administración.
+          </p>
+          <div className="mt-3">
+            <a href="/default-messages" className="btn btn-sm btn-primary rounded-pill px-3">
+              <i className="mdi mdi-plus-circle-outline me-1"></i>Crear Plantilla
+            </a>
+          </div>
         </div>
       ) : (
         <div className="text-start">

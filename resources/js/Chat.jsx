@@ -41,6 +41,14 @@ const Chat = ({ users = [], defaultMessages = [], activeLeadId: activeLeadIdDB, 
   const [contactDetails, setContactDetails] = useState(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [detailLead, setDetailLead] = useState(null);
+  const [now, setNow] = useState(Date.now());
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setNow(Date.now());
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   const onOpenModal = (data = {}) => {
     if (idRef.current) idRef.current.value = data?.id ?? "";
@@ -113,7 +121,7 @@ const Chat = ({ users = [], defaultMessages = [], activeLeadId: activeLeadIdDB, 
     setLoading(true);
 
     const request = {
-      fields: ['clients.id', 'clients.contact_name', 'clients.contact_phone', 'clients.last_message', 'clients.last_message_microtime', 'clients.assigned_to', 'clients.status_id', 'clients.manage_status_id', 'clients.integration_user_id', 'clients.integration_id', 'clients.origin'],
+      fields: ['clients.id', 'clients.contact_name', 'clients.contact_phone', 'clients.last_message', 'clients.last_message_microtime', 'clients.assigned_to', 'clients.status_id', 'clients.manage_status_id', 'clients.integration_user_id', 'clients.integration_id', 'clients.origin', 'clients.campaign_id'],
       withCount: ['unSeenMessages'],
       with: ['assigned', 'status', 'manageStatus', 'integration'],
       sort: [{ selector: 'last_message_microtime', desc: true }],
@@ -455,9 +463,54 @@ const Chat = ({ users = [], defaultMessages = [], activeLeadId: activeLeadIdDB, 
                               style={{
                                 color: lead.un_seen_messages_count > 0 ? (theme == 'light' ? '#343a40' : '#f7f7f7') : undefined,
                               }}>{last_message ?? <i className='text-muted'>Sin mensaje</i>}</p>
-                            <div className='d-flex gap-1' >
+                            <div className='d-flex gap-1 mt-1 align-items-center flex-wrap' >
                               <span className="badge" style={{ backgroundColor: lead.status?.color ?? '#6c757d' }}>{lead.status?.name ?? 'Sin estado'}</span>
                               <span className="badge" style={{ backgroundColor: lead.manage_status?.color ?? '#6c757d' }}>{lead.manage_status?.name ?? 'Sin estado'}</span>
+                              {(() => {
+                                const service = lead.integration?.meta_service || lead.origin?.toLowerCase();
+                                const isWhatsApp = service !== 'messenger' && service !== 'instagram';
+                                
+                                if (!isWhatsApp) return null;
+
+                                const lastHumanMicro = lead.last_human_message_microtime;
+                                const lastHumanMs = lastHumanMicro ? Math.floor(lastHumanMicro / 1000) : 0;
+                                
+                                if (lastHumanMs === 0) {
+                                  return (
+                                    <span className="badge border d-inline-flex align-items-center" style={{ fontSize: '10px', padding: '2px 6px', backgroundColor: 'rgba(234, 84, 85, 0.12)', color: '#ea5455', borderColor: 'rgba(234, 84, 85, 0.24)' }}>
+                                      <i className="mdi mdi-alert-circle-outline me-1"></i>Si inicia conversación se cobrará
+                                    </span>
+                                  );
+                                }
+                                
+                                const isCampaign = !!lead.campaign_id;
+                                const msInWindow = isCampaign ? 72 * 60 * 60 * 1000 : 24 * 60 * 60 * 1000;
+                                const expiresAt = lastHumanMs + msInWindow;
+                                const remainingMs = expiresAt - now;
+                                
+                                if (remainingMs > 0) {
+                                  const hours = Math.floor(remainingMs / (3600 * 1000));
+                                  const minutes = Math.floor((remainingMs % (3600 * 1000)) / (60 * 1000));
+                                  const seconds = Math.floor((remainingMs % (60 * 1000)) / 1000);
+                                  const formattedTime = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+                                  
+                                  return (
+                                    <span className="badge border d-inline-flex align-items-center" style={{ fontSize: '10px', padding: '2px 6px', backgroundColor: 'rgba(40, 199, 111, 0.12)', color: '#28c76f', borderColor: 'rgba(40, 199, 111, 0.24)' }}>
+                                      {isCampaign ? (
+                                        <><i className="mdi mdi-bullhorn-outline me-1"></i>Anuncio 72h: {formattedTime}</>
+                                      ) : (
+                                        <><i className="mdi mdi-clock-outline me-1"></i>24h: {formattedTime}</>
+                                      )}
+                                    </span>
+                                  );
+                                } else {
+                                  return (
+                                    <span className="badge border d-inline-flex align-items-center" style={{ fontSize: '10px', padding: '2px 6px', backgroundColor: 'rgba(234, 84, 85, 0.12)', color: '#ea5455', borderColor: 'rgba(234, 84, 85, 0.24)' }}>
+                                      <i className="mdi mdi-alert-circle-outline me-1"></i>Si inicia conversación se cobrará
+                                    </span>
+                                  );
+                                }
+                              })()}
                             </div>
                           </div>
                           <div className="d-flex flex-column align-items-end">

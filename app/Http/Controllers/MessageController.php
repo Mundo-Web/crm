@@ -54,7 +54,15 @@ class MessageController extends BasicController
             ->update(['seen' => true]);
         if ($request->summary && $updated > 0) {
             try {
-                $clientJpa = Client::select('id', 'contact_name', 'contact_phone', 'integration_user_id', 'last_message', 'last_message_microtime')
+                $clientJpa = Client::select('id', 'contact_name', 'contact_phone', 'integration_user_id', 'last_message', 'last_message_microtime', 'campaign_id')
+                    ->addSelect([
+                        'last_human_message_microtime' => Message::select('microtime')
+                            ->whereColumn('messages.wa_id', 'clients.contact_phone')
+                            ->where('messages.role', 'Human')
+                            ->whereColumn('messages.business_id', 'clients.business_id')
+                            ->orderBy('microtime', 'desc')
+                            ->limit(1)
+                    ])
                     ->where('business_id', Auth::user()->business_id)
                     ->where(function ($query) use ($request) {
                         $query->where('contact_phone', $request->summary['contact_phone'])

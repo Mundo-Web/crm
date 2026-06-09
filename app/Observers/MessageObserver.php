@@ -26,7 +26,15 @@ class MessageObserver
                 ->update(['seen' => true]);
         }
         try {
-            $clientJpa = Client::select('id', 'contact_name', 'contact_phone', 'last_message', 'last_message_microtime', 'assigned_to', 'status_id', 'manage_status_id', 'business_id')
+            $clientJpa = Client::select('id', 'contact_name', 'contact_phone', 'last_message', 'last_message_microtime', 'assigned_to', 'status_id', 'manage_status_id', 'business_id', 'campaign_id')
+                ->addSelect([
+                    'last_human_message_microtime' => Message::select('microtime')
+                        ->whereColumn('messages.wa_id', 'clients.contact_phone')
+                        ->where('messages.role', 'Human')
+                        ->whereColumn('messages.business_id', 'clients.business_id')
+                        ->orderBy('microtime', 'desc')
+                        ->limit(1)
+                ])
                 ->where('business_id', $message->business_id)
                 ->where('contact_phone', $message->wa_id)
                 ->orderBy('updated_at', 'DESC')
@@ -51,7 +59,15 @@ class MessageObserver
         EventController::notify('message.updated', $message->toArray(), ['business_id' => $message->business_id]);
 
         try {
-            $clientJpa = Client::select('id', 'contact_name', 'contact_phone', 'last_message', 'last_message_microtime', 'assigned_to', 'status_id', 'manage_status_id')
+            $clientJpa = Client::select('id', 'contact_name', 'contact_phone', 'last_message', 'last_message_microtime', 'assigned_to', 'status_id', 'manage_status_id', 'campaign_id')
+                ->addSelect([
+                    'last_human_message_microtime' => Message::select('microtime')
+                        ->whereColumn('messages.wa_id', 'clients.contact_phone')
+                        ->where('messages.role', 'Human')
+                        ->whereColumn('messages.business_id', 'clients.business_id')
+                        ->orderBy('microtime', 'desc')
+                        ->limit(1)
+                ])
                 ->where('business_id', $message->business_id)
                 ->where('contact_phone', $message->wa_id)
                 ->orderBy('updated_at', 'DESC')
