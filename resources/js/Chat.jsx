@@ -394,6 +394,8 @@ const Chat = ({ users = [], defaultMessages = [], activeLeadId: activeLeadIdDB, 
                     } else if (last_message.startsWith('/image:')) {
                       const content = String(last_message.split('\n').slice(1).join('\n') || '').trim()
                       last_message = <><i className='mdi mdi-image' /> {content || 'Foto'}</>
+                    } else if (last_message.startsWith('/sticker:')) {
+                      last_message = <><i className='mdi mdi-sticker-emoji' /> Sticker</>
                     } else if (last_message.startsWith('/document:')) {
                       const content = String(last_message.split('\n').slice(1).join('\n') || '').trim()
                       last_message = <><i className='mdi mdi-file-document' /> {content || 'Documento'}</>

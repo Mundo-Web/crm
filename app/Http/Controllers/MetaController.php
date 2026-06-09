@@ -477,6 +477,28 @@ class MetaController extends Controller
 
                     if ($messageType == 'text') {
                         $messageContent = $message['text']['body'] ?? '';
+                    } elseif ($messageType == 'location') {
+                        $location = $message['location'] ?? [];
+                        $latitude = $location['latitude'] ?? null;
+                        $longitude = $location['longitude'] ?? null;
+                        $name = $location['name'] ?? null;
+                        $address = $location['address'] ?? null;
+                        
+                        if ($latitude && $longitude) {
+                            $label = $name ?: ($address ?: 'Ubicación compartida');
+                            $messageContent = "📍 Ubicación: {$label}\nhttps://www.google.com/maps?q={$latitude},{$longitude}";
+                        } else {
+                            $messageContent = "📍 Ubicación compartida";
+                        }
+                    } elseif ($messageType == 'contacts') {
+                        $contactsList = $message['contacts'] ?? [];
+                        $formattedContacts = [];
+                        foreach ($contactsList as $contactItem) {
+                            $name = $contactItem['name']['formatted_name'] ?? 'Contacto';
+                            $phone = $contactItem['phones'][0]['phone'] ?? ($contactItem['phones'][0]['wa_id'] ?? 'Sin número');
+                            $formattedContacts[] = "👤 {$name}: {$phone}";
+                        }
+                        $messageContent = implode("\n", $formattedContacts) ?: '👤 Contacto compartido';
                     } else {
                         $mediaId = $message[$messageType]['id'] ?? null;
                         $mask = $message[$messageType]['filename'] ?? null;
@@ -488,8 +510,10 @@ class MetaController extends Controller
                                 switch ($messageType) {
                                     case 'image':
                                     case 'video':
-                                    case 'sticker':
                                         $messageContent = trim("/image:{$filename}\n{$caption}");
+                                        break;
+                                    case 'sticker':
+                                        $messageContent = trim("/sticker:{$filename}");
                                         break;
                                     case 'audio':
                                     case 'voice':
@@ -506,7 +530,13 @@ class MetaController extends Controller
                                 $messageContent = "[Error al descargar media: {$messageType}]";
                             }
                         } else {
-                            $messageContent = "[Media recibida: {$messageType}]";
+                            if ($messageType === 'unsupported' && isset($message['errors'][0])) {
+                                $error = $message['errors'][0];
+                                $details = $error['error_data']['details'] ?? $error['message'] ?? 'Tipo de mensaje no soportado';
+                                $messageContent = "[Media no soportada: {$details}]";
+                            } else {
+                                $messageContent = "[Media recibida: {$messageType}]";
+                            }
                         }
                     }
                     $referral = $message['referral'] ?? null;

@@ -36,6 +36,23 @@ const MessageCard = ({ index, forceAfter, message, isLast = false, fromMe, margi
             caption={content.split('\n').slice(1).join('\n') || ''}
             time={moment(message.created_at).subtract(5, 'hours').format('HH:mm')}
         />
+    } else if (content.startsWith('/sticker:')) {
+        messageCard = (
+            <div style={{ padding: '4px', position: 'relative' }}>
+                <img
+                    src={content.replace('/sticker:', `/storage/images/whatsapp/`)}
+                    alt="Sticker"
+                    style={{
+                        width: '120px',
+                        height: '120px',
+                        objectFit: 'contain'
+                    }}
+                />
+                <span className="time mt-0 d-block text-muted" style={{ fontSize: '10px', textAlign: 'right', marginTop: '4px' }}>
+                    {moment(message.created_at).subtract(5, 'hours').format('HH:mm')}
+                </span>
+            </div>
+        )
     } else if (content.startsWith('/document:')) {
         messageCard = <DocumentMessage
             fromMe={fromMe}
