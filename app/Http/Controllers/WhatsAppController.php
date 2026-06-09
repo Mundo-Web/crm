@@ -613,6 +613,35 @@ class WhatsAppController extends Controller
         return response($response->toArray(), $response->status);
     }
 
+    public function getBillingStatus()
+    {
+        $response = Response::simpleTryCatch(function () {
+            $integration = Integration::where('business_id', Auth::user()->business_id)
+                ->where('meta_service', 'whatsapp')
+                ->where('status', true)
+                ->first();
+
+            if (!$integration) {
+                return ['has_payment_method' => true];
+            }
+
+            $url = env('FACEBOOK_GRAPH_URL', 'https://graph.facebook.com/v22.0') . '/' . $integration->meta_business_id . '?fields=primary_funding_id';
+
+            $res = Http::withToken($integration->meta_access_token)->get($url);
+
+            if (!$res->ok()) {
+                return ['has_payment_method' => true];
+            }
+
+            $data = $res->json();
+            $hasPaymentMethod = isset($data['primary_funding_id']) && !empty($data['primary_funding_id']);
+
+            return ['has_payment_method' => $hasPaymentMethod];
+        });
+
+        return response($response->toArray(), $response->status);
+    }
+
     public function sendTemplate(Request $request)
     {
         $response = Response::simpleTryCatch(function () use ($request) {

@@ -73,6 +73,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/whatsapp/verify', [WhatsAppController::class, 'stream']);
     Route::post('/whatsapp/send', [WhatsAppController::class, 'send']);
     Route::get('/whatsapp/templates', [WhatsAppController::class, 'getTemplates']);
+    Route::get('/whatsapp/billing-status', [WhatsAppController::class, 'getBillingStatus']);
     Route::post('/whatsapp/templates', [WhatsAppController::class, 'createTemplate']);
     Route::delete('/whatsapp/templates/{name}', [WhatsAppController::class, 'deleteTemplate']);
     Route::post('/whatsapp/send-template', [WhatsAppController::class, 'sendTemplate']);

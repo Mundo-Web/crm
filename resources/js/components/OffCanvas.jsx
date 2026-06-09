@@ -186,12 +186,17 @@ const OffCanvas = ({ offCanvasRef, dataLoaded, setDataLoaded, defaultMessages, s
   const [templateParams, setTemplateParams] = useState({})
   const [isTemplatesLoading, setIsTemplatesLoading] = useState(false)
   const [isSendingTemplate, setIsSendingTemplate] = useState(false)
+  const [hasPaymentMethod, setHasPaymentMethod] = useState(true)
 
   const openTemplatesModal = async () => {
     setIsTemplatesLoading(true)
     $(templatesModalRef.current).modal('show')
-    const data = await whatsAppRest.getTemplates()
-    setTemplates(data || [])
+    const [templatesData, billingData] = await Promise.all([
+      whatsAppRest.getTemplates(),
+      whatsAppRest.verifyBilling()
+    ])
+    setTemplates(templatesData || [])
+    setHasPaymentMethod(billingData?.has_payment_method ?? true)
     setIsTemplatesLoading(false)
   }
 
@@ -628,6 +633,12 @@ const OffCanvas = ({ offCanvasRef, dataLoaded, setDataLoaded, defaultMessages, s
         </div>
       ) : (
         <div className="text-start">
+          {!hasPaymentMethod && (
+            <div className="alert alert-danger mb-3 text-start small border-0 shadow-sm" style={{ borderRadius: '8px', backgroundColor: 'rgba(220, 53, 69, 0.08)', color: '#dc3545', borderLeft: '4px solid #dc3545' }}>
+              <i className="mdi mdi-credit-card-off-outline me-1"></i>
+              <strong>Sin método de pago en Meta:</strong> No se detectó un método de pago válido en tu cuenta de WhatsApp Business. Los envíos de plantillas fallarán. Configura una tarjeta en el panel de Meta.
+            </div>
+          )}
           <div className="mb-3">
             <label className="form-label fw-bold">Seleccionar Plantilla</label>
             <select className="form-select" onChange={handleTemplateChange} defaultValue="" required>

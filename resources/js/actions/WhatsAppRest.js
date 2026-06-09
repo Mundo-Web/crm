@@ -196,6 +196,17 @@ class WhatsAppRest extends BasicRest {
       return false
     }
   }
+
+  verifyBilling = async () => {
+    try {
+      const { status, result } = await Fetch(`/api/${this.path}/billing-status`)
+      if (!status) return { has_payment_method: true }
+      return result.data ?? { has_payment_method: true }
+    } catch (error) {
+      console.error(error.message)
+      return { has_payment_method: true }
+    }
+  }
 }
 
 export default WhatsAppRest
