@@ -212,12 +212,156 @@ const ImportModal = ({ modalRef, fields, onSubmit, disabled, onClose, mapping, s
                         </ul>
                     </div>
                 </div>
+                <div className="mb-2">
+                    <label className="form-label small">ID de Campaña (opcional)</label>
+                    <div className="dropdown">
+                        <button
+                            className="btn btn-sm btn-white dropdown-toggle w-100 text-start border text-truncate"
+                            type="button"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                        >
+                            {mapping.campaign_id || 'Seleccionar columna'}
+                        </button>
+                        <ul className="dropdown-menu w-100" style={{ maxHeight: '300px', overflowY: 'auto' }}>
+                            <li>
+                                <button
+                                    className="dropdown-item small text-truncate text-muted"
+                                    type="button"
+                                    onClick={() => setMapping(prev => ({ ...prev, campaign_id: null }))}
+                                >
+                                    Ninguno
+                                </button>
+                            </li>
+                            {fields?.map((field, idx) => (
+                                <li key={idx}>
+                                    <button
+                                        className="dropdown-item small text-truncate"
+                                        type="button"
+                                        onClick={() => setMapping(prev => ({ ...prev, campaign_id: field }))}
+                                    >
+                                        {field}
+                                    </button>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                </div>
+                <div className="mb-2">
+                    <label className="form-label small">Nombre de Campaña (opcional)</label>
+                    <div className="dropdown">
+                        <button
+                            className="btn btn-sm btn-white dropdown-toggle w-100 text-start border text-truncate"
+                            type="button"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                        >
+                            {mapping.campaign_name || 'Seleccionar columna'}
+                        </button>
+                        <ul className="dropdown-menu w-100" style={{ maxHeight: '300px', overflowY: 'auto' }}>
+                            <li>
+                                <button
+                                    className="dropdown-item small text-truncate text-muted"
+                                    type="button"
+                                    onClick={() => setMapping(prev => ({ ...prev, campaign_name: null }))}
+                                >
+                                    Ninguno
+                                </button>
+                            </li>
+                            {fields?.map((field, idx) => (
+                                <li key={idx}>
+                                    <button
+                                        className="dropdown-item small text-truncate"
+                                        type="button"
+                                        onClick={() => setMapping(prev => ({ ...prev, campaign_name: field }))}
+                                    >
+                                        {field}
+                                    </button>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                </div>
+                <div className="mb-2">
+                    <label className="form-label small">Grupo de Anuncio / AdSet (opcional)</label>
+                    <div className="dropdown">
+                        <button
+                            className="btn btn-sm btn-white dropdown-toggle w-100 text-start border text-truncate"
+                            type="button"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                        >
+                            {mapping.adset_name || 'Seleccionar columna'}
+                        </button>
+                        <ul className="dropdown-menu w-100" style={{ maxHeight: '300px', overflowY: 'auto' }}>
+                            <li>
+                                <button
+                                    className="dropdown-item small text-truncate text-muted"
+                                    type="button"
+                                    onClick={() => setMapping(prev => ({ ...prev, adset_name: null }))}
+                                >
+                                    Ninguno
+                                </button>
+                            </li>
+                            {fields?.map((field, idx) => (
+                                <li key={idx}>
+                                    <button
+                                        className="dropdown-item small text-truncate"
+                                        type="button"
+                                        onClick={() => setMapping(prev => ({ ...prev, adset_name: field }))}
+                                    >
+                                        {field}
+                                    </button>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                </div>
+                <div className="mb-2">
+                    <label className="form-label small">Anuncio / Ad (opcional)</label>
+                    <div className="dropdown">
+                        <button
+                            className="btn btn-sm btn-white dropdown-toggle w-100 text-start border text-truncate"
+                            type="button"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                        >
+                            {mapping.ad_name || 'Seleccionar columna'}
+                        </button>
+                        <ul className="dropdown-menu w-100" style={{ maxHeight: '300px', overflowY: 'auto' }}>
+                            <li>
+                                <button
+                                    className="dropdown-item small text-truncate text-muted"
+                                    type="button"
+                                    onClick={() => setMapping(prev => ({ ...prev, ad_name: null }))}
+                                >
+                                    Ninguno
+                                </button>
+                            </li>
+                            {fields?.map((field, idx) => (
+                                <li key={idx}>
+                                    <button
+                                        className="dropdown-item small text-truncate"
+                                        type="button"
+                                        onClick={() => setMapping(prev => ({ ...prev, ad_name: field }))}
+                                    >
+                                        {field}
+                                    </button>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                </div>
                 <div className="p-2 bg-light rounded">
                     <label className="form-label small">Así se importarán los leads:</label>
                     <ul className="list-unstyled mb-0 small">
                         <li><b>Nombre:</b> {mapping.name || '—'}</li>
                         <li><b>Correo:</b> {mapping.email || '—'}</li>
                         <li><b>Teléfono:</b> {mapping.phone || '—'}</li>
+                        {mapping.campaign_id && <li><b>Campaña ID:</b> {mapping.campaign_id}</li>}
+                        {mapping.campaign_name && <li><b>Campaña Nombre:</b> {mapping.campaign_name}</li>}
+                        {mapping.adset_name && <li><b>Grupo de Anuncio:</b> {mapping.adset_name}</li>}
+                        {mapping.ad_name && <li><b>Anuncio:</b> {mapping.ad_name}</li>}
                         <li>
                             <b>Formulario:</b>
                             {

@@ -281,14 +281,35 @@ class LeadController extends BasicController
             $business_id = Auth::user()->business_id;
 
             // Build a map of campaign_code => existing campaign id
+            $campaignIdColumn = $mapping['campaign_id'] ?? null;
+            $campaignNameColumn = $mapping['campaign_name'] ?? null;
+
+            $campaignCodes = [];
+            if ($campaignIdColumn) {
+                $campaignCodes = array_unique(array_filter(array_column($cleanRows, $campaignIdColumn)));
+            } elseif ($campaignNameColumn) {
+                $campaignCodes = array_unique(array_filter(array_column($cleanRows, $campaignNameColumn)));
+            }
+
             $existingCampaigns = Campaign::where('business_id', $business_id)
-                ->whereIn('code', array_unique(array_filter(array_column($cleanRows, 'campaign_id'))))
+                ->whereIn('code', $campaignCodes)
                 ->pluck('id', 'code');
 
             // Collect new campaigns to insert
             $campaignsToInsert = [];
             foreach ($cleanRows as $row) {
-                $adId = trim($row['campaign_id'] ?? '');
+                $adId = '';
+                $adTitle = null;
+                if ($campaignIdColumn) {
+                    $adId = trim($row[$campaignIdColumn] ?? '');
+                    if ($campaignNameColumn) {
+                        $adTitle = $row[$campaignNameColumn] ?? null;
+                    }
+                } elseif ($campaignNameColumn) {
+                    $adId = trim($row[$campaignNameColumn] ?? '');
+                    $adTitle = $adId;
+                }
+
                 if ($adId === '' || isset($existingCampaigns[$adId])) {
                     continue;
                 }
@@ -297,7 +318,7 @@ class LeadController extends BasicController
                 $campaignsToInsert[$adId] = [
                     'id'          => Uuid::uuid1()->toString(),
                     'code'        => $adId,
-                    'title'       => $row['campaign_name'] ?? null,
+                    'title'       => $adTitle,
                     'source'      => match ($source) {
                         'fb' => 'facebook',
                         'ig' => 'instagram',
@@ -305,6 +326,8 @@ class LeadController extends BasicController
                     },
                     'protected'   => true,
                     'business_id' => $business_id,
+                    'created_at'  => now(),
+                    'updated_at'  => now()
                 ];
             }
 
@@ -323,10 +346,8 @@ class LeadController extends BasicController
                 $campaignMap[$code] = [
                     'id'    => $id,
                     'code'  => $code,
-                    // title, source, protected, business_id are not strictly needed downstream
                 ];
             }
-
             // Map rows to desired format using mapping
             $mappedRows = [];
             foreach ($cleanRows as $row) {
@@ -338,10 +359,40 @@ class LeadController extends BasicController
 
                 // Determine campaign_id
                 $campaignId = null;
-                $adId = $row['campaign_id'] ?? null;
+                $adId = null;
+                if ($campaignIdColumn) {
+                    $adId = $row[$campaignIdColumn] ?? null;
+                } elseif ($campaignNameColumn) {
+                    $adId = $row[$campaignNameColumn] ?? null;
+                }
+
                 if ($adId !== null && trim($adId) !== '' && isset($campaignMap[$adId])) {
                     $campaignId = $campaignMap[$adId]['id'];
                 }
+
+                // Determine attribution and channels
+                $originRaw = strtolower($row[$mapping['source']] ?? '');
+                $origin = match ($originRaw) {
+                    'fb', 'facebook' => 'Facebook',
+                    'ig', 'instagram' => 'Instagram',
+                    default => $row[$mapping['source']] ?? null,
+                };
+
+                $source = 'Importación';
+                $triggeredBy = $row[$mapping['triggered_by']] ?? 'Importación';
+                $sourceChannel = null;
+
+                if ($origin === 'Facebook' || $origin === 'Instagram') {
+                    $source = 'Meta';
+                    $triggeredBy = 'Formulario ' . $origin;
+                    $sourceChannel = $origin . ' Form';
+                }
+
+                $adsetColumn = $mapping['adset_name'] ?? null;
+                $adColumn = $mapping['ad_name'] ?? null;
+
+                $adsetName = $adsetColumn ? ($row[$adsetColumn] ?? null) : null;
+                $adName = $adColumn ? ($row[$adColumn] ?? null) : null;
 
                 $mapped = [
                     'id'     => Uuid::uuid1()->toString(),
@@ -350,13 +401,12 @@ class LeadController extends BasicController
                     'contact_name'   => $row[$mapping['name']] ?? null,
                     'contact_email'  => $row[$mapping['email']] ?? null,
                     'contact_phone' => $phone ?: null,
-                    'source' => 'Importación',
-                    'origin' => match (strtolower($row[$mapping['source']] ?? '')) {
-                        'fb' => 'Facebook',
-                        'ig' => 'Instagram',
-                        default => $row[$mapping['source']] ?? null,
-                    },
-                    'triggered_by' => $row[$mapping['triggered_by']] ?? 'Importación',
+                    'source' => $source,
+                    'origin' => $origin,
+                    'triggered_by' => $triggeredBy,
+                    'source_channel' => $sourceChannel,
+                    'adset_name' => $adsetName,
+                    'ad_name' => $adName,
                     'status_id' => Setting::get('default-lead-status'),
                     'manage_status_id' => Setting::get('default-manage-lead-status'),
                     'campaign_id' => $campaignId,
@@ -420,8 +470,12 @@ class LeadController extends BasicController
             if (!empty($rowsToInsert)) {
                 Client::insert(array_values($rowsToInsert));
 
-                // Build ClientNote records for the newly inserted leads
+                // Build ClientNote records and Task records for the newly inserted leads
                 $notesToInsert = [];
+                $tasksToInsert = [];
+
+                $newLeadMessageTemplate = Setting::get('whatsapp-new-lead-notification-message', $business_id);
+
                 foreach ($rowsToInsert as $row) {
                     $formString = '';
                     $forms = JSON::parse((string) $row['form_answers']);
@@ -432,6 +486,8 @@ class LeadController extends BasicController
                         }
                         $formString .= '<br>';
                     }
+
+                    // 1. Form Answers Note
                     $notesToInsert[] = [
                         'id' => Uuid::uuid1()->toString(),
                         'note_type_id' => '8e895346-3d87-4a87-897a-4192b917c211',
@@ -441,9 +497,43 @@ class LeadController extends BasicController
                         'created_at' => now(),
                         'updated_at' => now(),
                     ];
+
+                    // 2. "Lead nuevo" Note (just like webhooks/manual)
+                    $newLeadNoteId = Uuid::uuid1()->toString();
+                    $description = UtilController::replaceData(
+                        $newLeadMessageTemplate,
+                        $row
+                    );
+                    $notesToInsert[] = [
+                        'id' => $newLeadNoteId,
+                        'note_type_id' => '8e895346-3d87-4a87-897a-4192b917c211',
+                        'client_id' => $row['id'],
+                        'name' => 'Lead nuevo',
+                        'description' => $description,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ];
+
+                    // 3. "Revisar lead" Task (just like webhooks/manual)
+                    $tasksToInsert[] = [
+                        'id' => Uuid::uuid1()->toString(),
+                        'model_id' => ClientNote::class,
+                        'note_id' => $newLeadNoteId,
+                        'name' => 'Revisar lead',
+                        'description' => 'Debes revisar los requerimientos del lead',
+                        'ends_at' => Carbon::now()->addDay()->format('Y-m-d H:i:s'),
+                        'status' => 'Pendiente',
+                        'asignable' => true,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ];
                 }
+
                 if (!empty($notesToInsert)) {
                     ClientNote::insert($notesToInsert);
+                }
+                if (!empty($tasksToInsert)) {
+                    Task::insert($tasksToInsert);
                 }
             }
             DB::commit();

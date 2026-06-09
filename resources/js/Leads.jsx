@@ -1052,6 +1052,10 @@ const Leads = (properties) => {
         phone: null,
         source: null,
         triggered_by: null,
+        campaign_id: null,
+        campaign_name: null,
+        adset_name: null,
+        ad_name: null,
         form: [],
     });
     const [rowsCount, setRowsCount] = useState(0);
@@ -1191,6 +1195,10 @@ const Leads = (properties) => {
                 phone: null,
                 source: null,
                 triggered_by: null,
+                campaign_id: null,
+                campaign_name: null,
+                adset_name: null,
+                ad_name: null,
                 form: [],
             });
             return;
@@ -1203,6 +1211,10 @@ const Leads = (properties) => {
             phone: null,
             source: null,
             triggered_by: null,
+            campaign_id: null,
+            campaign_name: null,
+            adset_name: null,
+            ad_name: null,
             form: [],
         };
 
@@ -1255,6 +1267,56 @@ const Leads = (properties) => {
                 col.trim().split(/\s+/).length <= 3
             ) {
                 mapping.date = col;
+            } else if (
+                !mapping.campaign_id &&
+                (lower === "campaign_id" ||
+                    lower === "campaign id" ||
+                    lower === "id de campaña" ||
+                    lower === "id campaña" ||
+                    lower === "codigo de campaña" ||
+                    lower === "codigo campaña" ||
+                    lower === "id de campana" ||
+                    lower === "id campana" ||
+                    lower === "codigo de campana" ||
+                    lower === "codigo campana")
+            ) {
+                mapping.campaign_id = col;
+            } else if (
+                !mapping.campaign_name &&
+                (lower === "campaign_name" ||
+                    lower === "campaign name" ||
+                    lower === "nombre de campaña" ||
+                    lower === "nombre campaña" ||
+                    lower === "nombre de campana" ||
+                    lower === "nombre campana")
+            ) {
+                mapping.campaign_name = col;
+            } else if (
+                !mapping.adset_name &&
+                (lower === "adset_name" ||
+                    lower === "adset name" ||
+                    lower === "adset" ||
+                    lower === "grupo de anuncios" ||
+                    lower === "grupo de anuncio" ||
+                    lower === "grupo anuncios" ||
+                    lower === "grupo anuncio" ||
+                    lower.includes("adset") ||
+                    lower.includes("grupo de anuncio"))
+            ) {
+                mapping.adset_name = col;
+            } else if (
+                !mapping.ad_name &&
+                (lower === "ad_name" ||
+                    lower === "ad name" ||
+                    lower === "anuncio" ||
+                    lower === "nombre del anuncio" ||
+                    lower === "nombre anuncio" ||
+                    lower.includes("ad_name") ||
+                    lower.includes("ad name") ||
+                    lower === "anuncio name" ||
+                    (lower.includes("anuncio") && !lower.includes("grupo")))
+            ) {
+                mapping.ad_name = col;
             } else if (col.includes("?") && col.split(/\s+/).length >= 4) {
                 mapping.form.push(col);
             }
