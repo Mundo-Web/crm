@@ -488,6 +488,7 @@ class MetaController extends Controller
                                 switch ($messageType) {
                                     case 'image':
                                     case 'video':
+                                    case 'sticker':
                                         $messageContent = trim("/image:{$filename}\n{$caption}");
                                         break;
                                     case 'audio':

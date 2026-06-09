@@ -114,6 +114,10 @@ class WebhookController extends BasicController
                 $filename = $this->getAndSaveMedia($businessJpa, $messageId, 'image');
                 if (!$filename) throw new Exception('El archivo no se pudo guardar o no se generó');
                 $message = trim('/image:' . $filename . Text::lineBreak() . $message);
+            } else if ($messageType === 'stickerMessage') {
+                $filename = $this->getAndSaveMedia($businessJpa, $messageId, 'image');
+                if (!$filename) throw new Exception('El archivo no se pudo guardar o no se generó');
+                $message = '/image:' . $filename;
             } else if ($messageType === 'documentMessage') {
                 $filename = $this->getAndSaveMedia($businessJpa, $messageId, 'document');
                 if (!$filename) throw new Exception('El archivo no se pudo guardar o no se generó');

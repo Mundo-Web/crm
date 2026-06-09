@@ -129,6 +129,8 @@ class UtilController
       $mimeType = 'audio/mpeg';
     } elseif ($extension === 'wav') {
       $mimeType = 'audio/wav';
+    } elseif ($extension === 'webp') {
+      $mimeType = 'image/webp';
     } elseif ($isAudioPrefix && $mimeType === 'application/octet-stream') {
       $mimeType = 'audio/ogg';
     }
