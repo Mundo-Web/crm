@@ -388,10 +388,10 @@ const ChatContent = ({ leadId, setLeadId, theme, contactDetails, setContactDetai
       take: 60
     })
     setMessagesLoading(false)
-    if (result.data?.length > 0) {
+    if (result?.data?.length > 0) {
       setMessages(prev => {
         const existingIds = new Set(prev.map(m => m.id))
-        const newMessages = (result.data ?? []).filter(m => !existingIds.has(m.id))
+        const newMessages = (result?.data ?? []).filter(m => !existingIds.has(m.id))
         return [...newMessages, ...prev].sort((a, b) => a.microtime - b.microtime)
       })
       // Mantener posición de scroll después de cargar mensajes antiguos
@@ -432,7 +432,7 @@ const ChatContent = ({ leadId, setLeadId, theme, contactDetails, setContactDetai
     setMessages([])
     if (!leadId && !contact) return
     loadMessages()
-  }, [contact, leadId])
+  }, [contact?.id, leadId])
 
   useEffect(() => {
     const handleKeyDown = (e) => {
