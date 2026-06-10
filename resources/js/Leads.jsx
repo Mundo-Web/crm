@@ -103,7 +103,7 @@ const Leads = (properties) => {
     const mailModal = useRef();
     const messagesOffCanvasRef = useRef();
 
-    const socket = useWebSocket();
+    const { socket } = useWebSocket();
 
     useEffect(() => {
         const handleUpdate = () => {
