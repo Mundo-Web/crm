@@ -44,6 +44,7 @@ const Chat = ({ users = [], defaultMessages = [], activeLeadId: activeLeadIdDB, 
   const [detailLead, setDetailLead] = useState(null);
   const [chatStatusFilter, setChatStatusFilter] = useState('');
   const [now, setNow] = useState(Date.now());
+  const [hoveredLeadId, setHoveredLeadId] = useState(null);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -477,7 +478,30 @@ const Chat = ({ users = [], defaultMessages = [], activeLeadId: activeLeadIdDB, 
                     }
 
 
-                    return <li key={lead.id} className={`${lead.unread ? 'unread' : ''} ${activeLeadId == lead.id ? 'bg-light' : ''}`}>
+                    const statusColor = lead.chat_status?.color;
+                    const isActive = activeLeadId == lead.id;
+                    const isHovered = hoveredLeadId == lead.id;
+                    const liStyle = {};
+
+                    if (statusColor) {
+                      let opacity = '0a'; // ~4% opacity for default
+                      if (isActive) {
+                        opacity = '25'; // ~14.5% opacity for active
+                      } else if (isHovered) {
+                        opacity = '18'; // ~9% opacity for hover
+                      }
+                      liStyle.background = `linear-gradient(90deg, ${statusColor}${opacity} 0%, transparent 100%)`;
+                      liStyle.borderLeft = `4px solid ${statusColor}`;
+                      liStyle.transition = 'all 0.2s ease-in-out';
+                    }
+
+                    return <li
+                      key={lead.id}
+                      className={`${lead.unread ? 'unread' : ''} ${activeLeadId == lead.id && !statusColor ? 'bg-light' : ''}`}
+                      style={liStyle}
+                      onMouseEnter={() => setHoveredLeadId(lead.id)}
+                      onMouseLeave={() => setHoveredLeadId(null)}
+                    >
                       <a onClick={(e) => { setActiveLeadId(lead.id); e.stopPropagation() }} style={{ cursor: 'pointer' }}>
                         <div className="d-flex">
                           <div className={`position-relative flex-shrink-0 chat-user-img ${lead.online ? 'active' : ''} align-self-center me-2`}>
@@ -538,7 +562,6 @@ const Chat = ({ users = [], defaultMessages = [], activeLeadId: activeLeadIdDB, 
 
                           <div className="flex-grow-1 overflow-hidden">
                             <h5 className={`text-truncate font-14 mt-0 mb-0 ${lead.un_seen_messages_count > 0 ? 'fw-bold' : ''}`}>
-                              {Boolean(lead.is_pinned) && <i className="mdi mdi-pin text-primary me-1" title="Anclado"></i>}
                               {lead.contact_name}
                             </h5>
                             <p className={`text-truncate mb-0 ${lead.un_seen_messages_count > 0 ? 'fw-bold' : ''}`} title={getTextFromReactNode(last_message) ?? undefined}
@@ -547,7 +570,7 @@ const Chat = ({ users = [], defaultMessages = [], activeLeadId: activeLeadIdDB, 
                               }}>{last_message ?? <i className='text-muted'>Sin mensaje</i>}</p>
                             <div className='d-flex gap-1 mt-1 align-items-center flex-wrap' >
                               {lead.chat_status && (
-                                <span className="badge border d-inline-flex align-items-center" style={{ backgroundColor: 'transparent', color: lead.chat_status?.color ?? '#6c757d', borderColor: lead.chat_status?.color ?? '#6c757d' }}>
+                                <span className="badge  border d-inline-flex align-items-center d-none" style={{ backgroundColor: 'transparent', color: lead.chat_status?.color ?? '#6c757d', borderColor: lead.chat_status?.color ?? '#6c757d' }}>
                                   {lead.chat_status?.icon && (
                                     <i className={`mdi ${lead.chat_status.icon.startsWith('mdi-') ? lead.chat_status.icon : `mdi-${lead.chat_status.icon}`} me-1`} />
                                   )}
@@ -620,11 +643,16 @@ const Chat = ({ users = [], defaultMessages = [], activeLeadId: activeLeadIdDB, 
                               })()}
                             </div>
                           </div>
-                          <div className="d-flex flex-column align-items-end">
+                          <div className="d-flex flex-column align-items-end flex-shrink-0 ms-2">
                             <div className={`font-11 ${lead.un_seen_messages_count > 0 ? 'text-success' : ''}`}>{dateLabel}</div>
-                            {lead.un_seen_messages_count > 0 && (
-                              <span className="badge bg-success rounded-pill mt-1">{lead.un_seen_messages_count}</span>
-                            )}
+                            <div className="d-flex align-items-center gap-1 mt-1">
+                              {Boolean(lead.is_pinned) && (
+                                <i className="mdi mdi-pin text-primary font-16" title="Anclado" style={{ transform: 'rotate(45deg)', display: 'inline-block' }}></i>
+                              )}
+                              {lead.un_seen_messages_count > 0 && (
+                                <span className="badge bg-success rounded-pill">{lead.un_seen_messages_count}</span>
+                              )}
+                            </div>
                           </div>
                         </div>
                       </a>
