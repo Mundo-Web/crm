@@ -115,7 +115,10 @@ const ChatHeader = ({ contact, contactDetails, setContactDetails, loading, theme
                             if (!isWhatsApp) return null;
 
                             const lastHumanMicro = contact.last_human_message_microtime;
-                            const lastHumanMs = lastHumanMicro ? Math.floor(lastHumanMicro / 1000) : 0;
+                            let lastHumanMs = lastHumanMicro ? Math.floor(lastHumanMicro / 1000) : 0;
+                            if (lastHumanMs === 0 && contact.created_at) {
+                                lastHumanMs = new Date(contact.created_at).getTime();
+                            }
                             
                             if (lastHumanMs === 0) {
                                 return (

@@ -89,6 +89,23 @@ const LeadDetailContent = ({
     }, [leadLoadedInitial]);
 
     useEffect(() => {
+        const input = processRef.current;
+        if (!input) return;
+        const dropdownMenu = new bootstrap.Dropdown(input);
+
+        const onFocus = () => dropdownMenu.show();
+        const onBlur = () => setTimeout(() => dropdownMenu.hide(), 200);
+
+        input.addEventListener("focus", onFocus);
+        input.addEventListener("blur", onBlur);
+
+        return () => {
+            input.removeEventListener("focus", onFocus);
+            input.removeEventListener("blur", onBlur);
+        };
+    }, []);
+
+    useEffect(() => {
         gmailRest.check().then((data) => {
             if (data.authorized) return setHasGSToken(true);
             setGoogleAuthURI(data.auth_url);

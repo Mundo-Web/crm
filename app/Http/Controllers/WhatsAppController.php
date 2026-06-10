@@ -153,14 +153,12 @@ class WhatsAppController extends Controller
             // Para EvoAPI, el remoteJid individual debe terminar en @s.whatsapp.net
             $evoJid = $cleanJid . '@s.whatsapp.net';
 
-            // Paso 1: Llamar al endpoint de contactos
+            // Paso 1: Llamar al endpoint de profile picture
             $res = Http::withHeaders([
                 'Content-Type' => 'application/json',
                 'apikey' => $business->uuid,
-            ])->post(env('EVOAPI_URL') . '/chat/findContacts/' . $business->person->document_number, [
-                'where' => [
-                    'remoteJid' => $evoJid,
-                ]
+            ])->post(env('EVOAPI_URL') . '/chat/fetchProfilePictureUrl/' . $business->person->document_number, [
+                'number' => $evoJid
             ]);
 
             if (!$res->ok()) {
@@ -169,11 +167,11 @@ class WhatsAppController extends Controller
 
             $data = $res->json();
 
-            if (empty($data) || empty($data[0]['profilePicUrl'])) {
+            if (empty($data) || empty($data['profilePictureUrl'])) {
                 return response()->json(['error' => 'Profile image not found'], 404);
             }
 
-            $imageUrl = $data[0]['profilePicUrl'];
+            $imageUrl = $data['profilePictureUrl'];
 
             // Paso 2: Descargar la imagen
             $imageRes = Http::get($imageUrl);

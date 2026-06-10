@@ -122,7 +122,7 @@ const Chat = ({ users = [], defaultMessages = [], activeLeadId: activeLeadIdDB, 
     setLoading(true);
 
     const request = {
-      fields: ['clients.id', 'clients.contact_name', 'clients.contact_phone', 'clients.last_message', 'clients.last_message_microtime', 'clients.assigned_to', 'clients.status_id', 'clients.manage_status_id', 'clients.chat_status_id', 'clients.integration_user_id', 'clients.integration_id', 'clients.origin', 'clients.campaign_id', 'clients.is_pinned'],
+      fields: ['clients.id', 'clients.contact_name', 'clients.contact_phone', 'clients.last_message', 'clients.last_message_microtime', 'clients.assigned_to', 'clients.status_id', 'clients.manage_status_id', 'clients.chat_status_id', 'clients.integration_user_id', 'clients.integration_id', 'clients.origin', 'clients.campaign_id', 'clients.is_pinned', 'clients.created_at'],
       withCount: ['unSeenMessages'],
       with: ['assigned', 'status', 'manageStatus', 'chatStatus', 'integration'],
       sort: [{ selector: 'is_pinned', desc: true }, { selector: 'last_message_microtime', desc: true }],
@@ -158,7 +158,12 @@ const Chat = ({ users = [], defaultMessages = [], activeLeadId: activeLeadIdDB, 
 
     request.filter = ArrayJoin(filter, 'and');
 
-    const { data, totalCount: newTotalCount } = await leadsRest.paginate(request);
+    const result = await leadsRest.paginate(request);
+    if (!result) {
+      setLoading(false);
+      return;
+    }
+    const { data, totalCount: newTotalCount } = result;
 
     if (loadMore) {
       setLeads(prev => [...prev, ...(data ?? [])]);
@@ -520,9 +525,9 @@ const Chat = ({ users = [], defaultMessages = [], activeLeadId: activeLeadIdDB, 
                               }}>{last_message ?? <i className='text-muted'>Sin mensaje</i>}</p>
                             <div className='d-flex gap-1 mt-1 align-items-center flex-wrap' >
                               {lead.chat_status && (
-                                <span className="badge" style={{ backgroundColor: lead.chat_status?.color ?? '#6c757d' }}>
+                                <span className="badge border d-inline-flex align-items-center" style={{ backgroundColor: 'transparent', color: lead.chat_status?.color ?? '#6c757d', borderColor: lead.chat_status?.color ?? '#6c757d' }}>
                                   {lead.chat_status?.icon && (
-                                    <i className={`mdi ${lead.chat_status.icon.startsWith('mdi-') ? lead.chat_status.icon : `mdi-${lead.chat_status.icon}`}`} />
+                                    <i className={`mdi ${lead.chat_status.icon.startsWith('mdi-') ? lead.chat_status.icon : `mdi-${lead.chat_status.icon}`} me-1`} />
                                   )}
                                   {/*lead.chat_status?.name*/}
                                 </span>
@@ -550,7 +555,10 @@ const Chat = ({ users = [], defaultMessages = [], activeLeadId: activeLeadIdDB, 
                                 if (!isWhatsApp) return null;
 
                                 const lastHumanMicro = lead.last_human_message_microtime;
-                                const lastHumanMs = lastHumanMicro ? Math.floor(lastHumanMicro / 1000) : 0;
+                                let lastHumanMs = lastHumanMicro ? Math.floor(lastHumanMicro / 1000) : 0;
+                                if (lastHumanMs === 0 && lead.created_at) {
+                                  lastHumanMs = new Date(lead.created_at).getTime();
+                                }
 
                                 if (lastHumanMs === 0) {
                                   return (

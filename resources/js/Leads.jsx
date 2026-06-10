@@ -5,6 +5,8 @@ import { createRoot } from "react-dom/client";
 import { GET, Local, String } from "sode-extend-react";
 import Swal from "sweetalert2";
 import "../css/leads.css";
+import ArrayJoin from "./Utils/ArrayJoin.js";
+import useWebSocket from "./Reutilizables/CustomHooks/useWebSocket.jsx";
 import ClientNotesCard from "./Reutilizables/ClientNotes/ClientNotesCard.jsx";
 import TaskCard from "./Reutilizables/Tasks/TaskCard.jsx";
 import CreateReactScript from "./Utils/CreateReactScript.jsx";
@@ -100,6 +102,27 @@ const Leads = (properties) => {
     const composeModal = useRef();
     const mailModal = useRef();
     const messagesOffCanvasRef = useRef();
+
+    const socket = useWebSocket();
+
+    useEffect(() => {
+        const handleUpdate = () => {
+            if (gridRef.current) {
+                $(gridRef.current).dxDataGrid("instance").refresh();
+            }
+            if (managedGridRef.current) {
+                $(managedGridRef.current).dxDataGrid("instance").refresh();
+            }
+        };
+
+        socket.on('client.updated', handleUpdate);
+        socket.on('client.created', handleUpdate);
+
+        return () => {
+            socket.off('client.updated', handleUpdate);
+            socket.off('client.created', handleUpdate);
+        };
+    }, [socket]);
 
     const taskTitleRef = useRef();
     // const taskEndsAtRef = useRef()
