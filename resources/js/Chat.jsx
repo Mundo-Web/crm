@@ -195,16 +195,33 @@ const Chat = ({ users = [], defaultMessages = [], activeLeadId: activeLeadIdDB, 
     socket.on('client.updated', (client) => {
       setLeads(prev => {
         const idx = prev.findIndex(l => l.id === client.id);
+        let updatedList = [...prev];
+        
         if (idx !== -1) {
-          const updated = [...prev];
-          updated[idx] = { ...updated[idx], ...client };
-          return updated;
+          updatedList[idx] = { ...updatedList[idx], ...client };
+        } else {
+          // Only add new lead if assigned_to is in selectedUsersId (or if no filter is applied)
+          if (!selectedUsersId.length || selectedUsersId.includes(client.assigned_to)) {
+            if (client.un_seen_messages_count === undefined) {
+              client.un_seen_messages_count = client.notify ? 1 : 1;
+            }
+            updatedList.push(client);
+          } else {
+            return prev;
+          }
         }
-        // Only add new lead if assigned_to is in selectedUsersId (or if no filter is applied)
-        if (!selectedUsersId.length || selectedUsersId.includes(client.assigned_to)) {
-          return [...prev, client];
-        }
-        return prev;
+
+        // Sort by is_pinned first, then by last_message_microtime descending
+        updatedList.sort((a, b) => {
+          const pinA = a.is_pinned ? 1 : 0;
+          const pinB = b.is_pinned ? 1 : 0;
+          if (pinA !== pinB) return pinB - pinA;
+          const timeA = Number(a.last_message_microtime || 0);
+          const timeB = Number(b.last_message_microtime || 0);
+          return timeB - timeA;
+        });
+
+        return updatedList;
       });
     })
     return () => {
