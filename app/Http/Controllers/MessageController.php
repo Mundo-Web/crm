@@ -75,6 +75,7 @@ class MessageController extends BasicController
                     ->first();
                 $clientJpa->loadCount(['unSeenMessages']);
                 EventController::notify('client.updated', $clientJpa->toArray(), ['business_id' => Auth::user()->business_id]);
+                EventController::notify('client.updated.menu', $clientJpa->toArray(), ['business_id' => Auth::user()->business_id]);
             } catch (\Throwable $th) {
                 // Silently skip if client does not exist or any other error occurs
             }

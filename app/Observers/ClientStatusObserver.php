@@ -45,6 +45,7 @@ class ClientStatusObserver
                 ->withCount(['unSeenMessages'])
                 ->find($client->id);
             if ($clientJpa) {
+                $clientJpa->notify = true;
                 \App\Http\Controllers\EventController::notify('client.updated', $clientJpa->toArray(), ['business_id' => $client->business_id]);
                 \App\Http\Controllers\EventController::notify('client.updated.menu', $clientJpa->toArray(), ['business_id' => $client->business_id]);
             }
