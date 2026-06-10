@@ -356,6 +356,7 @@ const LeadDetailContent = ({
         let title = "";
         let isTask = false;
         let processStatus2save = processStatus;
+        let clientData = null;
 
         const lead = structuredClone({ ...leadLoaded });
 

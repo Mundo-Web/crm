@@ -129,10 +129,15 @@ class WhatsAppController extends Controller
     {
         try {
             $remoteJid = $request->remoteJid;
+            $cleanJid = preg_replace('/[^0-9]/', '', $remoteJid);
+
+            if (empty($cleanJid)) {
+                return response()->json(['error' => 'Invalid remote JID'], 400);
+            }
 
             // Paso 0: Verificar si existe en caché local
-            if (\Illuminate\Support\Facades\Storage::exists("whatsapp/{$remoteJid}.jpg")) {
-                $imageContent = \Illuminate\Support\Facades\Storage::get("whatsapp/{$remoteJid}.jpg");
+            if (\Illuminate\Support\Facades\Storage::exists("whatsapp/{$cleanJid}.jpg")) {
+                $imageContent = \Illuminate\Support\Facades\Storage::get("whatsapp/{$cleanJid}.jpg");
                 return FacadesResponse::make($imageContent, 200, [
                     'Content-Type' => 'image/jpeg',
                     'Cache-Control' => 'public, max-age=86400',
@@ -145,13 +150,16 @@ class WhatsAppController extends Controller
                 return response()->json(['error' => 'Business not found'], 404);
             }
 
+            // Para EvoAPI, el remoteJid individual debe terminar en @s.whatsapp.net
+            $evoJid = $cleanJid . '@s.whatsapp.net';
+
             // Paso 1: Llamar al endpoint de contactos
             $res = Http::withHeaders([
                 'Content-Type' => 'application/json',
                 'apikey' => $business->uuid,
             ])->post(env('EVOAPI_URL') . '/chat/findContacts/' . $business->person->document_number, [
                 'where' => [
-                    'remoteJid' => $request->remoteJid,
+                    'remoteJid' => $evoJid,
                 ]
             ]);
 
@@ -174,11 +182,15 @@ class WhatsAppController extends Controller
                 return response()->json(['error' => 'Failed to fetch image'], 500);
             }
 
+            // Guardar imagen en caché local para futuras peticiones
+            $imageBody = $imageRes->body();
+            \Illuminate\Support\Facades\Storage::put("whatsapp/{$cleanJid}.jpg", $imageBody);
+
             // Paso 3: Obtener tipo MIME
             $contentType = $imageRes->header('Content-Type', 'image/jpeg');
 
             // Paso 4: Retornar la imagen directamente
-            return FacadesResponse::make($imageRes->body(), 200, [
+            return FacadesResponse::make($imageBody, 200, [
                 'Content-Type' => $contentType,
                 'Cache-Control' => 'public, max-age=86400',
             ]);

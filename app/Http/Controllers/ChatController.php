@@ -36,6 +36,12 @@ class ChatController extends BasicController
             ->where('status', true)
             ->get();
 
+        $chatStatuses = Status::select()
+            ->where('table_id', '584dfcba-4b2a-464a-9721-3dfc82bf83f2')
+            ->where('business_id', Auth::user()->business_id)
+            ->where('status', true)
+            ->get();
+
         $noteTypes = NoteType::all();
 
         $processes = Process::where('business_id', Auth::user()->business_id)->get();
@@ -46,6 +52,7 @@ class ChatController extends BasicController
             'defaultMessages' => $defaultMessagesJpa,
             'statuses' => $statuses,
             'manageStatuses' => $manageStatuses,
+            'chatStatuses' => $chatStatuses,
             'noteTypes' => $noteTypes,
             'processes' => $processes,
             'session' => Auth::user()

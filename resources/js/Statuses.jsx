@@ -32,7 +32,7 @@ const StatusItem = ({ status, onEdit, onDelete }) => {
                 <div className="flex-1">
                     <div>
                         <i
-                            className="mdi mdi-circle me-1"
+                            className={`mdi ${status.icon ? (status.icon.startsWith('mdi-') ? status.icon : `mdi-${status.icon}`) : 'mdi-circle'} me-1`}
                             style={{
                                 color: status.color,
                             }}
@@ -103,6 +103,7 @@ const Statuses = ({ statuses: statusesFromDB, tables }) => {
     const descriptionRef = useRef();
     const requireRef = useRef();
     const childrenRef = useRef();
+    const iconRef = useRef();
 
     const [isEditing, setIsEditing] = useState(false);
     const [require, setRequire] = useState(false);
@@ -138,6 +139,9 @@ const Statuses = ({ statuses: statusesFromDB, tables }) => {
         orderRef.current.value = data?.order || "0";
         descriptionRef.current.value = data?.description || null;
         setRequire(data?.require || false);
+        if (iconRef.current) {
+            $(iconRef.current).val(data?.icon ?? "").trigger("change");
+        }
 
         $(modalRef.current).modal("show");
     };
@@ -156,6 +160,7 @@ const Statuses = ({ statuses: statusesFromDB, tables }) => {
             action_required: require ? "product" : null,
             pipeline: pipeline,
             children: $(childrenRef.current).val(),
+            icon: iconRef.current?.value || null,
         };
 
         const result = await statusesRest.save(request);
@@ -490,6 +495,27 @@ const Statuses = ({ statuses: statusesFromDB, tables }) => {
                         col="col-6"
                         required
                     />
+                    <SelectFormGroup
+                        eRef={iconRef}
+                        label="Icono"
+                        col="col-12"
+                        dropdownParent="#status-crud-container"
+                    >
+                        <option value="">Sin icono</option>
+                        <option value="mdi-fire">🔥 Fuego (Caliente)</option>
+                        <option value="mdi-snowflake">❄️ Copo de nieve (Frío)</option>
+                        <option value="mdi-lightning-bolt">⚡ Rayo (Tibio)</option>
+                        <option value="mdi-star">⭐ Estrella</option>
+                        <option value="mdi-heart">❤️ Corazón</option>
+                        <option value="mdi-thumb-up">👍 Thumbs Up</option>
+                        <option value="mdi-thumb-down">👎 Thumbs Down</option>
+                        <option value="mdi-alert">⚠️ Alerta</option>
+                        <option value="mdi-check-circle">✅ Check</option>
+                        <option value="mdi-clock">⏰ Reloj</option>
+                        <option value="mdi-chat">💬 Chat</option>
+                        <option value="mdi-briefcase">💼 Portafolio</option>
+                        <option value="mdi-close-circle">❌ Cruz</option>
+                    </SelectFormGroup>
                     <TextareaFormGroup
                         eRef={descriptionRef}
                         label="Descripcion"

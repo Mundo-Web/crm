@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import Global from "../../Utils/Global";
 
-const ChatHeader = ({ contact, contactDetails, setContactDetails, loading, theme }) => {
+const ChatHeader = ({ contact, contactDetails, setContactDetails, loading, theme, chatStatuses = [], onLeadUpdate = () => {} }) => {
     const [now, setNow] = useState(Date.now());
 
     useEffect(() => {
@@ -48,6 +48,66 @@ const ChatHeader = ({ contact, contactDetails, setContactDetails, loading, theme
                 {/* Badge and Arrow icon */}
                 {!loading && contact && (
                     <div className="d-flex align-items-center gap-2 ms-2">
+                        <button 
+                            className={`btn btn-sm btn-icon ${contact.is_pinned ? 'btn-primary' : 'btn-light'} shadow-sm border`}
+                            style={{ transition: 'all 0.2s ease-in-out' }}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                const icon = e.currentTarget.querySelector('i');
+                                icon.style.transform = 'scale(0.5)';
+                                setTimeout(() => {
+                                    icon.style.transform = contact.is_pinned ? 'scale(1)' : 'scale(1.2)';
+                                    setTimeout(() => icon.style.transform = 'scale(1)', 150);
+                                }, 150);
+                                onLeadUpdate(contact.id, !contact.is_pinned, 'is_pinned');
+                            }}
+                            title={contact.is_pinned ? "Desanclar chat" : "Anclar chat"}
+                        >
+                            <i 
+                              className={`mdi mdi-pin${contact.is_pinned ? '-off' : ''}`}
+                              style={{ transition: 'transform 0.15s ease-in-out', display: 'inline-block' }}
+                            ></i>
+                        </button>
+                        <div className="dropdown" onClick={(e) => e.stopPropagation()}>
+                            <button 
+                                className="btn btn-sm dropdown-toggle d-flex align-items-center justify-content-center gap-1 shadow-sm border text-truncate"
+                                type="button"
+                                data-bs-toggle="dropdown"
+                                style={{ 
+                                    backgroundColor: contact.chat_status?.color || '#f8f9fa', 
+                                    color: contact.chat_status ? '#fff' : '#495057',
+                                    minWidth: '130px'
+                                }}
+                            >
+                                {contact.chat_status?.icon && (
+                                    <i className={`mdi ${contact.chat_status.icon.startsWith('mdi-') ? contact.chat_status.icon : `mdi-${contact.chat_status.icon}`}`}></i>
+                                )}
+                                <span>{contact.chat_status?.name || 'Calificar chat...'}</span>
+                            </button>
+                            <div className="dropdown-menu scroll-hidden" style={{ maxHeight: '200px', overflowY: 'auto' }}>
+                                <button 
+                                    className="dropdown-item d-flex align-items-center gap-2"
+                                    onClick={() => onLeadUpdate(contact.id, null, 'chat_status')}
+                                >
+                                    <i className="mdi mdi-close-circle-outline"></i>
+                                    <span>Sin calificar</span>
+                                </button>
+                                {chatStatuses.map(status => (
+                                    <button 
+                                        key={status.id}
+                                        className="dropdown-item d-flex align-items-center gap-2"
+                                        onClick={() => onLeadUpdate(contact.id, status.id, 'chat_status')}
+                                        style={{ borderLeft: `4px solid ${status.color}` }}
+                                    >
+                                        {status.icon && (
+                                            <i className={`mdi ${status.icon.startsWith('mdi-') ? status.icon : `mdi-${status.icon}`}`} style={{ color: status.color }}></i>
+                                        )}
+                                        <span>{status.name}</span>
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
                         {(() => {
                             const service = contact.integration?.meta_service || contact.origin?.toLowerCase();
                             const isWhatsApp = service !== 'messenger' && service !== 'instagram';

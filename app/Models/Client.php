@@ -70,7 +70,9 @@ class Client extends Model
         'lead_origin',
         'business_sector_id',
         'adset_name',
-        'ad_name'
+        'ad_name',
+        'chat_status_id',
+        'is_pinned'
     ];
 
     protected $casts = [
@@ -129,6 +131,11 @@ class Client extends Model
     public function manageStatus()
     {
         return $this->hasOne(Status::class, 'id', 'manage_status_id');
+    }
+
+    public function chatStatus()
+    {
+        return $this->hasOne(Status::class, 'id', 'chat_status_id');
     }
 
     public function businessSector()

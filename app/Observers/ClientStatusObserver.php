@@ -23,15 +23,43 @@ class ClientStatusObserver
             'user_id' => Auth::id(),
             'comment' => 'Client created'
         ]);
+        if ($client->chat_status_id) {
+            ClientStatusTrace::create([
+                'client_id' => $client->id,
+                'status_id' => $client->chat_status_id,
+                'user_id' => Auth::id(),
+                'comment' => 'Client created'
+            ]);
+        }
+
+        // Initialize last_message and last_message_microtime if empty (so it appears in chat lists)
+        if (empty($client->last_message_microtime)) {
+            $client->last_message = $client->last_message ?: ($client->message ?: 'Sin mensaje');
+            $client->last_message_microtime = $client->last_message_microtime ?: (int) (microtime(true) * 1_000_000);
+            $client->saveQuietly();
+        }
+
+        // Notify in real-time about the new lead
+        try {
+            $clientJpa = Client::with(['assigned', 'status', 'manageStatus', 'chatStatus', 'integration'])
+                ->withCount(['unSeenMessages'])
+                ->find($client->id);
+            if ($clientJpa) {
+                \App\Http\Controllers\EventController::notify('client.updated', $clientJpa->toArray(), ['business_id' => $client->business_id]);
+                \App\Http\Controllers\EventController::notify('client.updated.menu', $clientJpa->toArray(), ['business_id' => $client->business_id]);
+            }
+        } catch (\Throwable $th) {
+            \Illuminate\Support\Facades\Log::error('Error notifying client creation: ' . $th->getMessage());
+        }
     }
 
     public function updated(Client $client)
     {
         if ($client->isDirty('status_id')) {
             $statusJpa = Status::find($client->status_id);
-            $comment = 'Se actualizo el estado de gestion a ' . $statusJpa->name;
+            $comment = 'Se actualizo el estado de gestion a ' . ($statusJpa ? $statusJpa->name : 'Sin estado');
             if (Auth::check()) {
-                $comment = Auth::user()->name . ' actualizo el estado de gestion a ' . $statusJpa->name;
+                $comment = Auth::user()->name . ' actualizo el estado de gestion a ' . ($statusJpa ? $statusJpa->name : 'Sin estado');
             }
             ClientStatusTrace::create([
                 'client_id' => $client->id,
@@ -42,9 +70,9 @@ class ClientStatusObserver
         }
         if ($client->isDirty('manage_status_id')) {
             $manageStatusJpa = Status::find($client->manage_status_id);
-            $comment = 'Se actualizo el estado a ' . $manageStatusJpa->name;
+            $comment = 'Se actualizo el estado a ' . ($manageStatusJpa ? $manageStatusJpa->name : 'Sin estado');
             if (Auth::check()) {
-                $comment = Auth::user()->name . ' actualizo el estado a ' . $manageStatusJpa->name;
+                $comment = Auth::user()->name . ' actualizo el estado a ' . ($manageStatusJpa ? $manageStatusJpa->name : 'Sin estado');
             }
             ClientStatusTrace::create([
                 'client_id' => $client->id,
@@ -52,6 +80,43 @@ class ClientStatusObserver
                 'user_id' => Auth::user()->id ?? null,
                 'comment' => $comment
             ]);
+        }
+        if ($client->isDirty('chat_status_id') && $client->chat_status_id) {
+            $chatStatusJpa = Status::find($client->chat_status_id);
+            $comment = 'Se actualizo el estado de chat a ' . ($chatStatusJpa ? $chatStatusJpa->name : 'Sin calificación');
+            if (Auth::check()) {
+                $comment = Auth::user()->name . ' actualizo el estado de chat a ' . ($chatStatusJpa ? $chatStatusJpa->name : 'Sin calificación');
+            }
+            ClientStatusTrace::create([
+                'client_id' => $client->id,
+                'status_id' => $client->chat_status_id,
+                'user_id' => Auth::user()->id ?? null,
+                'comment' => $comment
+            ]);
+        }
+
+        // Notify client.updated in real-time when critical fields change
+        $criticalFields = ['assigned_to', 'status_id', 'manage_status_id', 'chat_status_id', 'contact_name', 'contact_phone', 'contact_email', 'last_message', 'last_message_microtime'];
+        $isCriticalDirty = false;
+        foreach ($criticalFields as $field) {
+            if ($client->isDirty($field)) {
+                $isCriticalDirty = true;
+                break;
+            }
+        }
+
+        if ($isCriticalDirty) {
+            try {
+                $clientJpa = Client::with(['assigned', 'status', 'manageStatus', 'chatStatus', 'integration'])
+                    ->withCount(['unSeenMessages'])
+                    ->find($client->id);
+                if ($clientJpa) {
+                    \App\Http\Controllers\EventController::notify('client.updated', $clientJpa->toArray(), ['business_id' => $client->business_id]);
+                    \App\Http\Controllers\EventController::notify('client.updated.menu', $clientJpa->toArray(), ['business_id' => $client->business_id]);
+                }
+            } catch (\Throwable $th) {
+                \Illuminate\Support\Facades\Log::error('Error notifying client update: ' . $th->getMessage());
+            }
         }
     }
 }

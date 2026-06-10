@@ -63,6 +63,12 @@ class LeadController extends BasicController
             ->where('status', true)
             ->get();
 
+        $chatStatuses = Status::select()
+            ->where('table_id', '584dfcba-4b2a-464a-9721-3dfc82bf83f2')
+            ->where('business_id', Auth::user()->business_id)
+            ->where('status', true)
+            ->get();
+
         $products = Product::with('type')
             ->where('business_id', Auth::user()->business_id)
             ->where('status', true)
@@ -142,6 +148,7 @@ class LeadController extends BasicController
         return [
             'lead' => $request->lead,
             'manageStatuses' => $manageStatuses,
+            'chatStatuses' => $chatStatuses,
             'defaultClientStatus' => $defaultClientStatus,
             'defaultLeadStatus' => $defaultLeadStatus,
             'convertedLeadStatus' => $convertedLeadStatus,
@@ -173,7 +180,7 @@ class LeadController extends BasicController
                         ->limit(1)
                 ])
                 ->withCount(['notes', 'tasks', 'pendingTasks', 'products'])
-                ->with(['status', 'assigned', 'manageStatus', 'creator', 'businessSector'])
+                ->with(['status', 'assigned', 'manageStatus', 'chatStatus', 'creator', 'businessSector'])
                 ->join('statuses AS status', 'status.id', 'status_id')
                 ->leftJoin('statuses AS manage_status', 'manage_status.id', 'manage_status_id')
                 ->whereIn('status.table_id', ['e05a43e5-b3a6-46ce-8d1f-381a73498f33', 'a8367789-666e-4929-aacb-7cbc2fbf74de'])
@@ -199,7 +206,7 @@ class LeadController extends BasicController
                     ->limit(1)
             ])
             ->withCount($request->withCount ?? ['notes', 'tasks', 'pendingTasks', 'products'])
-            ->with($request->with ?? ['status', 'assigned', 'manageStatus', 'creator', 'integration', 'campaign', 'businessSector'])
+            ->with($request->with ?? ['status', 'assigned', 'manageStatus', 'chatStatus', 'creator', 'integration', 'campaign', 'businessSector'])
             ->leftJoin('statuses AS status', 'status.id', 'status_id')
             ->leftJoin('statuses AS manage_status', 'manage_status.id', 'manage_status_id')
             ->leftJoin('users AS assigned', 'assigned.id', 'clients.assigned_to')
@@ -719,7 +726,7 @@ class LeadController extends BasicController
         //     ]);
         // }
 
-        $newJpa = Client::with(['status', 'assigned', 'manageStatus', 'creator'])
+        $newJpa = Client::with(['status', 'assigned', 'manageStatus', 'chatStatus', 'creator'])
             ->where('id', $jpa->id)
             ->first();
 
@@ -731,7 +738,7 @@ class LeadController extends BasicController
         $response = Response::simpleTryCatch(function (Response $response) use ($request) {
             $clients = Client::select('clients.*')
                 ->withCount(['notes', 'tasks', 'pendingTasks'])
-                ->with(['status', 'assigned', 'manageStatus'])
+                ->with(['status', 'assigned', 'manageStatus', 'chatStatus'])
                 ->join('statuses AS status', 'status.id', 'status_id')
                 ->where('status.table_id', 'e05a43e5-b3a6-46ce-8d1f-381a73498f33')
                 ->where('clients.business_id', Auth::user()->business_id)
@@ -838,7 +845,7 @@ class LeadController extends BasicController
                     \Illuminate\Support\Facades\Log::info('LeadController::leadStatus - No hay productos para crear proyecto automatico');
                 }
             }
-            return $leadJpa->load(['status', 'assigned', 'manageStatus', 'creator']);
+            return $leadJpa->load(['status', 'assigned', 'manageStatus', 'chatStatus', 'creator']);
         });
         return response($response->toArray(), $response->status);
     }
@@ -888,7 +895,41 @@ class LeadController extends BasicController
             }
 
             $leadJpa->save();
-            return $leadJpa->load(['status', 'assigned', 'manageStatus', 'creator']);
+            return $leadJpa->load(['status', 'assigned', 'manageStatus', 'chatStatus', 'creator']);
+        });
+        return response($response->toArray(), $response->status);
+    }
+
+    public function chatStatus(Request $request)
+    {
+        $response = Response::simpleTryCatch(function (Response $response) use ($request) {
+            $leadJpa = Client::find($request->lead);
+            if (!$leadJpa) {
+                throw new Exception('Lead no encontrado');
+            }
+            if ($leadJpa->business_id != Auth::user()->business_id) throw new Exception('Este lead no pertenece a tu empresa');
+            
+            $leadJpa->chat_status_id = $request->status;
+            $leadJpa->save();
+            
+            return $leadJpa->load(['status', 'assigned', 'manageStatus', 'chatStatus', 'creator']);
+        });
+        return response($response->toArray(), $response->status);
+    }
+
+    public function togglePin(Request $request)
+    {
+        $response = Response::simpleTryCatch(function (Response $response) use ($request) {
+            $leadJpa = Client::find($request->lead);
+            if (!$leadJpa) {
+                throw new Exception('Lead no encontrado');
+            }
+            if ($leadJpa->business_id != Auth::user()->business_id) throw new Exception('Este lead no pertenece a tu empresa');
+            
+            $leadJpa->is_pinned = $request->is_pinned;
+            $leadJpa->save();
+            
+            return $leadJpa->load(['status', 'assigned', 'manageStatus', 'chatStatus', 'creator']);
         });
         return response($response->toArray(), $response->status);
     }

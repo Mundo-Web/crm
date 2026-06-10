@@ -31,7 +31,8 @@ class Status extends Model
         'action_required',
         'pipeline',
         'children',
-        'parent'
+        'parent',
+        'icon'
     ];
 
     protected $casts = [

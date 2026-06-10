@@ -27,7 +27,7 @@ const tasksRest = new TasksRest();
 const leadsRest = new LeadsRest()
 leadsRest.paginateSufix = null
 
-const Chat = ({ users = [], defaultMessages = [], activeLeadId: activeLeadIdDB, statuses = [], manageStatuses = [], noteTypes = [], processes = [], session = {}, signs = [], projectTypes = [], products = [], convertedLeadStatus, defaultClientStatus, ...properties }) => {
+const Chat = ({ users = [], defaultMessages = [], activeLeadId: activeLeadIdDB, statuses = [], manageStatuses = [], chatStatuses = [], noteTypes = [], processes = [], session = {}, signs = [], projectTypes = [], products = [], convertedLeadStatus, defaultClientStatus, ...properties }) => {
   const settings = Local.get('adminto_settings') ?? {}
   const [theme, setTheme] = useState(settings.theme ?? 'light');
 
@@ -41,6 +41,7 @@ const Chat = ({ users = [], defaultMessages = [], activeLeadId: activeLeadIdDB, 
   const [contactDetails, setContactDetails] = useState(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [detailLead, setDetailLead] = useState(null);
+  const [chatStatusFilter, setChatStatusFilter] = useState('');
   const [now, setNow] = useState(Date.now());
 
   useEffect(() => {
@@ -121,10 +122,10 @@ const Chat = ({ users = [], defaultMessages = [], activeLeadId: activeLeadIdDB, 
     setLoading(true);
 
     const request = {
-      fields: ['clients.id', 'clients.contact_name', 'clients.contact_phone', 'clients.last_message', 'clients.last_message_microtime', 'clients.assigned_to', 'clients.status_id', 'clients.manage_status_id', 'clients.integration_user_id', 'clients.integration_id', 'clients.origin', 'clients.campaign_id'],
+      fields: ['clients.id', 'clients.contact_name', 'clients.contact_phone', 'clients.last_message', 'clients.last_message_microtime', 'clients.assigned_to', 'clients.status_id', 'clients.manage_status_id', 'clients.chat_status_id', 'clients.integration_user_id', 'clients.integration_id', 'clients.origin', 'clients.campaign_id', 'clients.is_pinned'],
       withCount: ['unSeenMessages'],
-      with: ['assigned', 'status', 'manageStatus', 'integration'],
-      sort: [{ selector: 'last_message_microtime', desc: true }],
+      with: ['assigned', 'status', 'manageStatus', 'chatStatus', 'integration'],
+      sort: [{ selector: 'is_pinned', desc: true }, { selector: 'last_message_microtime', desc: true }],
       skip: 0,
       take: 40,
       requireTotalCount: true
@@ -134,6 +135,10 @@ const Chat = ({ users = [], defaultMessages = [], activeLeadId: activeLeadIdDB, 
 
     if (selectedUsersId.length) {
       filter.push(ArrayJoin(selectedUsersId.map(id => (['clients.assigned_to', '=', id])), 'or'));
+    }
+
+    if (chatStatusFilter) {
+      filter.push(['clients.chat_status_id', '=', chatStatusFilter]);
     }
 
     if (searchTerm) {
@@ -147,6 +152,7 @@ const Chat = ({ users = [], defaultMessages = [], activeLeadId: activeLeadIdDB, 
 
     if (loadMore && leads.length > 0) {
       const oldestMicrotime = Math.min(...leads.map(l => l.last_message_microtime));
+      // Need a more sophisticated loadMore logic with is_pinned but let's keep it simple for now
       filter.push(['clients.last_message_microtime', '<', oldestMicrotime]);
     }
 
@@ -177,7 +183,7 @@ const Chat = ({ users = [], defaultMessages = [], activeLeadId: activeLeadIdDB, 
 
   useEffect(() => {
     getLeads(false);
-  }, [selectedUsersId]);
+  }, [selectedUsersId, chatStatusFilter]);
 
   useEffect(() => {
     if (!socket) return
@@ -213,7 +219,7 @@ const Chat = ({ users = [], defaultMessages = [], activeLeadId: activeLeadIdDB, 
     };
     el.addEventListener('scroll', handleScroll);
     return () => el.removeEventListener('scroll', handleScroll);
-  }, [leads, loading, selectedUsersId, totalCount, searchTerm]);
+  }, [leads, loading, selectedUsersId, chatStatusFilter, totalCount, searchTerm]);
 
   const onAssignLead = async (leadId, userId) => {
     const { isConfirmed } = await Swal.fire({
@@ -249,16 +255,28 @@ const Chat = ({ users = [], defaultMessages = [], activeLeadId: activeLeadIdDB, 
     let success = false;
     const targetLeadId = leadId || detailLead?.id;
 
+    // Optimistic UI Update
+    if (type === 'is_pinned' || type === 'chat_status') {
+      setLeads(prev => prev.map(l => l.id === targetLeadId ? { ...l, [type === 'is_pinned' ? 'is_pinned' : 'chat_status_id']: value, chat_status: type === 'chat_status' ? (chatStatuses.find(s => s.id === value) || null) : l.chat_status } : l));
+      if (contactDetails && contactDetails.id === targetLeadId) {
+        setContactDetails(prev => ({ ...prev, [type === 'is_pinned' ? 'is_pinned' : 'chat_status_id']: value, chat_status: type === 'chat_status' ? (chatStatuses.find(s => s.id === value) || null) : prev.chat_status }));
+      }
+    }
+
     if (type === 'status') {
       success = await leadsRest.leadStatus({ lead: targetLeadId, status: value });
     } else if (type === 'manage_status') {
       success = await leadsRest.manageStatus({ lead: targetLeadId, status: value });
+    } else if (type === 'chat_status') {
+      success = await leadsRest.chatStatus({ lead: targetLeadId, status: value });
+    } else if (type === 'is_pinned') {
+      success = await leadsRest.togglePin({ lead: targetLeadId, is_pinned: value });
     } else {
       // General update (e.g. after saving a note)
       success = true;
     }
 
-    if (success) {
+    if (success && type !== 'is_pinned' && type !== 'chat_status') {
       const updated = await leadsRest.get(targetLeadId);
       if (detailLead && detailLead.id === targetLeadId) setDetailLead(updated);
       if (contactDetails && contactDetails.id === targetLeadId) setContactDetails(updated);
@@ -342,21 +360,38 @@ const Chat = ({ users = [], defaultMessages = [], activeLeadId: activeLeadIdDB, 
               </button>
             </div>
             <div className='p-2 border-top'>
-              <div className="search-box chat-search-box">
-                <input
-                  type="text"
-                  className="form-control rounded-pill"
-                  placeholder="Buscar lead por nombre o número..."
-                  value={searchTerm}
-                  onChange={handleSearchChange}
-                />
-                <i className="mdi mdi-magnify search-icon"></i>
+              <div className="d-flex gap-2">
+                <div className="search-box chat-search-box flex-grow-1">
+                  <input
+                    type="text"
+                    className="form-control rounded-pill"
+                    placeholder="Buscar lead..."
+                    value={searchTerm}
+                    onChange={handleSearchChange}
+                  />
+                  <i className="mdi mdi-magnify search-icon"></i>
+                </div>
+                <select
+                  className="form-select rounded-pill"
+                  style={{ width: 'auto', minWidth: '130px' }}
+                  value={chatStatusFilter}
+                  onChange={(e) => setChatStatusFilter(e.target.value)}
+                >
+                  <option value="">Todos</option>
+                  {chatStatuses.map(status => (
+                    <option key={status.id} value={status.id}>{status.name}</option>
+                  ))}
+                </select>
               </div>
             </div>
             <div ref={leadsContainerRef} className='scroll-hidden' style={{ overflowY: 'auto', height: 'calc(100vh - 300px)' }}>
               <ul className="list-unstyled chat-list mb-0">
                 {leads
-                  .sort((a, b) => new Date(b.last_message_microtime) - new Date(a.last_message_microtime))
+                  .sort((a, b) => {
+                    if (a.is_pinned && !b.is_pinned) return -1;
+                    if (!a.is_pinned && b.is_pinned) return 1;
+                    return new Date(b.last_message_microtime) - new Date(a.last_message_microtime);
+                  })
                   .map(lead => {
                     // Build a friendly date string
                     const messageDate = new Date((lead.last_message_microtime ?? 0) / 1000);
@@ -421,9 +456,9 @@ const Chat = ({ users = [], defaultMessages = [], activeLeadId: activeLeadIdDB, 
                             <div className="position-absolute" style={{ left: '-4px', top: '-4px', zIndex: 2 }}>
                               {(() => {
                                 const service = lead.integration?.meta_service || lead.origin?.toLowerCase();
-                                const isWhatsApp = service === 'whatsapp' || 
-                                                   service === 'forms' || 
-                                                   (!['messenger', 'instagram', 'tiktok'].includes(lead.integration?.meta_service) && lead.contact_phone);
+                                const isWhatsApp = service === 'whatsapp' ||
+                                  service === 'forms' ||
+                                  (!['messenger', 'instagram', 'tiktok'].includes(lead.integration?.meta_service) && lead.contact_phone);
 
                                 if (!isWhatsApp && service === 'messenger') {
                                   return (
@@ -475,25 +510,48 @@ const Chat = ({ users = [], defaultMessages = [], activeLeadId: activeLeadIdDB, 
                           </div>
 
                           <div className="flex-grow-1 overflow-hidden">
-                            <h5 className={`text-truncate font-14 mt-0 mb-0 ${lead.un_seen_messages_count > 0 ? 'fw-bold' : ''}`}>{lead.contact_name}</h5>
+                            <h5 className={`text-truncate font-14 mt-0 mb-0 ${lead.un_seen_messages_count > 0 ? 'fw-bold' : ''}`}>
+                              {Boolean(lead.is_pinned) && <i className="mdi mdi-pin text-primary me-1" title="Anclado"></i>}
+                              {lead.contact_name}
+                            </h5>
                             <p className={`text-truncate mb-0 ${lead.un_seen_messages_count > 0 ? 'fw-bold' : ''}`} title={getTextFromReactNode(last_message) ?? undefined}
                               style={{
                                 color: lead.un_seen_messages_count > 0 ? (theme == 'light' ? '#343a40' : '#f7f7f7') : undefined,
                               }}>{last_message ?? <i className='text-muted'>Sin mensaje</i>}</p>
                             <div className='d-flex gap-1 mt-1 align-items-center flex-wrap' >
-                              <span className="badge" style={{ backgroundColor: lead.status?.color ?? '#6c757d' }}>{lead.status?.name ?? 'Sin estado'}</span>
-                              <span className="badge" style={{ backgroundColor: lead.manage_status?.color ?? '#6c757d' }}>{lead.manage_status?.name ?? 'Sin estado'}</span>
+                              {lead.chat_status && (
+                                <span className="badge" style={{ backgroundColor: lead.chat_status?.color ?? '#6c757d' }}>
+                                  {lead.chat_status?.icon && (
+                                    <i className={`mdi ${lead.chat_status.icon.startsWith('mdi-') ? lead.chat_status.icon : `mdi-${lead.chat_status.icon}`}`} />
+                                  )}
+                                  {/*lead.chat_status?.name*/}
+                                </span>
+                              )}
+                              <Tippy
+                                content={
+                                  <div className="d-flex flex-column gap-1 p-1">
+                                    <span className="badge w-100" style={{ backgroundColor: lead.status?.color ?? '#6c757d' }}>{lead.status?.name ?? 'Sin estado'}</span>
+                                    <span className="badge w-100" style={{ backgroundColor: lead.manage_status?.color ?? '#6c757d' }}>{lead.manage_status?.name ?? 'Sin estado'}</span>
+                                  </div>
+                                }
+                                allowHTML={true}
+                                placement="top"
+                              >
+                                <span className="badge bg-light text-muted border" style={{ cursor: 'pointer', padding: '4px 6px' }}>
+                                  <i className="mdi mdi-dots-horizontal"></i>
+                                </span>
+                              </Tippy>
                               {(() => {
                                 const service = lead.integration?.meta_service || lead.origin?.toLowerCase();
-                                const isWhatsApp = service === 'whatsapp' || 
-                                                   service === 'forms' || 
-                                                   (!['messenger', 'instagram', 'tiktok'].includes(lead.integration?.meta_service) && lead.contact_phone);
-                                
+                                const isWhatsApp = service === 'whatsapp' ||
+                                  service === 'forms' ||
+                                  (!['messenger', 'instagram', 'tiktok'].includes(lead.integration?.meta_service) && lead.contact_phone);
+
                                 if (!isWhatsApp) return null;
 
                                 const lastHumanMicro = lead.last_human_message_microtime;
                                 const lastHumanMs = lastHumanMicro ? Math.floor(lastHumanMicro / 1000) : 0;
-                                
+
                                 if (lastHumanMs === 0) {
                                   return (
                                     <span className="badge border d-inline-flex align-items-center" style={{ fontSize: '10px', padding: '2px 6px', backgroundColor: 'rgba(234, 84, 85, 0.12)', color: '#ea5455', borderColor: 'rgba(234, 84, 85, 0.24)' }}>
@@ -501,18 +559,18 @@ const Chat = ({ users = [], defaultMessages = [], activeLeadId: activeLeadIdDB, 
                                     </span>
                                   );
                                 }
-                                
+
                                 const isCampaign = !!lead.campaign_id;
                                 const msInWindow = isCampaign ? 72 * 60 * 60 * 1000 : 24 * 60 * 60 * 1000;
                                 const expiresAt = lastHumanMs + msInWindow;
                                 const remainingMs = expiresAt - now;
-                                
+
                                 if (remainingMs > 0) {
                                   const hours = Math.floor(remainingMs / (3600 * 1000));
                                   const minutes = Math.floor((remainingMs % (3600 * 1000)) / (60 * 1000));
                                   const seconds = Math.floor((remainingMs % (60 * 1000)) / 1000);
                                   const formattedTime = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-                                  
+
                                   return (
                                     <span className="badge border d-inline-flex align-items-center" style={{ fontSize: '10px', padding: '2px 6px', backgroundColor: 'rgba(40, 199, 111, 0.12)', color: '#28c76f', borderColor: 'rgba(40, 199, 111, 0.24)' }}>
                                       {isCampaign ? (
@@ -570,7 +628,7 @@ const Chat = ({ users = [], defaultMessages = [], activeLeadId: activeLeadIdDB, 
             </div>
           ) : (
             <>
-              <ChatContent leadId={activeLeadId} setLeadId={setActiveLeadId} containerRef={messagesContainerRef} theme={theme} contactDetails={contactDetails} setContactDetails={setContactDetails} defaultMessages={defaultMessages} can={properties.can} />
+              <ChatContent leadId={activeLeadId} setLeadId={setActiveLeadId} containerRef={messagesContainerRef} theme={theme} contactDetails={contactDetails} setContactDetails={setContactDetails} defaultMessages={defaultMessages} can={properties.can} chatStatuses={chatStatuses} onLeadUpdate={onLeadUpdate} />
             </>
           )}
         </div>
@@ -579,58 +637,58 @@ const Chat = ({ users = [], defaultMessages = [], activeLeadId: activeLeadIdDB, 
         <div className="col-xl-3 col-lg-12">
           <div className="card contact-details-card mb-xl-0">
             <div className="card-body scroll-hidden" style={{ height: 'calc(100vh - 186px)', overflowY: 'auto' }}>
-              <ContactDetails {...contactDetails} users={users} onAssign={onAssignLead} onOpenDetails={onOpenDetails} />
+              <ContactDetails {...contactDetails} users={users} onAssign={onAssignLead} onOpenDetails={onOpenDetails} chatStatuses={chatStatuses} onLeadUpdate={onLeadUpdate} />
             </div>
           </div>
         </div>
       )}
     </div >
-      <DetailLeadModal
-        modalRef={detailModalRef}
-        lead={detailLead}
-        statuses={statuses}
-        manageStatuses={manageStatuses}
-        noteTypes={noteTypes}
-        users={users}
-        processes={processes}
-        session={session}
-        onLeadUpdate={onLeadUpdate}
-        onOpenEditModal={onOpenModal}
-        defaultMessages={defaultMessages}
-        signs={signs}
-        projectTypes={projectTypes}
-        convertedLeadStatus={convertedLeadStatus}
-        defaultClientStatus={defaultClientStatus}
-        products={products}
-      />
+    <DetailLeadModal
+      modalRef={detailModalRef}
+      lead={detailLead}
+      statuses={statuses}
+      manageStatuses={manageStatuses}
+      noteTypes={noteTypes}
+      users={users}
+      processes={processes}
+      session={session}
+      onLeadUpdate={onLeadUpdate}
+      onOpenEditModal={onOpenModal}
+      defaultMessages={defaultMessages}
+      signs={signs}
+      projectTypes={projectTypes}
+      convertedLeadStatus={convertedLeadStatus}
+      defaultClientStatus={defaultClientStatus}
+      products={products}
+    />
 
-      <Modal
-        modalRef={newLeadModalRef}
-        title="Editar lead"
-        btnSubmitText="Guardar"
-        onSubmit={onModalSubmit}
-        zIndex={1060}
-      >
-        <div className="row mb-0">
-          <input ref={idRef} type="hidden" />
-          <InputFormGroup eRef={contactNameRef} label="Nombre completo" />
-          <InputFormGroup eRef={contactEmailRef} label="Correo electronico" type="email" col="col-md-6" />
-          <InputFormGroup eRef={contactPhoneRef} label="Telefono" type="tel" col="col-md-6" required />
-          <InputFormGroup eRef={nameRef} label="Razón Social" col="col-md-6" />
-          <InputFormGroup eRef={webUrlRef} label="Link de WEB" col="col-md-6" />
-          <InputFormGroup eRef={rucRef} label="RUC" col="col-md-6" />
-          <InputFormGroup eRef={workersRef} label="N° Trabajadores" col="col-md-6" />
-          <SelectAPIFormGroup
-            eRef={sectorRef}
-            label="Rubro de Negocio"
-            col="col-md-12"
-            searchAPI="/api/business-sectors/paginate"
-            searchBy="name"
-            dropdownParent={newLeadModalRef.current}
-          />
-          <TextareaFormGroup eRef={messageRef} label="Mensaje" placeholder="Ingresa tu mensaje" rows={4} />
-        </div>
-      </Modal>
+    <Modal
+      modalRef={newLeadModalRef}
+      title="Editar lead"
+      btnSubmitText="Guardar"
+      onSubmit={onModalSubmit}
+      zIndex={1060}
+    >
+      <div className="row mb-0">
+        <input ref={idRef} type="hidden" />
+        <InputFormGroup eRef={contactNameRef} label="Nombre completo" />
+        <InputFormGroup eRef={contactEmailRef} label="Correo electronico" type="email" col="col-md-6" />
+        <InputFormGroup eRef={contactPhoneRef} label="Telefono" type="tel" col="col-md-6" required />
+        <InputFormGroup eRef={nameRef} label="Razón Social" col="col-md-6" />
+        <InputFormGroup eRef={webUrlRef} label="Link de WEB" col="col-md-6" />
+        <InputFormGroup eRef={rucRef} label="RUC" col="col-md-6" />
+        <InputFormGroup eRef={workersRef} label="N° Trabajadores" col="col-md-6" />
+        <SelectAPIFormGroup
+          eRef={sectorRef}
+          label="Rubro de Negocio"
+          col="col-md-12"
+          searchAPI="/api/business-sectors/paginate"
+          searchBy="name"
+          dropdownParent={newLeadModalRef.current}
+        />
+        <TextareaFormGroup eRef={messageRef} label="Mensaje" placeholder="Ingresa tu mensaje" rows={4} />
+      </div>
+    </Modal>
   </Adminto>
 };
 

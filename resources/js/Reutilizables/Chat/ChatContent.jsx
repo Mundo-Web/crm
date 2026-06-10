@@ -22,7 +22,7 @@ const tiktokRest = new TikTokRest()
 const messagesRest = new MessagesRest()
 const leadsRest = new LeadsRest()
 
-const ChatContent = ({ leadId, setLeadId, theme, contactDetails, setContactDetails, defaultMessages, can }) => {
+const ChatContent = ({ leadId, setLeadId, theme, contactDetails, setContactDetails, defaultMessages, can, chatStatuses = [], onLeadUpdate = () => {} }) => {
   const inputMessageRef = useRef()
   const fileInputRef = useRef()
   const audioRef = useRef()
@@ -459,8 +459,17 @@ const ChatContent = ({ leadId, setLeadId, theme, contactDetails, setContactDetai
 
   if (!contact && !contactLoading) return <ChatEmpty />
 
+  const handleLeadUpdate = async (id, value, type) => {
+    // Optimistic update locally in ChatContent
+    if (type === 'is_pinned' || type === 'chat_status') {
+      setContact(prev => prev ? { ...prev, [type === 'is_pinned' ? 'is_pinned' : 'chat_status_id']: value, chat_status: type === 'chat_status' ? (chatStatuses.find(s => s.id === value) || null) : prev.chat_status } : prev);
+    }
+    // Call parent onLeadUpdate
+    await onLeadUpdate(id, value, type);
+  }
+
   return <>
-    <ChatHeader contact={contact} contactDetails={contactDetails} setContactDetails={setContactDetails} loading={contactLoading} theme={theme} />
+    <ChatHeader contact={contact} contactDetails={contactDetails} setContactDetails={setContactDetails} loading={contactLoading} theme={theme} chatStatuses={chatStatuses} onLeadUpdate={handleLeadUpdate} />
     <div className="card-body p-0 position-relative border" style={{
       backgroundColor: theme == 'light' ? 'rgb(245, 241, 235)' : 'rgb(22, 23, 23)',
     }}>

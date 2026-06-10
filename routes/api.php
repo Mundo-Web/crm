@@ -279,6 +279,8 @@ Route::middleware('auth')->group(function () {
     // Route::post('/leads/paginate/{recentOnly?}', [NewLeadController::class, 'paginate']);
     Route::post('/leads/status', [LeadController::class, 'leadStatus']);
     Route::post('/leads/manage-status', [LeadController::class, 'manageStatus']);
+    Route::post('/leads/chat-status', [LeadController::class, 'chatStatus']);
+    Route::post('/leads/toggle-pin', [LeadController::class, 'togglePin']);
     Route::put('/leads/attend/{lead}', [LeadController::class, 'attend']);
     Route::delete('/leads/attend/{lead}', [LeadController::class, 'attend']);
     Route::post('/leads/massive-assign', [LeadController::class, 'massiveAssign']);

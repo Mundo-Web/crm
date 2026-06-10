@@ -7,7 +7,7 @@ import Tippy from "@tippyjs/react";
 
 const clientNotesRest = new ClientNotesRest()
 
-const ContactDetails = ({ users = [], onAssign = () => { }, onOpenDetails = () => { }, ...contact }) => {
+const ContactDetails = ({ users = [], onAssign = () => { }, onOpenDetails = () => { }, chatStatuses = [], onLeadUpdate = () => {}, ...contact }) => {
     const [notes, setNotes] = useState([])
     const [loading, setLoading] = useState(false)
 
@@ -57,6 +57,48 @@ const ContactDetails = ({ users = [], onAssign = () => { }, onOpenDetails = () =
                 <button className="btn btn-sm w-100" style={{ backgroundColor: contact.manage_status?.color || '#6c757d', color: '#fff', cursor: 'default' }}>
                     {contact.manage_status?.name || 'Sin estado'}
                 </button>
+            </div>
+        </div>
+
+        <div className="mb-2">
+            <b className="d-block small text-muted mb-1 text-center">Calificación de Chat</b>
+            <div className="dropdown w-100">
+                <button 
+                    className="btn btn-sm w-100 dropdown-toggle d-flex align-items-center justify-content-center gap-1 shadow-sm border text-truncate"
+                    type="button"
+                    data-bs-toggle="dropdown"
+                    style={{ 
+                        backgroundColor: contact.chat_status?.color || '#f8f9fa', 
+                        color: contact.chat_status ? '#fff' : '#495057'
+                    }}
+                >
+                    {contact.chat_status?.icon && (
+                        <i className={`mdi ${contact.chat_status.icon.startsWith('mdi-') ? contact.chat_status.icon : `mdi-${contact.chat_status.icon}`}`}></i>
+                    )}
+                    <span>{contact.chat_status?.name || 'Calificar chat...'}</span>
+                </button>
+                <div className="dropdown-menu w-100 text-center scroll-hidden" style={{ maxHeight: '200px', overflowY: 'auto' }}>
+                    <button 
+                        className="dropdown-item d-flex align-items-center justify-content-center gap-1"
+                        onClick={() => onLeadUpdate(contact.id, null, 'chat_status')}
+                    >
+                        <i className="mdi mdi-close-circle-outline"></i>
+                        <span>Sin calificar</span>
+                    </button>
+                    {chatStatuses.map(status => (
+                        <button 
+                            key={status.id}
+                            className="dropdown-item d-flex align-items-center justify-content-center gap-1"
+                            onClick={() => onLeadUpdate(contact.id, status.id, 'chat_status')}
+                            style={{ borderLeft: `4px solid ${status.color}` }}
+                        >
+                            {status.icon && (
+                                <i className={`mdi ${status.icon.startsWith('mdi-') ? status.icon : `mdi-${status.icon}`}`} style={{ color: status.color }}></i>
+                            )}
+                            <span>{status.name}</span>
+                        </button>
+                    ))}
+                </div>
             </div>
         </div>
 
