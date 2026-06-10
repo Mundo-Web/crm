@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import Global from "../../Utils/Global";
+import LeadAvatar from "../../components/LeadAvatar.jsx";
 
 const ChatHeader = ({ contact, contactDetails, setContactDetails, loading, theme, chatStatuses = [], onLeadUpdate = () => {} }) => {
     const [now, setNow] = useState(Date.now());
@@ -21,13 +22,7 @@ const ChatHeader = ({ contact, contactDetails, setContactDetails, loading, theme
             <div className="d-flex align-items-center">
                 {/* Avatar */}
                 {!loading && contact && (
-                    <img
-                        src={`/api/whatsapp/profile/${contact.integration_user_id || contact.contact_phone}`}
-                        className="rounded-circle avatar-sm bg-light me-2"
-                        alt={contact.contact_name}
-                        style={{ padding: 0, border: 'none' }}
-                        onError={(e) => { e.target.src = `//${Global.APP_DOMAIN}/assets/img/user-404.svg`; }}
-                    />
+                    <LeadAvatar lead={contact} className="avatar-sm me-2" />
                 )}
                 {loading && (
                     <div className="placeholder-glow">

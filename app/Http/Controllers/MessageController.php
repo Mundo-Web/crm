@@ -57,7 +57,10 @@ class MessageController extends BasicController
                 $clientJpa = Client::select('id', 'contact_name', 'contact_phone', 'integration_user_id', 'last_message', 'last_message_microtime', 'campaign_id')
                     ->addSelect([
                         'last_human_message_microtime' => Message::select('microtime')
-                            ->whereColumn('messages.wa_id', 'clients.contact_phone')
+                            ->where(function ($q) {
+                                $q->whereColumn('messages.wa_id', 'clients.contact_phone')
+                                  ->orWhereColumn('messages.wa_id', 'clients.integration_user_id');
+                            })
                             ->where('messages.role', 'Human')
                             ->whereColumn('messages.business_id', 'clients.business_id')
                             ->orderBy('microtime', 'desc')

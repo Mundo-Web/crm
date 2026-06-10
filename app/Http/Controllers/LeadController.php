@@ -173,7 +173,10 @@ class LeadController extends BasicController
             $data = $this->model::select('clients.*')
                 ->addSelect([
                     'last_human_message_microtime' => Message::select('microtime')
-                        ->whereColumn('messages.wa_id', 'clients.contact_phone')
+                        ->where(function ($q) {
+                            $q->whereColumn('messages.wa_id', 'clients.contact_phone')
+                              ->orWhereColumn('messages.wa_id', 'clients.integration_user_id');
+                        })
                         ->where('messages.role', 'Human')
                         ->whereColumn('messages.business_id', 'clients.business_id')
                         ->orderBy('microtime', 'desc')
@@ -199,7 +202,10 @@ class LeadController extends BasicController
         $query = $model::select($request->fields ?? 'clients.*')
             ->addSelect([
                 'last_human_message_microtime' => Message::select('microtime')
-                    ->whereColumn('messages.wa_id', 'clients.contact_phone')
+                    ->where(function ($q) {
+                        $q->whereColumn('messages.wa_id', 'clients.contact_phone')
+                          ->orWhereColumn('messages.wa_id', 'clients.integration_user_id');
+                    })
                     ->where('messages.role', 'Human')
                     ->whereColumn('messages.business_id', 'clients.business_id')
                     ->orderBy('microtime', 'desc')

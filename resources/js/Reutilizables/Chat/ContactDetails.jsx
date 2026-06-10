@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import Global from "../../Utils/Global";
+import LeadAvatar from "../../components/LeadAvatar.jsx";
 import ClientNotesCard from "../ClientNotes/ClientNotesCard";
 import ClientNotesRest from "../../actions/ClientNotesRest";
 import LaravelSession from "../../Utils/LaravelSession";
@@ -24,12 +25,9 @@ const ContactDetails = ({ users = [], onAssign = () => { }, onOpenDetails = () =
 
     return <>
         <div className="contact-details d-flex flex-column gap-2 flex-md-row flex-xl-row align-items-center  rounded-4 shadow-sm mb-2 overflow-hidden">
-            <img
-                src={`/api/whatsapp/profile/${contact.integration_user_id || contact.contact_phone}`}
-                className="rounded-circle avatar-lg bg-light border-0 mb-3 mb-md-0 mb-xl-0 flex-shrink-0"
-                alt={contact.contact_name}
-                style={{ objectFit: 'cover' }}
-                onError={(e) => { e.target.src = `//${Global.APP_DOMAIN}/assets/img/user-404.svg`; }}
+            <LeadAvatar
+                lead={contact}
+                className="avatar-lg mb-3 mb-md-0 mb-xl-0 flex-shrink-0 me-md-2"
             />
             <div className="text-center text-md-start text-xl-start w-100">
                 <div className="fw-bold fs-5 text-dark text-truncat">{contact.contact_name}</div>

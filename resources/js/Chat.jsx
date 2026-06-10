@@ -1,6 +1,7 @@
 import { createRoot } from 'react-dom/client'
 import CreateReactScript from './Utils/CreateReactScript.jsx'
 import Adminto from './components/Adminto.jsx'
+import LeadAvatar from './components/LeadAvatar.jsx'
 import Tippy from '@tippyjs/react';
 import Global from './Utils/Global.js';
 import { useEffect, useRef, useState } from 'react';
@@ -509,9 +510,7 @@ const Chat = ({ users = [], defaultMessages = [], activeLeadId: activeLeadIdDB, 
                                 }
                               })()}
                             </div>
-                            <img src={`/api/whatsapp/profile/${lead.integration_user_id || lead.contact_phone}`}
-                              className="rounded-circle avatar-sm bg-light" alt={lead.name} style={{ padding: 0, border: 'none' }}
-                              onError={(e) => { e.target.src = `//${Global.APP_DOMAIN}/assets/img/user-404.svg`; }} />
+                            <LeadAvatar lead={lead} className="avatar-sm" />
                             {
                               lead.assigned_to && lead.assigned?.relative_id &&
                               // Only show if no filters are applied OR if the assigned user is NOT the only selected one
