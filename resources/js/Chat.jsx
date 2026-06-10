@@ -196,14 +196,20 @@ const Chat = ({ users = [], defaultMessages = [], activeLeadId: activeLeadIdDB, 
       setLeads(prev => {
         const idx = prev.findIndex(l => l.id === client.id);
         let updatedList = [...prev];
-        
+
         if (idx !== -1) {
-          updatedList[idx] = { ...updatedList[idx], ...client };
+          // If the backend says notify=true (new incoming message), ensure count >= 1
+          // This handles the race condition where ClientStatusObserver fires before the message
+          // is committed to DB (count=0), followed by MessageObserver with notify=true (count=1)
+          const incomingCount = client.un_seen_messages_count ?? updatedList[idx].un_seen_messages_count;
+          const finalCount = client.notify ? Math.max(incomingCount, 1) : incomingCount;
+          updatedList[idx] = { ...updatedList[idx], ...client, un_seen_messages_count: finalCount };
         } else {
-          // Only add new lead if assigned_to is in selectedUsersId (or if no filter is applied)
+          // New lead not in list yet — only add if it passes the user filter
           if (!selectedUsersId.length || selectedUsersId.includes(client.assigned_to)) {
-            if (client.un_seen_messages_count === undefined) {
-              client.un_seen_messages_count = client.notify ? 1 : 1;
+            // Force at least 1 unseen since a message just arrived
+            if (!client.un_seen_messages_count) {
+              client.un_seen_messages_count = 1;
             }
             updatedList.push(client);
           } else {
