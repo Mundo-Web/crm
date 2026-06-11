@@ -1501,6 +1501,7 @@ const Leads = (properties) => {
             ) : (
                 <LeadKanban
                     statuses={statuses}
+                    manageStatuses={manageStatuses}
                     leads={leads}
                     defaultView={defaultView}
                     getLeads={getLeads}

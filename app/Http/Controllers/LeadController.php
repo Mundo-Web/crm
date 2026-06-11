@@ -1064,6 +1064,47 @@ class LeadController extends BasicController
         return response($response->toArray(), $response->status);
     }
 
+    public function deleteChat(Request $request, string $lead)
+    {
+        $response = Response::simpleTryCatch(function (Response $response) use ($lead) {
+            $client = Client::find($lead);
+            if (!$client) throw new Exception('Lead no encontrado');
+            if ($client->business_id != Auth::user()->business_id) {
+                throw new Exception('No tienes permisos para realizar esta acción');
+            }
+
+            // Resetear campos de chat
+            $client->last_message = null;
+            $client->last_message_microtime = null;
+            $client->save();
+
+            // Eliminar mensajes asociados de la tabla 'messages'
+            DB::table('messages')
+                ->where('business_id', $client->business_id)
+                ->where(function ($q) use ($client) {
+                    $q->where('wa_id', $client->contact_phone);
+                    if ($client->integration_user_id) {
+                        $q->orWhere('wa_id', $client->integration_user_id);
+                    }
+                })
+                ->delete();
+
+            // Notificar cambios en tiempo real
+            try {
+                $clientJpa = Client::with(['assigned', 'status', 'manageStatus', 'chatStatus', 'integration'])
+                    ->withCount(['unSeenMessages'])
+                    ->find($client->id);
+                if ($clientJpa) {
+                    \App\Http\Controllers\EventController::notify('client.updated', $clientJpa->toArray(), ['business_id' => $client->business_id]);
+                    \App\Http\Controllers\EventController::notify('client.updated.menu', $clientJpa->toArray(), ['business_id' => $client->business_id]);
+                }
+            } catch (\Throwable $th) {
+                // Silenciar errores de broadcast
+            }
+        });
+        return response($response->toArray(), $response->status);
+    }
+
     public function delete(Request $request, string $id)
     {
         $response = new Response();

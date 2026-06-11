@@ -15,6 +15,7 @@ import wa2html from "../../Utils/wa2html"
 import HtmlContent from "../../Utils/HtmlContent"
 import Global from "../../Utils/Global"
 import Modal from "../../components/Modal"
+import Swal from "sweetalert2"
 
 const whatsAppRest = new WhatsAppRest()
 const metaRest = new MetaRest()
@@ -468,8 +469,33 @@ const ChatContent = ({ leadId, setLeadId, theme, contactDetails, setContactDetai
     await onLeadUpdate(id, value, type);
   }
 
+  const handleDeleteChat = async () => {
+    if (!contact) return;
+    const { isConfirmed } = await Swal.fire({
+      title: '¿Eliminar conversación?',
+      text: "Se borrarán los mensajes de esta conversación y se ocultará de la lista de chats. El lead permanecerá en el CRM.",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#ea5455',
+      cancelButtonColor: '#82868b'
+    });
+    if (!isConfirmed) return;
+
+    setIsSending(true);
+    const result = await leadsRest.deleteChat(contact.id);
+    setIsSending(false);
+
+    if (result) {
+      setLeadId(null);
+      setContactDetails(null);
+      onLeadUpdate(contact.id, null, 'chat_deleted');
+    }
+  };
+
   return <>
-    <ChatHeader contact={contact} contactDetails={contactDetails} setContactDetails={setContactDetails} loading={contactLoading} theme={theme} chatStatuses={chatStatuses} onLeadUpdate={handleLeadUpdate} />
+    <ChatHeader contact={contact} contactDetails={contactDetails} setContactDetails={setContactDetails} loading={contactLoading} theme={theme} chatStatuses={chatStatuses} onLeadUpdate={handleLeadUpdate} onDeleteChat={handleDeleteChat} />
     <div className="card-body p-0 position-relative border" style={{
       backgroundColor: theme == 'light' ? 'rgb(245, 241, 235)' : 'rgb(22, 23, 23)',
     }}>

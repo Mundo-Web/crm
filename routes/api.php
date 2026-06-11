@@ -284,6 +284,7 @@ Route::middleware('auth')->group(function () {
     Route::put('/leads/attend/{lead}', [LeadController::class, 'attend']);
     Route::delete('/leads/attend/{lead}', [LeadController::class, 'attend']);
     Route::post('/leads/massive-assign', [LeadController::class, 'massiveAssign']);
+    Route::delete('/leads/chat/{lead}', [LeadController::class, 'deleteChat']);
     Route::delete('/leads/{id}', [LeadController::class, 'delete']);
 
     Route::patch('/tasks/status', [TaskController::class, 'status']);

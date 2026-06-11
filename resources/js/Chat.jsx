@@ -285,6 +285,13 @@ const Chat = ({ users = [], defaultMessages = [], activeLeadId: activeLeadIdDB, 
     let success = false;
     const targetLeadId = leadId || detailLead?.id;
 
+    if (type === 'chat_deleted') {
+      setLeads(prev => prev.filter(l => l.id !== targetLeadId));
+      if (contactDetails && contactDetails.id === targetLeadId) setContactDetails(null);
+      if (activeLeadId === targetLeadId) setActiveLeadId(null);
+      return;
+    }
+
     // Optimistic UI Update
     if (type === 'is_pinned' || type === 'chat_status') {
       setLeads(prev => prev.map(l => l.id === targetLeadId ? { ...l, [type === 'is_pinned' ? 'is_pinned' : 'chat_status_id']: value, chat_status: type === 'chat_status' ? (chatStatuses.find(s => s.id === value) || null) : l.chat_status } : l));
@@ -601,9 +608,6 @@ const Chat = ({ users = [], defaultMessages = [], activeLeadId: activeLeadIdDB, 
 
                                 const lastHumanMicro = lead.last_human_message_microtime;
                                 let lastHumanMs = lastHumanMicro ? Math.floor(lastHumanMicro / 1000) : 0;
-                                if (lastHumanMs === 0 && lead.created_at) {
-                                  lastHumanMs = new Date(lead.created_at).getTime();
-                                }
 
                                 if (lastHumanMs === 0) {
                                   return (

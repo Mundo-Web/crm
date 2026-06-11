@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import Global from "../../Utils/Global";
 import LeadAvatar from "../../components/LeadAvatar.jsx";
 
-const ChatHeader = ({ contact, contactDetails, setContactDetails, loading, theme, chatStatuses = [], onLeadUpdate = () => {} }) => {
+const ChatHeader = ({ contact, contactDetails, setContactDetails, loading, theme, chatStatuses = [], onLeadUpdate = () => {}, onDeleteChat = () => {} }) => {
     const [now, setNow] = useState(Date.now());
 
     useEffect(() => {
@@ -43,6 +43,16 @@ const ChatHeader = ({ contact, contactDetails, setContactDetails, loading, theme
                 {/* Badge and Arrow icon */}
                 {!loading && contact && (
                     <div className="d-flex align-items-center gap-2 ms-2">
+                        <button 
+                            className="btn btn-sm btn-icon btn-light shadow-sm border"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onDeleteChat();
+                            }}
+                            title="Eliminar conversación"
+                        >
+                            <i className="mdi mdi-delete text-danger"></i>
+                        </button>
                         <button 
                             className={`btn btn-sm btn-icon ${contact.is_pinned ? 'btn-primary' : 'btn-light'} shadow-sm border`}
                             style={{ transition: 'all 0.2s ease-in-out' }}
@@ -111,9 +121,6 @@ const ChatHeader = ({ contact, contactDetails, setContactDetails, loading, theme
 
                             const lastHumanMicro = contact.last_human_message_microtime;
                             let lastHumanMs = lastHumanMicro ? Math.floor(lastHumanMicro / 1000) : 0;
-                            if (lastHumanMs === 0 && contact.created_at) {
-                                lastHumanMs = new Date(contact.created_at).getTime();
-                            }
                             
                             if (lastHumanMs === 0) {
                                 return (

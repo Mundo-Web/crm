@@ -10,7 +10,9 @@ import { LeadsContext } from "./LeadsProvider";
 
 const leadsRest = new LeadsRest()
 
-const LeadKanban = ({ statuses, leads, onLeadClicked, onOpenModal, onMakeLeadClient, onArchiveClicked, onDeleteClicked, onAttendClient, users }) => {
+const LeadKanban = ({ statuses, manageStatuses = [], leads, onLeadClicked, onOpenModal, onMakeLeadClient, onArchiveClicked, onDeleteClicked, onAttendClient, users }) => {
+
+  const [columnFilters, setColumnFilters] = useState({});
 
   const { setLeads, getLeads, defaultView, refreshLeads, getMoreLeads, leadsCount, statusesLoading, selectedUsersId, setSelectedUsersId, months, selectedMonth, setSelectedMonth } = useContext(LeadsContext)
   const loadingRefs = useRef({});
@@ -168,19 +170,101 @@ const LeadKanban = ({ statuses, leads, onLeadClicked, onOpenModal, onMakeLeadCli
           .map((status, i) => {
           const correlative = Correlative(status.name)
           const leadsCountHere = leadsCount[status.id] ?? 0
+
+          const uniqueTagIdsInColumn = [...new Set(
+            leads
+              .filter(lead => lead.status_id === status.id)
+              .map(lead => lead.manage_status_id || lead.manage_status?.id)
+              .filter(Boolean)
+          )];
+
+          const childTags = manageStatuses.filter(tag => 
+            uniqueTagIdsInColumn.includes(tag.id)
+          ).sort((a, b) => a.order - b.order);
+
+          const activeFilter = columnFilters[status.id];
+          const filteredLeads = leads.filter(x => {
+            if (x.status_id != status.id) return false;
+            if (activeFilter) {
+              return x.manage_status_id === activeFilter;
+            }
+            return true;
+          });
+          const visibleLeadsCount = filteredLeads.length;
+
           return (<div key={`status-${i}`} style={{ minWidth: '270px', maxWidth: '270px' }}>
             <div className="card mb-0">
-              <div className="card-header">
-                <span className="float-end">
-                  {
-                    leadsCountHere > 50 &&
-                    <Tippy content={`Tienes ${leadsCountHere} leads en este estado, recuerda que tambien puedes archivar leads.`}>
-                      <i className="mdi mdi-alert-outline text-danger me-1"></i>
-                    </Tippy>
-                  }
-                  {leadsCountHere}
-                </span>
-                <h4 className="header-title my-0" style={{ color: status.color }}>{status.name}</h4>
+              <div className="card-header pb-2">
+                <div className="d-flex align-items-center justify-content-between mb-1">
+                  <h4 className="header-title my-0 text-truncate" style={{ color: status.color, maxWidth: '170px' }} title={status.name}>
+                    {status.name}
+                  </h4>
+                  <span className="badge bg-light text-dark rounded-pill">
+                    {
+                      leadsCountHere > 50 &&
+                      <Tippy content={`Tienes ${leadsCountHere} leads en este estado, recuerda que tambien puedes archivar leads.`}>
+                        <i className="mdi mdi-alert-outline text-danger me-1"></i>
+                      </Tippy>
+                    }
+                    {activeFilter ? `${visibleLeadsCount} de ${leadsCountHere}` : leadsCountHere}
+                  </span>
+                </div>
+                {childTags.length > 0 && (
+                  <div className="dropdown mt-1">
+                    <button
+                      className="btn btn-xs btn-white dropdown-toggle w-100 text-start text-truncate d-flex align-items-center justify-content-between border"
+                      type="button"
+                      data-bs-toggle="dropdown"
+                      aria-expanded="false"
+                      style={{ fontSize: '11px', padding: '3px 8px', borderRadius: '4px' }}
+                    >
+                      <span className="text-truncate">
+                        {activeFilter ? (
+                          <>
+                            <i className="mdi mdi-circle me-1" style={{ color: childTags.find(t => t.id === activeFilter)?.color || '#6c757d' }}></i>
+                            {childTags.find(t => t.id === activeFilter)?.name}
+                          </>
+                        ) : (
+                          "Filtrar por etiqueta..."
+                        )}
+                      </span>
+                      <i className="mdi mdi-chevron-down ms-1" />
+                    </button>
+                    <ul className="dropdown-menu w-100 shadow-sm border" style={{ fontSize: '11px', minWidth: '100%' }}>
+                      <li>
+                        <button
+                          className="dropdown-item py-1 d-flex align-items-center"
+                          type="button"
+                          onClick={() => {
+                            const newFilters = { ...columnFilters };
+                            delete newFilters[status.id];
+                            setColumnFilters(newFilters);
+                          }}
+                        >
+                          <i className="mdi mdi-circle-outline me-1 text-muted"></i>
+                          Todos
+                        </button>
+                      </li>
+                      {childTags.map(tag => (
+                        <li key={tag.id}>
+                          <button
+                            className="dropdown-item py-1 text-truncate d-flex align-items-center"
+                            type="button"
+                            onClick={() => {
+                              setColumnFilters(prev => ({
+                                ...prev,
+                                [status.id]: tag.id
+                              }));
+                            }}
+                          >
+                            <i className="mdi mdi-circle me-1" style={{ color: tag.color || '#6c757d' }} />
+                            {tag.name}
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
               </div>
               <div
                 className="card-body taskboard-box p-2"
@@ -190,7 +274,7 @@ const LeadKanban = ({ statuses, leads, onLeadClicked, onOpenModal, onMakeLeadCli
                 <ul className="sortable-list list-unstyled taskList" id={`status-${correlative}`} data-id={status.id}>
                   <AnimatePresence>
                     {
-                      leads.filter(x => x.status_id == status.id).sort((a, b) => {
+                      filteredLeads.sort((a, b) => {
                         return a.created_at > b.created_at ? -1 : 1
                       }).sort((a, b) => {
                         return a.assigned_to == LaravelSession.service_user.id ? -1 : 1

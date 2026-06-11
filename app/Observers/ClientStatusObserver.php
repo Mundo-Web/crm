@@ -32,13 +32,6 @@ class ClientStatusObserver
             ]);
         }
 
-        // Initialize last_message and last_message_microtime if empty (so it appears in chat lists)
-        if (empty($client->last_message_microtime)) {
-            $client->last_message = $client->last_message ?: ($client->message ?: 'Sin mensaje');
-            $client->last_message_microtime = $client->last_message_microtime ?: (int) (microtime(true) * 1_000_000);
-            $client->saveQuietly();
-        }
-
         // Notify in real-time about the new lead
         try {
             $clientJpa = Client::with(['assigned', 'status', 'manageStatus', 'chatStatus', 'integration'])
