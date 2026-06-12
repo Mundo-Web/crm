@@ -1112,7 +1112,7 @@ const ChatContent = ({ leadId, setLeadId, theme, contactDetails, setContactDetai
             )}
             <div className="mb-3">
               <label className="form-label fw-bold">Seleccionar Plantilla</label>
-              <select className="form-select" onChange={handleTemplateChange} defaultValue="" required>
+              <select className="form-select" onChange={handleTemplateChange} value={selectedTemplate?.name || ""} required>
                 <option value="" disabled>-- Seleccione una plantilla --</option>
                 {(Array.isArray(templates) ? templates : []).map((tpl, i) => (
                   <option key={i} value={tpl.name}>{tpl.name} ({tpl.language})</option>
