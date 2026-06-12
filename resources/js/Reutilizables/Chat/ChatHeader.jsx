@@ -146,6 +146,21 @@ const ChatHeader = ({ contact, contactDetails, setContactDetails, loading, theme
                                     </span>
                                 );
                             } else {
+                                const isCampaign = !!contact.campaign_id;
+                                const msIn72hWindow = 72 * 60 * 60 * 1000;
+                                const expiresAt72h = lastHumanMs + msIn72hWindow;
+                                const remaining72hMs = expiresAt72h - now;
+
+                                if (isCampaign && remaining72hMs > 0) {
+                                    const hours = Math.floor(remaining72hMs / (3600 * 1000));
+                                    const minutes = Math.floor((remaining72hMs % (3600 * 1000)) / (60 * 1000));
+                                    return (
+                                        <span className="badge border d-inline-flex align-items-center" style={{ fontSize: '11px', padding: '4px 8px', backgroundColor: 'rgba(40, 199, 111, 0.12)', color: '#28c76f', borderColor: 'rgba(40, 199, 111, 0.24)' }}>
+                                            <i className="mdi mdi-gift-outline me-1"></i>Plantilla gratis ({hours}h {minutes}m)
+                                        </span>
+                                    );
+                                }
+
                                 return (
                                     <span className="badge border d-inline-flex align-items-center" style={{ fontSize: '11px', padding: '4px 8px', backgroundColor: 'rgba(234, 84, 85, 0.12)', color: '#ea5455', borderColor: 'rgba(234, 84, 85, 0.24)' }}>
                                         <i className="mdi mdi-alert-circle-outline me-1"></i>Si inicia conversación se cobrará
