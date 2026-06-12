@@ -34,7 +34,19 @@ class ClientStatusObserver
 
         // Notify in real-time about the new lead
         try {
-            $clientJpa = Client::with(['assigned', 'status', 'manageStatus', 'chatStatus', 'integration'])
+            $clientJpa = Client::select('clients.*')
+                ->addSelect([
+                    'last_human_message_microtime' => \App\Models\Message::select('microtime')
+                        ->where(function ($q) {
+                            $q->whereColumn('messages.wa_id', 'clients.contact_phone')
+                              ->orWhereColumn('messages.wa_id', 'clients.integration_user_id');
+                        })
+                        ->where('messages.role', 'Human')
+                        ->whereColumn('messages.business_id', 'clients.business_id')
+                        ->orderBy('microtime', 'desc')
+                        ->limit(1)
+                ])
+                ->with(['assigned', 'status', 'manageStatus', 'chatStatus', 'integration'])
                 ->withCount(['unSeenMessages'])
                 ->find($client->id);
             if ($clientJpa) {
@@ -101,7 +113,19 @@ class ClientStatusObserver
 
         if ($isCriticalDirty) {
             try {
-                $clientJpa = Client::with(['assigned', 'status', 'manageStatus', 'chatStatus', 'integration'])
+                $clientJpa = Client::select('clients.*')
+                    ->addSelect([
+                        'last_human_message_microtime' => \App\Models\Message::select('microtime')
+                            ->where(function ($q) {
+                                $q->whereColumn('messages.wa_id', 'clients.contact_phone')
+                                  ->orWhereColumn('messages.wa_id', 'clients.integration_user_id');
+                            })
+                            ->where('messages.role', 'Human')
+                            ->whereColumn('messages.business_id', 'clients.business_id')
+                            ->orderBy('microtime', 'desc')
+                            ->limit(1)
+                    ])
+                    ->with(['assigned', 'status', 'manageStatus', 'chatStatus', 'integration'])
                     ->withCount(['unSeenMessages'])
                     ->find($client->id);
                 if ($clientJpa) {

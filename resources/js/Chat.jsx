@@ -200,17 +200,26 @@ const Chat = ({ users = [], defaultMessages = [], activeLeadId: activeLeadIdDB, 
         let updatedList = [...prev];
 
         if (idx !== -1) {
-          // If the backend says notify=true (new incoming message), ensure count >= 1
-          // This handles the race condition where ClientStatusObserver fires before the message
-          // is committed to DB (count=0), followed by MessageObserver with notify=true (count=1)
-          const incomingCount = client.un_seen_messages_count ?? updatedList[idx].un_seen_messages_count;
-          const finalCount = client.notify ? Math.max(incomingCount, 1) : incomingCount;
-          updatedList[idx] = { ...updatedList[idx], ...client, un_seen_messages_count: finalCount };
+          // Check if it still matches active filters
+          const matchesUser = !selectedUsersId.length || selectedUsersId.includes(client.assigned_to);
+          const matchesStatus = !chatStatusFilter || client.chat_status_id === chatStatusFilter;
+
+          if (!matchesUser || !matchesStatus) {
+            updatedList.splice(idx, 1);
+          } else {
+            const incomingCount = client.un_seen_messages_count ?? updatedList[idx].un_seen_messages_count;
+            const finalCount = client.notify ? Math.max(incomingCount, 1) : incomingCount;
+            updatedList[idx] = { ...updatedList[idx], ...client, un_seen_messages_count: finalCount };
+          }
         } else {
-          // New lead not in list yet — only add if it passes the user filter
-          if (!selectedUsersId.length || selectedUsersId.includes(client.assigned_to)) {
-            // Force at least 1 unseen since a message just arrived
-            if (!client.un_seen_messages_count) {
+          // New lead not in list yet — only add if it passes active filters and has history or is a new notification
+          const matchesUser = !selectedUsersId.length || selectedUsersId.includes(client.assigned_to);
+          const matchesStatus = !chatStatusFilter || client.chat_status_id === chatStatusFilter;
+          const hasHistoryOrNotify = client.last_message_microtime || client.notify;
+
+          if (matchesUser && matchesStatus && hasHistoryOrNotify) {
+            // Force at least 1 unseen if a new message actually arrived
+            if (client.notify && !client.un_seen_messages_count) {
               client.un_seen_messages_count = 1;
             }
             updatedList.push(client);
