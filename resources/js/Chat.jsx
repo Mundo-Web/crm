@@ -620,7 +620,7 @@ const Chat = ({ users = [], defaultMessages = [], activeLeadId: activeLeadIdDB, 
 
                                 if (lastHumanMs === 0) {
                                   return (
-                                    <span className="badge border d-inline-flex align-items-center" style={{ fontSize: '10px', padding: '2px 6px', backgroundColor: 'rgba(234, 84, 85, 0.12)', color: '#ea5455', borderColor: 'rgba(234, 84, 85, 0.24)' }}>
+                                    <span className="badge border d-inline-flex align-items-center" style={{ fontSize: '10px', padding: '2px 6px', backgroundColor: 'rgba(43, 114, 207, 0.12)', color: '#2b72cf', borderColor: 'rgba(43, 114, 207, 0.24)' }}>
                                       <i className="mdi mdi-alert-circle-outline me-1"></i>Si inicia conversación se cobrará
                                     </span>
                                   );
@@ -658,7 +658,7 @@ const Chat = ({ users = [], defaultMessages = [], activeLeadId: activeLeadIdDB, 
                                   }
 
                                   return (
-                                    <span className="badge border d-inline-flex align-items-center" style={{ fontSize: '10px', padding: '2px 6px', backgroundColor: 'rgba(234, 84, 85, 0.12)', color: '#ea5455', borderColor: 'rgba(234, 84, 85, 0.24)' }}>
+                                    <span className="badge border d-inline-flex align-items-center" style={{ fontSize: '10px', padding: '2px 6px', backgroundColor: 'rgba(43, 114, 207, 0.12)', color: '#2b72cf', borderColor: 'rgba(43, 114, 207, 0.24)' }}>
                                       <i className="mdi mdi-alert-circle-outline me-1"></i>Si inicia conversación se cobrará
                                     </span>
                                   );

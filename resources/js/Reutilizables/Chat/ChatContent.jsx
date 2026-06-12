@@ -191,6 +191,131 @@ const ChatContent = ({ leadId, setLeadId, theme, contactDetails, setContactDetai
     return `${hours}h y ${minutes}m`;
   };
 
+  useEffect(() => {
+    if (contact && isWhatsApp) {
+      whatsAppRest.getTemplates().then(data => {
+        setTemplates(data || [])
+      }).catch(err => {
+        console.error('Error fetching templates: ', err)
+      })
+    } else {
+      setTemplates([])
+    }
+  }, [contact?.id, isWhatsApp])
+
+  const getSlashSuggestions = (queryVal = messageText) => {
+    const query = queryVal.toLowerCase();
+    if (!query.startsWith('/')) return [];
+
+    const searchStr = query.slice(1);
+
+    // 1. Meta templates (only for WhatsApp)
+    const metaSuggestions = isWhatsApp
+      ? (templates || [])
+          .filter(t => t.name.toLowerCase().includes(searchStr))
+          .map(t => {
+            const bodyComp = t.components?.find(c => c.type === 'BODY');
+            const text = bodyComp?.text || '';
+            return {
+              type: 'meta',
+              name: t.name,
+              description: text,
+              original: t
+            };
+          })
+      : [];
+
+    // 2. Local templates (only if NOT WhatsApp, OR if WhatsApp window is open)
+    const localSuggestions = (!isWhatsApp || is24HourWindowOpen())
+      ? (defaultMessages || [])
+          .filter(dm => dm.name.toLowerCase().includes(searchStr))
+          .map(dm => {
+            const content = $(`<div>${dm.description}</div>`);
+            content.find('.mention').each((_, element) => {
+              const mention = $(element);
+              const mentionId = mention.attr('data-id');
+              mention.removeClass('mention');
+              mention.text(contact?.[mentionId]);
+            });
+            return {
+              type: 'local',
+              name: dm.name,
+              description: content.text(),
+              html: content.html(),
+              original: dm
+            };
+          })
+      : [];
+
+    return [...localSuggestions, ...metaSuggestions].sort((a, b) => a.name.localeCompare(b.name));
+  };
+
+  useEffect(() => {
+    if (messageText.startsWith('/')) {
+      const suggestions = getSlashSuggestions(messageText);
+      if (suggestions.length > 0) {
+        setIsDMOpen(true);
+      } else {
+        setIsDMOpen(false);
+      }
+    } else {
+      setIsDMOpen(false);
+    }
+  }, [messageText, templates, defaultMessages, messages, contact, isWhatsApp]);
+
+  const handleSuggestionClick = async (item) => {
+    setIsDMOpen(false);
+    setMessageText('');
+
+    if (item.type === 'meta') {
+      // Open Meta templates modal and select this template
+      setSelectedTemplate(item.original);
+      // Initialize parameters
+      const bodyComponent = item.original.components?.find(c => c.type === 'BODY');
+      const bodyText = bodyComponent?.text || '';
+      const matches = [...bodyText.matchAll(/\{\{(\d+)\}\}/g)];
+      const paramsCount = matches.length;
+
+      const initialParams = {};
+      const clientName = contact?.contact_name || '';
+      if (paramsCount >= 1) {
+        initialParams['1'] = clientName;
+      }
+      for (let i = 2; i <= paramsCount; i++) {
+        initialParams[String(i)] = '';
+      }
+      setTemplateParams(initialParams);
+      $(templatesModalRef.current).modal('show');
+    } else {
+      // Send local template
+      setIsSending(true);
+      const dmRest = isTikTokIntegration ? tiktokRest : (isMetaIntegration ? metaRest : whatsAppRest);
+      if (item.original.attachments.length > 0) {
+        const attachment = item.original.attachments[0];
+        const attachmentURL = `${Global.APP_URL}/cloud/${attachment.file}`;
+        const content = $(`<div>${item.original.description}</div>`);
+        content.find('.mention').each((_, element) => {
+          const mention = $(element);
+          const mentionId = mention.attr('data-id');
+          mention.removeClass('mention');
+          mention.text(contact?.[mentionId]);
+        });
+        await dmRest.send(leadId, `/attachment:${attachmentURL}\n${content.html()}`);
+        setIsSending(false);
+        return;
+      }
+      const content = $(`<div>${item.original.description}</div>`);
+      content.find('.mention').each((_, element) => {
+        const mention = $(element);
+        const mentionId = mention.attr('data-id');
+        mention.removeClass('mention');
+        mention.text(contact?.[mentionId]);
+      });
+      await dmRest.send(leadId, content.html());
+      setIsSending(false);
+    }
+  };
+
   // Preview states
   const [previewBlob, setPreviewBlob] = useState(null)
   const [previewType, setPreviewType] = useState(null) // 'image' | 'video' | 'document'
@@ -336,6 +461,17 @@ const ChatContent = ({ leadId, setLeadId, theme, contactDetails, setContactDetai
   const onMessageSubmit = async (e) => {
     e.preventDefault()
     if (!contact) return
+
+    if (isWhatsApp && !is24HourWindowOpen()) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Ventana Expirada',
+        text: 'La ventana de 24h ha expirado. Debes usar una Plantilla de WhatsApp autorizada escribiendo "/".',
+        confirmButtonColor: '#f0ad4e'
+      })
+      return
+    }
+
     const text = messageText.trim()
     if (!text && !audioBlob && !attachment) return
 
@@ -663,33 +799,26 @@ const ChatContent = ({ leadId, setLeadId, theme, contactDetails, setContactDetai
               </ul>
               {
                 can('chats', 'create') && (
-                  isWhatsApp && !is24HourWindowOpen() ? (
-                    <div className="alert m-3 text-start small border-0 shadow-sm" style={{ borderRadius: '12px', zIndex: 2, backgroundColor: 'rgba(240, 173, 78, 0.1)', color: '#d9534f', borderLeft: '4px solid #f0ad4e', padding: '16px' }}>
-                      <div className="d-flex align-items-center mb-2">
-                        <i className="mdi mdi-alert-circle-outline font-18 me-2 text-warning"></i>
-                        <h6 className="alert-heading fw-bold mb-0 text-warning" style={{ fontSize: '13px' }}>
-                          Ventana de conversación cerrada (24h expiradas)
-                        </h6>
-                      </div>
-                      <p className="mb-0 text-muted small" style={{ lineHeight: '1.5' }}>
-                        Para reiniciar la comunicación y poder chatear libremente, Meta exige el uso de una <strong>Plantilla de WhatsApp autorizada</strong>. 
-                        Una vez que envíes la plantilla y el cliente responda, se reactivará una nueva ventana gratuita de conversación libre de cargos.
-                      </p>
-                      {isWithin72HourCampaignWindow() && (
-                        <div className="mt-2 p-2 rounded border d-flex align-items-center" style={{ backgroundColor: 'rgba(40, 199, 111, 0.12)', color: '#28c76f', borderColor: 'rgba(40, 199, 111, 0.24)', fontSize: '11px', textAlign: 'left' }}>
-                          <i className="mdi mdi-gift-outline font-16 me-2"></i>
+                  <>
+                    {/* Warning Banners above the message input */}
+                    {isWhatsApp && !is24HourWindowOpen() && (
+                      isWithin72HourCampaignWindow() ? (
+                        <div className="mx-3 mb-2 p-2 rounded border d-flex align-items-center animate__animated animate__fadeIn" style={{ backgroundColor: 'rgba(40, 199, 111, 0.12)', color: '#28c76f', borderColor: 'rgba(40, 199, 111, 0.24)', fontSize: '11px', textAlign: 'left', zIndex: 2 }}>
+                          <i className="mdi mdi-gift-outline font-16 me-2 animate__animated animate__bounceIn"></i>
                           <span>
-                            <strong>Beneficio de Anuncio:</strong> Este cliente proviene de un anuncio y está dentro de las 72h de gracia (te quedan <strong>{getRemaining72HourTime()}</strong>). El envío de esta plantilla será <strong>100% gratuito</strong> en tu facturación de Meta.
+                            <strong>Beneficio de Anuncio:</strong> Plantilla <strong>gratuita</strong> (te quedan <strong>{getRemaining72HourTime()}</strong>). Escribe <strong>"/"</strong> para seleccionar.
                           </span>
                         </div>
-                      )}
-                      <div className="mt-3 text-end">
-                        <button type="button" className="btn btn-xs btn-warning px-3 rounded-pill" onClick={openTemplatesModal}>
-                          <i className="mdi mdi-whatsapp me-1"></i> Seleccionar plantilla
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
+                      ) : (
+                        <div className="mx-3 mb-2 p-2 rounded border d-flex align-items-center animate__animated animate__fadeIn" style={{ backgroundColor: 'rgba(240, 173, 78, 0.1)', color: '#d9534f', borderLeft: '4px solid #f0ad4e', fontSize: '11px', textAlign: 'left', zIndex: 2 }}>
+                          <i className="mdi mdi-alert-circle-outline font-16 me-2 text-warning animate__animated animate__flash"></i>
+                          <span>
+                            La ventana de 24h ha expirado. Escribe <strong>"/"</strong> para seleccionar una plantilla autorizada.
+                          </span>
+                        </div>
+                      )
+                    )}
+
                     <form className="p-2 pt-0 conversation-input position-relative" onSubmit={onMessageSubmit}>
                       <label className={`row g-0 align-items-end p-1 ${theme == 'dark' ? 'bg-light' : 'bg-white'}`} htmlFor="message-input" style={{
                         borderRadius: '24px'
@@ -709,31 +838,35 @@ const ChatContent = ({ leadId, setLeadId, theme, contactDetails, setContactDetai
                               <i className={`mdi ${isDropdownOpen ? 'mdi-close' : 'mdi-plus'}`}></i>
                             </button>
                             <div ref={dropdownContainerRef} className="dropdown-menu mb-1">
-                              <button className="dropdown-item" href="#" onClick={(e) => {
+                              <button className={`dropdown-item ${isWhatsApp && !is24HourWindowOpen() ? 'text-muted opacity-50' : ''}`} style={{ cursor: isWhatsApp && !is24HourWindowOpen() ? 'not-allowed' : 'pointer' }} disabled={isWhatsApp && !is24HourWindowOpen()} onClick={(e) => {
                                 e.preventDefault()
+                                if (isWhatsApp && !is24HourWindowOpen()) return;
                                 fileInputRef.current?.setAttribute('accept', '*')
                                 fileInputRef.current?.click()
                               }}>
                                 <i className="mdi mdi-file-document me-2" style={{ color: '#7F66FF' }} />
                                 Documentos
                               </button>
-                              <button className="dropdown-item" href="#" onClick={(e) => {
+                              <button className={`dropdown-item ${isWhatsApp && !is24HourWindowOpen() ? 'text-muted opacity-50' : ''}`} style={{ cursor: isWhatsApp && !is24HourWindowOpen() ? 'not-allowed' : 'pointer' }} disabled={isWhatsApp && !is24HourWindowOpen()} onClick={(e) => {
                                 e.preventDefault()
+                                if (isWhatsApp && !is24HourWindowOpen()) return;
                                 fileInputRef.current?.setAttribute('accept', 'image/*,video/*')
                                 fileInputRef.current?.click()
                               }}>
                                 <i className="mdi mdi-image me-2" style={{ color: '#007BFC' }} />
                                 Fotos y videos
                               </button>
-                              <button className="dropdown-item" href="#" onClick={(e) => {
+                              <button className={`dropdown-item ${isWhatsApp && !is24HourWindowOpen() ? 'text-muted opacity-50' : ''}`} style={{ cursor: isWhatsApp && !is24HourWindowOpen() ? 'not-allowed' : 'pointer' }} disabled={isWhatsApp && !is24HourWindowOpen()} onClick={(e) => {
                                 e.preventDefault()
+                                if (isWhatsApp && !is24HourWindowOpen()) return;
                                 setIsOpenCamera(true)
                               }}>
                                 <i className="mdi mdi-camera me-2" style={{ color: '#FF2E74' }} />
                                 Cámara
                               </button>
-                              <button className="dropdown-item" href="#" onClick={(e) => {
+                              <button className={`dropdown-item ${isWhatsApp && !is24HourWindowOpen() ? 'text-muted opacity-50' : ''}`} style={{ cursor: isWhatsApp && !is24HourWindowOpen() ? 'not-allowed' : 'pointer' }} disabled={isWhatsApp && !is24HourWindowOpen()} onClick={(e) => {
                                 e.preventDefault()
+                                if (isWhatsApp && !is24HourWindowOpen()) return;
                                 fileInputRef.current?.setAttribute('accept', 'audio/*')
                                 fileInputRef.current?.click()
                               }}>
@@ -780,53 +913,40 @@ const ChatContent = ({ leadId, setLeadId, theme, contactDetails, setContactDetai
                                   overflowY: 'auto'
                                 }}>
                                 {
-                                  defaultMessages
-                                    .filter(dm => `/${dm.name}`.toLowerCase().startsWith(messageText.toLowerCase()))
-                                    .sort((a, b) => a.name.localeCompare(b.name))
-                                    .map((message, idx) => {
-                                      const content = $(`<div>${message.description}</div>`)
-                                      content.find('.mention').each((_, element) => {
-                                        const mention = $(element)
-                                        const mentionId = mention.attr('data-id')
-                                        mention.removeClass('mention')
-                                        mention.text(contact?.[mentionId])
-                                      })
-                                      return <div key={idx} className="dropdown-item" type="button" style={{ width: '300px' }} onClick={async () => {
-                                        setIsDMOpen(false)
-                                        setMessageText('')
-                                        setIsSending(true)
-                                        const dmRest = isTikTokIntegration ? tiktokRest : (isMetaIntegration ? metaRest : whatsAppRest)
-                                        if (message.attachments.length > 0) {
-                                          const attachment = message.attachments[0]
-                                          const attachmentURL = `${Global.APP_URL}/cloud/${attachment.file}`
-                                          await dmRest.send(leadId, `/attachment:${attachmentURL}\n${content.html()}`)
-                                          setIsSending(false)
-                                          return
-                                        }
-                                        await dmRest.send(leadId, content.html())
-                                        setIsSending(false)
-                                      }}>
-                                        <span className="d-block text-truncate">/{message.name}</span>
-                                        <small className="d-block text-muted text-truncate">{content.text()}</small>
+                                  getSlashSuggestions(messageText).map((item, idx) => {
+                                    return (
+                                      <div key={idx} className="dropdown-item d-flex align-items-center justify-content-between py-2 border-bottom" type="button" style={{ width: '320px', whiteSpace: 'normal', cursor: 'pointer' }} onClick={() => handleSuggestionClick(item)}>
+                                        <div style={{ maxWidth: '220px' }}>
+                                          <span className="d-block text-truncate fw-bold font-12" style={{ color: item.type === 'meta' ? '#28c76f' : '#7F66FF' }}>/{item.name}</span>
+                                          <small className="d-block text-muted text-truncate" style={{ fontSize: '10px' }}>{item.description}</small>
+                                        </div>
+                                        <div>
+                                          {item.type === 'meta' ? (
+                                            <span className="badge border" style={{ fontSize: '9px', padding: '2px 4px', backgroundColor: 'rgba(40, 199, 111, 0.12)', color: '#28c76f', borderColor: 'rgba(40, 199, 111, 0.24)' }}>Meta</span>
+                                          ) : (
+                                            <span className="badge border" style={{ fontSize: '9px', padding: '2px 4px', backgroundColor: 'rgba(127, 102, 255, 0.12)', color: '#7F66FF', borderColor: 'rgba(127, 102, 255, 0.24)' }}>Local</span>
+                                          )}
+                                        </div>
                                       </div>
-                                    })
+                                    )
+                                  })
                                 }
                               </div>
                               <textarea
                                 ref={inputMessageRef}
                                 id="message-input"
                                 className="form-control w-100"
-                                placeholder="Ingrese su mensaje aquí"
+                                placeholder={isWhatsApp && !is24HourWindowOpen() ? "Escribe '/' para enviar plantilla..." : "Ingrese su mensaje aquí"}
                                 rows={1}
                                 style={{ minHeight: '38px', maxHeight: '188px', fieldSizing: 'content', resize: 'none', border: 'none', backgroundColor: 'transparent' }}
                                 disabled={isSending || !!audioBlob || !!cameraBlob || !!previewBlob}
                                 value={messageText}
                                 onChange={(e) => {
-                                  const newValue = e.target.value
-                                  if (String(newValue).trim().startsWith('/') && defaultMessages.some(({ name }) => (`/${name}`.toLowerCase()).startsWith(newValue.toLowerCase()))) {
-                                    setIsDMOpen(true)
-                                  } else {
-                                    setIsDMOpen(false)
+                                  let newValue = e.target.value
+                                  if (isWhatsApp && !is24HourWindowOpen()) {
+                                    if (newValue.length > 0 && !newValue.startsWith('/')) {
+                                      newValue = '/' + newValue
+                                    }
                                   }
                                   setMessageText(newValue)
                                 }}
@@ -929,9 +1049,9 @@ const ChatContent = ({ leadId, setLeadId, theme, contactDetails, setContactDetai
                                   type="button"
                                   className="btn btn-outline-primary btn-sm"
                                   onClick={startRecording}
-                                  disabled={isSending}
+                                  disabled={isSending || (isWhatsApp && !is24HourWindowOpen())}
                                   style={{ borderRadius: '50%', width: '38px', height: '38px', padding: 0 }}
-                                  title="Grabar audio"
+                                  title={isWhatsApp && !is24HourWindowOpen() ? "Grabación deshabilitada (ventana expirada)" : "Grabar audio"}
                                 >
                                   <i className="mdi mdi-microphone"></i>
                                 </button>
@@ -941,7 +1061,7 @@ const ChatContent = ({ leadId, setLeadId, theme, contactDetails, setContactDetai
                         </div>
                       </label>
                     </form>
-                  )
+                  </>
                 )
               }
             </section>

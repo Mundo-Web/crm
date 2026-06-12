@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import Global from "../../Utils/Global";
 import LeadAvatar from "../../components/LeadAvatar.jsx";
 
-const ChatHeader = ({ contact, contactDetails, setContactDetails, loading, theme, chatStatuses = [], onLeadUpdate = () => {}, onDeleteChat = () => {} }) => {
+const ChatHeader = ({ contact, contactDetails, setContactDetails, loading, theme, chatStatuses = [], onLeadUpdate = () => { }, onDeleteChat = () => { } }) => {
     const [now, setNow] = useState(Date.now());
 
     useEffect(() => {
@@ -43,7 +43,7 @@ const ChatHeader = ({ contact, contactDetails, setContactDetails, loading, theme
                 {/* Badge and Arrow icon */}
                 {!loading && contact && (
                     <div className="d-flex align-items-center gap-2 ms-2">
-                        <button 
+                        <button
                             className="btn btn-sm btn-icon btn-light shadow-sm border"
                             onClick={(e) => {
                                 e.stopPropagation();
@@ -53,7 +53,7 @@ const ChatHeader = ({ contact, contactDetails, setContactDetails, loading, theme
                         >
                             <i className="mdi mdi-delete text-danger"></i>
                         </button>
-                        <button 
+                        <button
                             className={`btn btn-sm btn-icon ${contact.is_pinned ? 'btn-primary' : 'btn-light'} shadow-sm border`}
                             style={{ transition: 'all 0.2s ease-in-out' }}
                             onClick={(e) => {
@@ -68,18 +68,18 @@ const ChatHeader = ({ contact, contactDetails, setContactDetails, loading, theme
                             }}
                             title={contact.is_pinned ? "Desanclar chat" : "Anclar chat"}
                         >
-                            <i 
-                              className={`mdi mdi-pin${contact.is_pinned ? '-off' : ''}`}
-                              style={{ transition: 'transform 0.15s ease-in-out', display: 'inline-block' }}
+                            <i
+                                className={`mdi mdi-pin${contact.is_pinned ? '-off' : ''}`}
+                                style={{ transition: 'transform 0.15s ease-in-out', display: 'inline-block' }}
                             ></i>
                         </button>
                         <div className="dropdown" onClick={(e) => e.stopPropagation()}>
-                            <button 
+                            <button
                                 className="btn btn-sm dropdown-toggle d-flex align-items-center justify-content-center gap-1 shadow-sm border text-truncate"
                                 type="button"
                                 data-bs-toggle="dropdown"
-                                style={{ 
-                                    backgroundColor: contact.chat_status?.color || '#f8f9fa', 
+                                style={{
+                                    backgroundColor: contact.chat_status?.color || '#f8f9fa',
                                     color: contact.chat_status ? '#fff' : '#495057',
                                     minWidth: '130px'
                                 }}
@@ -90,7 +90,7 @@ const ChatHeader = ({ contact, contactDetails, setContactDetails, loading, theme
                                 <span>{contact.chat_status?.name || 'Calificar chat...'}</span>
                             </button>
                             <div className="dropdown-menu scroll-hidden" style={{ maxHeight: '200px', overflowY: 'auto' }}>
-                                <button 
+                                <button
                                     className="dropdown-item d-flex align-items-center gap-2"
                                     onClick={() => onLeadUpdate(contact.id, null, 'chat_status')}
                                 >
@@ -98,7 +98,7 @@ const ChatHeader = ({ contact, contactDetails, setContactDetails, loading, theme
                                     <span>Sin calificar</span>
                                 </button>
                                 {chatStatuses.map(status => (
-                                    <button 
+                                    <button
                                         key={status.id}
                                         className="dropdown-item d-flex align-items-center gap-2"
                                         onClick={() => onLeadUpdate(contact.id, status.id, 'chat_status')}
@@ -116,30 +116,30 @@ const ChatHeader = ({ contact, contactDetails, setContactDetails, loading, theme
                         {(() => {
                             const service = contact.integration?.meta_service || contact.origin?.toLowerCase();
                             const isWhatsApp = service !== 'messenger' && service !== 'instagram';
-                            
+
                             if (!isWhatsApp) return null;
 
                             const lastHumanMicro = contact.last_human_message_microtime;
                             let lastHumanMs = lastHumanMicro ? Math.floor(lastHumanMicro / 1000) : 0;
-                            
+
                             if (lastHumanMs === 0) {
                                 return (
-                                    <span className="badge border d-inline-flex align-items-center" style={{ fontSize: '11px', padding: '4px 8px', backgroundColor: 'rgba(234, 84, 85, 0.12)', color: '#ea5455', borderColor: 'rgba(234, 84, 85, 0.24)' }}>
+                                    <span className="badge border d-inline-flex align-items-center" style={{ fontSize: '11px', padding: '4px 8px', backgroundColor: 'rgba(43, 114, 207, 0.12)', color: '#2b72cf', borderColor: 'rgba(43, 114, 207, 0.24)' }}>
                                         <i className="mdi mdi-alert-circle-outline me-1"></i>Si inicia conversación se cobrará
                                     </span>
                                 );
                             }
-                            
+
                             const msInWindow = 24 * 60 * 60 * 1000;
                             const expiresAt = lastHumanMs + msInWindow;
                             const remainingMs = expiresAt - now;
-                            
+
                             if (remainingMs > 0) {
                                 const hours = Math.floor(remainingMs / (3600 * 1000));
                                 const minutes = Math.floor((remainingMs % (3600 * 1000)) / (60 * 1000));
                                 const seconds = Math.floor((remainingMs % (60 * 1000)) / 1000);
                                 const formattedTime = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-                                
+
                                 return (
                                     <span className="badge border d-inline-flex align-items-center" style={{ fontSize: '11px', padding: '4px 8px', backgroundColor: 'rgba(40, 199, 111, 0.12)', color: '#28c76f', borderColor: 'rgba(40, 199, 111, 0.24)' }}>
                                         <><i className="mdi mdi-clock-outline me-1"></i>24h: {formattedTime}</>
@@ -162,7 +162,7 @@ const ChatHeader = ({ contact, contactDetails, setContactDetails, loading, theme
                                 }
 
                                 return (
-                                    <span className="badge border d-inline-flex align-items-center" style={{ fontSize: '11px', padding: '4px 8px', backgroundColor: 'rgba(234, 84, 85, 0.12)', color: '#ea5455', borderColor: 'rgba(234, 84, 85, 0.24)' }}>
+                                    <span className="badge border d-inline-flex align-items-center" style={{ fontSize: '11px', padding: '4px 8px', backgroundColor: 'rgba(43, 114, 207, 0.12)', color: '#2b72cf', borderColor: 'rgba(43, 114, 207, 0.24)' }}>
                                         <i className="mdi mdi-alert-circle-outline me-1"></i>Si inicia conversación se cobrará
                                     </span>
                                 );
