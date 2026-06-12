@@ -130,8 +130,7 @@ const ChatHeader = ({ contact, contactDetails, setContactDetails, loading, theme
                                 );
                             }
                             
-                            const isCampaign = !!contact.campaign_id;
-                            const msInWindow = isCampaign ? 72 * 60 * 60 * 1000 : 24 * 60 * 60 * 1000;
+                            const msInWindow = 24 * 60 * 60 * 1000;
                             const expiresAt = lastHumanMs + msInWindow;
                             const remainingMs = expiresAt - now;
                             
@@ -143,11 +142,7 @@ const ChatHeader = ({ contact, contactDetails, setContactDetails, loading, theme
                                 
                                 return (
                                     <span className="badge border d-inline-flex align-items-center" style={{ fontSize: '11px', padding: '4px 8px', backgroundColor: 'rgba(40, 199, 111, 0.12)', color: '#28c76f', borderColor: 'rgba(40, 199, 111, 0.24)' }}>
-                                        {isCampaign ? (
-                                            <><i className="mdi mdi-bullhorn-outline me-1"></i>Anuncio 72h: {formattedTime}</>
-                                        ) : (
-                                            <><i className="mdi mdi-clock-outline me-1"></i>24h: {formattedTime}</>
-                                        )}
+                                        <><i className="mdi mdi-clock-outline me-1"></i>24h: {formattedTime}</>
                                     </span>
                                 );
                             } else {

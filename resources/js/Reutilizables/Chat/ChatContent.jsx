@@ -156,8 +156,39 @@ const ChatContent = ({ leadId, setLeadId, theme, contactDetails, setContactDetai
     const currentTimestamp = Date.now();
 
     const diffHours = (currentTimestamp - latestTimestamp) / (1000 * 60 * 60);
-    const windowHours = contact?.campaign_id ? 72 : 24;
+    const windowHours = 24;
     return diffHours < windowHours;
+  };
+
+  const isWithin72HourCampaignWindow = () => {
+    if (!contact?.campaign_id) return false;
+    if (!messages || messages.length === 0) return false;
+    const humanMessages = messages.filter(m => m.role === 'Human');
+    if (humanMessages.length === 0) return false;
+
+    const maxMicrotime = Math.max(...humanMessages.map(m => Number(m.microtime)));
+    const latestTimestamp = maxMicrotime / 1000;
+    const currentTimestamp = Date.now();
+
+    const diffHours = (currentTimestamp - latestTimestamp) / (1000 * 60 * 60);
+    return diffHours < 72;
+  };
+
+  const getRemaining72HourTime = () => {
+    if (!messages || messages.length === 0) return '';
+    const humanMessages = messages.filter(m => m.role === 'Human');
+    if (humanMessages.length === 0) return '';
+
+    const maxMicrotime = Math.max(...humanMessages.map(m => Number(m.microtime)));
+    const latestTimestamp = maxMicrotime / 1000;
+    const currentTimestamp = Date.now();
+
+    const diffMs = (latestTimestamp + (72 * 60 * 60 * 1000)) - currentTimestamp;
+    if (diffMs <= 0) return '';
+
+    const hours = Math.floor(diffMs / (3600 * 1000));
+    const minutes = Math.floor((diffMs % (3600 * 1000)) / (60 * 1000));
+    return `${hours}h y ${minutes}m`;
   };
 
   // Preview states
@@ -637,13 +668,21 @@ const ChatContent = ({ leadId, setLeadId, theme, contactDetails, setContactDetai
                       <div className="d-flex align-items-center mb-2">
                         <i className="mdi mdi-alert-circle-outline font-18 me-2 text-warning"></i>
                         <h6 className="alert-heading fw-bold mb-0 text-warning" style={{ fontSize: '13px' }}>
-                          Ventana de conversación cerrada ({contact?.campaign_id ? '72h' : '24h'} expiradas)
+                          Ventana de conversación cerrada (24h expiradas)
                         </h6>
                       </div>
                       <p className="mb-0 text-muted small" style={{ lineHeight: '1.5' }}>
                         Para reiniciar la comunicación y poder chatear libremente, Meta exige el uso de una <strong>Plantilla de WhatsApp autorizada</strong>. 
                         Una vez que envíes la plantilla y el cliente responda, se reactivará una nueva ventana gratuita de conversación libre de cargos.
                       </p>
+                      {isWithin72HourCampaignWindow() && (
+                        <div className="mt-2 p-2 rounded border d-flex align-items-center" style={{ backgroundColor: 'rgba(40, 199, 111, 0.12)', color: '#28c76f', borderColor: 'rgba(40, 199, 111, 0.24)', fontSize: '11px', textAlign: 'left' }}>
+                          <i className="mdi mdi-gift-outline font-16 me-2"></i>
+                          <span>
+                            <strong>Beneficio de Anuncio:</strong> Este cliente proviene de un anuncio y está dentro de las 72h de gracia (te quedan <strong>{getRemaining72HourTime()}</strong>). El envío de esta plantilla será <strong>100% gratuito</strong> en tu facturación de Meta.
+                          </span>
+                        </div>
+                      )}
                       <div className="mt-3 text-end">
                         <button type="button" className="btn btn-xs btn-warning px-3 rounded-pill" onClick={openTemplatesModal}>
                           <i className="mdi mdi-whatsapp me-1"></i> Seleccionar plantilla
