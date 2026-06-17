@@ -40,6 +40,8 @@ const Settings = ({
     const archivedLeadStatusDaysRef = useRef();
     const archivedLeadStatusDirectRef = useRef();
     const defaultProjectStatusRef = useRef();
+    const defaultUnarchiveLeadStatusRef = useRef();
+    const defaultUnarchiveManageLeadStatusRef = useRef();
 
     const [constantType, setConstantType] = useState();
     const [specification, setSpecification] = useState();
@@ -270,6 +272,22 @@ const Settings = ({
         await settingsRest.save(request);
     };
 
+    const onDefaultUnarchiveLeadStatusChange = async (e) => {
+        const request = {
+            name: "default-unarchive-lead-status",
+            value: e.target.value || null,
+        };
+        await settingsRest.save(request);
+    };
+
+    const onDefaultUnarchiveManageLeadStatusChange = async (e) => {
+        const request = {
+            name: "default-unarchive-manage-lead-status",
+            value: e.target.value || null,
+        };
+        await settingsRest.save(request);
+    };
+
     const archivedLeadStatus = getConstant("archived-lead-status");
     const archivedLeadStatusDays = getConstant("archived-lead-status-days");
     const archivedLeadStatusDirect = getConstant("archived-lead-status-direct");
@@ -279,6 +297,8 @@ const Settings = ({
     const convertedLeadStatus = getConstant("converted-lead-status");
     const newLeadStatus = getConstant("default-manage-lead-status");
     const defaultLeadStatus = getConstant("default-lead-status");
+    const defaultUnarchiveLeadStatus = getConstant("default-unarchive-lead-status");
+    const defaultUnarchiveManageLeadStatus = getConstant("default-unarchive-manage-lead-status");
 
     useEffect(() => {
         window.location.hash = activeTab;
@@ -303,6 +323,8 @@ const Settings = ({
             .select2();
         $(newLeadStatusRef.current).val(newLeadStatus.value).select2();
         $(defaultLeadStatusRef.current).val(defaultLeadStatus.value).select2();
+        $(defaultUnarchiveLeadStatusRef.current).val(defaultUnarchiveLeadStatus.value).select2();
+        $(defaultUnarchiveManageLeadStatusRef.current).val(defaultUnarchiveManageLeadStatus.value).select2();
     }, [null]);
 
     const questionsObj = getConstant("gemini-extra-questions");
@@ -621,6 +643,115 @@ const Settings = ({
                                                                     (item) =>
                                                                         item.table_id ==
                                                                         "e05a43e5-b3a6-46ce-8d1f-381a73498f33",
+                                                                )
+                                                                .map(
+                                                                    (
+                                                                        status,
+                                                                        index,
+                                                                    ) => {
+                                                                        return (
+                                                                            <option
+                                                                                key={
+                                                                                    index
+                                                                                }
+                                                                                value={
+                                                                                    status.id
+                                                                                }
+                                                                            >
+                                                                                {
+                                                                                    status.name
+                                                                                }
+                                                                            </option>
+                                                                        );
+                                                                    },
+                                                                )}
+                                                        </SelectFormGroup>
+                                                    </div>
+                                                </div>
+
+                                                <div className="col-md-4 col-sm-6 col-xs-12">
+                                                    <div
+                                                        className="card card-body border p-2"
+                                                        style={{
+                                                            cursor: "default",
+                                                        }}
+                                                    >
+                                                        <h5 className="card-title mb-1">
+                                                            Estado de desarchivado
+                                                        </h5>
+                                                        <p className="card-text">
+                                                            ¿Qué estado de lead se le asignará al desarchivar? (Deja vacío para mantener el actual)
+                                                        </p>
+                                                        <SelectFormGroup
+                                                            eRef={
+                                                                defaultUnarchiveLeadStatusRef
+                                                            }
+                                                            label="Escoge un estado"
+                                                            noMargin
+                                                            onChange={
+                                                                onDefaultUnarchiveLeadStatusChange
+                                                            }
+                                                        >
+                                                            <option value="">Mantener estado actual</option>
+                                                            {statuses
+                                                                .filter(
+                                                                    (item) =>
+                                                                        item.table_id ==
+                                                                        "e05a43e5-b3a6-46ce-8d1f-381a73498f33",
+                                                                )
+                                                                .map(
+                                                                    (
+                                                                        status,
+                                                                        index,
+                                                                    ) => {
+                                                                        return (
+                                                                            <option
+                                                                                key={
+                                                                                    index
+                                                                                }
+                                                                                value={
+                                                                                    status.id
+                                                                                }
+                                                                            >
+                                                                                {
+                                                                                    status.name
+                                                                                }
+                                                                            </option>
+                                                                        );
+                                                                    },
+                                                                )}
+                                                        </SelectFormGroup>
+                                                    </div>
+                                                </div>
+
+                                                <div className="col-md-4 col-sm-6 col-xs-12">
+                                                    <div
+                                                        className="card card-body border p-2"
+                                                        style={{
+                                                            cursor: "default",
+                                                        }}
+                                                    >
+                                                        <h5 className="card-title mb-1">
+                                                            Etiqueta de desarchivado
+                                                        </h5>
+                                                        <p className="card-text">
+                                                            ¿Qué etiqueta se le asignará al desarchivar?
+                                                        </p>
+                                                        <SelectFormGroup
+                                                            eRef={
+                                                                defaultUnarchiveManageLeadStatusRef
+                                                            }
+                                                            label="Escoge un estado"
+                                                            noMargin
+                                                            onChange={
+                                                                onDefaultUnarchiveManageLeadStatusChange
+                                                            }
+                                                        >
+                                                            {statuses
+                                                                .filter(
+                                                                    (item) =>
+                                                                        item.table_id ==
+                                                                        "9c27e649-574a-47eb-82af-851c5d425434",
                                                                 )
                                                                 .map(
                                                                     (

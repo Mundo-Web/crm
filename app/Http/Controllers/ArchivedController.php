@@ -55,14 +55,35 @@ class ArchivedController extends BasicController
             Log::info('Looking for client...', ['id' => $id]);
             $client = $this->model::findOrFail($id);
             Log::info('Client found.', ['client_id' => $client->id, 'current_status' => $client->status]);
-            
+
             $client->status = true;
-            Log::info('Updating status to true. Saving...');
-            
-            $saved = $client->save();
-            Log::info('Client save result.', ['saved' => $saved, 'new_status' => $client->status]);
+
+            $unarchiveLeadStatus = Setting::get('default-unarchive-lead-status', Auth::user()->business_id);
+            $unarchiveManageStatus = Setting::get('default-unarchive-manage-lead-status', Auth::user()->business_id);
+
+            /*   Log::info('Unarchive settings loaded.', [
+                   'unarchive-lead-status' => $unarchiveLeadStatus,
+                   'unarchive-manage-lead-status' => $unarchiveManageStatus
+               ]);*/
+
+            if (!empty($unarchiveLeadStatus)) {
+                $client->status_id = $unarchiveLeadStatus;
+            }
+
+            if (!empty($unarchiveManageStatus)) {
+                $client->manage_status_id = $unarchiveManageStatus;
+            }
+
+            /*  Log::info('Saving client with new settings...');*/
+            $client->save();
+            /*  Log::info('Client save result.', [
+                  'saved' => $saved,
+                  'new_status' => $client->status,
+                  'new_status_id' => $client->status_id,
+                'new_manage_status_id' => $client->manage_status_id
+            ]);*/
         });
-        Log::info('ArchivedController@status completed.', ['response' => $response->toArray()]);
+        /*  Log::info('ArchivedController@status completed.', ['response' => $response->toArray()]);*/
         return response($response->toArray(), $response->status);
     }
 }
