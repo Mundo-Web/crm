@@ -7,6 +7,7 @@ use App\Models\NoteType;
 use App\Models\Setting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use SoDe\Extend\Response;
 
 class ArchivedController extends BasicController
@@ -48,13 +49,20 @@ class ArchivedController extends BasicController
 
     public function status(Request $request)
     {
+        Log::info('ArchivedController@status initiated.', ['request_all' => $request->all()]);
         $response = Response::simpleTryCatch(function (Response $response) use ($request) {
-            $client = $this->model::findOrFail($request->id);
+            $id = $request->id;
+            Log::info('Looking for client...', ['id' => $id]);
+            $client = $this->model::findOrFail($id);
+            Log::info('Client found.', ['client_id' => $client->id, 'current_status' => $client->status]);
+            
             $client->status = true;
-            //    $client->status_id = Setting::get('default-lead-status', Auth::user()->business_id);
-            //  $client->manage_status_id = Setting::get('default-manage-lead-status', Auth::user()->business_id);
-            $client->save();
+            Log::info('Updating status to true. Saving...');
+            
+            $saved = $client->save();
+            Log::info('Client save result.', ['saved' => $saved, 'new_status' => $client->status]);
         });
+        Log::info('ArchivedController@status completed.', ['response' => $response->toArray()]);
         return response($response->toArray(), $response->status);
     }
 }
