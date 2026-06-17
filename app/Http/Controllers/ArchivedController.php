@@ -41,7 +41,7 @@ class ArchivedController extends BasicController
             ->leftJoin('business_sectors AS business_sector', 'business_sector.id', 'clients.business_sector_id')
             ->where(function ($q) {
                 $q->whereNull('clients.status')
-                  ->orWhere('clients.status', false);
+                    ->orWhere('clients.status', false);
             })
             ->where('clients.business_id', Auth::user()->business_id);
     }
@@ -49,10 +49,11 @@ class ArchivedController extends BasicController
     public function status(Request $request)
     {
         $response = Response::simpleTryCatch(function (Response $response) use ($request) {
-            $this->model::where('id', $request->id)
-                ->update([
-                    'status' => 1
-                ]);
+            $client = $this->model::findOrFail($request->id);
+            $client->status = true;
+            //    $client->status_id = Setting::get('default-lead-status', Auth::user()->business_id);
+            //  $client->manage_status_id = Setting::get('default-manage-lead-status', Auth::user()->business_id);
+            $client->save();
         });
         return response($response->toArray(), $response->status);
     }
