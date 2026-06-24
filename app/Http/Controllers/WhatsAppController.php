@@ -373,10 +373,12 @@ class WhatsAppController extends Controller
 
             // Send message via Meta Graph API
             if (!$isDummy) {
-                $integration = $clientJpa->integration ?? Integration::where('business_id', Auth::user()->business_id)
-                    ->where('meta_service', 'whatsapp')
-                    ->where('status', true)
-                    ->first();
+                $integration = ($clientJpa->integration && $clientJpa->integration->meta_service === 'whatsapp' && $clientJpa->integration->status)
+                    ? $clientJpa->integration
+                    : Integration::where('business_id', Auth::user()->business_id)
+                        ->where('meta_service', 'whatsapp')
+                        ->where('status', true)
+                        ->first();
 
                 if (!$integration) {
                     Log::error('Meta integration not found', ['business_id' => Auth::user()->business_id]);
@@ -387,7 +389,7 @@ class WhatsAppController extends Controller
 
                 Log::info('Preparing Meta request', [
                     'url' => $url,
-                    'is_custom_integration' => !!$clientJpa->integration,
+                    'is_custom_integration' => ($clientJpa->integration && $clientJpa->integration->meta_service === 'whatsapp'),
                     'integration_id' => $integration->id
                 ]);
 
@@ -690,10 +692,12 @@ class WhatsAppController extends Controller
                 $number = '51' . $number;
             }
 
-            $integration = $clientJpa->integration ?? Integration::where('business_id', Auth::user()->business_id)
-                ->where('meta_service', 'whatsapp')
-                ->where('status', true)
-                ->first();
+            $integration = ($clientJpa->integration && $clientJpa->integration->meta_service === 'whatsapp' && $clientJpa->integration->status)
+                ? $clientJpa->integration
+                : Integration::where('business_id', Auth::user()->business_id)
+                    ->where('meta_service', 'whatsapp')
+                    ->where('status', true)
+                    ->first();
 
             if (!$integration) {
                 Log::error('Meta integration not found', ['business_id' => Auth::user()->business_id]);
