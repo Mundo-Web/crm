@@ -145,6 +145,7 @@ const ChatContent = ({ leadId, setLeadId, theme, contactDetails, setContactDetai
                      (!['messenger', 'instagram', 'tiktok'].includes(contact?.integration?.meta_service) && contact?.contact_phone);
   const isMetaIntegration = !isWhatsApp && (service === 'messenger' || service === 'instagram');
   const isTikTokIntegration = !isWhatsApp && service === 'tiktok';
+  const chatIdentifier = isWhatsApp ? contact?.contact_phone : (contact?.integration_user_id || contact?.contact_phone);
 
   const is24HourWindowOpen = () => {
     if (!messages || messages.length === 0) return false;
@@ -355,7 +356,7 @@ const ChatContent = ({ leadId, setLeadId, theme, contactDetails, setContactDetai
   useEffect(() => {
     if (!socket || !contact) return
     socket.on('message.created', (props) => {
-      if (props.wa_id != (contact?.integration_user_id || contact?.contact_phone)) return
+      if (props.wa_id != chatIdentifier) return
       const { id, microtime } = props;
       setMessages(prev => {
         const exists = prev.find(m => m.id === id);
@@ -379,7 +380,7 @@ const ChatContent = ({ leadId, setLeadId, theme, contactDetails, setContactDetai
     })
 
     socket.on('message.updated', (props) => {
-      if (props.wa_id != (contact?.integration_user_id || contact?.contact_phone)) return
+      if (props.wa_id != chatIdentifier) return
       const { id } = props;
       setMessages(prev => {
         return prev.map(m => m.id === id ? { ...m, ...props } : m);
@@ -390,7 +391,7 @@ const ChatContent = ({ leadId, setLeadId, theme, contactDetails, setContactDetai
       socket.off('message.created')
       socket.off('message.updated')
     }
-  }, [socket, contact, messages])
+  }, [socket, contact, messages, chatIdentifier])
 
   // Infinite scroll handler
   // useEffect(() => {
@@ -540,16 +541,16 @@ const ChatContent = ({ leadId, setLeadId, theme, contactDetails, setContactDetai
     const el = containerRef.current
     const prevScrollHeight = el ? el.scrollHeight : 0
     const oldestMessage = messages
-      .filter(m => m.wa_id == (contact.integration_user_id || contact.contact_phone))
+      .filter(m => m.wa_id == chatIdentifier)
       .sort((a, b) => a.microtime - b.microtime)[0] ?? { microtime: (Date.now() + 5 * 60 * 60 * 1000) * 1000 }
     setMessagesLoading(true)
     const result = await messagesRest.paginate({
       summary: {
-        'contact_phone': contact.integration_user_id || contact.contact_phone
+        'contact_phone': chatIdentifier
       },
       filter: [
         ["microtime", "<", oldestMessage.microtime], "and",
-        ["wa_id", "contains", contact.integration_user_id || contact.contact_phone]
+        ["wa_id", "contains", chatIdentifier]
       ],
       sort: [{ selector: 'microtime', desc: true }],
       skip: 0,
@@ -576,11 +577,11 @@ const ChatContent = ({ leadId, setLeadId, theme, contactDetails, setContactDetai
     if (!contact) return
     await messagesRest.paginate({
       summary: {
-        'contact_phone': contact.integration_user_id || contact.contact_phone
+        'contact_phone': chatIdentifier
       },
       filter: [
         ["microtime", "<=", sinceMicrotime], "and",
-        ["wa_id", "contains", contact.integration_user_id || contact.contact_phone]
+        ["wa_id", "contains", chatIdentifier]
       ],
       sort: [{ selector: 'microtime', desc: true }],
       skip: 0,

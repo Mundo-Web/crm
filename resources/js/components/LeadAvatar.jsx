@@ -39,7 +39,7 @@ const LeadAvatar = ({ lead, className = "avatar-sm", style = {}, ...props }) => 
 
     return (
         <img 
-            src={`/api/whatsapp/profile/${lead.integration_user_id || lead.contact_phone}`}
+            src={`/api/whatsapp/profile/${lead.contact_phone || lead.integration_user_id}`}
             className={`rounded-circle bg-light ${className}`}
             alt={lead.name} 
             style={{ padding: 0, border: 'none', objectFit: 'cover', ...style }}
