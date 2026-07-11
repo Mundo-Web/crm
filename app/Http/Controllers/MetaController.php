@@ -946,37 +946,46 @@ class MetaController extends Controller
                 throw new Exception('No hay una integración de Meta activa (Forms) para este negocio');
             }
 
-            // meta_app_token: ads_management/ads_read permissions
-            // meta_access_token: fallback (leads_retrieval)
-            $token = $integrationJpa->meta_app_token ?? $integrationJpa->meta_access_token;
-            if (!$token) {
-                throw new Exception('Configure el App Token en la integración para sincronizar campañas.');
+            // meta_app_token: User Token de larga duración del OAuth (con ads_read)
+            //                 O bien un System User Token con ads_management
+            // meta_access_token: Page Access Token (solo sirve para leads, NO para campañas)
+            //
+            // IMPORTANTE: Se usa meta_app_token como token principal para campañas.
+            // Este campo se llena automáticamente al reconectar la integración (OAuth).
+            $campaignToken = $integrationJpa->meta_app_token;
+            if (!$campaignToken) {
+                throw new Exception(
+                    'No hay un token de usuario configurado para sincronizar campañas. ' .
+                    'Por favor, vuelve a conectar la integración de Meta (Forms) en Configuración → Webhooks ' .
+                    'para autorizar los permisos de acceso a campañas (ads_read).'
+                );
             }
 
             $facebookGraphUrl = env('FACEBOOK_GRAPH_URL', 'https://graph.facebook.com/v22.0');
             $syncedCount = 0;
 
-            // meta_access_token: discovers ad accounts (it has user-level authority)
-            // meta_app_token: reads campaign hierarchy (has ads_management permissions)
-            $discoveryToken  = $integrationJpa->meta_access_token;
-            $campaignToken   = $integrationJpa->meta_app_token ?? $discoveryToken;
-
-            // STEP 1: Determine which ad accounts to sync
-            // Priority: use stored meta_ad_account_id, fallback to /me/adaccounts discovery
+            // STEP 1: Determinar qué cuentas publicitarias sincronizar
+            // Prioridad: meta_ad_account_id guardado → /me/adaccounts con el User Token
             if ($integrationJpa->meta_ad_account_id) {
                 $rawId = trim($integrationJpa->meta_ad_account_id);
                 $cleanId = str_starts_with($rawId, 'act_') ? $rawId : 'act_' . $rawId;
                 $adAccounts = [['id' => $cleanId]];
                 Log::info('Using stored Ad Account ID', ['account' => $cleanId]);
             } else {
-                Log::info('Fetching all ad accounts from Meta (no specific ID configured)');
+                Log::info('Fetching all ad accounts from Meta using User Token (Standard Access)');
                 $adAccountsRes = new Fetch("{$facebookGraphUrl}/me/adaccounts?fields=id,name,account_status&limit=50", [
-                    'headers' => ['Authorization' => 'Bearer ' . $discoveryToken]
+                    'headers' => ['Authorization' => 'Bearer ' . $campaignToken]
                 ]);
                 $adAccountsData = $adAccountsRes->ok ? $adAccountsRes->json() : [];
 
                 if (!$adAccountsRes->ok || isset($adAccountsData['error'])) {
-                    throw new Exception('Error obteniendo cuentas publicitarias: ' . ($adAccountsData['error']['message'] ?? 'Respuesta de red inválida'));
+                    $metaError = $adAccountsData['error']['message'] ?? 'Respuesta de red inválida';
+                    $metaCode  = $adAccountsData['error']['code'] ?? 0;
+                    throw new Exception(
+                        "Error obteniendo cuentas publicitarias de Meta (código {$metaCode}): {$metaError}. " .
+                        'Asegúrate de que el token tiene el permiso ads_read. ' .
+                        'Reconecta la integración de Meta en Webhooks para obtener un nuevo token.'
+                    );
                 }
 
                 $adAccounts = $adAccountsData['data'] ?? [];
@@ -985,7 +994,10 @@ class MetaController extends Controller
             Log::info('Ad accounts to sync', ['count' => count($adAccounts)]);
 
             if (empty($adAccounts)) {
-                throw new Exception('No se encontraron cuentas publicitarias asociadas al token.');
+                throw new Exception(
+                    'No se encontraron cuentas publicitarias activas asociadas a este usuario de Meta. ' .
+                    'Asegúrate de que el usuario tiene acceso a al menos una cuenta publicitaria activa.'
+                );
             }
 
             // STEP 2: For each Ad Account, fetch campaigns with full hierarchy
@@ -1919,7 +1931,7 @@ class MetaController extends Controller
 
         // Scopes específicos por servicio — solo pedimos lo que cada canal necesita
         $scopesMap = [
-            'forms'     => ['pages_show_list', 'pages_manage_metadata', 'pages_read_engagement', 'leads_retrieval'],
+            'forms'     => ['pages_show_list', 'pages_manage_metadata', 'pages_read_engagement', 'leads_retrieval', 'ads_read'],
             'messenger' => ['pages_show_list', 'pages_read_engagement', 'pages_messaging'],
             'instagram' => ['pages_show_list', 'instagram_basic', 'instagram_manage_messages'],
             'whatsapp'  => ['whatsapp_business_messaging', 'whatsapp_business_management', 'business_management', 'ads_read'],
@@ -2097,12 +2109,38 @@ class MetaController extends Controller
                 $pages     = $pagesData['data'] ?? [];
             }
 
+            // Para el servicio 'forms', también obtenemos las cuentas publicitarias
+            // usando el user token (Standard Access funciona para cuentas propias del usuario)
+            $adAccounts = [];
+            if ($service === 'forms') {
+                $adAccountsRes = new Fetch("{$graphUrl}/me/adaccounts?fields=id,name,account_status,currency&limit=50", [
+                    'headers' => ['Authorization' => 'Bearer ' . $longLivedUserToken]
+                ]);
+                $adAccountsData = $adAccountsRes->json();
+                if (!isset($adAccountsData['error']) && isset($adAccountsData['data'])) {
+                    foreach ($adAccountsData['data'] as $acc) {
+                        // Solo cuentas activas (status 1 = ACTIVE)
+                        if (($acc['account_status'] ?? 0) == 1) {
+                            $adAccounts[] = [
+                                'id'   => $acc['id'],   // incluye prefijo act_
+                                'name' => $acc['name'] ?? $acc['id'],
+                            ];
+                        }
+                    }
+                } else {
+                    Log::info('No se pudieron obtener ad accounts (puede ser normal si el usuario no tiene cuentas)', [
+                        'error' => $adAccountsData['error'] ?? null
+                    ]);
+                }
+            }
+
             // Consolidar payload y codificar en Base64
             $payload = base64_encode(json_encode([
-                'service'     => $service,
-                'pages'       => $pages,
-                'waba_phones' => $wabaPhones,
-                'user_token'  => $longLivedUserToken,
+                'service'      => $service,
+                'pages'        => $pages,
+                'waba_phones'  => $wabaPhones,
+                'user_token'   => $longLivedUserToken,
+                'ad_accounts'  => $adAccounts,   // cuentas publicitarias del usuario (forms)
             ]));
 
             return view('meta_callback', ['payload' => $payload]);

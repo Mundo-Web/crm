@@ -24,9 +24,18 @@ class CampaignController extends BasicController
             ->where('status', true)
             ->exists();
 
+        // Verificar si la integración de Meta tiene el User Token para campañas (meta_app_token)
+        $formsIntegration = \App\Models\Integration::where('business_id', $businessId)
+            ->where('meta_service', 'forms')
+            ->where('status', true)
+            ->first();
+
+        $hasMetaCampaignConfig = $formsIntegration && !empty($formsIntegration->meta_app_token);
+
         return [
-            'hasFormsIntegration' => $hasFormsIntegration,
-            'hasTikTokIntegration' => $hasTikTokIntegration
+            'hasFormsIntegration'   => $hasFormsIntegration,
+            'hasTikTokIntegration'  => $hasTikTokIntegration,
+            'hasMetaCampaignConfig' => $hasMetaCampaignConfig,
         ];
     }
 

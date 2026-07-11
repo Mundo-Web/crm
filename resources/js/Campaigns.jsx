@@ -591,7 +591,7 @@ const CampaignItem = ({ campaign, onEdit, onDelete, onSync }) => {
     );
 };
 
-const Campaigns = ({ can, hasFormsIntegration, hasTikTokIntegration }) => {
+const Campaigns = ({ can, hasFormsIntegration, hasTikTokIntegration, hasMetaCampaignConfig }) => {
     const modalRef = useRef();
     const idRef = useRef();
     const codeRef = useRef();
@@ -675,27 +675,46 @@ const Campaigns = ({ can, hasFormsIntegration, hasTikTokIntegration }) => {
 
     const onSyncMetaClicked = async () => {
         const { isConfirmed } = await Swal.fire({
-            title: "Sincronizar con Meta",
-            text: "Se buscarán actualizaciones de jerarquía en Facebook.",
-            icon: "question",
+            title: "Sincronizar Campañas con Meta",
+            html: hasMetaCampaignConfig
+                ? "Se actualizará la jerarquía de campañas, conjuntos y anuncios desde Meta Ads."
+                : "<div class='text-start'><strong class='text-danger'>Configuración incompleta</strong><br/><small>No hay token de usuario configurado para campañas. Reconecta la integración de Meta en Webhooks para habilitar esta función.</small></div>",
+            icon: hasMetaCampaignConfig ? "question" : "warning",
             showCancelButton: true,
-            confirmButtonText: "Sincronizar ahora",
+            confirmButtonText: hasMetaCampaignConfig ? "Sincronizar ahora" : "Ir a configuración",
+            cancelButtonText: "Cancelar",
         });
-        if (isConfirmed) {
-            Swal.fire({
-                title: "Sincronizando...",
-                didOpen: () => Swal.showLoading(),
-            });
+        if (!isConfirmed) return;
+
+        if (!hasMetaCampaignConfig) {
+            window.location.href = '/webhooks';
+            return;
+        }
+
+        Swal.fire({
+            title: "Sincronizando con Meta...",
+            html: "<small class='text-muted'>Obteniendo campañas, conjuntos y anuncios...</small>",
+            didOpen: () => Swal.showLoading(),
+            allowOutsideClick: false,
+        });
+        try {
             const result = await campaignsRest.syncMetaHierarchy();
             Swal.close();
             if (result) {
                 fetchCampaigns();
                 Swal.fire(
-                    "Sincronizado",
-                    "La estructura se ha actualizado.",
+                    "¡Sincronizado!",
+                    "La estructura de campañas se ha actualizado correctamente.",
                     "success",
                 );
             }
+        } catch (err) {
+            Swal.close();
+            Swal.fire(
+                "Error de sincronización",
+                err.message || "Ocurrió un error al sincronizar con Meta. Verifica que la integración esté correctamente configurada.",
+                "error"
+            );
         }
     };
 
@@ -788,6 +807,22 @@ const Campaigns = ({ can, hasFormsIntegration, hasTikTokIntegration }) => {
                 </div>
             </div>
 
+            {/* Alerta si hay integración de Meta pero falta el token de campañas */}
+            {hasFormsIntegration && !hasMetaCampaignConfig && (
+                <div className="alert border-0 mb-4 rounded-3 d-flex align-items-start gap-3"
+                    style={{ background: "linear-gradient(135deg, #fff3cd 0%, #fffbea 100%)", borderLeft: "4px solid #ffc107" }}>
+                    <i className="mdi mdi-alert-circle text-warning fs-4 mt-1"></i>
+                    <div>
+                        <div className="fw-semibold text-dark mb-1">Sincronización de campañas no configurada</div>
+                        <div className="small text-muted">
+                            Tienes la integración de Meta activa para leads, pero falta autorizar el acceso a campañas (<code>ads_read</code>).
+                            Para solucionarlo, reconecta tu integración de Meta desde{" "}
+                            <a href="/webhooks" className="text-primary fw-semibold">Configuración → Webhooks</a>.
+                        </div>
+                    </div>
+                </div>
+            )}
+
             <div className="row mb-4">
                 <div className="col-md-6">
                     <div className="input-group input-group-merge shadow-sm rounded-pill overflow-hidden border-0">
@@ -799,6 +834,7 @@ const Campaigns = ({ can, hasFormsIntegration, hasTikTokIntegration }) => {
                             className="form-control border-0 py-2"
                             placeholder="Buscar por nombre o código de campaña..."
                             value={searchTerm}
+
                             onChange={(e) => setSearchTerm(e.target.value)}
                         />
                     </div>

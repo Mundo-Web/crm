@@ -581,6 +581,12 @@ const IntegrationWizardModal = ({
                 targetAccountId = selectedPage.id;
                 targetAccessToken = selectedPage.access_token;
                 targetPhoneId = "";
+
+                // Para 'forms': guardar automáticamente el User Token como appToken
+                // Este token tiene ads_read y permite sincronizar campañas sin Advanced Access
+                if (service === 'forms' && authPayload?.user_token) {
+                    setAppToken(authPayload.user_token);
+                }
             }
         }
 
@@ -607,6 +613,7 @@ const IntegrationWizardModal = ({
             setVerifying(false);
         }
     };
+
 
     const onCopyClicked = async (toCopy) => {
         Clipboard.copy(toCopy, () => {
@@ -1675,44 +1682,77 @@ const IntegrationWizardModal = ({
 
                                                     {/* Sincronización de Campañas para Meta Forms */}
                                                     {service === "forms" && (
-                                                        <div className="card border rounded-3 mt-4">
-                                                            <div className="card-header bg-transparent py-2">
-                                                                <h6 className="mb-0 text-dark fw-semibold">
-                                                                    <i className="mdi mdi-chart-bar me-2 text-primary"></i>
-                                                                    Sincronización de Campañas (Opcional)
+                                                        <div className="card border-0 rounded-3 mt-4" style={{ background: "linear-gradient(135deg, #e8f4fd 0%, #f0f7ff 100%)", border: "1px solid #bfdbfe !important" }}>
+                                                            <div className="card-header border-0 py-2 rounded-top-3" style={{ background: "transparent" }}>
+                                                                <h6 className="mb-0 text-primary fw-semibold d-flex align-items-center gap-2">
+                                                                    <i className="mdi mdi-chart-timeline-variant-shimmer fs-5"></i>
+                                                                    Campañas de Meta Ads
+                                                                    {appToken && (
+                                                                        <span className="badge bg-success ms-2 small fw-normal">
+                                                                            <i className="mdi mdi-check-circle me-1"></i>Token listo
+                                                                        </span>
+                                                                    )}
                                                                 </h6>
                                                             </div>
-                                                            <div className="card-body p-3">
-                                                                <div className="row g-3">
-                                                                    <div className="col-12">
-                                                                        <label className="form-label fw-semibold small text-muted">
-                                                                            App Token (System User):
-                                                                        </label>
-                                                                        <input
-                                                                            type="text"
-                                                                            className="form-control border-2"
-                                                                            value={appToken}
-                                                                            onChange={(e) => setAppToken(e.target.value)}
-                                                                            placeholder="Token con permisos ads_management y ads_read"
-                                                                        />
-                                                                        <div className="form-text small">
-                                                                            Introduce un System User Token para poder sincronizar y ver las métricas de tus campañas publicitarias.
-                                                                        </div>
+                                                            <div className="card-body pt-2 pb-3 px-3">
+                                                                {/* Estado del token */}
+                                                                {appToken ? (
+                                                                    <div className="alert alert-success border-0 py-2 px-3 mb-3 d-flex align-items-center gap-2 small rounded-3">
+                                                                        <i className="mdi mdi-shield-check fs-5 text-success"></i>
+                                                                        <span>
+                                                                            <strong>Token con ads_read guardado automáticamente.</strong>{" "}
+                                                                            La sincronización de campañas estará disponible.
+                                                                        </span>
                                                                     </div>
-                                                                    <div className="col-12">
-                                                                        <label className="form-label fw-semibold small text-muted">
-                                                                            Ad Account ID:
-                                                                        </label>
+                                                                ) : (
+                                                                    <div className="alert alert-info border-0 py-2 px-3 mb-3 d-flex align-items-center gap-2 small rounded-3">
+                                                                        <i className="mdi mdi-information fs-5 text-info"></i>
+                                                                        <span>
+                                                                            Selecciona tu página arriba para activar la sincronización de campañas automáticamente.
+                                                                        </span>
+                                                                    </div>
+                                                                )}
+
+                                                                {/* Selector de Ad Account */}
+                                                                <div className="mb-2">
+                                                                    <label className="form-label fw-semibold small text-dark mb-1 d-flex align-items-center gap-1">
+                                                                        <i className="mdi mdi-briefcase-account text-primary"></i>
+                                                                        Cuenta Publicitaria (Ad Account):
+                                                                        <span className="text-danger">*</span>
+                                                                    </label>
+
+                                                                    {/* Si el OAuth devolvió cuentas, mostrar selector */}
+                                                                    {authPayload?.ad_accounts && authPayload.ad_accounts.length > 0 ? (
+                                                                        <select
+                                                                            className="form-select border-2"
+                                                                            value={adAccountId}
+                                                                            onChange={(e) => setAdAccountId(e.target.value)}
+                                                                            style={{ borderRadius: "8px" }}
+                                                                        >
+                                                                            <option value="">-- Selecciona una cuenta publicitaria --</option>
+                                                                            {authPayload.ad_accounts.map((acc) => (
+                                                                                <option key={acc.id} value={acc.id}>
+                                                                                    {acc.name} ({acc.id})
+                                                                                </option>
+                                                                            ))}
+                                                                        </select>
+                                                                    ) : (
+                                                                        /* Si no hay cuentas en el payload (edición o no detectadas), campo manual */
                                                                         <input
                                                                             type="text"
                                                                             className="form-control border-2"
                                                                             value={adAccountId}
                                                                             onChange={(e) => setAdAccountId(e.target.value)}
-                                                                            placeholder="Ej: 1960065440840205"
+                                                                            placeholder="Ej: act_1960065440840205  o  1960065440840205"
+                                                                            style={{ borderRadius: "8px" }}
                                                                         />
-                                                                        <div className="form-text small">
-                                                                            ID de tu cuenta publicitaria de Meta Ads.
-                                                                        </div>
+                                                                    )}
+                                                                    <div className="form-text small mt-1">
+                                                                        <i className="mdi mdi-information-outline me-1"></i>
+                                                                        Necesario para sincronizar campañas.{" "}
+                                                                        <a href="https://business.facebook.com/adsmanager" target="_blank" rel="noopener noreferrer" className="text-primary">
+                                                                            Ver en Business Manager
+                                                                        </a>
                                                                     </div>
                                                                 </div>
                                                             </div>
@@ -1721,6 +1761,7 @@ const IntegrationWizardModal = ({
                                                 </div>
                                             )}
                                         </div>
+
                                     ) : (
                                         <div className="row g-3">
                                             <div className="col-12">
@@ -1896,112 +1937,57 @@ const IntegrationWizardModal = ({
                                                 </>
                                             )}
 
-                                            {/* App Token + Ad Account ID - Solo para Meta Forms */}
+                                            {/* Campañas de Meta Ads - Solo para Forms (modo edición manual) */}
                                             {service === "forms" && (
                                                 <div className="col-12 mt-2">
-                                                    <div className="form-check form-switch p-0 d-flex align-items-center">
-                                                        <input
-                                                            className="form-check-input ms-0 me-2"
-                                                            type="checkbox"
-                                                            id="toggleCampaignConfig"
-                                                            checked={showCampaignConfig}
-                                                            onChange={(e) => setShowCampaignConfig(e.target.checked)}
-                                                            style={{ cursor: "pointer", width: "2.5em", height: "1.25em" }}
-                                                        />
-                                                        <label className="form-check-label fw-semibold text-muted" htmlFor="toggleCampaignConfig" style={{ cursor: "pointer" }}>
-                                                            Sincronización de Campañas (Avanzado / Opcional)
-                                                        </label>
-                                                    </div>
-                                                </div>
-                                            )}
-
-                                            {service === "forms" && showCampaignConfig && (
-                                                <>
-                                                    <div className="col-12">
-                                                        <label className="form-label fw-semibold d-flex align-items-center">
-                                                            <i
-                                                                className="mdi mdi-key-star me-2"
-                                                                style={{
-                                                                    color: config.color,
-                                                                }}
-                                                            ></i>
-                                                            App Token{" "}
-                                                            <span className="text-muted fw-normal ms-2 small">
-                                                                (para sincronizar
-                                                                campañas)
-                                                            </span>
-                                                            :
-                                                        </label>
-                                                        <input
-                                                            type="text"
-                                                            className="form-control border-2"
-                                                            value={appToken}
-                                                            onChange={(e) =>
-                                                                setAppToken(
-                                                                    e.target.value,
-                                                                )
-                                                            }
-                                                            placeholder="Token con permisos: ads_management, ads_read, pages_manage_ads"
-                                                            style={{
-                                                                borderColor:
-                                                                    "var(--bs-border-color)",
-                                                                backgroundColor:
-                                                                    "var(--bs-body-bg)",
-                                                                color: "var(--bs-body-color)",
-                                                            }}
-                                                        />
-                                                        <div className="form-text text-muted mt-1">
-                                                            <i className="mdi mdi-information-outline me-1"></i>
-                                                            Opcional. Token
-                                                            diferente al de leads
-                                                            con permisos de gestión
-                                                            de anuncios.
+                                                    <div
+                                                        className="card border-0 rounded-3 p-3"
+                                                        style={{ background: "linear-gradient(135deg, #e8f4fd 0%, #f0f7ff 100%)" }}
+                                                    >
+                                                        <div className="d-flex align-items-center gap-2 mb-2">
+                                                            <i className="mdi mdi-chart-timeline-variant-shimmer text-primary fs-5"></i>
+                                                            <span className="fw-semibold text-primary small">Campañas de Meta Ads</span>
+                                                            {appToken && (
+                                                                <span className="badge bg-success ms-auto small fw-normal">
+                                                                    <i className="mdi mdi-check-circle me-1"></i>Token configurado
+                                                                </span>
+                                                            )}
                                                         </div>
-                                                    </div>
-                                                    <div className="col-12">
-                                                        <label className="form-label fw-semibold d-flex align-items-center">
-                                                            <i
-                                                                className="mdi mdi-identifier me-2"
-                                                                style={{
-                                                                    color: config.color,
-                                                                }}
-                                                            ></i>
-                                                            Ad Account ID{" "}
-                                                            <span className="text-muted fw-normal ms-2 small">
-                                                                (para sincronizar
-                                                                campañas)
-                                                            </span>
-                                                            :
+                                                        {!appToken && (
+                                                            <div className="alert alert-warning border-0 py-2 px-3 mb-2 small rounded-3">
+                                                                <i className="mdi mdi-alert-outline me-1"></i>
+                                                                <strong>Sin token de campañas.</strong> Para activar la sincronización, reconecta esta integración desde el inicio haciendo clic en «Conectar con Meta».
+                                                            </div>
+                                                        )}
+                                                        <label className="form-label fw-semibold small text-dark mb-1">
+                                                            <i className="mdi mdi-briefcase-account text-primary me-1"></i>
+                                                            Ad Account ID:
                                                         </label>
                                                         <input
                                                             type="text"
                                                             className="form-control border-2"
                                                             value={adAccountId}
-                                                            onChange={(e) =>
-                                                                setAdAccountId(
-                                                                    e.target.value,
-                                                                )
-                                                            }
-                                                            placeholder="Ej: 1960065440840205"
+                                                            onChange={(e) => setAdAccountId(e.target.value)}
+                                                            placeholder="Ej: act_1960065440840205  o  1960065440840205"
                                                             style={{
-                                                                borderColor:
-                                                                    "var(--bs-border-color)",
-                                                                backgroundColor:
-                                                                    "var(--bs-body-bg)",
+                                                                borderColor: adAccountId ? "#0d6efd" : "var(--bs-border-color)",
+                                                                backgroundColor: "var(--bs-body-bg)",
                                                                 color: "var(--bs-body-color)",
+                                                                borderRadius: "8px",
                                                             }}
                                                         />
-                                                        <div className="form-text text-muted mt-1">
+                                                        <div className="form-text text-muted mt-1 small">
                                                             <i className="mdi mdi-information-outline me-1"></i>
-                                                            Opcional. Si lo pones,
-                                                            solo se sincronizarán
-                                                            las campañas de esta
-                                                            cuenta.
+                                                            Necesario para sincronizar campañas.{" "}
+                                                            <a href="https://business.facebook.com/adsmanager" target="_blank" rel="noopener noreferrer" className="text-primary">
+                                                                Ver en Business Manager
+                                                            </a>
                                                         </div>
                                                     </div>
-                                                </>
+                                                </div>
                                             )}
                                         </div>
+
                                     )}
 
                                     <div className="mt-4">
