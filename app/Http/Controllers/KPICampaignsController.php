@@ -168,25 +168,27 @@ class KPICampaignsController extends BasicController
                 ->join('campaigns as campaign', 'campaign.id', '=', 'clients.campaign_id')
                 ->whereRaw('LENGTH(clients.campaign_id) > 10');
 
-            // Query con filtros de ad meta (adset + ad) + fecha actual con ajuste de zona horaria de Meta (+5 horas)
-            $query = function () use ($queryBase, $dateFrom, $dateTo, $platform, $advisorId) {
+            $shift = $this->getTimezoneShift();
+
+            // Query con filtros de ad meta (adset + ad) + fecha actual con ajuste de zona horaria de Meta
+            $query = function () use ($queryBase, $dateFrom, $dateTo, $platform, $advisorId, $shift) {
                 $q = $queryBase()
                     ->whereNotNull('clients.adset_name')
                     ->where('clients.adset_name', '<>', '')
                     ->whereNotNull('clients.ad_name')
                     ->where('clients.ad_name', '<>', '')
-                    ->whereBetween(DB::raw('DATE_ADD(clients.created_at, INTERVAL 5 HOUR)'), ["{$dateFrom} 00:00:00", "{$dateTo} 23:59:59"]);
+                    ->whereBetween(DB::raw("DATE_ADD(clients.created_at, INTERVAL {$shift} HOUR)"), ["{$dateFrom} 00:00:00", "{$dateTo} 23:59:59"]);
                 return $this->applyOptionalFilters($q, $platform, $advisorId);
             };
 
-            // Query equivalente para el periodo anterior con ajuste de zona horaria de Meta (+5 horas)
-            $queryPrev = function () use ($queryBase, $prevDateFrom, $prevDateTo, $platform, $advisorId) {
+            // Query equivalente para el periodo anterior con ajuste de zona horaria de Meta
+            $queryPrev = function () use ($queryBase, $prevDateFrom, $prevDateTo, $platform, $advisorId, $shift) {
                 $q = $queryBase()
                     ->whereNotNull('clients.adset_name')
                     ->where('clients.adset_name', '<>', '')
                     ->whereNotNull('clients.ad_name')
                     ->where('clients.ad_name', '<>', '')
-                    ->whereBetween(DB::raw('DATE_ADD(clients.created_at, INTERVAL 5 HOUR)'), ["{$prevDateFrom} 00:00:00", "{$prevDateTo} 23:59:59"]);
+                    ->whereBetween(DB::raw("DATE_ADD(clients.created_at, INTERVAL {$shift} HOUR)"), ["{$prevDateFrom} 00:00:00", "{$prevDateTo} 23:59:59"]);
                 return $this->applyOptionalFilters($q, $platform, $advisorId);
             };
 
@@ -478,10 +480,9 @@ class KPICampaignsController extends BasicController
                 ->orderBy('assignation_date', 'desc')
                 ->get();
 
-            // ──────────────────────────────────────────────────────────
             // Jerarquía: Campaign → AdSet → Ads
             // ──────────────────────────────────────────────────────────
-            $rawAdsData = Client::whereBetween(DB::raw('DATE_ADD(clients.created_at, INTERVAL 5 HOUR)'), ["{$dateFrom} 00:00:00", "{$dateTo} 23:59:59"])
+            $rawAdsData = Client::whereBetween(DB::raw("DATE_ADD(clients.created_at, INTERVAL {$shift} HOUR)"), ["{$dateFrom} 00:00:00", "{$dateTo} 23:59:59"])
                 ->select([
                     'clients.campaign_id AS campaign_id',
                     'campaign.title AS campaign_name',
@@ -697,17 +698,17 @@ class KPICampaignsController extends BasicController
                 }
             }
 
-            // Leads por día (para el gráfico timeline) con ajuste timezone (+5 horas)
+            // Leads por día (para el gráfico timeline) con ajuste timezone
             // ──────────────────────────────────────────────────────────
             $leadsByDay = $query()
                 ->select([
-                    DB::raw('DATE(DATE_ADD(clients.created_at, INTERVAL 5 HOUR)) as date'),
+                    DB::raw("DATE(DATE_ADD(clients.created_at, INTERVAL {$shift} HOUR)) as date"),
                     DB::raw('COUNT(*) as total'),
                     DB::raw('COUNT(CASE WHEN clients.status_id IN (' . implode(',', array_map(fn($id) => '"' . $id . '"', $clientStatusesIds)) . ') AND clients.status IS NOT NULL THEN 1 END) as sales'),
                     DB::raw('COUNT(CASE WHEN clients.status IS NULL THEN 1 END) as archived'),
                 ])
-                ->groupBy(DB::raw('DATE(DATE_ADD(clients.created_at, INTERVAL 5 HOUR))'))
-                ->orderBy(DB::raw('DATE(DATE_ADD(clients.created_at, INTERVAL 5 HOUR))'), 'asc')
+                ->groupBy(DB::raw("DATE(DATE_ADD(clients.created_at, INTERVAL {$shift} HOUR))"))
+                ->orderBy(DB::raw("DATE(DATE_ADD(clients.created_at, INTERVAL {$shift} HOUR))"), 'asc')
                 ->get();
 
             // ──────────────────────────────────────────────────────────
@@ -855,6 +856,8 @@ class KPICampaignsController extends BasicController
 
     public function setPaginationInstance(Request $request, string $model)
     {
+        $shift = $this->getTimezoneShift();
+
         return Client::select([
             'clients.id',
             'clients.name',
@@ -874,15 +877,15 @@ class KPICampaignsController extends BasicController
             ->leftJoin('statuses', 'statuses.id', '=', 'clients.status_id')
             ->leftJoin('statuses as manage_status', 'manage_status.id', '=', 'clients.manage_status_id')
             ->leftJoin('users', 'users.id', '=', 'clients.assigned_to')
-            ->where(function ($query) use ($request) {
-                // Soporte para date_from/date_to y legacy month con ajuste de zona horaria de Meta (+5 horas)
+            ->where(function ($query) use ($request, $shift) {
+                // Soporte para date_from/date_to y legacy month con ajuste de zona horaria de Meta
                 if ($request->date_from && $request->date_to) {
-                    $query->whereBetween(DB::raw('DATE_ADD(clients.created_at, INTERVAL 5 HOUR)'), [
+                    $query->whereBetween(DB::raw("DATE_ADD(clients.created_at, INTERVAL {$shift} HOUR)"), [
                         $request->date_from . ' 00:00:00',
                         $request->date_to . ' 23:59:59'
                     ]);
                 } elseif ($request->month) {
-                    $query->whereRaw("DATE_FORMAT(DATE_ADD(clients.created_at, INTERVAL 5 HOUR), '%Y-%m') = ?", [$request->month]);
+                    $query->whereRaw("DATE_FORMAT(DATE_ADD(clients.created_at, INTERVAL {$shift} HOUR), '%Y-%m') = ?", [$request->month]);
                 }
                 if ($request->campaign_id) {
                     $query->where('clients.campaign_id', $request->campaign_id);
@@ -907,6 +910,27 @@ class KPICampaignsController extends BasicController
                     $query->where('clients.assigned_to', $request->advisor_id);
                 }
             });
+    }
+
+    /**
+     * Obtiene el desfase de horas necesario para alinear las fechas de la base de datos
+     * con la zona horaria UTC de Meta. Si el servidor de bases de datos ya está en UTC,
+     * no se aplica ningún desfase (0). Si está en America/Lima, se le suman 5 horas.
+     */
+    private function getTimezoneShift(): int
+    {
+        try {
+            $tz = DB::select("SELECT @@session.time_zone as tz")[0]->tz;
+            if ($tz === 'SYSTEM') {
+                $tz = DB::select("SELECT @@global.time_zone as tz")[0]->tz;
+            }
+            if ($tz === 'UTC' || $tz === '+00:00' || str_contains(strtolower($tz), 'utc')) {
+                return 0;
+            }
+            return 5;
+        } catch (\Throwable $e) {
+            return 5;
+        }
     }
 
     /**
