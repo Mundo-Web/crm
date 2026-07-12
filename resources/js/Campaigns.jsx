@@ -599,6 +599,7 @@ const Campaigns = ({ can, hasFormsIntegration, hasTikTokIntegration, hasMetaCamp
     const titleRef = useRef();
     const linkRef = useRef();
     const notesRef = useRef();
+    const spendRef = useRef();
 
     const [campaigns, setCampaigns] = useState([]);
     const [filteredCampaigns, setFilteredCampaigns] = useState([]);
@@ -638,6 +639,7 @@ const Campaigns = ({ can, hasFormsIntegration, hasTikTokIntegration, hasMetaCamp
         titleRef.current.value = data?.title || null;
         linkRef.current.value = data?.link || null;
         notesRef.current.value = data?.notes || null;
+        spendRef.current.value = data?.spend || 0;
         $(modalRef.current).modal("show");
     };
 
@@ -650,6 +652,7 @@ const Campaigns = ({ can, hasFormsIntegration, hasTikTokIntegration, hasMetaCamp
             title: titleRef.current.value,
             link: linkRef.current.value,
             notes: notesRef.current.value,
+            spend: spendRef.current.value || 0,
         };
         const result = await campaignsRest.save(request);
         if (result) {
@@ -915,6 +918,13 @@ const Campaigns = ({ can, hasFormsIntegration, hasTikTokIntegration, hasMetaCamp
                         eRef={linkRef}
                         label="Enlace"
                         col="col-12"
+                    />
+                    <InputFormGroup
+                        eRef={spendRef}
+                        label="Gasto de Campaña (S/)"
+                        col="col-12"
+                        type="number"
+                        step="0.01"
                     />
                     <TextareaFormGroup
                         eRef={notesRef}

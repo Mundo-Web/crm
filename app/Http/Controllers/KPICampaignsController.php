@@ -6,6 +6,7 @@ use App\Models\Breakdown;
 use App\Models\Client;
 use App\Models\Setting;
 use App\Models\Status;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -30,12 +31,6 @@ class KPICampaignsController extends BasicController
             DB::raw('count(clients.id) AS quantity')
         ])
             ->where('clients.business_id', Auth::user()->business_id)
-            ->whereNotNull('clients.campaign_id')
-            ->whereRaw('LENGTH(clients.campaign_id) > 10')
-            ->whereNotNull('clients.adset_name')
-            ->where('clients.adset_name', '<>', '')
-            ->whereNotNull('clients.ad_name')
-            ->where('clients.ad_name', '<>', '')
             ->groupBy(
                 DB::raw('YEAR(clients.created_at)'),
                 DB::raw('MONTH(clients.created_at)'),
@@ -62,42 +57,144 @@ class KPICampaignsController extends BasicController
             ]);
         }
 
+        // Cargar asesores del negocio para el filtro
+        $advisors = User::where('business_id', Auth::user()->business_id)
+            ->select('id', 'name', 'relative_id')
+            ->orderBy('name')
+            ->get();
+
+        // Configuración de semana personalizada
+        $weekStartDay = Setting::get('campaign-week-start-day') ?? 1; // 1 = Lunes por defecto
+        
+        // Tipo de cambio USD a PEN — consultar API Luna en tiempo real
+        $exchangeRate = $this->getLunaExchangeRate();
+
         return [
             'months' => $months,
             'currentMonth' => $currentMonth,
-            'currentYear' => $currentYear
+            'currentYear' => $currentYear,
+            'advisors' => $advisors,
+            'weekStartDay' => (int)$weekStartDay,
+            'exchangeRate' => (float)$exchangeRate,
         ];
     }
 
-    public function kpi(Request $request)
+    /**
+     * Construye el rango de fechas del periodo anterior con la misma duración
+     */
+    private function getPreviousPeriod(string $dateFrom, string $dateTo): array
     {
-        $response = Response::simpleTryCatch(function ($response) use ($request) {
-            [$year, $month] = \explode('-', $request->month);
+        $from = \Carbon\Carbon::parse($dateFrom);
+        $to   = \Carbon\Carbon::parse($dateTo);
+        $diff = $from->diffInDays($to);
 
-            $defaultLeadStatus = Setting::get('default-lead-status');
+        $prevTo   = (clone $from)->subDay();
+        $prevFrom = (clone $prevTo)->subDays($diff);
+
+        return [
+            $prevFrom->format('Y-m-d'),
+            $prevTo->format('Y-m-d'),
+        ];
+    }
+
+    /**
+     * Aplica los filtros opcionales de plataforma y asesor sobre una query
+     */
+    private function applyOptionalFilters($query, ?string $platform, ?string $advisorId)
+    {
+        if ($platform && $platform !== 'all') {
+            $platformMap = [
+                'fb'      => ['Facebook', 'fb', 'Meta', 'facebook', 'facebook&instagram'],
+                'ig'      => ['Instagram', 'ig', 'instagram', 'facebook&instagram'],
+                'wa'      => ['WhatsApp', 'Whatsapp', 'whatsapp', 'wa'],
+                'landing' => ['Landing', 'landing', 'integration', 'Formulario', 'CRM Atalaya'],
+            ];
+            $origins = $platformMap[$platform] ?? [$platform];
+            $query->whereIn('clients.origin', $origins);
+        }
+
+        if ($advisorId && $advisorId !== 'all') {
+            $query->where('clients.assigned_to', $advisorId);
+        }
+
+        return $query;
+    }
+
+    public function kpi(Request $request, ?string $month = null)
+    {
+        $response = Response::simpleTryCatch(function ($response) use ($request, $month) {
+
+            // ──────────────────────────────────────────────────────────
+            // Parsear parámetros de fecha (nuevo sistema flexible)
+            // Acepta: date_from + date_to  O  el parámetro legacy "month"
+            // ──────────────────────────────────────────────────────────
+            if ($request->date_from && $request->date_to) {
+                $dateFrom = $request->date_from;
+                $dateTo   = $request->date_to;
+            } elseif ($month || $request->month) {
+                // Compatibilidad legacy con parámetro del segmento de ruta
+                $m = $month ?? $request->month;
+                [$year, $mo] = \explode('-', $m);
+                $dateFrom = "{$year}-{$mo}-01";
+                $lastDay  = date('t', mktime(0, 0, 0, $mo, 1, $year));
+                $dateTo   = "{$year}-{$mo}-{$lastDay}";
+            } else {
+                // Default: mes actual
+                $dateFrom = date('Y-m-01');
+                $dateTo   = date('Y-m-t');
+
+            }
+
+            $platform  = $request->platform  ?? null;
+            $advisorId = $request->advisor_id ?? null;
+
+            // Periodo anterior (misma duración, inmediatamente antes)
+            [$prevDateFrom, $prevDateTo] = $this->getPreviousPeriod($dateFrom, $dateTo);
+
+            $defaultLeadStatus   = Setting::get('default-lead-status');
             $asignationLeadStatus = JSON::parseable(Setting::get('assignation-lead-status')) ?? [];
 
-            $leadStatuses = Status::forLeads()->get();
+            $leadStatuses   = Status::forLeads()->get();
             $clientStatuses = Status::forClients()->get();
 
-            $leadStatusesIds = array_map(fn($status) => $status['id'], $leadStatuses->toArray());
-            $clientStatusesIds = array_map(fn($status) => $status['id'], $clientStatuses->toArray());
+            $leadStatusesIds   = array_map(fn($s) => $s['id'], $leadStatuses->toArray());
+            $clientStatusesIds = array_map(fn($s) => $s['id'], $clientStatuses->toArray());
 
+            // ──────────────────────────────────────────────────────────
+            // Query base: campaña válida + rango de fechas
+            // ──────────────────────────────────────────────────────────
             $queryBase = fn() => Client::where('clients.business_id', Auth::user()->business_id)
                 ->select('clients.*')
                 ->join('campaigns as campaign', 'campaign.id', '=', 'clients.campaign_id')
                 ->whereRaw('LENGTH(clients.campaign_id) > 10');
 
-            $query = fn() => $queryBase()
-                ->whereNotNull('clients.adset_name')
-                ->where('clients.adset_name', '<>', '')
-                ->whereNotNull('clients.ad_name')
-                ->where('clients.ad_name', '<>', '')
-                ->whereYear('clients.created_at', $year)
-                ->whereMonth('clients.created_at', $month);
+            // Query con filtros de ad meta (adset + ad) + fecha actual con ajuste de zona horaria de Meta (+5 horas)
+            $query = function () use ($queryBase, $dateFrom, $dateTo, $platform, $advisorId) {
+                $q = $queryBase()
+                    ->whereNotNull('clients.adset_name')
+                    ->where('clients.adset_name', '<>', '')
+                    ->whereNotNull('clients.ad_name')
+                    ->where('clients.ad_name', '<>', '')
+                    ->whereBetween(DB::raw('DATE_ADD(clients.created_at, INTERVAL 5 HOUR)'), ["{$dateFrom} 00:00:00", "{$dateTo} 23:59:59"]);
+                return $this->applyOptionalFilters($q, $platform, $advisorId);
+            };
 
+            // Query equivalente para el periodo anterior con ajuste de zona horaria de Meta (+5 horas)
+            $queryPrev = function () use ($queryBase, $prevDateFrom, $prevDateTo, $platform, $advisorId) {
+                $q = $queryBase()
+                    ->whereNotNull('clients.adset_name')
+                    ->where('clients.adset_name', '<>', '')
+                    ->whereNotNull('clients.ad_name')
+                    ->where('clients.ad_name', '<>', '')
+                    ->whereBetween(DB::raw('DATE_ADD(clients.created_at, INTERVAL 5 HOUR)'), ["{$prevDateFrom} 00:00:00", "{$prevDateTo} 23:59:59"]);
+                return $this->applyOptionalFilters($q, $platform, $advisorId);
+            };
+
+            // ──────────────────────────────────────────────────────────
+            // Métricas del periodo actual
+            // ──────────────────────────────────────────────────────────
             $totalCount = (clone $query())->count();
-            $totalSum = (clone $query())
+            $totalSum   = (clone $query())
                 ->join('client_has_products AS chp', 'chp.client_id', 'clients.id')
                 ->sum('chp.price');
 
@@ -115,33 +212,50 @@ class KPICampaignsController extends BasicController
                 ->orderBy('status.order', 'asc')
                 ->get();
 
-            // Lógica unificada de gestión
             $managingBase = $query()
                 ->whereIn('clients.status_id', $leadStatusesIds)
                 ->where('clients.status_id', '<>', $defaultLeadStatus);
 
-            // Lógica de clientes basada en trazas (Nueva Fórmula)
-            $clientsQuery = $queryBase()
-                ->whereIn('clients.status_id', $clientStatusesIds)
-                ->whereNotNull('clients.status')
-                ->whereExists(function ($query) use ($year, $month) {
-                    $query->select(DB::raw(1))
-                        ->from('client_status_traces')
-                        ->join('statuses', 'statuses.id', '=', 'client_status_traces.status_id')
-                        ->where('statuses.table_id', 'a8367789-666e-4929-aacb-7cbc2fbf74de')
-                        ->whereColumn('client_status_traces.client_id', 'clients.id')
-                        ->whereYear('client_status_traces.created_at', $year)
-                        ->whereMonth('client_status_traces.created_at', $month);
-                });
+            // Query de clientes (cierres) basada en trazas — usa fecha de la traza, no de creación
+            $clientsQuery = function () use ($queryBase, $dateFrom, $dateTo, $platform, $advisorId, $clientStatusesIds) {
+                $q = $queryBase()
+                    ->whereIn('clients.status_id', $clientStatusesIds)
+                    ->whereNotNull('clients.status')
+                    ->whereExists(function ($sub) use ($dateFrom, $dateTo) {
+                        $sub->select(DB::raw(1))
+                            ->from('client_status_traces')
+                            ->join('statuses', 'statuses.id', '=', 'client_status_traces.status_id')
+                            ->where('statuses.table_id', 'a8367789-666e-4929-aacb-7cbc2fbf74de')
+                            ->whereColumn('client_status_traces.client_id', 'clients.id')
+                            ->whereBetween('client_status_traces.created_at', ["{$dateFrom} 00:00:00", "{$dateTo} 23:59:59"]);
+                    });
+                return $this->applyOptionalFilters($q, $platform, $advisorId);
+            };
 
-            $clientsCount = (clone $clientsQuery)->count();
-            $clientsSum = (clone $clientsQuery)
+            // Query de clientes para periodo anterior
+            $clientsQueryPrev = function () use ($queryBase, $prevDateFrom, $prevDateTo, $platform, $advisorId, $clientStatusesIds) {
+                $q = $queryBase()
+                    ->whereIn('clients.status_id', $clientStatusesIds)
+                    ->whereNotNull('clients.status')
+                    ->whereExists(function ($sub) use ($prevDateFrom, $prevDateTo) {
+                        $sub->select(DB::raw(1))
+                            ->from('client_status_traces')
+                            ->join('statuses', 'statuses.id', '=', 'client_status_traces.status_id')
+                            ->where('statuses.table_id', 'a8367789-666e-4929-aacb-7cbc2fbf74de')
+                            ->whereColumn('client_status_traces.client_id', 'clients.id')
+                            ->whereBetween('client_status_traces.created_at', ["{$prevDateFrom} 00:00:00", "{$prevDateTo} 23:59:59"]);
+                    });
+                return $this->applyOptionalFilters($q, $platform, $advisorId);
+            };
+
+            $clientsCount = (clone $clientsQuery())->count();
+            $clientsSum   = (clone $clientsQuery())
                 ->join('client_has_products AS chp', 'chp.client_id', 'clients.id')
                 ->sum('chp.price');
 
-            $archivedCount = (clone $managingBase)->whereNull('clients.status')->count();
+            $archivedCount     = (clone $managingBase)->whereNull('clients.status')->count();
             $trueManagingCount = (clone $managingBase)->where('clients.status', true)->count();
-            $managingCount = (clone $managingBase)->count(); // Total (Vivo + Muerto)
+            $managingCount     = (clone $managingBase)->count();
 
             $pendingCount = $query()
                 ->where('clients.status_id', $defaultLeadStatus)
@@ -151,6 +265,45 @@ class KPICampaignsController extends BasicController
                 ->join('client_has_products AS chp', 'chp.client_id', 'clients.id')
                 ->sum('chp.price');
 
+            // ──────────────────────────────────────────────────────────
+            // Métricas del periodo ANTERIOR (para comparativa ↑↓)
+            // ──────────────────────────────────────────────────────────
+            $prevTotalCount   = (clone $queryPrev())->count();
+            $prevClientsCount = (clone $clientsQueryPrev())->count();
+            $prevArchivedCount = (clone $queryPrev())
+                ->whereIn('clients.status_id', $leadStatusesIds)
+                ->where('clients.status_id', '<>', $defaultLeadStatus)
+                ->whereNull('clients.status')
+                ->count();
+            $prevManagingCount = (clone $queryPrev())
+                ->whereIn('clients.status_id', $leadStatusesIds)
+                ->where('clients.status_id', '<>', $defaultLeadStatus)
+                ->count();
+
+            $calcVariation = function ($current, $previous) {
+                if ($previous == 0) return $current > 0 ? 100 : 0;
+                return round((($current - $previous) / $previous) * 100, 1);
+            };
+
+            $previousPeriod = [
+                'dateFrom'      => $prevDateFrom,
+                'dateTo'        => $prevDateTo,
+                'totalCount'    => $prevTotalCount,
+                'clientsCount'  => $prevClientsCount,
+                'archivedCount' => $prevArchivedCount,
+                'managingCount' => $prevManagingCount,
+            ];
+
+            $variations = [
+                'totalCount'   => $calcVariation($totalCount, $prevTotalCount),
+                'clientsCount' => $calcVariation($clientsCount, $prevClientsCount),
+                'archivedCount'=> $calcVariation($archivedCount, $prevArchivedCount),
+                'managingCount'=> $calcVariation($managingCount, $prevManagingCount),
+            ];
+
+            // ──────────────────────────────────────────────────────────
+            // Gráfico por estado de gestión
+            // ──────────────────────────────────────────────────────────
             $groupedByManageStatus = $query()
                 ->select([
                     'status.id AS status_id',
@@ -167,6 +320,9 @@ class KPICampaignsController extends BasicController
                 ->orderBy('status.order', 'asc')
                 ->get();
 
+            // ──────────────────────────────────────────────────────────
+            // Fuentes de leads
+            // ──────────────────────────────────────────────────────────
             $leadSources = $query()
                 ->select([
                     DB::raw('COUNT(CASE 
@@ -215,11 +371,10 @@ class KPICampaignsController extends BasicController
                 ->orderBy('total', 'desc')
                 ->get();
 
-            $breakdownCounts = Breakdown::whereYear('created_at', $year)
-                ->whereMonth('created_at', $month)
+            $breakdownCounts = Breakdown::whereBetween('created_at', ["{$dateFrom} 00:00:00", "{$dateTo} 23:59:59"])
                 ->where('business_id', Auth::user()->business_id)
                 ->count();
-            
+
             $funnelRaw = $query()
                 ->select([
                     'clients.triggered_by as triggered_by',
@@ -272,14 +427,10 @@ class KPICampaignsController extends BasicController
                 ->whereIn('clients.manage_status_id', $allArchivedStatuses)
                 ->count();
 
-            $archivedBreakdown = DB::table('clients')
+            $archivedBreakdown = (clone $managingBase)
                 ->select('status.id', 'status.name', 'status.color', DB::raw('count(clients.id) as quantity'))
                 ->leftJoin('statuses as status', 'status.id', '=', 'clients.manage_status_id')
-                ->where('clients.business_id', Auth::user()->business_id)
-                ->whereNotNull('clients.campaign_id')
-                ->whereIn('clients.manage_status_id', $allArchivedStatuses)
-                ->whereMonth('clients.created_at', $month)
-                ->whereYear('clients.created_at', $year)
+                ->whereNull('clients.status')
                 ->groupBy('status.id', 'status.name', 'status.color')
                 ->get();
 
@@ -305,8 +456,7 @@ class KPICampaignsController extends BasicController
                     FROM client_notes 
                     WHERE client_notes.user_id = clients.assigned_to
                     AND client_notes.note_type_id = "37b1e8e2-04c4-4246-a8c9-838baa7f8187"
-                    AND YEAR(client_notes.created_at) = ' . $year . '
-                    AND MONTH(client_notes.created_at) = ' . $month . '
+                    AND client_notes.created_at BETWEEN "' . $dateFrom . ' 00:00:00" AND "' . $dateTo . ' 23:59:59"
                 ) as emails_sent'),
             ];
 
@@ -314,8 +464,7 @@ class KPICampaignsController extends BasicController
                 FROM client_notes
                 WHERE client_notes.user_id = clients.assigned_to
                 AND client_notes.manage_status_id = "' . $convertedLeadStatus . '"
-                AND YEAR(client_notes.created_at) = ' . $year . '
-                AND MONTH(client_notes.created_at) = ' . $month . '
+                AND client_notes.created_at BETWEEN "' . $dateFrom . ' 00:00:00" AND "' . $dateTo . ' 23:59:59"
             ) as converted');
             else $columns[] = DB::raw("NULL as converted");
 
@@ -329,9 +478,10 @@ class KPICampaignsController extends BasicController
                 ->orderBy('assignation_date', 'desc')
                 ->get();
 
-            // Hierarchical Data: Campaign -> Ad Set -> Ads
-            // Hierarchical Data: Campaign -> Ad Set -> Ads
-            $rawAdsData = Client::byMonth($year, $month)
+            // ──────────────────────────────────────────────────────────
+            // Jerarquía: Campaign → AdSet → Ads
+            // ──────────────────────────────────────────────────────────
+            $rawAdsData = Client::whereBetween('clients.created_at', ["{$dateFrom} 00:00:00", "{$dateTo} 23:59:59"])
                 ->select([
                     'clients.campaign_id AS campaign_id',
                     'campaign.title AS campaign_name',
@@ -352,6 +502,19 @@ class KPICampaignsController extends BasicController
                 ->where('clients.adset_name', '<>', '')
                 ->whereNotNull('clients.ad_name')
                 ->where('clients.ad_name', '<>', '')
+                ->when($platform && $platform !== 'all', function ($q) use ($platform) {
+                    $platformMap = [
+                        'fb'      => ['Facebook', 'fb', 'Meta'],
+                        'ig'      => ['Instagram', 'ig'],
+                        'wa'      => ['WhatsApp', 'wa'],
+                        'landing' => ['Landing', 'integration', 'Formulario'],
+                    ];
+                    $origins = $platformMap[$platform] ?? [$platform];
+                    $q->whereIn('clients.origin', $origins);
+                })
+                ->when($advisorId && $advisorId !== 'all', function ($q) use ($advisorId) {
+                    $q->where('clients.assigned_to', $advisorId);
+                })
                 ->groupBy('clients.campaign_id', 'campaign.title', 'clients.adset_name', 'clients.ad_name')
                 ->orderBy('campaign.title', 'asc')
                 ->orderBy('total', 'desc')
@@ -361,8 +524,8 @@ class KPICampaignsController extends BasicController
             foreach ($rawAdsData as $row) {
                 if (!isset($hierarchy[$row->campaign_id])) {
                     $hierarchy[$row->campaign_id] = [
-                        'id' => $row->campaign_id,
-                        'name' => $row->campaign_name,
+                        'id'     => $row->campaign_id,
+                        'name'   => $row->campaign_name,
                         'adSets' => []
                     ];
                 }
@@ -370,29 +533,29 @@ class KPICampaignsController extends BasicController
                 if (!isset($hierarchy[$row->campaign_id]['adSets'][$row->adset_name])) {
                     $hierarchy[$row->campaign_id]['adSets'][$row->adset_name] = [
                         'name' => $row->adset_name,
-                        'ads' => []
+                        'ads'  => []
                     ];
                 }
 
                 $adName = $row->ad_name;
                 if (!isset($hierarchy[$row->campaign_id]['adSets'][$row->adset_name]['ads'][$adName])) {
                     $hierarchy[$row->campaign_id]['adSets'][$row->adset_name]['ads'][$adName] = [
-                        'name' => $adName,
-                        'total' => 0,
+                        'name'      => $adName,
+                        'total'     => 0,
                         'contacted' => 0,
-                        'archived' => 0,
-                        'sales' => 0
+                        'archived'  => 0,
+                        'sales'     => 0
                     ];
                 }
 
                 $ad = &$hierarchy[$row->campaign_id]['adSets'][$row->adset_name]['ads'][$adName];
-                $ad['total'] += $row->total;
+                $ad['total']     += $row->total;
                 $ad['contacted'] += ($row->total - $row->pending);
-                $ad['archived'] += $row->archived;
-                $ad['sales'] += $row->sales;
+                $ad['archived']  += $row->archived;
+                $ad['sales']     += $row->sales;
             }
 
-            // Convert adSets and ads from associative to indexed arrays
+            // Convertir adSets y ads de asociativo a indexado
             $finalHierarchy = [];
             foreach ($hierarchy as $cId => $cData) {
                 $adSets = [];
@@ -411,8 +574,10 @@ class KPICampaignsController extends BasicController
 
             $totalConversionPercent = $totalCount > 0 ? round(($clientsCount / $totalCount) * 100, 1) : 0;
 
-            // Ranking de Asesores (Basado en la nueva fórmula)
-            $usersRanking = (clone $clientsQuery)
+            // ──────────────────────────────────────────────────────────
+            // Ranking de asesores
+            // ──────────────────────────────────────────────────────────
+            $usersRanking = (clone $clientsQuery())
                 ->select([
                     'assigned_to',
                     DB::raw('count(distinct clients.id) as count'),
@@ -425,48 +590,40 @@ class KPICampaignsController extends BasicController
                 ->orderBy('total', 'desc')
                 ->get();
 
-            $clientsListRaw = (clone $clientsQuery)
+            $clientsListRaw = (clone $clientsQuery())
                 ->with(['products', 'assigned', 'campaign'])
                 ->get();
 
             $groupedClients = [];
             foreach ($clientsListRaw as $client) {
                 $campaignName = $client->campaign->title ?? 'Sin Campaña';
-                $adsetName = $client->adset_name ?? 'Sin Adset';
-                $adName = $client->ad_name ?? 'Sin Anuncio';
+                $adsetName    = $client->adset_name ?? 'Sin Adset';
+                $adName       = $client->ad_name ?? 'Sin Anuncio';
 
-                if (!isset($groupedClients[$campaignName])) {
-                    $groupedClients[$campaignName] = [];
-                }
-                if (!isset($groupedClients[$campaignName][$adsetName])) {
-                    $groupedClients[$campaignName][$adsetName] = [];
-                }
-                if (!isset($groupedClients[$campaignName][$adsetName][$adName])) {
-                    $groupedClients[$campaignName][$adsetName][$adName] = [];
-                }
+                if (!isset($groupedClients[$campaignName])) $groupedClients[$campaignName] = [];
+                if (!isset($groupedClients[$campaignName][$adsetName])) $groupedClients[$campaignName][$adsetName] = [];
+                if (!isset($groupedClients[$campaignName][$adsetName][$adName])) $groupedClients[$campaignName][$adsetName][$adName] = [];
 
                 $groupedClients[$campaignName][$adsetName][$adName][] = $client;
             }
 
-            // Convertir a formato de array para facilitar el mapeo en JS
             $clientsList = [];
             foreach ($groupedClients as $cName => $adsets) {
                 $cData = ['name' => $cName, 'adsets' => []];
                 foreach ($adsets as $asName => $ads) {
                     $asData = ['name' => $asName, 'ads' => []];
                     foreach ($ads as $aName => $leads) {
-                        $asData['ads'][] = [
-                            'name' => $aName,
-                            'leads' => $leads
-                        ];
+                        $asData['ads'][] = ['name' => $aName, 'leads' => $leads];
                     }
                     $cData['adsets'][] = $asData;
                 }
                 $clientsList[] = $cData;
             }
 
-            // Análisis de Ganadores (Basado en la nueva fórmula)
-            $winningCampaign = (clone $clientsQuery)
+            // ──────────────────────────────────────────────────────────
+            // Ganadores por Cierres (ventas)
+            // ──────────────────────────────────────────────────────────
+            $winningCampaign = (clone $clientsQuery())
                 ->leftJoin('client_has_products as chp', 'chp.client_id', 'clients.id')
                 ->select('campaign.title as name', 'clients.campaign_id', DB::raw('count(distinct clients.id) as count'), DB::raw('SUM(chp.price) as total_amount'))
                 ->groupBy('campaign.title', 'clients.campaign_id')
@@ -474,10 +631,10 @@ class KPICampaignsController extends BasicController
                 ->first();
 
             $winningAdset = null;
-            $winningAd = null;
+            $winningAd    = null;
 
             if ($winningCampaign) {
-                $winningAdset = (clone $clientsQuery)
+                $winningAdset = (clone $clientsQuery())
                     ->where('clients.campaign_id', $winningCampaign->campaign_id)
                     ->leftJoin('client_has_products as chp', 'chp.client_id', 'clients.id')
                     ->select('clients.adset_name as name', DB::raw('count(distinct clients.id) as count'), DB::raw('SUM(chp.price) as total_amount'))
@@ -486,7 +643,7 @@ class KPICampaignsController extends BasicController
                     ->first();
 
                 if ($winningAdset) {
-                    $winningAd = (clone $clientsQuery)
+                    $winningAd = (clone $clientsQuery())
                         ->where('clients.campaign_id', $winningCampaign->campaign_id)
                         ->where('clients.adset_name', $winningAdset->name)
                         ->leftJoin('client_has_products as chp', 'chp.client_id', 'clients.id')
@@ -497,7 +654,7 @@ class KPICampaignsController extends BasicController
                 }
             }
 
-            $campaignsRanking = (clone $clientsQuery)
+            $campaignsRanking = (clone $clientsQuery())
                 ->select([
                     'clients.adset_name',
                     'clients.ad_name',
@@ -509,7 +666,9 @@ class KPICampaignsController extends BasicController
                 ->orderByDesc('total_liquidated')
                 ->get();
 
-            // Ganadores por Leads Totales (Captación)
+            // ──────────────────────────────────────────────────────────
+            // Ganadores por Leads totales (captación)
+            // ──────────────────────────────────────────────────────────
             $leadWinningCampaign = (clone $query())
                 ->select('campaign.title as name', 'clients.campaign_id', DB::raw('count(*) as count'))
                 ->groupBy('campaign.title', 'clients.campaign_id')
@@ -517,7 +676,7 @@ class KPICampaignsController extends BasicController
                 ->first();
 
             $leadWinningAdset = null;
-            $leadWinningAd = null;
+            $leadWinningAd    = null;
 
             if ($leadWinningCampaign) {
                 $leadWinningAdset = (clone $query())
@@ -538,39 +697,152 @@ class KPICampaignsController extends BasicController
                 }
             }
 
+            // ──────────────────────────────────────────────────────────
+            // Leads por día (para el gráfico timeline) con ajuste timezone (+5 horas)
+            // ──────────────────────────────────────────────────────────
+            $leadsByDay = $query()
+                ->select([
+                    DB::raw('DATE(DATE_ADD(clients.created_at, INTERVAL 5 HOUR)) as date'),
+                    DB::raw('COUNT(*) as total'),
+                    DB::raw('COUNT(CASE WHEN clients.status_id IN (' . implode(',', array_map(fn($id) => '"' . $id . '"', $clientStatusesIds)) . ') AND clients.status IS NOT NULL THEN 1 END) as sales'),
+                    DB::raw('COUNT(CASE WHEN clients.status IS NULL THEN 1 END) as archived'),
+                ])
+                ->groupBy(DB::raw('DATE(DATE_ADD(clients.created_at, INTERVAL 5 HOUR))'))
+                ->orderBy(DB::raw('DATE(DATE_ADD(clients.created_at, INTERVAL 5 HOUR))'), 'asc')
+                ->get();
+
+            // ──────────────────────────────────────────────────────────
+            // Meta de leads (campaign_goals)
+            // ──────────────────────────────────────────────────────────
+            $goals = [];
+            $goalProgress = null;
+            try {
+                $goalsRaw = DB::table('campaign_goals')
+                    ->where('business_id', Auth::user()->business_id)
+                    ->whereNull('campaign_id')
+                    ->where('period', 'monthly')
+                    ->orderBy('created_at', 'desc')
+                    ->first();
+
+                if ($goalsRaw) {
+                    $progress = $totalCount > 0 ? min(100, round(($totalCount / $goalsRaw->target_leads) * 100, 1)) : 0;
+                    $goalProgress = [
+                        'target'   => $goalsRaw->target_leads,
+                        'current'  => $totalCount,
+                        'percent'  => $progress,
+                    ];
+                }
+            } catch (\Throwable $e) {
+                // La tabla puede no existir aún
+            }
+
+            // ──────────────────────────────────────────────────────────
+            // Gasto publicitario (spend) de campañas del periodo
+            // ──────────────────────────────────────────────────────────
+            $totalSpend = 0;
+            $cpl = 0;
+            $cpa = 0;
+            $roas = 0;
+            try {
+                // Tipo de cambio en tiempo real desde API Luna (tc_venta)
+                $exchangeRateCalc = $this->getLunaExchangeRate();
+                
+                $activeCampaignIds = array_keys($hierarchy ?? []);
+                if (!empty($activeCampaignIds)) {
+                    $campaignsForSpend = DB::table('campaigns')
+                        ->where('business_id', Auth::user()->business_id)
+                        ->whereIn('id', $activeCampaignIds)
+                        ->get(['spend', 'currency']);
+                        
+                    foreach ($campaignsForSpend as $c) {
+                        $cSpend = (float)$c->spend;
+                        if (strtoupper($c->currency) === 'USD') {
+                            $cSpend *= $exchangeRateCalc;
+                        }
+                        $totalSpend += $cSpend;
+                    }
+                } else {
+                    $totalSpend = 0;
+                }
+
+                if ($totalCount > 0 && $totalSpend > 0) {
+                    $cpl = round($totalSpend / $totalCount, 2);
+                }
+                if ($clientsCount > 0 && $totalSpend > 0) {
+                    $cpa = round($totalSpend / $clientsCount, 2);
+                }
+                if ($totalSpend > 0 && $clientsSum > 0) {
+                    $roas = round($clientsSum / $totalSpend, 2);
+                }
+            } catch (\Throwable $e) {
+                // Columna spend puede no existir aún
+            }
+
             $response->summary = [
-                'hierarchy' => $finalHierarchy,
-                'grouped' => $grouped,
-                'totalCount' => $totalCount,
-                'totalSum' => $totalSum,
+                // Datos del periodo
+                'dateFrom'     => $dateFrom,
+                'dateTo'       => $dateTo,
+                'platform'     => $platform,
+                'advisorId'    => $advisorId,
+
+                // Métricas principales
+                'hierarchy'    => $finalHierarchy,
+                'grouped'      => $grouped,
+                'totalCount'   => $totalCount,
+                'totalSum'     => $totalSum,
                 'clientsCount' => $clientsCount,
-                'clientsSum' => $clientsSum,
-                'archivedCount' => $archivedCount,
-                'archivedSum' => $archivedSum,
+                'clientsSum'   => $clientsSum,
+                'archivedCount'=> $archivedCount,
+                'archivedSum'  => $archivedSum,
                 'pendingCount' => $pendingCount,
-                'managingCount' => $managingCount,
+                'managingCount'=> $managingCount,
                 'trueManagingCount' => $trueManagingCount,
-                'managingSum' => $managingSum,
-                'leadSources' => $leadSources,
+                'managingSum'  => $managingSum,
+
+                // Comparativa con periodo anterior
+                'previousPeriod' => $previousPeriod,
+                'variations'     => $variations,
+
+                // Gasto publicitario
+                'totalSpend'  => $totalSpend,
+                'cpl'         => $cpl,
+                'cpa'         => $cpa,
+                'roas'        => $roas,
+
+                // Meta de leads
+                'goalProgress' => $goalProgress,
+
+                // Timeline leads por día
+                'leadsByDay'   => $leadsByDay,
+
+                // Fuentes y orígenes
+                'leadSources'  => $leadSources,
                 'originCounts' => $originCounts,
                 'originCampaignCounts' => $originCampaignCounts,
                 'originLandingCampaignCounts' => $originLandingCampaignCounts,
                 'totalConversionPercent' => $totalConversionPercent,
-                'usersAssignation' => $usersAssignation,
-                'breakdownCounts' => $breakdownCounts,
                 'funnelCounts' => $funnelCounts,
+                'breakdownCounts' => $breakdownCounts,
+
+                // Archivados
                 'totalArchivedCounts' => $totalArchivedCounts,
                 'archivedLabelsCount' => $archivedLabelsCount,
-                'archivedBreakdown' => $archivedBreakdown,
-                'winningCampaign' => $winningCampaign,
-                'winningAdset' => $winningAdset,
-                'winningAd' => $winningAd,
-                'usersRanking' => $usersRanking,
+                'archivedBreakdown'   => $archivedBreakdown,
+                'convertedLabelsCount'=> 0,
+
+                // Ranking
+                'usersAssignation' => $usersAssignation,
+                'usersRanking'     => $usersRanking,
                 'campaignsRanking' => $campaignsRanking,
-                'leadWinningCampaign' => $leadWinningCampaign,
-                'leadWinningAdset' => $leadWinningAdset,
-                'leadWinningAd' => $leadWinningAd,
-                'clientsList' => $clientsList
+                'clientsList'      => $clientsList,
+
+                // Ganadores
+                'winningCampaign'    => $winningCampaign,
+                'winningAdset'       => $winningAdset,
+                'winningAd'          => $winningAd,
+                'leadWinningCampaign'=> $leadWinningCampaign,
+                'leadWinningAdset'   => $leadWinningAdset,
+                'leadWinningAd'      => $leadWinningAd,
             ];
             $response->data = $groupedByManageStatus;
         });
@@ -604,8 +876,14 @@ class KPICampaignsController extends BasicController
             ->leftJoin('statuses as manage_status', 'manage_status.id', '=', 'clients.manage_status_id')
             ->leftJoin('users', 'users.id', '=', 'clients.assigned_to')
             ->where(function ($query) use ($request) {
-                if ($request->month) {
-                    $query->whereRaw("DATE_FORMAT(clients.created_at, '%Y-%m') = ?", [$request->month]);
+                // Soporte para date_from/date_to y legacy month con ajuste de zona horaria de Meta (+5 horas)
+                if ($request->date_from && $request->date_to) {
+                    $query->whereBetween(DB::raw('DATE_ADD(clients.created_at, INTERVAL 5 HOUR)'), [
+                        $request->date_from . ' 00:00:00',
+                        $request->date_to . ' 23:59:59'
+                    ]);
+                } elseif ($request->month) {
+                    $query->whereRaw("DATE_FORMAT(DATE_ADD(clients.created_at, INTERVAL 5 HOUR), '%Y-%m') = ?", [$request->month]);
                 }
                 if ($request->campaign_id) {
                     $query->where('clients.campaign_id', $request->campaign_id);
@@ -616,6 +894,44 @@ class KPICampaignsController extends BasicController
                 if ($request->ad_name) {
                     $query->where('clients.ad_name', $request->ad_name);
                 }
+                if ($request->platform && $request->platform !== 'all') {
+                    $platformMap = [
+                        'fb'      => ['Facebook', 'fb', 'Meta', 'facebook', 'facebook&instagram'],
+                        'ig'      => ['Instagram', 'ig', 'instagram', 'facebook&instagram'],
+                        'wa'      => ['WhatsApp', 'Whatsapp', 'whatsapp', 'wa'],
+                        'landing' => ['Landing', 'landing', 'integration', 'Formulario', 'CRM Atalaya'],
+                    ];
+                    $origins = $platformMap[$request->platform] ?? [$request->platform];
+                    $query->whereIn('clients.origin', $origins);
+                }
+                if ($request->advisor_id && $request->advisor_id !== 'all') {
+                    $query->where('clients.assigned_to', $request->advisor_id);
+                }
             });
+    }
+
+    /**
+     * Obtiene el tipo de cambio USD → PEN (tc_venta) desde la API de Luna en tiempo real.
+     * Si la API falla, retorna el valor guardado en settings o 3.80 como fallback.
+     */
+    private function getLunaExchangeRate(): float
+    {
+        try {
+            $res = new \SoDe\Extend\Fetch(
+                'https://apiluna.cambiafx.pe/api/BackendPizarra/getTcCustomerNoAuth?idParCurrency=1'
+            );
+            $data = $res->json();
+
+            if (is_array($data) && count($data) > 0) {
+                $tcVenta = (float)($data[0]['tcSale'] ?? 0);
+                if ($tcVenta > 0) {
+                    return $tcVenta;
+                }
+            }
+        } catch (\Throwable $e) {
+            // Si la API falla, usamos el valor guardado o el fallback
+        }
+
+        return (float)(Setting::get('exchange-rate-usd-pen') ?? 3.80);
     }
 }
