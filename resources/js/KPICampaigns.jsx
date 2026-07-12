@@ -437,14 +437,31 @@ const KPICampaigns = ({ months = [], currentMonth, currentYear, advisors = [], w
         }
     };
 
+    const getAdjustedDates = (from, to) => {
+        if (!from || !to) return { date_from: from, date_to: to };
+        const [y1, m1, d1] = from.split('-').map(Number);
+        const adjustedStartDate = new Date(y1, m1 - 1, d1, 0, 0, 0);
+        adjustedStartDate.setHours(-5, 0, 0, 0);
+
+        const [y2, m2, d2] = to.split('-').map(Number);
+        const adjustedEndDate = new Date(y2, m2 - 1, d2, 0, 0, 0);
+        adjustedEndDate.setHours(18, 59, 59, 999);
+
+        return {
+            date_from: adjustedStartDate.toISOString(),
+            date_to: adjustedEndDate.toISOString()
+        };
+    };
+
     // ─── REST: paginación de leads con nuevos filtros ────────────────────────
     const leadsRest = {
         paginate: (params) => {
+            const adjusted = getAdjustedDates(dateFrom, dateTo);
             return axios
                 .post(`/api/dashboard/campaigns/leads/paginate`, {
                     ...params,
-                    date_from: dateFrom,
-                    date_to: dateTo,
+                    date_from: adjusted.date_from,
+                    date_to: adjusted.date_to,
                     platform,
                     advisor_id: advisorId !== "all" ? advisorId : null,
                     campaign_id: selectedCampaignId,
@@ -469,9 +486,11 @@ const KPICampaigns = ({ months = [], currentMonth, currentYear, advisors = [], w
         setLeadSources({});
         setOriginCounts([]);
 
+        const adjusted = getAdjustedDates(from, to);
+
         KPICampaignsRest.kpi({
-            date_from: from,
-            date_to: to,
+            date_from: adjusted.date_from,
+            date_to: adjusted.date_to,
             platform: plt !== "all" ? plt : null,
             advisor_id: adv !== "all" ? adv : null,
         }).then(({ data, summary }) => {

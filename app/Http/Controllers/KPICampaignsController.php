@@ -79,21 +79,18 @@ class KPICampaignsController extends BasicController
         ];
     }
 
-    /**
-     * Construye el rango de fechas del periodo anterior con la misma duración
-     */
     private function getPreviousPeriod(string $dateFrom, string $dateTo): array
     {
         $from = \Carbon\Carbon::parse($dateFrom);
         $to   = \Carbon\Carbon::parse($dateTo);
-        $diff = $from->diffInDays($to);
+        $diffInSeconds = $from->diffInSeconds($to);
 
-        $prevTo   = (clone $from)->subDay();
-        $prevFrom = (clone $prevTo)->subDays($diff);
+        $prevTo   = (clone $from)->subSecond();
+        $prevFrom = (clone $prevTo)->subSeconds($diffInSeconds);
 
         return [
-            $prevFrom->format('Y-m-d'),
-            $prevTo->format('Y-m-d'),
+            $prevFrom->toDateTimeString(),
+            $prevTo->toDateTimeString(),
         ];
     }
 
@@ -135,14 +132,13 @@ class KPICampaignsController extends BasicController
                 // Compatibilidad legacy con parámetro del segmento de ruta
                 $m = $month ?? $request->month;
                 [$year, $mo] = \explode('-', $m);
-                $dateFrom = "{$year}-{$mo}-01";
+                $dateFrom = "{$year}-{$mo}-01 00:00:00";
                 $lastDay  = date('t', mktime(0, 0, 0, $mo, 1, $year));
-                $dateTo   = "{$year}-{$mo}-{$lastDay}";
+                $dateTo   = "{$year}-{$mo}-{$lastDay} 23:59:59";
             } else {
                 // Default: mes actual
-                $dateFrom = date('Y-m-01');
-                $dateTo   = date('Y-m-t');
-
+                $dateFrom = date('Y-m-01 00:00:00');
+                $dateTo   = date('Y-m-t 23:59:59');
             }
 
             $platform  = $request->platform  ?? null;
@@ -168,27 +164,27 @@ class KPICampaignsController extends BasicController
                 ->join('campaigns as campaign', 'campaign.id', '=', 'clients.campaign_id')
                 ->whereRaw('LENGTH(clients.campaign_id) > 10');
 
-            $shift = $this->getTimezoneShift();
+            
 
             // Query con filtros de ad meta (adset + ad) + fecha actual con ajuste de zona horaria de Meta
-            $query = function () use ($queryBase, $dateFrom, $dateTo, $platform, $advisorId, $shift) {
+            $query = function () use ($queryBase, $dateFrom, $dateTo, $platform, $advisorId) {
                 $q = $queryBase()
                     ->whereNotNull('clients.adset_name')
                     ->where('clients.adset_name', '<>', '')
                     ->whereNotNull('clients.ad_name')
                     ->where('clients.ad_name', '<>', '')
-                    ->whereBetween(DB::raw("DATE_ADD(clients.created_at, INTERVAL {$shift} HOUR)"), ["{$dateFrom} 00:00:00", "{$dateTo} 23:59:59"]);
+                    ->whereBetween('clients.created_at', [$dateFrom, $dateTo]);
                 return $this->applyOptionalFilters($q, $platform, $advisorId);
             };
 
             // Query equivalente para el periodo anterior con ajuste de zona horaria de Meta
-            $queryPrev = function () use ($queryBase, $prevDateFrom, $prevDateTo, $platform, $advisorId, $shift) {
+            $queryPrev = function () use ($queryBase, $prevDateFrom, $prevDateTo, $platform, $advisorId) {
                 $q = $queryBase()
                     ->whereNotNull('clients.adset_name')
                     ->where('clients.adset_name', '<>', '')
                     ->whereNotNull('clients.ad_name')
                     ->where('clients.ad_name', '<>', '')
-                    ->whereBetween(DB::raw("DATE_ADD(clients.created_at, INTERVAL {$shift} HOUR)"), ["{$prevDateFrom} 00:00:00", "{$prevDateTo} 23:59:59"]);
+                    ->whereBetween('clients.created_at', [$prevDateFrom, $prevDateTo]);
                 return $this->applyOptionalFilters($q, $platform, $advisorId);
             };
 
@@ -229,7 +225,7 @@ class KPICampaignsController extends BasicController
                             ->join('statuses', 'statuses.id', '=', 'client_status_traces.status_id')
                             ->where('statuses.table_id', 'a8367789-666e-4929-aacb-7cbc2fbf74de')
                             ->whereColumn('client_status_traces.client_id', 'clients.id')
-                            ->whereBetween('client_status_traces.created_at', ["{$dateFrom} 00:00:00", "{$dateTo} 23:59:59"]);
+                            ->whereBetween('client_status_traces.created_at', [$dateFrom, $dateTo]);
                     });
                 return $this->applyOptionalFilters($q, $platform, $advisorId);
             };
@@ -245,7 +241,7 @@ class KPICampaignsController extends BasicController
                             ->join('statuses', 'statuses.id', '=', 'client_status_traces.status_id')
                             ->where('statuses.table_id', 'a8367789-666e-4929-aacb-7cbc2fbf74de')
                             ->whereColumn('client_status_traces.client_id', 'clients.id')
-                            ->whereBetween('client_status_traces.created_at', ["{$prevDateFrom} 00:00:00", "{$prevDateTo} 23:59:59"]);
+                            ->whereBetween('client_status_traces.created_at', [$prevDateFrom, $prevDateTo]);
                     });
                 return $this->applyOptionalFilters($q, $platform, $advisorId);
             };
@@ -373,7 +369,7 @@ class KPICampaignsController extends BasicController
                 ->orderBy('total', 'desc')
                 ->get();
 
-            $breakdownCounts = Breakdown::whereBetween('created_at', ["{$dateFrom} 00:00:00", "{$dateTo} 23:59:59"])
+            $breakdownCounts = Breakdown::whereBetween('created_at', [$dateFrom, $dateTo])
                 ->where('business_id', Auth::user()->business_id)
                 ->count();
 
@@ -458,7 +454,7 @@ class KPICampaignsController extends BasicController
                     FROM client_notes 
                     WHERE client_notes.user_id = clients.assigned_to
                     AND client_notes.note_type_id = "37b1e8e2-04c4-4246-a8c9-838baa7f8187"
-                    AND client_notes.created_at BETWEEN "' . $dateFrom . ' 00:00:00" AND "' . $dateTo . ' 23:59:59"
+                    AND client_notes.created_at BETWEEN "' . $dateFrom . '" AND "' . $dateTo . '"
                 ) as emails_sent'),
             ];
 
@@ -466,7 +462,7 @@ class KPICampaignsController extends BasicController
                 FROM client_notes
                 WHERE client_notes.user_id = clients.assigned_to
                 AND client_notes.manage_status_id = "' . $convertedLeadStatus . '"
-                AND client_notes.created_at BETWEEN "' . $dateFrom . ' 00:00:00" AND "' . $dateTo . ' 23:59:59"
+                AND client_notes.created_at BETWEEN "' . $dateFrom . '" AND "' . $dateTo . '"
             ) as converted');
             else $columns[] = DB::raw("NULL as converted");
 
@@ -482,7 +478,7 @@ class KPICampaignsController extends BasicController
 
             // Jerarquía: Campaign → AdSet → Ads
             // ──────────────────────────────────────────────────────────
-            $rawAdsData = Client::whereBetween(DB::raw("DATE_ADD(clients.created_at, INTERVAL {$shift} HOUR)"), ["{$dateFrom} 00:00:00", "{$dateTo} 23:59:59"])
+            $rawAdsData = Client::whereBetween('clients.created_at', [$dateFrom, $dateTo])
                 ->select([
                     'clients.campaign_id AS campaign_id',
                     'campaign.title AS campaign_name',
@@ -702,13 +698,13 @@ class KPICampaignsController extends BasicController
             // ──────────────────────────────────────────────────────────
             $leadsByDay = $query()
                 ->select([
-                    DB::raw("DATE(DATE_ADD(clients.created_at, INTERVAL {$shift} HOUR)) as date"),
+                    DB::raw("DATE(clients.created_at) as date"),
                     DB::raw('COUNT(*) as total'),
                     DB::raw('COUNT(CASE WHEN clients.status_id IN (' . implode(',', array_map(fn($id) => '"' . $id . '"', $clientStatusesIds)) . ') AND clients.status IS NOT NULL THEN 1 END) as sales'),
                     DB::raw('COUNT(CASE WHEN clients.status IS NULL THEN 1 END) as archived'),
                 ])
-                ->groupBy(DB::raw("DATE(DATE_ADD(clients.created_at, INTERVAL {$shift} HOUR))"))
-                ->orderBy(DB::raw("DATE(DATE_ADD(clients.created_at, INTERVAL {$shift} HOUR))"), 'asc')
+                ->groupBy(DB::raw('DATE(clients.created_at)'))
+                ->orderBy(DB::raw('DATE(clients.created_at)'), 'asc')
                 ->get();
 
             // ──────────────────────────────────────────────────────────
@@ -856,8 +852,6 @@ class KPICampaignsController extends BasicController
 
     public function setPaginationInstance(Request $request, string $model)
     {
-        $shift = $this->getTimezoneShift();
-
         return Client::select([
             'clients.id',
             'clients.name',
@@ -877,15 +871,11 @@ class KPICampaignsController extends BasicController
             ->leftJoin('statuses', 'statuses.id', '=', 'clients.status_id')
             ->leftJoin('statuses as manage_status', 'manage_status.id', '=', 'clients.manage_status_id')
             ->leftJoin('users', 'users.id', '=', 'clients.assigned_to')
-            ->where(function ($query) use ($request, $shift) {
-                // Soporte para date_from/date_to y legacy month con ajuste de zona horaria de Meta
+            ->where(function ($query) use ($request) {
                 if ($request->date_from && $request->date_to) {
-                    $query->whereBetween(DB::raw("DATE_ADD(clients.created_at, INTERVAL {$shift} HOUR)"), [
-                        $request->date_from . ' 00:00:00',
-                        $request->date_to . ' 23:59:59'
-                    ]);
+                    $query->whereBetween('clients.created_at', [$request->date_from, $request->date_to]);
                 } elseif ($request->month) {
-                    $query->whereRaw("DATE_FORMAT(DATE_ADD(clients.created_at, INTERVAL {$shift} HOUR), '%Y-%m') = ?", [$request->month]);
+                    $query->whereRaw("DATE_FORMAT(clients.created_at, '%Y-%m') = ?", [$request->month]);
                 }
                 if ($request->campaign_id) {
                     $query->where('clients.campaign_id', $request->campaign_id);
