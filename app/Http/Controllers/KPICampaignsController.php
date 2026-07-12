@@ -481,7 +481,7 @@ class KPICampaignsController extends BasicController
             // ──────────────────────────────────────────────────────────
             // Jerarquía: Campaign → AdSet → Ads
             // ──────────────────────────────────────────────────────────
-            $rawAdsData = Client::whereBetween('clients.created_at', ["{$dateFrom} 00:00:00", "{$dateTo} 23:59:59"])
+            $rawAdsData = Client::whereBetween(DB::raw('DATE_ADD(clients.created_at, INTERVAL 5 HOUR)'), ["{$dateFrom} 00:00:00", "{$dateTo} 23:59:59"])
                 ->select([
                     'clients.campaign_id AS campaign_id',
                     'campaign.title AS campaign_name',
@@ -697,7 +697,6 @@ class KPICampaignsController extends BasicController
                 }
             }
 
-            // ──────────────────────────────────────────────────────────
             // Leads por día (para el gráfico timeline) con ajuste timezone (+5 horas)
             // ──────────────────────────────────────────────────────────
             $leadsByDay = $query()
