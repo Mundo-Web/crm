@@ -127,6 +127,19 @@ class MetaSpendController extends Controller
                 }
             }
 
+            // ── Auto-sincronizar también Google Ads y TikTok (silencioso) ────
+            try {
+                (new GoogleAdsController())->syncGoogleAdsCampaigns($request);
+            } catch (\Throwable $e) {
+                Log::warning("Google Ads sync in MetaSpendController failed: " . $e->getMessage());
+            }
+
+            try {
+                (new TikTokController())->syncTikTokCampaigns($request);
+            } catch (\Throwable $e) {
+                Log::warning("TikTok sync in MetaSpendController failed: " . $e->getMessage());
+            }
+
             $response->message = "Gasto sincronizado correctamente.";
             $response->data = [
                 'updated'  => $updated,

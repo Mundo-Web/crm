@@ -88,6 +88,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/tiktok/send', [\App\Http\Controllers\TikTokController::class, 'send']);
     Route::post('/tiktok/sync-campaigns', [\App\Http\Controllers\TikTokController::class, 'syncTikTokCampaigns']);
 
+    Route::post('/google-ads/sync-campaigns', [\App\Http\Controllers\GoogleAdsController::class, 'syncGoogleAdsCampaigns']);
+
     Route::get('/dashboard/{range}', [DashboardController::class, 'revenue']);
     Route::get('/dashboard/leads/kpi/{month}', [KPILeadsController::class, 'kpi']);
     Route::get('/dashboard/campaigns/kpi/{month}', [KPICampaignsController::class, 'kpi']);   // Legacy (compatibilidad)

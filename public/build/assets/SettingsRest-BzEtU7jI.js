@@ -1,0 +1,1 @@
+var i=Object.defineProperty;var n=(t,s,e)=>s in t?i(t,s,{enumerable:!0,configurable:!0,writable:!0,value:e}):t[s]=e;var a=(t,s,e)=>n(t,typeof s!="symbol"?s+"":s,e);import{B as o}from"./Adminto-BfLBGsxt.js";class c extends o{constructor(){super(...arguments);a(this,"path","settings")}}export{c as S};

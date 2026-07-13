@@ -102,6 +102,7 @@ Route::middleware(['auth', 'firstTime', 'hasPlan'])->group(function () {
     Route::get('/pixels', [PixelController::class, 'reactView'])->name('Pixels.jsx');
     Route::get('/webhooks', [WebhookController::class, 'reactView'])->name('Webhooks.jsx');
     Route::get('/meta/connect', [MetaController::class, 'redirectToMeta'])->name('meta.connect');
+    Route::get('/google-ads/connect', [\App\Http\Controllers\GoogleAdsController::class, 'connect'])->name('google-ads.connect');
     Route::get('/types', [TypeController::class, 'reactView'])->name('Types.jsx');
     Route::get('/settings', [SettingController::class, 'reactView'])->name('Settings.jsx');
     Route::get('/business-sectors', [BusinessSectorController::class, 'reactView'])->name('BusinessSectors.jsx');
@@ -112,6 +113,7 @@ Route::middleware(['auth', 'firstTime', 'hasPlan'])->group(function () {
 // Callback public route to allow Meta redirect via ngrok without requiring active session
 Route::get('/meta/callback', [MetaController::class, 'handleMetaCallback']);
 Route::get('/tiktok/callback', [\App\Http\Controllers\TikTokController::class, 'handleTikTokCallback']);
+Route::get('/google-ads/callback', [\App\Http\Controllers\GoogleAdsController::class, 'callback'])->name('google-ads.callback');
 
 
 if (env('APP_ENV') === 'local') {

@@ -511,6 +511,11 @@ const LeadTable = ({
                                         <i className="mdi mdi-music-note" style={{ color: "#FF0050" }}></i>
                                     );
                                     break;
+                                case "google-ads":
+                                    integrationIcon = (
+                                        <i className="mdi mdi-google" style={{ color: "#4285F4" }}></i>
+                                    );
+                                    break;
                                 default:
                                     integrationIcon = (
                                         <i className="mdi mdi-whatsapp" style={{ color: "#25D366" }}></i>

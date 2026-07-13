@@ -28,6 +28,8 @@ class IntegrationController extends BasicController
             $metaBusiness = MetaController::getMetaProfile($request->accountId, $request->accessToken);
         } else if ($request->service == 'tiktok') {
             $metaBusiness = \App\Http\Controllers\TikTokController::getAdvertiserProfile($request->accountId, $request->accessToken);
+        } else if ($request->service == 'google-ads') {
+            $metaBusiness = \App\Http\Controllers\GoogleAdsController::getCustomerProfile($request->accountId, $request->accessToken);
         }
 
         if (!isset($metaBusiness['id'])) {
@@ -64,15 +66,27 @@ class IntegrationController extends BasicController
                 mkdir($directory, 0755, true);
             }
 
-            // Get image content and generate filename
-            $imageContent = file_get_contents($metaBusiness['picture']['data']['url']);
-            $filename = $request->accountId . '.jpg';
-            $fullPath = $directory . '/' . $filename;
-
-            // Save image to storage
-            file_put_contents($fullPath, $imageContent);
-
-            $metaBusinessProfile =  $filename;
+            $url = $metaBusiness['picture']['data']['url'];
+            if (\SoDe\Extend\Text::startsWith($url, 'http')) {
+                // Get image content and generate filename
+                $imageContent = @file_get_contents($url);
+                if ($imageContent) {
+                    $filename = $request->accountId . '.jpg';
+                    $fullPath = $directory . '/' . $filename;
+                    // Save image to storage
+                    file_put_contents($fullPath, $imageContent);
+                    $metaBusinessProfile = $filename;
+                }
+            } else {
+                if ($url === 'google-ads.svg') {
+                    $sourcePath = public_path('assets/img/google-ads.svg');
+                    $destPath = $directory . '/google-ads.svg';
+                    if (file_exists($sourcePath)) {
+                        copy($sourcePath, $destPath);
+                    }
+                }
+                $metaBusinessProfile = $url;
+            }
         }
 
         $integration = [
@@ -122,6 +136,8 @@ class IntegrationController extends BasicController
                 $profile = MetaController::getMetaProfile($request->accountId, $request->accessToken);
             } else if ($request->service == 'tiktok') {
                 $profile = \App\Http\Controllers\TikTokController::getAdvertiserProfile($request->accountId, $request->accessToken);
+            } else if ($request->service == 'google-ads') {
+                $profile = \App\Http\Controllers\GoogleAdsController::getCustomerProfile($request->accountId, $request->accessToken);
             } else {
                 throw new Exception('Invalid service type');
             }

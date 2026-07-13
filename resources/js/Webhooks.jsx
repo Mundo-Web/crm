@@ -72,6 +72,13 @@ const icons = {
             style={{ height: "200px", width: "auto" }}
         />
     ),
+    "google-ads": (
+        <img
+            src="/assets/img/google-ads.svg"
+            alt="Google Ads"
+            style={{ height: "200px", width: "auto" }}
+        />
+    ),
 };
 
 const ServiceCard = ({
@@ -421,6 +428,25 @@ const IntegrationWizardModal = ({
                 image: null,
             },
         },
+        "google-ads": {
+            name: "Google Ads",
+            color: "#FBBC05",
+            icon: "mdi-google",
+            developer_url: "https://console.developers.google.com",
+            product_name: "Google Ads API",
+            account_type: "cuenta de Google Ads Business",
+            permissions: "adwords",
+            steps: [
+                '<strong>Webhook de Google Ads:</strong> Configura la URL del Webhook y la Clave de Verificación en tu formulario de Google Ads para capturar leads en tiempo real.',
+                '<strong>Conexión OAuth:</strong> Inicia el asistente de autenticación en la pestaña "Autenticación" para autorizar al CRM a sincronizar campañas.',
+                '<strong>Seleccionar cuenta:</strong> Escoge la cuenta publicitaria (Customer ID) correspondiente para importar el rendimiento de tus anuncios.'
+            ],
+            authSteps: [
+                '<strong>Autorizar cuenta:</strong> Haz clic en el botón "Conectar con Google" para abrir el flujo seguro de Google Cloud.',
+                '<strong>Seleccionar cuenta publicitaria:</strong> Elige tu Customer ID de la lista desplegable una vez completado el flujo.',
+                '<strong>Sincronizar campañas:</strong> Presiona guardar y el CRM comenzará a vincular los leads con tus campañas publicitarias.'
+            ],
+        },
     };
 
     const config = serviceConfig[service] || serviceConfig.messenger;
@@ -503,6 +529,42 @@ const IntegrationWizardModal = ({
         }
     };
 
+    const handleConnectGoogleAds = () => {
+        clearPolling();
+        localStorage.removeItem('meta_auth_result');
+        
+        const width = 600;
+        const height = 650;
+        const left = window.screen.width / 2 - width / 2;
+        const top = window.screen.height / 2 - height / 2;
+        
+        window.open(
+            `/google-ads/connect?state=${apikey}`,
+            'GoogleAdsAuthPopup',
+            `width=${width},height=${height},top=${top},left=${left},scrollbars=yes,status=yes`
+        );
+        
+        setPollingActive(true);
+        pollingIntervalRef.current = setInterval(() => {
+            const rawPayload = localStorage.getItem('meta_auth_result');
+            if (rawPayload) {
+                try {
+                    const decoded = JSON.parse(atob(rawPayload));
+                    if (decoded.service === 'google-ads') {
+                        setAuthPayload(decoded);
+                        localStorage.removeItem('meta_auth_result');
+                        clearPolling();
+                        toast.success("Conexión con Google establecida exitosamente");
+                    }
+                } catch (e) {
+                    console.error("Error decoding meta_auth_result:", e);
+                    toast.error("Error al procesar la respuesta de autenticación");
+                    clearPolling();
+                }
+            }
+        }, 500);
+    };
+
     const handleConnectMeta = () => {
         clearPolling();
         localStorage.removeItem('meta_auth_result');
@@ -565,6 +627,13 @@ const IntegrationWizardModal = ({
             const selectedAdv = authPayload?.advertisers?.find(a => a.id === assetId);
             if (selectedAdv) {
                 targetAccountId = selectedAdv.id;
+                targetAccessToken = authPayload.user_token;
+                targetPhoneId = "";
+            }
+        } else if (service === 'google-ads') {
+            const selectedAcc = authPayload?.accounts?.find(a => a.id === assetId);
+            if (selectedAcc) {
+                targetAccountId = selectedAcc.id;
                 targetAccessToken = authPayload.user_token;
                 targetPhoneId = "";
             }
@@ -1230,7 +1299,7 @@ const IntegrationWizardModal = ({
                                                     <input
                                                         type="text"
                                                         className="form-control border-2"
-                                                        value={auth_token}
+                                                        value={service === "google-ads" ? apikey : auth_token}
                                                         readOnly
                                                         style={{
                                                             backgroundColor:
@@ -1252,7 +1321,7 @@ const IntegrationWizardModal = ({
                                                         }}
                                                         onClick={() =>
                                                             onCopyClicked(
-                                                                auth_token,
+                                                                service === "google-ads" ? apikey : auth_token,
                                                             )
                                                         }
                                                     >
@@ -1514,6 +1583,125 @@ const IntegrationWizardModal = ({
                                                                         </span>
                                                                         <div className="text-muted small mt-1">
                                                                             Advertiser ID: {accountVerified.id}
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                                <button
+                                                                    type="button"
+                                                                    className="btn btn-outline-secondary btn-sm"
+                                                                    onClick={handleDisconnectMeta}
+                                                                >
+                                                                    Cambiar cuenta
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    ) : service === "google-ads" ? (
+                                        <div className="row g-3">
+                                            {/* Caso 1: No conectado ni verificado */}
+                                            {!authPayload && !accountVerified && (
+                                                <div className="col-12 text-center py-4">
+                                                    <button
+                                                        type="button"
+                                                        className="btn btn-lg px-5 py-3 text-white fw-bold d-inline-flex align-items-center justify-content-center border-0 shadow"
+                                                        style={{
+                                                            backgroundColor: "#FBBC05",
+                                                            borderRadius: "10px",
+                                                            transition: "all 0.3s ease",
+                                                        }}
+                                                        onClick={handleConnectGoogleAds}
+                                                        disabled={verifying}
+                                                        onMouseOver={(e) => e.currentTarget.style.filter = "brightness(1.1)"}
+                                                        onMouseOut={(e) => e.currentTarget.style.filter = "none"}
+                                                    >
+                                                        {verifying ? (
+                                                            <i className="mdi mdi-loading mdi-spin me-2 fs-5"></i>
+                                                        ) : (
+                                                            <i className="mdi mdi-google me-2 fs-5"></i>
+                                                        )}
+                                                        Conectar con Google
+                                                    </button>
+                                                    <p className="text-muted mt-3 mb-0 small">
+                                                        Se abrirá una ventana de Google para autorizar la integración con tu cuenta de Google Ads.
+                                                    </p>
+                                                </div>
+                                            )}
+
+                                            {/* Caso 2: Conectado pero no verificado/seleccionado todavía */}
+                                            {authPayload && !accountVerified && (
+                                                <div className="col-12">
+                                                    <div>
+                                                        <label className="form-label fw-semibold text-dark">
+                                                            <i className="mdi mdi-google text-warning me-2 fs-5"></i>
+                                                            Selecciona tu Cuenta Publicitaria de Google Ads (Customer ID):
+                                                        </label>
+                                                        <select
+                                                            className="form-select border-2 p-2"
+                                                            value={selectedAssetId}
+                                                            onChange={(e) => handleAssetSelect(e.target.value)}
+                                                            style={{ borderRadius: "8px" }}
+                                                            disabled={verifying}
+                                                        >
+                                                            <option value="">-- Selecciona una cuenta --</option>
+                                                            {authPayload?.accounts?.map((acc) => (
+                                                                <option key={acc.id} value={acc.id}>
+                                                                    {acc.name} (ID: {acc.id})
+                                                                </option>
+                                                            ))}
+                                                        </select>
+                                                        {(!authPayload?.accounts || authPayload.accounts.length === 0) && (
+                                                            <div className="alert alert-warning border-0 mt-3 small">
+                                                                <i className="mdi mdi-alert-circle me-1"></i>
+                                                                No se encontraron cuentas de Google Ads autorizadas. Asegúrate de configurar un Developer Token válido.
+                                                            </div>
+                                                        )}
+                                                    </div>
+
+                                                    {verifying && (
+                                                        <div className="text-center py-3 mt-3">
+                                                            <i className="mdi mdi-loading mdi-spin me-2 fs-4 text-primary"></i>
+                                                            Verificando perfil seleccionado...
+                                                        </div>
+                                                    )}
+
+                                                    <div className="text-end mt-4">
+                                                        <button
+                                                            type="button"
+                                                            className="btn btn-outline-danger btn-sm"
+                                                            onClick={handleDisconnectMeta}
+                                                            disabled={verifying}
+                                                        >
+                                                            <i className="mdi mdi-logout me-1"></i>
+                                                            Cancelar / Desconectar
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            {/* Caso 3: Cuenta verificada exitosamente */}
+                                            {accountVerified && (
+                                                <div className="col-12">
+                                                    <div className="card shadow-sm border rounded-3 overflow-hidden mb-3">
+                                                        <div className="card-body bg-light p-3">
+                                                            <div className="d-flex align-items-center justify-content-between">
+                                                                <div className="d-flex align-items-center">
+                                                                    <img
+                                                                        className="avatar-md rounded-circle me-3 border border-2 border-warning"
+                                                                        src="/assets/img/google-ads.svg"
+                                                                        alt={accountVerified.name}
+                                                                        style={{ width: "56px", height: "56px", objectFit: "cover" }}
+                                                                    />
+                                                                    <div>
+                                                                        <h5 className="mb-1 text-dark fw-bold">{accountVerified.name}</h5>
+                                                                        <span className="badge bg-warning-lighten text-warning p-1 fs-7">
+                                                                            <i className="mdi mdi-check-circle me-1"></i>
+                                                                            Conectado y verificado
+                                                                        </span>
+                                                                        <div className="text-muted small mt-1">
+                                                                            Customer ID: {accountVerified.id}
                                                                         </div>
                                                                     </div>
                                                                 </div>
@@ -2379,6 +2567,8 @@ const Webhooks = ({ apikey, auth_token, integrations: integrationsDB }) => {
             "Integra Google Calendar para gestionar citas y eventos desde Atalaya.",
         formularios:
             "Conecta formularios web para recibir leads directamente en Atalaya.",
+        "google-ads":
+            "Integra Google Ads para recibir leads en tiempo real y sincronizar estadísticas de tus campañas.",
     };
 
     const handleIntegrationSuccess = (newIntegration, isEdit = false) => {
@@ -2419,10 +2609,14 @@ const Webhooks = ({ apikey, auth_token, integrations: integrationsDB }) => {
         }
     };
 
-    const handleSyncCampaignsTikTok = async (integration) => {
-        const loadingToast = toast.loading("Sincronizando campañas y reportes de TikTok...");
+    const handleSyncCampaigns = async (integration, serviceName) => {
+        const isGoogle = serviceName === 'google-ads';
+        const label = isGoogle ? "Google Ads" : "TikTok";
+        const endpoint = isGoogle ? '/api/google-ads/sync-campaigns' : '/api/tiktok/sync-campaigns';
+        
+        const loadingToast = toast.loading(`Sincronizando campañas y reportes de ${label}...`);
         try {
-            const res = await fetch('/api/tiktok/sync-campaigns', {
+            const res = await fetch(endpoint, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -2431,13 +2625,13 @@ const Webhooks = ({ apikey, auth_token, integrations: integrationsDB }) => {
             });
             const data = await res.json();
             if (data.status === true || data.status === 200) {
-                toast.success("Campañas de TikTok sincronizadas exitosamente");
+                toast.success(`Campañas de ${label} sincronizadas exitosamente`);
             } else {
-                throw new Error(data.message || "Error al sincronizar campañas");
+                throw new Error(data.message || `Error al sincronizar campañas de ${label}`);
             }
         } catch (err) {
             console.error(err);
-            toast.error(err.message || "Error al sincronizar campañas");
+            toast.error(err.message || `Error al sincronizar campañas de ${label}`);
         } finally {
             toast.dismiss(loadingToast);
         }
@@ -2463,7 +2657,7 @@ const Webhooks = ({ apikey, auth_token, integrations: integrationsDB }) => {
                             integration={ibms[service]}
                             onIntegrate={handleOpenWizard}
                             onUnlink={onUnlinkClicked}
-                            onSyncTikTok={handleSyncCampaignsTikTok}
+                            onSyncTikTok={(integration) => handleSyncCampaigns(integration, service)}
                         />
                     ))}
                 </div>

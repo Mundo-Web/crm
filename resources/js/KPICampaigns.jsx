@@ -20,6 +20,8 @@ import { ArchivedAnalysis } from "./Reutilizables/KPSLeads/ArchivedAnalysis";
 import {
     Bar,
     BarChart,
+    Line,
+    LineChart,
     CartesianGrid,
     Legend,
     ResponsiveContainer,
@@ -311,7 +313,7 @@ const KPICampaigns = ({ months = [], currentMonth, currentYear, advisors = [], w
     const [showNoContestanModal, setShowNoContestanModal] = useState(false);
     const [showArchivadosModal, setShowArchivadosModal] = useState(false);
     const [activePreset, setActivePreset] = useState("month");
-    
+
     // Funciones de formato
     const formatNumber = (n) => n.toLocaleString("es-PE");
     const formatCurrency = (n) => `S/ ${(n || 0).toLocaleString("es-PE", { minimumFractionDigits: 2 })}`;
@@ -346,6 +348,7 @@ const KPICampaigns = ({ months = [], currentMonth, currentYear, advisors = [], w
     const [cpa, setCpa] = useState(0);
     const [roas, setRoas] = useState(0);
     const [syncingSpend, setSyncingSpend] = useState(false);
+    const [spendsLoading, setSpendsLoading] = useState(false);
 
     // Variaciones vs periodo anterior
     const [variations, setVariations] = useState({});
@@ -393,6 +396,10 @@ const KPICampaigns = ({ months = [], currentMonth, currentYear, advisors = [], w
     const [leadWinningCampaign, setLeadWinningCampaign] = useState(null);
     const [leadWinningAdset, setLeadWinningAdset] = useState(null);
     const [leadWinningAd, setLeadWinningAd] = useState(null);
+
+    // Evolución Semanal
+    const [weeklyEvolution, setWeeklyEvolution] = useState([]);
+    const [loading, setLoading] = useState(true);
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [modalTitle, setModalTitle] = useState("");
@@ -482,9 +489,37 @@ const KPICampaigns = ({ months = [], currentMonth, currentYear, advisors = [], w
     };
 
     // ─── Fetch principal ──────────────────────────────────────────────────────
-    const fetchGraph = (from, to, plt, adv) => {
-        setLeadSources({});
-        setOriginCounts([]);
+    // ─── Fetch principal ──────────────────────────────────────────────────────
+    const fetchSpendsOnly = (from, to, plt, adv) => {
+        const adjusted = getAdjustedDates(from, to);
+        KPICampaignsRest.kpi({
+            date_from: adjusted.date_from,
+            date_to: adjusted.date_to,
+            platform: plt !== "all" ? plt : null,
+            advisor_id: adv !== "all" ? adv : null,
+            exclude_spend: 0,
+        }).then(({ summary }) => {
+            setTotalSpend(summary.totalSpend ?? 0);
+            setCpl(summary.cpl ?? 0);
+            setCpa(summary.cpa ?? 0);
+            setRoas(summary.roas ?? 0);
+            setWeeklyEvolution(summary.weeklyEvolution ?? []);
+            setSpendsLoading(false);
+        }).catch((err) => {
+            console.error("Error fetching spends:", err);
+            setSpendsLoading(false);
+        });
+    };
+
+    const fetchGraph = (from, to, plt, adv, skipSpend = false, silent = false) => {
+        if (!silent) {
+            setLoading(true);
+            setLeadSources({});
+            setOriginCounts([]);
+        }
+        if (skipSpend) {
+            setSpendsLoading(true);
+        }
 
         const adjusted = getAdjustedDates(from, to);
 
@@ -493,6 +528,7 @@ const KPICampaigns = ({ months = [], currentMonth, currentYear, advisors = [], w
             date_to: adjusted.date_to,
             platform: plt !== "all" ? plt : null,
             advisor_id: adv !== "all" ? adv : null,
+            exclude_spend: skipSpend ? 1 : 0,
         }).then(({ data, summary }) => {
             setGroupedByManageStatus(data);
             setGrouped(summary.grouped ?? []);
@@ -510,10 +546,17 @@ const KPICampaigns = ({ months = [], currentMonth, currentYear, advisors = [], w
             setManagingSum(summary.managingSum ?? 0);
 
             // Gasto
-            setTotalSpend(summary.totalSpend ?? 0);
-            setCpl(summary.cpl ?? 0);
-            setCpa(summary.cpa ?? 0);
-            setRoas(summary.roas ?? 0);
+            if (!skipSpend) {
+                setTotalSpend(summary.totalSpend ?? 0);
+                setCpl(summary.cpl ?? 0);
+                setCpa(summary.cpa ?? 0);
+                setRoas(summary.roas ?? 0);
+                setWeeklyEvolution(summary.weeklyEvolution ?? []);
+                setSpendsLoading(false);
+            } else {
+                setWeeklyEvolution(summary.weeklyEvolution ?? []);
+                fetchSpendsOnly(from, to, plt, adv);
+            }
 
             // Comparativa
             setVariations(summary.variations ?? {});
@@ -548,6 +591,14 @@ const KPICampaigns = ({ months = [], currentMonth, currentYear, advisors = [], w
             setLeadWinningCampaign(summary.leadWinningCampaign ?? null);
             setLeadWinningAdset(summary.leadWinningAdset ?? null);
             setLeadWinningAd(summary.leadWinningAd ?? null);
+
+            if (!silent) {
+                setLoading(false);
+            }
+        }).catch((err) => {
+            console.error("Error fetching KPI graph:", err);
+            setLoading(false);
+            setSpendsLoading(false);
         });
     };
 
@@ -570,8 +621,26 @@ const KPICampaigns = ({ months = [], currentMonth, currentYear, advisors = [], w
     };
 
     useEffect(() => {
-        fetchGraph(dateFrom, dateTo, platform, advisorId);
-    }, [dateFrom, dateTo, platform, advisorId]);
+        // Carga los datos instantáneamente usando el cache local/DB (omitiendo gasto al inicio para rapidez)
+        fetchGraph(dateFrom, dateTo, platform, advisorId, true);
+
+        // Dispara la sincronización en segundo plano después de 1.5 segundos (sin bloquear al usuario)
+        const runBackgroundSync = async () => {
+            try {
+                await axios.post("/api/dashboard/campaigns/sync-spend", {
+                    date_from: dateFrom,
+                    date_to: dateTo
+                });
+                // Actualiza silenciosamente los datos incluyendo el gasto cuando la sincronización termina (usando silent = true)
+                fetchGraph(dateFrom, dateTo, platform, advisorId, false, true);
+            } catch (e) {
+                console.warn("Sincronización en segundo plano falló:", e);
+            }
+        };
+
+        const timer = setTimeout(runBackgroundSync, 1500);
+        return () => clearTimeout(timer);
+    }, [dateFrom, dateTo, platform, advisorId, localWeekStartDay]);
 
     // Click fuera del DateRange picker — igual que Table.jsx
     useEffect(() => {
@@ -806,7 +875,7 @@ const KPICampaigns = ({ months = [], currentMonth, currentYear, advisors = [], w
                     to { opacity: 1; transform: translateX(0) scale(1); }
                 }
             `}</style>
-            
+
             <div className="row mb-4 align-items-center g-2">
 
                 {/* Selector de Mes — mismo patrón que KPILeads */}
@@ -834,7 +903,7 @@ const KPICampaigns = ({ months = [], currentMonth, currentYear, advisors = [], w
                             {months.map((row, index) => {
                                 const month = moment({ month: row.month - 1, year: row.year });
                                 const mFrom = `${row.year}-${String(row.month).padStart(2, '0')}-01`;
-                                const mTo   = month.clone().endOf('month').format('YYYY-MM-DD');
+                                const mTo = month.clone().endOf('month').format('YYYY-MM-DD');
                                 return (
                                     <li key={index}>
                                         <a
@@ -861,7 +930,7 @@ const KPICampaigns = ({ months = [], currentMonth, currentYear, advisors = [], w
                 <div className="col-auto">
                     <div className="d-flex gap-2 align-items-center flex-wrap">
                         {[
-                            { key: 'today',     label: 'Hoy' },
+                            { key: 'today', label: 'Hoy' },
                             { key: 'yesterday', label: 'Ayer' },
                         ].map(({ key, label }) => (
                             <button
@@ -902,7 +971,7 @@ const KPICampaigns = ({ months = [], currentMonth, currentYear, advisors = [], w
                                                 const { startDate, endDate } = item.selection;
                                                 setDateRange([item.selection]);
                                                 setDateFrom(startDate ? startDate.toISOString().slice(0, 10) : dateFrom);
-                                                setDateTo(endDate   ? endDate.toISOString().slice(0, 10)   : dateTo);
+                                                setDateTo(endDate ? endDate.toISOString().slice(0, 10) : dateTo);
                                             }}
                                             moveRangeOnFirstSelection={false}
                                             ranges={dateRange}
@@ -963,7 +1032,8 @@ const KPICampaigns = ({ months = [], currentMonth, currentYear, advisors = [], w
                                         onChange={async (e) => {
                                             const val = parseInt(e.target.value);
                                             setLocalWeekStartDay(val);
-                                            await SettingsRest.save({ 'campaign-week-start-day': val });
+                                            await settingsRest.save({ name: 'campaign-week-start-day', value: val });
+                                            fetchGraph(dateFrom, dateTo, platform, advisorId);
                                         }}
                                     >
                                         <option value="0">Domingo</option>
@@ -975,39 +1045,11 @@ const KPICampaigns = ({ months = [], currentMonth, currentYear, advisors = [], w
                                         <option value="6">Sábado</option>
                                     </select>
                                 </div>
-                                <hr className="my-2" style={{ opacity: 0.1 }} />
-                                <div>
-                                    <label className="form-label text-muted mb-1" style={{ fontSize: '11px', fontWeight: 600 }}>Tipo de Cambio (1 USD = PEN)</label>
-                                    <input
-                                        type="number"
-                                        step="0.01"
-                                        className="form-control form-control-sm"
-                                        style={{ fontSize: '12px', borderRadius: '8px' }}
-                                        value={localExchangeRate}
-                                        onChange={(e) => setLocalExchangeRate(e.target.value)}
-                                        onBlur={async () => {
-                                            const val = parseFloat(localExchangeRate);
-                                            if (val > 0) {
-                                                await SettingsRest.save({ 'exchange-rate-usd-pen': val });
-                                                fetchGraph(dateFrom, dateTo, platform, advisorId);
-                                            }
-                                        }}
-                                    />
-                                </div>
                             </div>
                         </div>
 
-                        {/* Sync Gasto */}
-                        <button
-                            className="btn btn-primary rounded-pill btn-sm fw-semibold px-3"
-                            onClick={handleSyncSpend}
-                            disabled={syncingSpend}
-                        >
-                            {syncingSpend
-                                ? <><i className="mdi mdi-loading mdi-spin me-1"></i>Syncing...</>
-                                : <><i className="mdi mdi-currency-usd me-1"></i>Sync Gasto</>
-                            }
-                        </button>
+                        {/* Tipo de Cambio: gestionado automáticamente por API Luna — oculto */}
+                        {/* Sync Gasto: ahora automático al cargar datos */}
 
                         {/* Plataforma — temporalmente oculto */}
                         <div style={{ display: 'none' }}>
@@ -1021,6 +1063,8 @@ const KPICampaigns = ({ months = [], currentMonth, currentYear, advisors = [], w
                 </div>
 
             </div>
+
+
 
             <div className="d-flex align-items-center mt-4 px-1">
                 <div>
@@ -1076,13 +1120,29 @@ const KPICampaigns = ({ months = [], currentMonth, currentYear, advisors = [], w
             )}
 
             {(() => {
-                
+
                 // ─── Modal No Contestan ──────────────────────────────────────────────────
 
                 return (
                     <>
                         <style>{`
                             @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap');
+                            @keyframes skeleton-loading {
+                                0% { background-position: 100% 50%; }
+                                100% { background-position: 0 50%; }
+                            }
+                            .skeleton-item {
+                                background: linear-gradient(90deg, #e2e8f0 25%, #cbd5e1 37%, #e2e8f0 63%);
+                                background-size: 400% 100%;
+                                animation: skeleton-loading 1.4s ease infinite;
+                                border-radius: 8px;
+                            }
+                            .skeleton-item-dark {
+                                background: linear-gradient(90deg, rgba(255,255,255,0.12) 25%, rgba(255,255,255,0.24) 37%, rgba(255,255,255,0.12) 63%);
+                                background-size: 400% 100%;
+                                animation: skeleton-loading 1.4s ease infinite;
+                                border-radius: 8px;
+                            }
                             .bento-card {
                                 font-family: 'Plus Jakarta Sans', sans-serif;
                                 border-radius: 24px;
@@ -1144,7 +1204,7 @@ const KPICampaigns = ({ months = [], currentMonth, currentYear, advisors = [], w
                                 box-shadow: 0 4px 12px rgba(0,0,0,0.1);
                             }
                         `}</style>
-                        
+
                         <div className="row g-3 mb-3 mt-0">
                             {[
                                 { title: "Total Leads", value: formatNumber(totalCount), icon: "mdi-account-multiple", grad: "linear-gradient(135deg, #6366F1, #818CF8)", shadow: "rgba(99, 102, 241, 0.4)" },
@@ -1156,10 +1216,10 @@ const KPICampaigns = ({ months = [], currentMonth, currentYear, advisors = [], w
                                 { title: "Conversión", value: formatPercentage((clientsCount / totalCount) * 100 || 0), icon: "mdi-percent", grad: "linear-gradient(135deg, #8B5CF6, #A78BFA)", shadow: "rgba(139, 92, 246, 0.4)" },
                             ].map((k, i) => (
                                 <div key={i} className="col-md-6 col-xl">
-                                    <div 
-                                        className={`bento-card h-100 ${k.onClick ? 'clickable' : ''}`} 
+                                    <div
+                                        className={`bento-card h-100 ${k.onClick && !loading ? 'clickable' : ''}`}
                                         style={{ background: k.grad, boxShadow: `0 15px 35px -10px ${k.shadow}` }}
-                                        onClick={k.onClick}
+                                        onClick={!loading ? k.onClick : undefined}
                                     >
                                         <i className={`mdi ${k.icon} bento-icon-bg`}></i>
                                         <div className="d-flex align-items-center justify-content-between mb-3">
@@ -1168,14 +1228,18 @@ const KPICampaigns = ({ months = [], currentMonth, currentYear, advisors = [], w
                                                 <i className={`mdi ${k.icon}`}></i>
                                             </div>
                                         </div>
-                                        <h2 className="bento-value">{k.value}</h2>
+                                        {loading ? (
+                                            <div className="skeleton-item-dark" style={{ height: '38px', width: '95px', margin: '4px 0' }}></div>
+                                        ) : (
+                                            <h2 className="bento-value">{k.value}</h2>
+                                        )}
                                     </div>
                                 </div>
                             ))}
                         </div>
 
                         {/* ─── Fila 2: Cards de Gasto Publicitario (Meta Ads) ─── */}
-                        {(totalSpend > 0 || cpl > 0) && (
+                        {(loading || spendsLoading || totalSpend > 0 || cpl > 0) && (
                             <div className="row g-3 mb-3">
                                 {[
                                     { title: "Gasto Meta Ads", value: formatCurrency(totalSpend), sub: "", icon: "mdi-currency-usd", grad: "linear-gradient(135deg, #3B82F6, #60A5FA)", shadow: "rgba(59, 130, 246, 0.4)" },
@@ -1192,15 +1256,431 @@ const KPICampaigns = ({ months = [], currentMonth, currentYear, advisors = [], w
                                                     <i className={`mdi ${k.icon}`}></i>
                                                 </div>
                                             </div>
-                                            <h2 className="bento-value">{k.value}</h2>
-                                            {k.sub && <div className="bento-subtitle">{k.sub}</div>}
-                                            {i === 0 && <div className="position-absolute" style={{ top: "20px", right: "20px", zIndex: 1 }}><VariationBadge value={variations?.spend} /></div>}
+                                            {(loading || spendsLoading) ? (
+                                                <div className="skeleton-item-dark" style={{ height: '38px', width: '105px', margin: '4px 0' }}></div>
+                                            ) : (
+                                                <h2 className="bento-value">{k.value}</h2>
+                                            )}
+                                            {k.sub && (
+                                                <div className="bento-subtitle">
+                                                    {(loading || spendsLoading) ? (
+                                                        <div className="skeleton-item-dark" style={{ height: '14px', width: '130px', marginTop: '4px' }}></div>
+                                                    ) : (
+                                                        k.sub
+                                                    )}
+                                                </div>
+                                            )}
+                                            {!loading && !spendsLoading && i === 0 && <div className="position-absolute" style={{ top: "20px", right: "20px", zIndex: 1 }}><VariationBadge value={variations?.spend} /></div>}
                                         </div>
                                     </div>
                                 ))}
                             </div>
                         )}
                     </>
+                );
+            })()}
+
+            <div className="d-flex align-items-center mt-4 px-1">
+                <div>
+                    <h3
+                        className="mb-0 fw-bold text-dark"
+                        style={{ letterSpacing: "-0.5px" }}
+                    >
+                        Evolución semanal
+                    </h3>
+                </div>
+            </div>
+
+            {/* ═══════════════════════════════════════════════════════════
+                TABLA DE EVOLUCIÓN SEMANAL
+            ═══════════════════════════════════════════════════════════ */}
+            {weeklyEvolution.length > 1 && (() => {
+                const weekDayNames = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+                const startDayName = weekDayNames[localWeekStartDay] ?? 'Lunes';
+                const endDayName = weekDayNames[localWeekStartDay === 0 ? 6 : localWeekStartDay - 1] ?? 'Domingo';
+
+                // Detectar el mes y año del rango para el título
+                const [fy, fm] = dateFrom.split('-');
+                const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+                const monthLabel = `${monthNames[parseInt(fm, 10) - 1] ?? ''} ${fy}`;
+
+                const chartData = weeklyEvolution.map(wk => ({
+                    name: wk.label,
+                    pctContact: wk.pctContact ?? 0,
+                    pctCierre: wk.pctCierre ?? 0,
+                    roas: wk.roas ?? 0
+                }));
+
+                const fmtNum = (n) => (n ?? 0).toLocaleString('es-PE');
+                const fmtMon = (n) => `S/ ${(n ?? 0).toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                const fmtPct = (n) => `${(n ?? 0).toFixed(1)}%`;
+                const fmtRoas = (n) => `${(n ?? 0).toFixed(2)}x`;
+
+                const deltaBadge = (val) => {
+                    if (val === null || val === undefined) return <span style={{ color: '#94a3b8', fontSize: '11px', fontWeight: 500 }}>—</span>;
+                    if (val === 0) return <span className="badge" style={{ backgroundColor: '#f1f5f9', color: '#64748b', fontSize: '10px', padding: '3px 8px', borderRadius: '12px', fontWeight: 600 }}>0</span>;
+                    const isPositive = val > 0;
+                    const bg = isPositive ? 'rgba(16, 185, 129, 0.12)' : 'rgba(239, 68, 68, 0.12)';
+                    const color = isPositive ? '#10B981' : '#EF4444';
+                    const prefix = isPositive ? '+' : '';
+                    return (
+                        <span className="badge" style={{ backgroundColor: bg, color, fontSize: '10px', padding: '3px 8px', borderRadius: '12px', fontWeight: 700 }}>
+                            {prefix}{val}
+                        </span>
+                    );
+                };
+
+                return (<>
+                    <div className="card border-0 mb-5" style={{ marginTop: '28px', borderRadius: '24px', boxShadow: '0 15px 30px -10px rgba(29, 78, 216, 0.25)', border: '1px solid rgba(59, 130, 246, 0.15)', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+                        {/* Header Premium - Estilo Bento KPI Card */}
+                        <div style={{
+                            background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
+                            padding: '22px 28px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            position: 'relative',
+                            borderTopLeftRadius: '24px',
+                            borderTopRightRadius: '24px'
+                        }}>
+                            {/* Watermark icon like KPI cards */}
+                            <i className="mdi mdi-calendar-month-outline" style={{
+                                position: 'absolute',
+                                right: '-10px',
+                                bottom: '-20px',
+                                fontSize: '110px',
+                                opacity: 0.1,
+                                transform: 'rotate(-10deg)',
+                                color: '#fff',
+                                pointerEvents: 'none'
+                            }}></i>
+
+                            <div className="d-flex align-items-center gap-3" style={{ zIndex: 1 }}>
+                                <div style={{
+                                    width: 44, height: 44, borderRadius: '14px',
+                                    background: 'rgba(255, 255, 255, 0.2)',
+                                    backdropFilter: 'blur(10px)',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    boxShadow: '0 4px 12px rgba(0,0,0,0.08)'
+                                }}>
+                                    <i className="mdi mdi-calendar-week" style={{ color: '#fff', fontSize: '22px' }}></i>
+                                </div>
+                                <div>
+                                    <div style={{ color: '#ffffff', fontWeight: 800, fontSize: '17px', letterSpacing: '-0.3px', textShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
+                                        Rendimiento Acumulado
+                                    </div>
+                                    <div style={{ color: 'rgba(255, 255, 255, 0.85)', fontSize: '11px', marginTop: '2px', fontWeight: 600 }}>
+                                        {monthLabel} &bull; {startDayName} a {endDayName}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Selector integrado de Inicio de Semana en la cabecera - Estilo Dropdown de Mes */}
+                            <div className="dropdown" style={{ zIndex: 1 }}>
+                                <button
+                                    className="btn btn-sm btn-light bg-white dropdown-toggle fw-bold rounded-pill text-dark d-flex align-items-center gap-1 border-0"
+                                    type="button"
+                                    id="weekStartDropdown"
+                                    data-bs-toggle="dropdown"
+                                    aria-expanded="false"
+                                    style={{
+                                        fontSize: '12px',
+                                        padding: '6px 16px',
+                                        boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+                                    }}
+                                >
+                                    <i className="mdi mdi-calendar-clock text-primary me-1"></i>
+                                    Inicio: {weekDayNames[localWeekStartDay] ?? 'Lunes'}
+                                </button>
+                                <ul className="dropdown-menu dropdown-menu-end shadow-lg py-1 border-0" aria-labelledby="weekStartDropdown" style={{ borderRadius: '14px', minWidth: '160px', overflow: 'hidden', boxShadow: '0 10px 25px -5px rgba(0,0,0,0.15)', zIndex: 1050 }}>
+                                    {weekDayNames.map((name, val) => (
+                                        <li key={val}>
+                                            <a
+                                                className={`dropdown-item py-2 px-3 d-flex align-items-center justify-content-between fw-semibold ${localWeekStartDay === val ? 'bg-light text-primary' : 'text-dark'}`}
+                                                href="#"
+                                                onClick={async (e) => {
+                                                    e.preventDefault();
+                                                    setLocalWeekStartDay(val);
+                                                    await settingsRest.save({ name: 'campaign-week-start-day', value: val });
+                                                    fetchGraph(dateFrom, dateTo, platform, advisorId);
+                                                }}
+                                                style={{ fontSize: '12px', transition: 'all 0.15s' }}
+                                            >
+                                                <span>{name}</span>
+                                                {localWeekStartDay === val && <i className="mdi mdi-check text-primary"></i>}
+                                            </a>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        </div>
+
+                        {/* Table container */}
+                        <div style={{ overflowX: 'auto', borderBottomLeftRadius: '24px', borderBottomRightRadius: '24px' }}>
+                            <table style={{
+                                width: '100%',
+                                borderCollapse: 'collapse',
+                                fontSize: '12px',
+                                minWidth: '1100px',
+                            }}>
+                                <thead>
+                                    {/* Main Group Headers */}
+                                    <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
+                                        <th colSpan={3} style={{ padding: '12px 14px', borderRight: '1px solid #e2e8f0', textAlign: 'center', color: '#475569', fontWeight: 800, fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.8px' }}>Periodo</th>
+                                        <th colSpan={3} style={{ padding: '12px 14px', borderRight: '1px solid #e2e8f0', textAlign: 'center', color: '#4f46e5', fontWeight: 800, fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.8px', background: 'rgba(79, 70, 229, 0.04)' }}>Inversión Campaña</th>
+                                        <th colSpan={4} style={{ padding: '12px 14px', borderRight: '1px solid #e2e8f0', textAlign: 'center', color: '#059669', fontWeight: 800, fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.8px', background: 'rgba(5, 150, 105, 0.04)' }}>Trazabilidad & Leads</th>
+                                        <th colSpan={4} style={{ padding: '12px 14px', borderRight: '1px solid #e2e8f0', textAlign: 'center', color: '#d97706', fontWeight: 800, fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.8px', background: 'rgba(217, 119, 6, 0.04)' }}>Variación vs Anterior</th>
+                                        <th colSpan={3} style={{ padding: '12px 14px', textAlign: 'center', color: '#7c3aed', fontWeight: 800, fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.8px', background: 'rgba(124, 58, 237, 0.04)' }}>Indicadores ROAS</th>
+                                    </tr>
+                                    {/* Columns sub-headers */}
+                                    <tr style={{ background: '#f8fafc', borderBottom: '2px solid #cbd5e1' }}>
+                                        {/* Semana */}
+                                        <th style={{ padding: '10px 12px', color: '#64748b', fontWeight: 700, fontSize: '10px', textAlign: 'center', width: '60px' }}>Semana</th>
+                                        <th style={{ padding: '10px 12px', color: '#64748b', fontWeight: 700, fontSize: '10px', textAlign: 'center', width: '80px' }}>Desde</th>
+                                        <th style={{ padding: '10px 12px', borderRight: '1px solid #e2e8f0', color: '#64748b', fontWeight: 700, fontSize: '10px', textAlign: 'center', width: '80px' }}>Hasta</th>
+                                        {/* Inversión */}
+                                        <th style={{ padding: '10px 12px', color: '#4f46e5', fontWeight: 700, fontSize: '10px', textAlign: 'right', background: 'rgba(79, 70, 229, 0.02)' }}>Registros</th>
+                                        <th style={{ padding: '10px 12px', color: '#4f46e5', fontWeight: 700, fontSize: '10px', textAlign: 'right', background: 'rgba(79, 70, 229, 0.02)' }}>Inversión</th>
+                                        <th style={{ padding: '10px 12px', borderRight: '1px solid #e2e8f0', color: '#4f46e5', fontWeight: 700, fontSize: '10px', textAlign: 'right', background: 'rgba(79, 70, 229, 0.02)' }}>Costo Lead (CPR)</th>
+                                        {/* Resultados */}
+                                        <th style={{ padding: '10px 12px', color: '#059669', fontWeight: 700, fontSize: '10px', textAlign: 'right', background: 'rgba(5, 150, 105, 0.02)' }}>Contactados</th>
+                                        <th style={{ padding: '10px 12px', color: '#ea580c', fontWeight: 700, fontSize: '10px', textAlign: 'right', background: 'rgba(5, 150, 105, 0.02)' }}>No Contesta</th>
+                                        <th style={{ padding: '10px 12px', color: '#059669', fontWeight: 700, fontSize: '10px', textAlign: 'right', background: 'rgba(5, 150, 105, 0.02)' }}>Respondió</th>
+                                        <th style={{ padding: '10px 12px', borderRight: '1px solid #e2e8f0', color: '#059669', fontWeight: 700, fontSize: '10px', textAlign: 'right', background: 'rgba(5, 150, 105, 0.02)' }}>Ventas</th>
+                                        {/* Variaciones */}
+                                        <th style={{ padding: '10px 12px', color: '#d97706', fontWeight: 700, fontSize: '10px', textAlign: 'center', background: 'rgba(217, 119, 6, 0.02)' }}>Δ Contac.</th>
+                                        <th style={{ padding: '10px 12px', color: '#d97706', fontWeight: 700, fontSize: '10px', textAlign: 'center', background: 'rgba(217, 119, 6, 0.02)' }}>Δ No Cont.</th>
+                                        <th style={{ padding: '10px 12px', color: '#d97706', fontWeight: 700, fontSize: '10px', textAlign: 'center', background: 'rgba(217, 119, 6, 0.02)' }}>Δ Respond.</th>
+                                        <th style={{ padding: '10px 12px', borderRight: '1px solid #e2e8f0', color: '#d97706', fontWeight: 700, fontSize: '10px', textAlign: 'center', background: 'rgba(217, 119, 6, 0.02)' }}>Δ Ventas</th>
+                                        {/* Ratios */}
+                                        <th style={{ padding: '10px 12px', color: '#7c3aed', fontWeight: 700, fontSize: '10px', textAlign: 'right', background: 'rgba(124, 58, 237, 0.02)' }}>% Contacto</th>
+                                        <th style={{ padding: '10px 12px', color: '#7c3aed', fontWeight: 700, fontSize: '10px', textAlign: 'right', background: 'rgba(124, 58, 237, 0.02)' }}>% Cierre</th>
+                                        <th style={{ padding: '10px 12px', color: '#7c3aed', fontWeight: 700, fontSize: '10px', textAlign: 'right', background: 'rgba(124, 58, 237, 0.02)' }}>ROAS</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {loading ? (
+                                        Array.from({ length: 4 }).map((_, idx) => (
+                                            <tr key={idx} style={{ background: idx % 2 === 0 ? '#ffffff' : '#f8fafc', borderBottom: '1px solid #f1f5f9' }}>
+                                                <td colSpan={17} style={{ padding: '16px 20px' }}>
+                                                    <div className="skeleton-item" style={{ height: '18px', width: '100%' }}></div>
+                                                </td>
+                                            </tr>
+                                        ))
+                                    ) : (
+                                        weeklyEvolution.map((wk, idx) => {
+                                            const isEven = idx % 2 === 0;
+                                            const rowBg = isEven ? '#ffffff' : '#f8fafc';
+                                            return (
+                                                <tr key={wk.label} style={{ background: rowBg, borderBottom: '1px solid #f1f5f9', transition: 'all 0.2s' }}
+                                                    onMouseEnter={e => {
+                                                        e.currentTarget.style.background = '#f1f5f9';
+                                                        e.currentTarget.style.boxShadow = 'inset 0 0 0 1px rgba(99, 102, 241, 0.1)';
+                                                    }}
+                                                    onMouseLeave={e => {
+                                                        e.currentTarget.style.background = rowBg;
+                                                        e.currentTarget.style.boxShadow = 'none';
+                                                    }}
+                                                >
+                                                    {/* Semana */}
+                                                    <td style={{ padding: '12px', textAlign: 'center', fontWeight: 800, color: '#0f172a', fontSize: '13px' }}>{wk.label}</td>
+                                                    <td style={{ padding: '12px', textAlign: 'center', color: '#64748b', fontWeight: 600 }}>{wk.start_formatted}</td>
+                                                    <td style={{ padding: '12px', textAlign: 'center', color: '#64748b', fontWeight: 600, borderRight: '1px solid #e2e8f0' }}>{wk.end_formatted}</td>
+
+                                                    {/* Inversión */}
+                                                    <td style={{ padding: '12px', textAlign: 'right', fontWeight: 700, color: '#0f172a', background: 'rgba(79, 70, 229, 0.02)' }}>{fmtNum(wk.registros)}</td>
+                                                    <td style={{ padding: '12px', textAlign: 'right', fontWeight: 600, color: '#4f46e5', background: 'rgba(79, 70, 229, 0.02)' }}>
+                                                        {spendsLoading ? <div className="skeleton-item" style={{ height: '18px', width: '75px', marginLeft: 'auto' }}></div> : fmtMon(wk.spend)}
+                                                    </td>
+                                                    <td style={{ padding: '12px', textAlign: 'right', fontWeight: 600, color: '#4f46e5', borderRight: '1px solid #e2e8f0', background: 'rgba(79, 70, 229, 0.02)' }}>
+                                                        {spendsLoading ? (
+                                                            <div className="skeleton-item" style={{ height: '18px', width: '60px', marginLeft: 'auto' }}></div>
+                                                        ) : (
+                                                            wk.spend > 0 && wk.registros > 0 ? fmtMon(wk.cpr) : <span style={{ color: '#cbd5e1' }}>—</span>
+                                                        )}
+                                                    </td>
+
+                                                    {/* Resultados */}
+                                                    <td style={{ padding: '12px', textAlign: 'right', fontWeight: 600, color: '#0f172a', background: 'rgba(5, 150, 105, 0.02)' }}>{fmtNum(wk.contactados)}</td>
+                                                    <td style={{ padding: '12px', textAlign: 'right', fontWeight: 600, color: '#ef4444', background: 'rgba(5, 150, 105, 0.02)' }}>{fmtNum(wk.noContesta)}</td>
+                                                    <td style={{ padding: '12px', textAlign: 'right', fontWeight: 600, color: '#10b981', background: 'rgba(5, 150, 105, 0.02)' }}>{fmtNum(wk.respondio)}</td>
+                                                    <td style={{ padding: '12px', textAlign: 'right', fontWeight: 800, color: '#10b981', borderRight: '1px solid #e2e8f0', background: 'rgba(5, 150, 105, 0.02)' }}>{fmtNum(wk.ventas)}</td>
+
+                                                    {/* Variaciones */}
+                                                    <td style={{ padding: '12px', textAlign: 'center', background: 'rgba(217, 119, 6, 0.02)' }}>{deltaBadge(wk.diffContactados)}</td>
+                                                    <td style={{ padding: '12px', textAlign: 'center', background: 'rgba(217, 119, 6, 0.02)' }}>{deltaBadge(wk.diffNoContesta)}</td>
+                                                    <td style={{ padding: '12px', textAlign: 'center', background: 'rgba(217, 119, 6, 0.02)' }}>{deltaBadge(wk.diffRespondio)}</td>
+                                                    <td style={{ padding: '12px', textAlign: 'center', borderRight: '1px solid #e2e8f0', background: 'rgba(217, 119, 6, 0.02)' }}>{deltaBadge(wk.diffVentas)}</td>
+
+                                                    {/* Ratios */}
+                                                    <td style={{ padding: '12px', textAlign: 'right', color: '#7c3aed', fontWeight: 700, background: 'rgba(124, 58, 237, 0.02)' }}>{fmtPct(wk.pctContact)}</td>
+                                                    <td style={{ padding: '12px', textAlign: 'right', color: '#7c3aed', fontWeight: 700, background: 'rgba(124, 58, 237, 0.02)' }}>{fmtPct(wk.pctCierre)}</td>
+                                                    <td style={{ padding: '12px', textAlign: 'right', fontWeight: 800, color: wk.roas >= 1.0 ? '#10b981' : '#64748b', background: 'rgba(124, 58, 237, 0.02)', fontSize: '13px' }}>
+                                                        {spendsLoading ? (
+                                                            <div className="skeleton-item" style={{ height: '18px', width: '50px', marginLeft: 'auto' }}></div>
+                                                        ) : (
+                                                            wk.spend > 0 ? fmtRoas(wk.roas) : <span style={{ color: '#cbd5e1' }}>—</span>
+                                                        )}
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })
+                                    )}
+                                </tbody>
+                                <tfoot>
+                                    <tr style={{ background: '#f8fafc', borderTop: '2px solid #cbd5e1', borderBottom: '1px solid #cbd5e1' }}>
+                                        <td colSpan={3} style={{ padding: '14px 12px', fontWeight: 800, color: '#0f172a', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.8px', borderRight: '1px solid #e2e8f0' }}>Total Periodo</td>
+                                        <td style={{ padding: '14px 12px', textAlign: 'right', fontWeight: 800, color: '#0f172a', background: 'rgba(79, 70, 229, 0.05)', fontSize: '13px' }}>
+                                            {fmtNum(weeklyEvolution.reduce((s, w) => s + (w.registros ?? 0), 0))}
+                                        </td>
+                                        <td style={{ padding: '14px 12px', textAlign: 'right', fontWeight: 800, color: '#4f46e5', background: 'rgba(79, 70, 229, 0.05)', fontSize: '13px' }}>
+                                            {spendsLoading ? (
+                                                <div className="skeleton-item" style={{ height: '18px', width: '75px', marginLeft: 'auto' }}></div>
+                                            ) : (
+                                                fmtMon(weeklyEvolution.reduce((s, w) => s + (w.spend ?? 0), 0))
+                                            )}
+                                        </td>
+                                        <td style={{ padding: '14px 12px', textAlign: 'right', fontWeight: 700, color: '#4f46e5', borderRight: '1px solid #e2e8f0', background: 'rgba(79, 70, 229, 0.05)', fontSize: '12px' }}>
+                                            {spendsLoading ? (
+                                                <div className="skeleton-item" style={{ height: '18px', width: '60px', marginLeft: 'auto' }}></div>
+                                            ) : (
+                                                (() => {
+                                                    const totalReg = weeklyEvolution.reduce((s, w) => s + (w.registros ?? 0), 0);
+                                                    const totalSpendW = weeklyEvolution.reduce((s, w) => s + (w.spend ?? 0), 0);
+                                                    return totalReg > 0 ? fmtMon(totalSpendW / totalReg) : '—';
+                                                })()
+                                            )}
+                                        </td>
+                                        <td style={{ padding: '14px 12px', textAlign: 'right', fontWeight: 700, color: '#0f172a', background: 'rgba(5, 150, 105, 0.05)', fontSize: '12px' }}>
+                                            {fmtNum(weeklyEvolution.reduce((s, w) => s + (w.contactados ?? 0), 0))}
+                                        </td>
+                                        <td style={{ padding: '14px 12px', textAlign: 'right', fontWeight: 700, color: '#ef4444', background: 'rgba(5, 150, 105, 0.05)', fontSize: '12px' }}>
+                                            {fmtNum(weeklyEvolution.reduce((s, w) => s + (w.noContesta ?? 0), 0))}
+                                        </td>
+                                        <td style={{ padding: '14px 12px', textAlign: 'right', fontWeight: 700, color: '#10b981', background: 'rgba(5, 150, 105, 0.05)', fontSize: '12px' }}>
+                                            {fmtNum(weeklyEvolution.reduce((s, w) => s + (w.respondio ?? 0), 0))}
+                                        </td>
+                                        <td style={{ padding: '14px 12px', textAlign: 'right', fontWeight: 800, color: '#10b981', borderRight: '1px solid #e2e8f0', background: 'rgba(5, 150, 105, 0.05)', fontSize: '13px' }}>
+                                            {fmtNum(weeklyEvolution.reduce((s, w) => s + (w.ventas ?? 0), 0))}
+                                        </td>
+                                        <td colSpan={4} style={{ padding: '14px 12px', borderRight: '1px solid #e2e8f0', background: 'rgba(217, 119, 6, 0.03)' }}></td>
+                                        <td style={{ padding: '14px 12px', textAlign: 'right', fontWeight: 800, color: '#7c3aed', background: 'rgba(124, 58, 237, 0.05)', fontSize: '12px' }}>
+                                            {(() => {
+                                                const totalReg = weeklyEvolution.reduce((s, w) => s + (w.registros ?? 0), 0);
+                                                const totalCont = weeklyEvolution.reduce((s, w) => s + (w.contactados ?? 0), 0);
+                                                return totalReg > 0 ? fmtPct((totalCont / totalReg) * 100) : '0.0%';
+                                            })()}
+                                        </td>
+                                        <td style={{ padding: '14px 12px', textAlign: 'right', fontWeight: 800, color: '#7c3aed', background: 'rgba(124, 58, 237, 0.05)', fontSize: '12px' }}>
+                                            {(() => {
+                                                const totalReg = weeklyEvolution.reduce((s, w) => s + (w.registros ?? 0), 0);
+                                                const totalVent = weeklyEvolution.reduce((s, w) => s + (w.ventas ?? 0), 0);
+                                                return totalReg > 0 ? fmtPct((totalVent / totalReg) * 100) : '0.0%';
+                                            })()}
+                                        </td>
+                                        <td style={{ padding: '14px 12px', textAlign: 'right', fontWeight: 800, color: '#10b981', background: 'rgba(124, 58, 237, 0.05)', fontSize: '13px' }}>
+                                            {spendsLoading ? (
+                                                <div className="skeleton-item" style={{ height: '18px', width: '50px', marginLeft: 'auto' }}></div>
+                                            ) : (
+                                                (() => {
+                                                    const totalSpendW = weeklyEvolution.reduce((s, w) => s + (w.spend ?? 0), 0);
+                                                    const totalSaleAmt = weeklyEvolution.reduce((s, w) => s + (w.salesAmount ?? 0), 0);
+                                                    return totalSpendW > 0 ? fmtRoas(totalSaleAmt / totalSpendW) : '—';
+                                                })()
+                                            )}
+                                        </td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+
+                    {/* Gráficos de Evolución Semanal */}
+                    <div className="row g-4 mb-5">
+                        {/* Gráfico 1: Ratios */}
+                        <div className="col-lg-6">
+                            <div className="card border-0 shadow-sm p-4" style={{ borderRadius: '24px', background: '#fff', border: '1px solid rgba(226, 232, 240, 0.8)', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+                                <div className="d-flex align-items-center justify-content-between mb-4">
+                                    <div>
+                                        <h5 className="fw-bold text-dark mb-1" style={{ fontSize: '15px', letterSpacing: '-0.3px' }}>
+                                            Evolución Semanal de Ratios &mdash; {monthLabel}
+                                        </h5>
+                                        <p className="text-muted small mb-0">Tasa de contacto y cierre por semana</p>
+                                    </div>
+                                    <div style={{
+                                        width: 36, height: 36, borderRadius: '10px',
+                                        background: 'rgba(99, 102, 241, 0.08)',
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center'
+                                    }}>
+                                        <i className="mdi mdi-chart-line text-primary" style={{ fontSize: '18px' }}></i>
+                                    </div>
+                                </div>
+
+                                {loading ? (
+                                    <div className="skeleton-item" style={{ height: '300px', width: '100%' }}></div>
+                                ) : (
+                                    <div style={{ width: '100%', height: 300 }}>
+                                        <ResponsiveContainer width="100%" height="100%">
+                                            <LineChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                                                <XAxis dataKey="name" stroke="#94a3b8" fontSize={11} tickLine={false} axisLine={false} />
+                                                <YAxis stroke="#94a3b8" fontSize={11} tickLine={false} axisLine={false} domain={[0, 100]} tickFormatter={(v) => `${v}%`} />
+                                                <RechartsTooltip formatter={(value) => [`${value.toFixed(1)}%`, 'Tasa']} contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }} />
+                                                <Legend verticalAlign="top" height={36} iconType="circle" wrapperStyle={{ fontSize: '11px', fontWeight: 600 }} />
+                                                <Line type="monotone" name="% Contacto" dataKey="pctContact" stroke="#10b981" strokeWidth={3} dot={{ r: 5, strokeWidth: 2, fill: '#fff' }} activeDot={{ r: 7 }} />
+                                                <Line type="monotone" name="% Cierre" dataKey="pctCierre" stroke="#ef4444" strokeWidth={3} dot={{ r: 5, strokeWidth: 2, fill: '#fff' }} activeDot={{ r: 7 }} />
+                                            </LineChart>
+                                        </ResponsiveContainer>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Gráfico 2: ROAS */}
+                        <div className="col-lg-6">
+                            <div className="card border-0 shadow-sm p-4" style={{ borderRadius: '24px', background: '#fff', border: '1px solid rgba(226, 232, 240, 0.8)', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+                                <div className="d-flex align-items-center justify-content-between mb-4">
+                                    <div>
+                                        <h5 className="fw-bold text-dark mb-1" style={{ fontSize: '15px', letterSpacing: '-0.3px' }}>
+                                            ROAS por Semana
+                                        </h5>
+                                        <p className="text-muted small mb-0">Retorno sobre la inversión publicitaria semanal</p>
+                                    </div>
+                                    <div style={{
+                                        width: 36, height: 36, borderRadius: '10px',
+                                        background: 'rgba(239, 68, 68, 0.08)',
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center'
+                                    }}>
+                                        <i className="mdi mdi-trending-up text-danger" style={{ fontSize: '18px' }}></i>
+                                    </div>
+                                </div>
+
+                                {(loading || spendsLoading) ? (
+                                    <div className="skeleton-item" style={{ height: '300px', width: '100%' }}></div>
+                                ) : (
+                                    <div style={{ width: '100%', height: 300 }}>
+                                        <ResponsiveContainer width="100%" height="100%">
+                                            <BarChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                                                <defs>
+                                                    <linearGradient id="roasGrad" x1="0" y1="0" x2="0" y2="1">
+                                                        <stop offset="0%" stopColor="#ef4444" stopOpacity={0.9} />
+                                                        <stop offset="100%" stopColor="#f87171" stopOpacity={0.9} />
+                                                    </linearGradient>
+                                                </defs>
+                                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                                                <XAxis dataKey="name" stroke="#94a3b8" fontSize={11} tickLine={false} axisLine={false} />
+                                                <YAxis stroke="#94a3b8" fontSize={11} tickLine={false} axisLine={false} tickFormatter={(v) => `${v.toFixed(2)}x`} />
+                                                <RechartsTooltip formatter={(value) => [`${value.toFixed(2)}x`, 'ROAS']} contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }} />
+                                                <Legend verticalAlign="top" height={36} iconType="rect" wrapperStyle={{ fontSize: '11px', fontWeight: 600 }} />
+                                                <Bar name="ROAS" dataKey="roas" fill="url(#roasGrad)" radius={[8, 8, 0, 0]} maxBarSize={45} />
+                                            </BarChart>
+                                        </ResponsiveContainer>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </>
                 );
             })()}
             {clientsList.length > 0 && (
@@ -1313,27 +1793,47 @@ const KPICampaigns = ({ months = [], currentMonth, currentYear, advisors = [], w
                                                             <div className="bg-light bg-opacity-25 px-3 py-2 d-flex align-items-center justify-content-between border-bottom border-light">
                                                                 <div className="d-flex align-items-center">
                                                                     <div
-                                                                        className="avatar-xs me-2"
+                                                                        className="me-2"
                                                                         style={{
-                                                                            width: "28px",
-                                                                            height: "28px",
+                                                                            width: "36px",
+                                                                            height: "36px",
+                                                                            display: "flex",
+                                                                            alignItems: "center",
+                                                                            justifyContent: "center"
                                                                         }}
                                                                     >
-                                                                        <span
-                                                                            className="avatar-title rounded bg-soft-warning text-warning"
-                                                                            style={{
-                                                                                fontSize:
-                                                                                    "14px",
-                                                                            }}
-                                                                        >
-                                                                            <i className="mdi mdi-package-variant"></i>
-                                                                        </span>
+                                                                        {ad.preview_image_url ? (
+                                                                            <img
+                                                                                src={ad.preview_image_url}
+                                                                                alt="Anuncio"
+                                                                                className="rounded border"
+                                                                                style={{
+                                                                                    width: "100%",
+                                                                                    height: "100%",
+                                                                                    objectFit: "cover"
+                                                                                }}
+                                                                            />
+                                                                        ) : (
+                                                                            <span
+                                                                                className="avatar-title rounded bg-soft-warning text-warning d-flex align-items-center justify-content-center"
+                                                                                style={{
+                                                                                    fontSize: "14px",
+                                                                                    width: "36px",
+                                                                                    height: "36px",
+                                                                                    borderRadius: "6px",
+                                                                                    backgroundColor: "rgba(245, 158, 11, 0.1)"
+                                                                                }}
+                                                                            >
+                                                                                <i className="mdi mdi-package-variant"></i>
+                                                                            </span>
+                                                                        )}
                                                                     </div>
                                                                     <h6
-                                                                        className="mb-0 fw-bold text-dark"
+                                                                        className="fw-bold text-dark d-flex align-items-center"
                                                                         style={{
-                                                                            fontSize:
-                                                                                "13px",
+                                                                            fontSize: "16px",
+                                                                            height: "36px",
+                                                                            lineHeight: "36px"
                                                                         }}
                                                                     >
                                                                         {
@@ -1351,21 +1851,23 @@ const KPICampaigns = ({ months = [], currentMonth, currentYear, advisors = [], w
                                                                     className="text-muted"
                                                                     style={{
                                                                         fontSize:
-                                                                            "11px",
+                                                                            "16px",
                                                                     }}
                                                                 >
-                                                                    Total de
+                                                                    {/* Total de
                                                                     Cierres:{" "}
                                                                     <span className="text-dark fw-bold">
                                                                         {
                                                                             ad
                                                                                 .leads
                                                                                 .length
-                                                                        }
-                                                                    </span>
+                                                                        } 
+                                                                         
+                                                                           </span>
                                                                     <span className="mx-2 text-light">
                                                                         |
-                                                                    </span>
+                                                                    </span>*/}
+
                                                                     Venta Total:{" "}
                                                                     <span className="text-dark fw-bold">
                                                                         S/{" "}
@@ -1376,35 +1878,48 @@ const KPICampaigns = ({ months = [], currentMonth, currentYear, advisors = [], w
                                                                             },
                                                                         )}
                                                                     </span>
+                                                                    <span className="mx-2 text-light">
+                                                                        |
+                                                                    </span>
+                                                                    Gasto Anuncio:{" "}
+                                                                    <span className="text-dark fw-bold">
+                                                                        S/ {(ad.spend || 0).toLocaleString("es-PE", { minimumFractionDigits: 2 })}
+                                                                    </span>
+                                                                    <span className="mx-2 text-light">
+                                                                        |
+                                                                    </span>
+                                                                    ROAS:{" "}
+                                                                    <span className={`fw-bold ${ad.spend > 0 && (totalAdSales / ad.spend) >= 1.0 ? 'text-success' : 'text-danger'}`}>
+                                                                        {ad.spend > 0 ? `${(totalAdSales / ad.spend).toFixed(2)}x` : '—'}
+                                                                    </span>
                                                                 </div>
                                                             </div>
 
-                                                            <div className="table-responsive">
-                                                                <table className="table table-hover align-middle mb-0">
+                                                            <div className="table-responsive border rounded-3" style={{ borderColor: '#cbd5e1' }}>
+                                                                <table className="table table-bordered table-hover align-middle mb-0" style={{ borderColor: '#cbd5e1' }}>
                                                                     <thead>
                                                                         <tr
-                                                                            className="bg-white"
                                                                             style={{
                                                                                 fontSize:
                                                                                     "11px",
-                                                                                color: "#6c757d",
+                                                                                color: "#0f172a",
+                                                                                background: "#f1f5f9",
+                                                                                fontWeight: "800",
                                                                             }}
                                                                         >
-                                                                            <th className="border-0 px-3 py-3 fw-bold text-uppercase">
-                                                                                Lead
-                                                                                /
-                                                                                Cliente
+                                                                            <th className="px-3 py-3 fw-bold text-uppercase" style={{ borderColor: '#cbd5e1', fontWeight: '800' }}>
+                                                                                Lead / Cliente
                                                                             </th>
-                                                                            <th className="border-0 py-3 fw-bold text-uppercase">
+                                                                            <th className="py-3 fw-bold text-uppercase" style={{ borderColor: '#cbd5e1', fontWeight: '800' }}>
                                                                                 Contacto
                                                                             </th>
-                                                                            <th className="border-0 py-3 fw-bold text-uppercase">
+                                                                            <th className="py-3 fw-bold text-uppercase" style={{ borderColor: '#cbd5e1', fontWeight: '800' }}>
                                                                                 Asesor
                                                                             </th>
-                                                                            <th className="border-0 py-3 fw-bold text-uppercase">
+                                                                            <th className="py-3 fw-bold text-uppercase" style={{ borderColor: '#cbd5e1', fontWeight: '800' }}>
                                                                                 Producto
                                                                             </th>
-                                                                            <th className="border-0 text-end px-3 py-3 fw-bold text-uppercase">
+                                                                            <th className="text-end px-3 py-3 fw-bold text-uppercase" style={{ borderColor: '#cbd5e1', fontWeight: '800' }}>
                                                                                 Venta
                                                                             </th>
                                                                         </tr>
@@ -1433,7 +1948,7 @@ const KPICampaigns = ({ months = [], currentMonth, currentYear, advisors = [], w
                                                                                 return (
                                                                                     <tr
                                                                                         key={`l-${ci}-${ai}-${adi}-${li}`}
-                                                                                        className="border-top border-light"
+                                                                                        style={{ borderColor: '#cbd5e1' }}
                                                                                     >
                                                                                         <td className="px-3 py-3">
                                                                                             <span
@@ -2231,8 +2746,8 @@ const KPICampaigns = ({ months = [], currentMonth, currentYear, advisors = [], w
                                     </div>
                                     <div className="text-end">
                                         <h4 className="mb-1 fw-bold text-dark">{formatNumber(archivedCount)}</h4>
-                                        <button 
-                                            className="btn btn-sm btn-outline-secondary rounded-pill" 
+                                        <button
+                                            className="btn btn-sm btn-outline-secondary rounded-pill"
                                             style={{ fontSize: "10px", padding: "2px 8px" }}
                                             onClick={() => {
                                                 setShowNoContestanModal(false);

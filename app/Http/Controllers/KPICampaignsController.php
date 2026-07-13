@@ -143,6 +143,10 @@ class KPICampaignsController extends BasicController
 
             $platform  = $request->platform  ?? null;
             $advisorId = $request->advisor_id ?? null;
+            $excludeSpend = filter_var($request->input('exclude_spend'), FILTER_VALIDATE_BOOLEAN);
+
+            // Auto-sincronización de gasto removida del proceso síncrono para agilizar la carga.
+            // Se realiza asíncronamente desde el cliente frontend.
 
             // Periodo anterior (misma duración, inmediatamente antes)
             [$prevDateFrom, $prevDateTo] = $this->getPreviousPeriod($dateFrom, $dateTo);
@@ -519,6 +523,24 @@ class KPICampaignsController extends BasicController
 
             $hierarchy = [];
             foreach ($rawAdsData as $row) {
+                // Resolviendo adset_name si es numérico
+                $adsetName = $row->adset_name;
+                if (is_numeric($adsetName) || preg_match('/^\d+$/', $adsetName)) {
+                    $dbAdSet = DB::table('ad_sets')->where('meta_id', $adsetName)->first();
+                    if ($dbAdSet && $dbAdSet->name) {
+                        $adsetName = $dbAdSet->name;
+                    }
+                }
+
+                // Resolviendo ad_name si es numérico
+                $adName = $row->ad_name;
+                if (is_numeric($adName) || preg_match('/^\d+$/', $adName)) {
+                    $dbAd = DB::table('ads')->where('meta_id', $adName)->first();
+                    if ($dbAd && $dbAd->name) {
+                        $adName = $dbAd->name;
+                    }
+                }
+
                 if (!isset($hierarchy[$row->campaign_id])) {
                     $hierarchy[$row->campaign_id] = [
                         'id'     => $row->campaign_id,
@@ -527,16 +549,15 @@ class KPICampaignsController extends BasicController
                     ];
                 }
 
-                if (!isset($hierarchy[$row->campaign_id]['adSets'][$row->adset_name])) {
-                    $hierarchy[$row->campaign_id]['adSets'][$row->adset_name] = [
-                        'name' => $row->adset_name,
+                if (!isset($hierarchy[$row->campaign_id]['adSets'][$adsetName])) {
+                    $hierarchy[$row->campaign_id]['adSets'][$adsetName] = [
+                        'name' => $adsetName,
                         'ads'  => []
                     ];
                 }
 
-                $adName = $row->ad_name;
-                if (!isset($hierarchy[$row->campaign_id]['adSets'][$row->adset_name]['ads'][$adName])) {
-                    $hierarchy[$row->campaign_id]['adSets'][$row->adset_name]['ads'][$adName] = [
+                if (!isset($hierarchy[$row->campaign_id]['adSets'][$adsetName]['ads'][$adName])) {
+                    $hierarchy[$row->campaign_id]['adSets'][$adsetName]['ads'][$adName] = [
                         'name'      => $adName,
                         'total'     => 0,
                         'contacted' => 0,
@@ -545,7 +566,7 @@ class KPICampaignsController extends BasicController
                     ];
                 }
 
-                $ad = &$hierarchy[$row->campaign_id]['adSets'][$row->adset_name]['ads'][$adName];
+                $ad = &$hierarchy[$row->campaign_id]['adSets'][$adsetName]['ads'][$adName];
                 $ad['total']     += $row->total;
                 $ad['contacted'] += ($row->total - $row->pending);
                 $ad['archived']  += $row->archived;
@@ -604,13 +625,41 @@ class KPICampaignsController extends BasicController
                 $groupedClients[$campaignName][$adsetName][$adName][] = $client;
             }
 
+            // lookup de anuncios (imagen y gasto)
+            $adsLookup = [];
+            try {
+                $businessAds = \App\Models\Ad::select('ads.name', 'ads.preview_image_url', 'ads.spend', 'ad_sets.name as adset_name')
+                    ->join('ad_sets', 'ad_sets.id', '=', 'ads.ad_set_id')
+                    ->where('ads.business_id', Auth::user()->business_id)
+                    ->get();
+                foreach ($businessAds as $adModel) {
+                    $key = $adModel->adset_name . '|||' . $adModel->name;
+                    $adsLookup[$key] = [
+                        'preview_image_url' => $adModel->preview_image_url,
+                        'spend' => (float)$adModel->spend
+                    ];
+                }
+            } catch (\Throwable $e) {
+                // Si falla la tabla, continuar sin lookup
+            }
+
             $clientsList = [];
             foreach ($groupedClients as $cName => $adsets) {
                 $cData = ['name' => $cName, 'adsets' => []];
                 foreach ($adsets as $asName => $ads) {
                     $asData = ['name' => $asName, 'ads' => []];
                     foreach ($ads as $aName => $leads) {
-                        $asData['ads'][] = ['name' => $aName, 'leads' => $leads];
+                        $lookupKey = $asName . '|||' . $aName;
+                        $adInfo = $adsLookup[$lookupKey] ?? [
+                            'preview_image_url' => null,
+                            'spend' => 0.0
+                        ];
+                        $asData['ads'][] = [
+                            'name' => $aName,
+                            'leads' => $leads,
+                            'preview_image_url' => $adInfo['preview_image_url'],
+                            'spend' => $adInfo['spend']
+                        ];
                     }
                     $cData['adsets'][] = $asData;
                 }
@@ -739,39 +788,176 @@ class KPICampaignsController extends BasicController
             $cpl = 0;
             $cpa = 0;
             $roas = 0;
-            try {
-                // Tipo de cambio en tiempo real desde API Luna (tc_venta)
-                $exchangeRateCalc = $this->getLunaExchangeRate();
-                
-                $activeCampaignIds = array_keys($hierarchy ?? []);
-                if (!empty($activeCampaignIds)) {
-                    $campaignsForSpend = DB::table('campaigns')
-                        ->where('business_id', Auth::user()->business_id)
-                        ->whereIn('id', $activeCampaignIds)
-                        ->get(['spend', 'currency']);
-                        
-                    foreach ($campaignsForSpend as $c) {
-                        $cSpend = (float)$c->spend;
-                        if (strtoupper($c->currency) === 'USD') {
-                            $cSpend *= $exchangeRateCalc;
+            if (!$excludeSpend) {
+                try {
+                    // Tipo de cambio en tiempo real desde API Luna (tc_venta)
+                    $exchangeRateCalc = $this->getLunaExchangeRate();
+                    
+                    $activeCampaignIds = array_keys($hierarchy ?? []);
+                    if (!empty($activeCampaignIds)) {
+                        $campaignsForSpend = DB::table('campaigns')
+                            ->where('business_id', Auth::user()->business_id)
+                            ->whereIn('id', $activeCampaignIds)
+                            ->get(['spend', 'currency']);
+                            
+                        foreach ($campaignsForSpend as $c) {
+                            $cSpend = (float)$c->spend;
+                            if (strtoupper($c->currency) === 'USD') {
+                                $cSpend *= $exchangeRateCalc;
+                            }
+                            $totalSpend += $cSpend;
                         }
-                        $totalSpend += $cSpend;
+                    } else {
+                        $totalSpend = 0;
                     }
-                } else {
-                    $totalSpend = 0;
+
+                    if ($totalCount > 0 && $totalSpend > 0) {
+                        $cpl = round($totalSpend / $totalCount, 2);
+                    }
+                    if ($clientsCount > 0 && $totalSpend > 0) {
+                        $cpa = round($totalSpend / $clientsCount, 2);
+                    }
+                    if ($totalSpend > 0 && $clientsSum > 0) {
+                        $roas = round($clientsSum / $totalSpend, 2);
+                    }
+                } catch (\Throwable $e) {
+                    // Columna spend puede no existir aún
+                }
+            }
+
+            // ──────────────────────────────────────────────────────────
+            // Evolución Semanal — divide el rango en semanas dinámicas
+            // y calcula las métricas por semana según weekStartDay
+            // ──────────────────────────────────────────────────────────
+            $weeklyEvolution = [];
+            try {
+                $weekStartDaySetting = (int)(Setting::get('campaign-week-start-day') ?? 1); // 1 = Lunes
+
+                $startLimit = \Carbon\Carbon::parse($dateFrom)->startOfMonth()->startOfDay();
+                $endLimit   = \Carbon\Carbon::parse($dateTo)->endOfMonth()->endOfDay();
+
+                // Obtener desglose de inversión diaria de todas las plataformas
+                $dailySpends = [];
+                if (!$excludeSpend) {
+                    $dailySpends = $this->getDailySpendBreakdown($startLimit->toDateTimeString(), $endLimit->toDateTimeString());
                 }
 
-                if ($totalCount > 0 && $totalSpend > 0) {
-                    $cpl = round($totalSpend / $totalCount, 2);
+                $currentStart = $startLimit->copy();
+                $weekNumber   = 1;
+
+                // Día que cierra la semana: el día anterior al inicio de semana
+                $targetEndDay = ($weekStartDaySetting === 0) ? 6 : ($weekStartDaySetting - 1);
+
+                while ($currentStart->lte($endLimit)) {
+                    // Calcular el último día de esta semana
+                    $currentEnd = $currentStart->copy();
+                    for ($i = 0; $i < 6; $i++) {
+                        if ($currentEnd->dayOfWeek === $targetEndDay) break;
+                        $currentEnd->addDay();
+                    }
+                    if ($currentEnd->gt($endLimit)) {
+                        $currentEnd = $endLimit->copy();
+                    }
+                    $currentEnd->endOfDay();
+
+                    $startStr = $currentStart->toDateTimeString();
+                    $endStr   = $currentEnd->toDateTimeString();
+
+                    // ── Registros (leads creados en la semana con ads) ─────
+                    $weekLeadBase = Client::where('clients.business_id', Auth::user()->business_id)
+                        ->join('campaigns as campaign', 'campaign.id', '=', 'clients.campaign_id')
+                        ->whereRaw('LENGTH(clients.campaign_id) > 10')
+                        ->whereBetween('clients.created_at', [$startStr, $endStr]);
+                    $weekLeadBase = $this->applyOptionalFilters($weekLeadBase, $platform, $advisorId);
+
+                    $registros = (clone $weekLeadBase)->count();
+
+                    // ── Inversión de la semana (sumando gastos diarios) ───
+                    $weekSpend  = 0.0;
+                    $tempDate   = $currentStart->copy();
+                    while ($tempDate->lte($currentEnd)) {
+                        $weekSpend += ($dailySpends[$tempDate->format('Y-m-d')] ?? 0);
+                        $tempDate->addDay();
+                    }
+
+                    // ── Contactados (status != default) ──────────────────
+                    $contactados = (clone $weekLeadBase)
+                        ->whereIn('clients.status_id', $leadStatusesIds)
+                        ->where('clients.status_id', '<>', $defaultLeadStatus)
+                        ->count();
+
+                    // ── Respondió (contactados + status = true) ───────────
+                    $respondio = (clone $weekLeadBase)
+                        ->whereIn('clients.status_id', $leadStatusesIds)
+                        ->where('clients.status_id', '<>', $defaultLeadStatus)
+                        ->where('clients.status', true)
+                        ->count();
+
+                    $noContesta = max(0, $contactados - $respondio);
+
+                    // ── Ventas (cierres trazados en esta semana) ──────────
+                    $ventasBase = Client::where('clients.business_id', Auth::user()->business_id)
+                        ->join('campaigns as campaign', 'campaign.id', '=', 'clients.campaign_id')
+                        ->whereRaw('LENGTH(clients.campaign_id) > 10')
+                        ->whereIn('clients.status_id', $clientStatusesIds)
+                        ->whereExists(function ($sub) use ($startStr, $endStr) {
+                            $sub->select(DB::raw(1))
+                                ->from('client_status_traces')
+                                ->join('statuses', 'statuses.id', '=', 'client_status_traces.status_id')
+                                ->where('statuses.table_id', 'a8367789-666e-4929-aacb-7cbc2fbf74de')
+                                ->whereColumn('client_status_traces.client_id', 'clients.id')
+                                ->whereBetween('client_status_traces.created_at', [$startStr, $endStr]);
+                        });
+                    $ventasBase = $this->applyOptionalFilters($ventasBase, $platform, $advisorId);
+                    $ventas     = (clone $ventasBase)->count();
+
+                    // ── Monto vendido en la semana ────────────────────────
+                    $salesAmount = (clone $ventasBase)
+                        ->join('client_has_products AS chp', 'chp.client_id', 'clients.id')
+                        ->sum('chp.price');
+
+                    // ── Ratios ────────────────────────────────────────────
+                    $cpr        = ($registros > 0 && $weekSpend > 0) ? round($weekSpend / $registros, 2)   : 0;
+                    $pctContact = ($registros > 0) ? round(($contactados / $registros) * 100, 1) : 0;
+                    $pctCierre  = ($registros > 0) ? round(($ventas / $registros) * 100, 1)      : 0;
+                    $weekRoas   = ($weekSpend > 0 && $salesAmount > 0) ? round($salesAmount / $weekSpend, 2) : 0;
+
+                    $weeklyEvolution[] = [
+                        'label'           => 'S' . $weekNumber,
+                        'start_formatted' => $currentStart->format('d/m'),
+                        'end_formatted'   => $currentEnd->format('d/m'),
+                        'registros'       => $registros,
+                        'spend'           => round($weekSpend, 2),
+                        'cpr'             => $cpr,
+                        'contactados'     => $contactados,
+                        'noContesta'      => $noContesta,
+                        'respondio'       => $respondio,
+                        'ventas'          => $ventas,
+                        'salesAmount'     => round((float)$salesAmount, 2),
+                        'pctContact'      => $pctContact,
+                        'pctCierre'       => $pctCierre,
+                        'roas'            => $weekRoas,
+                        'diffContactados' => null,
+                        'diffNoContesta'  => null,
+                        'diffRespondio'   => null,
+                        'diffVentas'      => null,
+                    ];
+
+                    // Avanzar al inicio de la siguiente semana
+                    $currentStart = $currentEnd->copy()->addDay()->startOfDay();
+                    $weekNumber++;
                 }
-                if ($clientsCount > 0 && $totalSpend > 0) {
-                    $cpa = round($totalSpend / $clientsCount, 2);
-                }
-                if ($totalSpend > 0 && $clientsSum > 0) {
-                    $roas = round($clientsSum / $totalSpend, 2);
+
+                // Calcular variaciones vs semana anterior
+                for ($idx = 1; $idx < count($weeklyEvolution); $idx++) {
+                    $prev = $weeklyEvolution[$idx - 1];
+                    $weeklyEvolution[$idx]['diffContactados'] = $weeklyEvolution[$idx]['contactados'] - $prev['contactados'];
+                    $weeklyEvolution[$idx]['diffNoContesta']  = $weeklyEvolution[$idx]['noContesta']  - $prev['noContesta'];
+                    $weeklyEvolution[$idx]['diffRespondio']   = $weeklyEvolution[$idx]['respondio']   - $prev['respondio'];
+                    $weeklyEvolution[$idx]['diffVentas']      = $weeklyEvolution[$idx]['ventas']      - $prev['ventas'];
                 }
             } catch (\Throwable $e) {
-                // Columna spend puede no existir aún
+                \Illuminate\Support\Facades\Log::warning('Error calculando evolución semanal: ' . $e->getMessage());
             }
 
             $response->summary = [
@@ -839,6 +1025,9 @@ class KPICampaignsController extends BasicController
                 'leadWinningCampaign'=> $leadWinningCampaign,
                 'leadWinningAdset'   => $leadWinningAdset,
                 'leadWinningAd'      => $leadWinningAd,
+
+                // Evolución Semanal
+                'weeklyEvolution'    => $weeklyEvolution,
             ];
             $response->data = $groupedByManageStatus;
         });
@@ -946,5 +1135,157 @@ class KPICampaignsController extends BasicController
         }
 
         return (float)(Setting::get('exchange-rate-usd-pen') ?? 3.80);
+    }
+
+    /**
+     * Obtiene el gasto diario desglosado para Meta, Google Ads y TikTok.
+     */
+    private function getDailySpendBreakdown(string $dateFrom, string $dateTo): array
+    {
+        $businessId = Auth::user()->business_id;
+        $exchangeRateCalc = $this->getLunaExchangeRate();
+        $dailySpends = [];
+
+        $startDateStr = substr($dateFrom, 0, 10);
+        $endDateStr = substr($dateTo, 0, 10);
+
+        // 1. Meta Ads Daily Spend
+        try {
+            $integration = \App\Models\Integration::where('business_id', $businessId)
+                ->where(function($q) {
+                    $q->where('meta_service', 'forms')
+                      ->orWhere('meta_service', 'messenger');
+                })
+                ->whereNotNull('meta_access_token')
+                ->whereNotNull('meta_ad_account_id')
+                ->where('meta_ad_account_id', '<>', '')
+                ->first();
+
+            if ($integration) {
+                $accessToken = $integration->meta_app_token ?: $integration->meta_access_token;
+                $adAccountId = ltrim($integration->meta_ad_account_id, 'act_');
+                $graphUrl = env('FACEBOOK_GRAPH_URL', 'https://graph.facebook.com/v22.0');
+
+                // Obtener moneda
+                $accountUrl = "{$graphUrl}/act_{$adAccountId}?fields=currency&access_token={$accessToken}";
+                $accRes = new \SoDe\Extend\Fetch($accountUrl);
+                $accBody = $accRes->json();
+                $currency = $accBody['currency'] ?? 'PEN';
+
+                // Llamar a Meta Ads API con time_increment=1
+                $timeRange = json_encode(['since' => $startDateStr, 'until' => $endDateStr]);
+                $url = "{$graphUrl}/act_{$adAccountId}/insights?level=campaign&time_increment=1&time_range=" . urlencode($timeRange)
+                     . "&fields=spend,date_start"
+                     . "&limit=500"
+                     . "&access_token={$accessToken}";
+
+                $nextUrl = $url;
+                $pages = 0;
+                while ($nextUrl && $pages < 10) {
+                    $res = new \SoDe\Extend\Fetch($nextUrl);
+                    $body = $res->json();
+                    if (isset($body['error'])) break;
+
+                    if (!empty($body['data'])) {
+                        foreach ($body['data'] as $item) {
+                            $day = $item['date_start'] ?? null;
+                            $spend = (float)($item['spend'] ?? 0);
+                            if ($day) {
+                                if (strtoupper($currency) === 'USD') {
+                                    $spend *= $exchangeRateCalc;
+                                }
+                                $dailySpends[$day] = ($dailySpends[$day] ?? 0) + $spend;
+                            }
+                        }
+                    }
+                    $nextUrl = $body['paging']['next'] ?? null;
+                    $pages++;
+                }
+            }
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning("Error fetching daily Meta spend: " . $e->getMessage());
+        }
+
+        // 2. Google Ads Daily Spend
+        try {
+            $integration = \App\Models\Integration::where('business_id', $businessId)
+                ->where('meta_service', 'google-ads')
+                ->where('status', true)
+                ->first();
+
+            if ($integration && $integration->meta_access_token) {
+                $refreshToken = $integration->meta_app_token ?? $integration->meta_access_token;
+                $developerToken = env('GOOGLE_ADS_DEVELOPER_TOKEN') ?: Setting::get('google-ads-developer-token');
+                $customerId = $integration->meta_business_id;
+
+                if ($developerToken && $customerId) {
+                    $client = new \Google\Client();
+                    $client->setAuthConfig(storage_path('app/google/credentials.json'));
+                    $token = $client->fetchAccessTokenWithRefreshToken($refreshToken);
+                    $accessToken = $token['access_token'] ?? null;
+
+                    if ($accessToken) {
+                        $googleAdsController = new GoogleAdsController();
+                        $gaql = "SELECT segments.date, metrics.cost_micros FROM campaign WHERE segments.date BETWEEN '{$startDateStr}' AND '{$endDateStr}'";
+                        $results = $googleAdsController->queryGoogleAds($customerId, $accessToken, $developerToken, $gaql);
+                        
+                        foreach ($results as $row) {
+                            $day = $row['segments']['date'] ?? null;
+                            $costMicros = (float)($row['metrics']['costMicros'] ?? 0);
+                            $spend = $costMicros / 1000000;
+                            // Conversión a PEN (Google Ads se almacena en USD)
+                            $spend *= $exchangeRateCalc;
+
+                            if ($day) {
+                                $dailySpends[$day] = ($dailySpends[$day] ?? 0) + $spend;
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning("Error fetching daily Google Ads spend: " . $e->getMessage());
+        }
+
+        // 3. TikTok Daily Spend
+        try {
+            $integration = \App\Models\Integration::where('business_id', $businessId)
+                ->where('meta_service', 'tiktok')
+                ->where('status', true)
+                ->first();
+
+            if ($integration && $integration->meta_access_token) {
+                $accessToken = $integration->meta_access_token;
+                $advertiserId = $integration->meta_ad_account_id ?? $integration->meta_business_id;
+
+                if ($advertiserId) {
+                    $url = "https://business-api.tiktok.com/open_api/v1.3/report/integrated/get/?advertiser_id={$advertiserId}&report_type=BASIC&data_level=AUCTION_CAMPAIGN&dimensions=" . urlencode(json_encode(["stat_time_day"])) . "&metrics=" . urlencode(json_encode(["spend"])) . "&start_date={$startDateStr}&end_date={$endDateStr}&page_size=100";
+                    $res = new \SoDe\Extend\Fetch($url, [
+                        'method' => 'GET',
+                        'headers' => [
+                            'Access-Token' => $accessToken,
+                            'Content-Type' => 'application/json'
+                        ]
+                    ]);
+                    $body = $res->json();
+                    $list = $body['data']['list'] ?? [];
+                    
+                    foreach ($list as $item) {
+                        $metrics = $item['metrics'] ?? [];
+                        $dayRaw = $item['dimensions']['stat_time_day'] ?? null;
+                        if ($dayRaw) {
+                            $day = substr($dayRaw, 0, 10);
+                            $spend = (float)($metrics['spend'] ?? 0);
+                            $spend *= $exchangeRateCalc;
+                            $dailySpends[$day] = ($dailySpends[$day] ?? 0) + $spend;
+                        }
+                    }
+                }
+            }
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning("Error fetching daily TikTok spend: " . $e->getMessage());
+        }
+
+        return $dailySpends;
     }
 }

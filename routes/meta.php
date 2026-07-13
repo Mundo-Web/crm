@@ -24,6 +24,8 @@ Route::post('/webhook', [MetaController::class, 'handleGlobalWebhook']);
 Route::get('/tiktok/{business_uuid}', [\App\Http\Controllers\TikTokController::class, 'verify']);
 Route::post('/tiktok/{business_uuid}', [\App\Http\Controllers\TikTokController::class, 'webhook']);
 
+Route::post('/google-ads/{business_uuid}', [\App\Http\Controllers\GoogleAdsController::class, 'webhook']);
+
 Route::get('/{origin}/{business_uuid}', [MetaController::class, 'verify']);
 Route::post('/{origin}/{business_uuid}', [MetaController::class, 'webhook']);
 
