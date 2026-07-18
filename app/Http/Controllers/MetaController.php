@@ -652,27 +652,54 @@ class MetaController extends Controller
                 try {
                     switch ($origin) {
                         case 'messenger':
-                            // Para Messenger PSIDs necesitamos el Page Access Token (meta_access_token
-                            // almacenado) — si no tiene permiso pages_messaging aprobado en Live Mode,
-                            // Meta devolverá error 100. Intentamos; si falla, usamos fallback.
+                            // CORRECCIÓN CLAVE: Para PSIDs de Messenger el campo correcto es 'name'
+                            // (nombre completo). Los campos 'first_name' y 'last_name' NO son válidos
+                            // para PSIDs y Meta devuelve error 100 al pedirlos.
                             $graphUrl = config('services.meta.facebook_graph_url', 'https://graph.facebook.com/v22.0');
                             $pageToken = $integrationJpa->meta_access_token;
-                            // Intentar obtener Page Access Token de larga duración si el token
-                            // almacenado es un User Token (para mejorar compatibilidad)
+                            // Si el token almacenado es un User Token, intentar obtener
+                            // el Page Token de larga duración para mayor compatibilidad
                             $pageId = $entry['id'] ?? $integrationJpa->meta_business_id;
                             $pageTokenRes = new Fetch("{$graphUrl}/{$pageId}?fields=access_token&access_token={$pageToken}");
                             $pageTokenData = $pageTokenRes->json();
                             if (isset($pageTokenData['access_token'])) {
                                 $pageToken = $pageTokenData['access_token'];
                             }
-                            $profileData = MetaController::getFacebookProfile($senderId, $pageToken, true);
-                            $profileData['fullname'] = ($profileData['first_name'] ?? '') . ' ' . ($profileData['last_name'] ?? '');
-                            $profileData['fullname'] = trim($profileData['fullname']) ?: "Usuario Messenger ({$senderId})";
+                            // Consultar PSID con los campos correctos: 'name' y 'profile_pic'
+                            $messengerRes = new Fetch("{$graphUrl}/{$senderId}?fields=name,profile_pic&access_token={$pageToken}");
+                            $messengerData = $messengerRes->json();
+                            if (isset($messengerData['error'])) {
+                                $err  = $messengerData['error']['message'] ?? 'Desconocido';
+                                $code = $messengerData['error']['code'] ?? 0;
+                                throw new \Exception("Error obteniendo perfil Messenger PSID: {$err} (Código: {$code})");
+                            }
+                            $profileData = [
+                                'id'          => $messengerData['id'] ?? $senderId,
+                                'first_name'  => $messengerData['name'] ?? '',
+                                'last_name'   => '',
+                                'fullname'    => $messengerData['name'] ?? "Usuario Messenger ({$senderId})",
+                                'profile_pic' => $messengerData['profile_pic'] ?? null,
+                            ];
                             break;
                         case 'instagram':
-                            $profileData = MetaController::getInstagramProfile($senderId, $integrationJpa->meta_access_token, true);
-                            $profileData['fullname'] = ($profileData['first_name'] ?? '') . ' ' . ($profileData['last_name'] ?? '');
-                            $profileData['fullname'] = trim($profileData['fullname']) ?: "Usuario Instagram ({$senderId})";
+                            // Instagram PSIDs: campos disponibles son 'name' y 'username', no first/last_name
+                            $igGraphUrl = config('services.meta.facebook_graph_url', 'https://graph.facebook.com/v22.0');
+                            $igToken    = $integrationJpa->meta_access_token;
+                            $igRes = new Fetch("{$igGraphUrl}/{$senderId}?fields=name,username,profile_pic&access_token={$igToken}");
+                            $igData = $igRes->json();
+                            if (isset($igData['error'])) {
+                                $err  = $igData['error']['message'] ?? 'Desconocido';
+                                $code = $igData['error']['code'] ?? 0;
+                                throw new \Exception("Error obteniendo perfil Instagram PSID: {$err} (Código: {$code})");
+                            }
+                            $displayName = $igData['name'] ?? $igData['username'] ?? "Usuario Instagram ({$senderId})";
+                            $profileData = [
+                                'id'          => $igData['id'] ?? $senderId,
+                                'first_name'  => $displayName,
+                                'last_name'   => '',
+                                'fullname'    => $displayName,
+                                'profile_pic' => $igData['profile_pic'] ?? null,
+                            ];
                             break;
                         case 'whatsapp':
                             $profileData = [
