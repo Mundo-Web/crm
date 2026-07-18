@@ -714,11 +714,15 @@ class MetaController extends Controller
                             break;
                         case 'instagram':
                             // Mismo enfoque para Instagram: usar conversaciones para obtener el nombre
-                            // GET /{ig_user_id}/conversations?user_id={psid}&fields=participants
+                            // El endpoint es: GET /{ig-business-account-id}/conversations?platform=instagram&user_id={psid}
+                            // IMPORTANTE: usar meta_business_id (Instagram Business Account ID),
+                            // NO meta_number_id (que es el Facebook Page ID — incorrecto para este endpoint)
                             $igGraphUrl  = config('services.meta.facebook_graph_url', 'https://graph.facebook.com/v22.0');
                             $igToken     = $integrationJpa->meta_access_token;
-                            // Para Instagram, meta_business_id es el ID del Ig Account
-                            $igAccountId = $integrationJpa->meta_number_id ?? $integrationJpa->meta_business_id;
+                            // meta_business_id = Instagram Business Account ID (guardado en beforeSave)
+                            $igAccountId = $integrationJpa->meta_business_id;
+                            // Page ID del webhook (para excluir la página de los participantes)
+                            $igPageId    = $entry['id'] ?? $integrationJpa->meta_number_id;
 
                             $igResolvedName    = null;
                             $igResolvedPicture = null;
@@ -733,9 +737,13 @@ class MetaController extends Controller
                                     'access_token' => $igToken,
                                 ]));
                                 $igConvData = $igConvRes->json();
+                                Log::info('Instagram conversations API response', ['data' => $igConvData]);
                                 if (isset($igConvData['data'][0]['participants']['data'])) {
                                     foreach ($igConvData['data'][0]['participants']['data'] as $participant) {
-                                        if ((string)$participant['id'] !== (string)$igAccountId) {
+                                        // Excluir la cuenta de negocio propia — comparar con ambos IDs posibles
+                                        $isOwnAccount = (string)$participant['id'] === (string)$igAccountId
+                                            || (string)$participant['id'] === (string)$igPageId;
+                                        if (!$isOwnAccount) {
                                             $igResolvedName    = $participant['name'] ?? null;
                                             $igResolvedPicture = $participant['profile_pic'] ?? null;
                                             break;
@@ -751,6 +759,7 @@ class MetaController extends Controller
                                 try {
                                     $igPsidRes  = new Fetch("{$igGraphUrl}/{$senderId}?fields=name,username,profile_pic&access_token={$igToken}");
                                     $igPsidData = $igPsidRes->json();
+                                    Log::info('Instagram PSID directo response', ['data' => $igPsidData]);
                                     if (!isset($igPsidData['error'])) {
                                         $igResolvedName    = $igPsidData['name'] ?? $igPsidData['username'] ?? null;
                                         $igResolvedPicture = $igPsidData['profile_pic'] ?? null;
