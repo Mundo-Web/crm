@@ -652,53 +652,125 @@ class MetaController extends Controller
                 try {
                     switch ($origin) {
                         case 'messenger':
-                            // CORRECCIÓN CLAVE: Para PSIDs de Messenger el campo correcto es 'name'
-                            // (nombre completo). Los campos 'first_name' y 'last_name' NO son válidos
-                            // para PSIDs y Meta devuelve error 100 al pedirlos.
-                            $graphUrl = config('services.meta.facebook_graph_url', 'https://graph.facebook.com/v22.0');
+                            // Meta cambió sus políticas: el endpoint /{psid}?fields=name ahora
+                            // requiere App Review (Advanced Access) para pages_messaging.
+                            // Alternativa que funciona con Standard Access: consultar las
+                            // conversaciones de la página para obtener el nombre del participante.
+                            // GET /{page_id}/conversations?user_id={psid}&fields=participants
+                            $graphUrl  = config('services.meta.facebook_graph_url', 'https://graph.facebook.com/v22.0');
                             $pageToken = $integrationJpa->meta_access_token;
-                            // Si el token almacenado es un User Token, intentar obtener
-                            // el Page Token de larga duración para mayor compatibilidad
-                            $pageId = $entry['id'] ?? $integrationJpa->meta_business_id;
-                            $pageTokenRes = new Fetch("{$graphUrl}/{$pageId}?fields=access_token&access_token={$pageToken}");
-                            $pageTokenData = $pageTokenRes->json();
-                            if (isset($pageTokenData['access_token'])) {
-                                $pageToken = $pageTokenData['access_token'];
+                            $pageId    = $entry['id'] ?? $integrationJpa->meta_business_id;
+
+                            $resolvedName    = null;
+                            $resolvedPicture = null;
+
+                            // Intento 1: API de conversaciones (Standard Access — no requiere App Review)
+                            try {
+                                $convRes  = new Fetch("{$graphUrl}/{$pageId}/conversations?" . http_build_query([
+                                    'user_id' => $senderId,
+                                    'fields'  => 'participants',
+                                    'limit'   => 1,
+                                    'access_token' => $pageToken,
+                                ]));
+                                $convData = $convRes->json();
+                                if (isset($convData['data'][0]['participants']['data'])) {
+                                    foreach ($convData['data'][0]['participants']['data'] as $participant) {
+                                        // Excluir la propia página — quedarnos con el usuario
+                                        if ((string)$participant['id'] !== (string)$pageId) {
+                                            $resolvedName = $participant['name'] ?? null;
+                                            break;
+                                        }
+                                    }
+                                }
+                            } catch (\Throwable $convEx) {
+                                Log::warning('Messenger conversations API falló', ['error' => $convEx->getMessage()]);
                             }
-                            // Consultar PSID con los campos correctos: 'name' y 'profile_pic'
-                            $messengerRes = new Fetch("{$graphUrl}/{$senderId}?fields=name,profile_pic&access_token={$pageToken}");
-                            $messengerData = $messengerRes->json();
-                            if (isset($messengerData['error'])) {
-                                $err  = $messengerData['error']['message'] ?? 'Desconocido';
-                                $code = $messengerData['error']['code'] ?? 0;
-                                throw new \Exception("Error obteniendo perfil Messenger PSID: {$err} (Código: {$code})");
+
+                            // Intento 2 (fallback): endpoint directo del PSID (requiere Advanced Access)
+                            if (!$resolvedName) {
+                                try {
+                                    $psidRes  = new Fetch("{$graphUrl}/{$senderId}?fields=name,profile_pic&access_token={$pageToken}");
+                                    $psidData = $psidRes->json();
+                                    if (!isset($psidData['error'])) {
+                                        $resolvedName    = $psidData['name'] ?? null;
+                                        $resolvedPicture = $psidData['profile_pic'] ?? null;
+                                    }
+                                } catch (\Throwable $psidEx) {
+                                    Log::warning('Messenger PSID directo también falló', ['error' => $psidEx->getMessage()]);
+                                }
                             }
+
+                            if (!$resolvedName) {
+                                throw new \Exception("No se pudo obtener el nombre del remitente de Messenger (PSID: {$senderId}). Verifica que la app tenga pages_messaging con Advanced Access en Meta App Review.");
+                            }
+
                             $profileData = [
-                                'id'          => $messengerData['id'] ?? $senderId,
-                                'first_name'  => $messengerData['name'] ?? '',
+                                'id'          => $senderId,
+                                'first_name'  => $resolvedName,
                                 'last_name'   => '',
-                                'fullname'    => $messengerData['name'] ?? "Usuario Messenger ({$senderId})",
-                                'profile_pic' => $messengerData['profile_pic'] ?? null,
+                                'fullname'    => $resolvedName,
+                                'profile_pic' => $resolvedPicture,
                             ];
                             break;
                         case 'instagram':
-                            // Instagram PSIDs: campos disponibles son 'name' y 'username', no first/last_name
-                            $igGraphUrl = config('services.meta.facebook_graph_url', 'https://graph.facebook.com/v22.0');
-                            $igToken    = $integrationJpa->meta_access_token;
-                            $igRes = new Fetch("{$igGraphUrl}/{$senderId}?fields=name,username,profile_pic&access_token={$igToken}");
-                            $igData = $igRes->json();
-                            if (isset($igData['error'])) {
-                                $err  = $igData['error']['message'] ?? 'Desconocido';
-                                $code = $igData['error']['code'] ?? 0;
-                                throw new \Exception("Error obteniendo perfil Instagram PSID: {$err} (Código: {$code})");
+                            // Mismo enfoque para Instagram: usar conversaciones para obtener el nombre
+                            // GET /{ig_user_id}/conversations?user_id={psid}&fields=participants
+                            $igGraphUrl  = config('services.meta.facebook_graph_url', 'https://graph.facebook.com/v22.0');
+                            $igToken     = $integrationJpa->meta_access_token;
+                            // Para Instagram, meta_business_id es el ID del Ig Account
+                            $igAccountId = $integrationJpa->meta_number_id ?? $integrationJpa->meta_business_id;
+
+                            $igResolvedName    = null;
+                            $igResolvedPicture = null;
+
+                            // Intento 1: API de conversaciones de Instagram (platform=instagram)
+                            try {
+                                $igConvRes  = new Fetch("{$igGraphUrl}/{$igAccountId}/conversations?" . http_build_query([
+                                    'user_id'  => $senderId,
+                                    'fields'   => 'participants',
+                                    'platform' => 'instagram',
+                                    'limit'    => 1,
+                                    'access_token' => $igToken,
+                                ]));
+                                $igConvData = $igConvRes->json();
+                                if (isset($igConvData['data'][0]['participants']['data'])) {
+                                    foreach ($igConvData['data'][0]['participants']['data'] as $participant) {
+                                        if ((string)$participant['id'] !== (string)$igAccountId) {
+                                            $igResolvedName    = $participant['name'] ?? null;
+                                            $igResolvedPicture = $participant['profile_pic'] ?? null;
+                                            break;
+                                        }
+                                    }
+                                }
+                            } catch (\Throwable $igConvEx) {
+                                Log::warning('Instagram conversations API falló', ['error' => $igConvEx->getMessage()]);
                             }
-                            $displayName = $igData['name'] ?? $igData['username'] ?? "Usuario Instagram ({$senderId})";
+
+                            // Intento 2 (fallback): endpoint directo del PSID
+                            if (!$igResolvedName) {
+                                try {
+                                    $igPsidRes  = new Fetch("{$igGraphUrl}/{$senderId}?fields=name,username,profile_pic&access_token={$igToken}");
+                                    $igPsidData = $igPsidRes->json();
+                                    if (!isset($igPsidData['error'])) {
+                                        $igResolvedName    = $igPsidData['name'] ?? $igPsidData['username'] ?? null;
+                                        $igResolvedPicture = $igPsidData['profile_pic'] ?? null;
+                                    }
+                                } catch (\Throwable $igPsidEx) {
+                                    Log::warning('Instagram PSID directo también falló', ['error' => $igPsidEx->getMessage()]);
+                                }
+                            }
+
+                            if (!$igResolvedName) {
+                                throw new \Exception("No se pudo obtener el nombre del remitente de Instagram (PSID: {$senderId}).");
+                            }
+
+                            $displayName = $igResolvedName;
                             $profileData = [
-                                'id'          => $igData['id'] ?? $senderId,
+                                'id'          => $senderId,
                                 'first_name'  => $displayName,
                                 'last_name'   => '',
                                 'fullname'    => $displayName,
-                                'profile_pic' => $igData['profile_pic'] ?? null,
+                                'profile_pic' => $igResolvedPicture,
                             ];
                             break;
                         case 'whatsapp':
