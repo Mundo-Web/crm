@@ -19,7 +19,25 @@ class IntegrationController extends BasicController
     {
         $metaBusiness = ['error' => 'No se pudo obtener el perfil del negocio'];
         if ($request->service == 'messenger') {
-            $metaBusiness = MetaController::getFacebookProfile($request->accountId, $request->accessToken);
+            // El accessToken que llega es el Page Access Token de /me/accounts.
+            // Usamos external=true para consultar directamente el Page ID sin comparar con /me
+            $graphUrl = config('services.meta.facebook_graph_url', 'https://graph.facebook.com/v22.0');
+            $pageToken = $request->accessToken;
+            // Intentar obtener el Page Token permanente (si el token almacenado es User Token)
+            $ptRes  = new \SoDe\Extend\Fetch("{$graphUrl}/{$request->accountId}?fields=id,name,picture,access_token&access_token={$pageToken}");
+            $ptData = $ptRes->json();
+            if (isset($ptData['access_token'])) {
+                $pageToken = $ptData['access_token'];
+                // Actualizar el accessToken en el request para que se guarde el token permanente
+                $request->merge(['accessToken' => $pageToken]);
+            }
+            if (isset($ptData['id'])) {
+                // Ya tenemos el perfil de la página, no necesitamos otra llamada
+                $metaBusiness = $ptData;
+                $metaBusiness['name'] = $ptData['name'] ?? $request->accountId;
+            } else {
+                $metaBusiness = MetaController::getFacebookProfile($request->accountId, $pageToken, true);
+            }
         } else if ($request->service == 'instagram') {
             $metaBusiness = MetaController::getInstagramProfile($request->accountId, $request->accessToken);
         } else if ($request->service == 'whatsapp') {
@@ -184,6 +202,14 @@ class IntegrationController extends BasicController
             $pageTokenRes  = new \SoDe\Extend\Fetch("{$graphUrl}/{$pageId}?fields=access_token&access_token={$accessToken}");
             $pageTokenData = $pageTokenRes->json();
             $pageToken     = $pageTokenData['access_token'] ?? $accessToken;
+
+            // Si obtuvimos un Page Token permanente distinto al original, guardarlo en la BD
+            // para que las consultas de PSID en el webhook usen el token correcto.
+            if ($pageToken !== $accessToken) {
+                $jpa->meta_access_token = $pageToken;
+                $jpa->save();
+                \Illuminate\Support\Facades\Log::info('Meta Messenger: Page Token permanente guardado en la integración', ['page_id' => $pageId]);
+            }
 
             $res  = new \SoDe\Extend\Fetch("{$graphUrl}/{$pageId}/subscribed_apps", [
                 'method'  => 'POST',

@@ -797,6 +797,13 @@ class MetaController extends Controller
 
                 $hasApikey = Setting::get('gemini-api-key', $businessJpa->id);
 
+                $triggeredByLabel = match($origin) {
+                    'messenger'  => 'Messenger',
+                    'instagram'  => 'Instagram',
+                    'whatsapp'   => 'Whatsapp API',
+                    default      => Text::toTitleCase($origin),
+                };
+
                 $preClient = [
                     'message' => $messaging['message']['text'] ?? 'Sin mensaje',
                     'contact_name' => $profileData['fullname'],
@@ -809,7 +816,7 @@ class MetaController extends Controller
                     'status_id' => Setting::get('default-lead-status', $businessJpa->id),
                     'manage_status_id' => Setting::get('default-manage-lead-status', $businessJpa->id),
                     'origin' => Text::toTitleCase($origin),
-                    'triggered_by' => 'Whatsapp API',
+                    'triggered_by' => $triggeredByLabel,
                     'status' => true,
                     'complete_registration' => false,
                 ];
