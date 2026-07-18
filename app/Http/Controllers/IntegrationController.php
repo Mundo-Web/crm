@@ -39,7 +39,18 @@ class IntegrationController extends BasicController
                 $metaBusiness = MetaController::getFacebookProfile($request->accountId, $pageToken, true);
             }
         } else if ($request->service == 'instagram') {
-            $metaBusiness = MetaController::getInstagramProfile($request->accountId, $request->accessToken);
+            // El accessToken que llega es el Page Access Token.
+            // Intentar obtener el Page Token permanente para Instagram
+            $graphUrl = config('services.meta.facebook_graph_url', 'https://graph.facebook.com/v22.0');
+            $pageToken = $request->accessToken;
+            $ptRes  = new \SoDe\Extend\Fetch("{$graphUrl}/{$request->accountId}?fields=access_token&access_token={$pageToken}");
+            $ptData = $ptRes->json();
+            if (isset($ptData['access_token'])) {
+                $pageToken = $ptData['access_token'];
+                // Actualizar el accessToken en el request para guardar el token permanente
+                $request->merge(['accessToken' => $pageToken]);
+            }
+            $metaBusiness = MetaController::getInstagramProfile($request->accountId, $pageToken);
         } else if ($request->service == 'whatsapp') {
             $metaBusiness = MetaController::getWhatsAppProfile($request->accountId, $request->accessToken);
         } else if ($request->service == 'forms') {
@@ -248,6 +259,13 @@ class IntegrationController extends BasicController
             $pageTokenRes  = new \SoDe\Extend\Fetch("{$graphUrl}/{$pageId}?fields=access_token&access_token={$accessToken}");
             $pageTokenData = $pageTokenRes->json();
             $pageToken     = $pageTokenData['access_token'] ?? $accessToken;
+ 
+            // Guardar el Page Token permanente en la base de datos
+            if ($pageToken !== $accessToken) {
+                $jpa->meta_access_token = $pageToken;
+                $jpa->save();
+                \Illuminate\Support\Facades\Log::info('Meta Instagram: Page Token permanente guardado en la integración', ['page_id' => $pageId]);
+            }
 
             $res  = new \SoDe\Extend\Fetch("{$graphUrl}/{$pageId}/subscribed_apps", [
                 'method'  => 'POST',
