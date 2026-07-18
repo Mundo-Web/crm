@@ -644,27 +644,65 @@ class MetaController extends Controller
                     return;
                 }
 
-                switch ($origin) {
-                    case 'messenger':
-                        $profileData = MetaController::getFacebookProfile($messaging['sender']['id'], $integrationJpa->meta_access_token, true);
-                        $profileData['fullname'] = $profileData['first_name'] . ' ' . $profileData['last_name'];
-                        break;
-                    case 'instagram':
-                        $profileData = MetaController::getInstagramProfile($messaging['sender']['id'], $integrationJpa->meta_access_token, true);
-                        $profileData['fullname'] = $profileData['first_name'] . ' ' . $profileData['last_name'];
-                        break;
-                    case 'whatsapp':
-                        $profileData = [
-                            'id' => $entry['changes'][0]['value']['contacts'][0]['wa_id'],
-                            'fullname' => $entry['changes'][0]['value']['contacts'][0]['profile']['name'],
-                        ];
-                        break;
-                    case 'forms':
-                        $profileData = MetaController::getMetaProfile($messaging['sender']['id'], $integrationJpa->meta_access_token, true);
-                        $profileData['fullname'] = $profileData['first_name'] . ' ' . $profileData['last_name'];
-                        break;
-                    default:
-                        $profileData = MetaController::getFacebookProfile($messaging['sender']['id'], $integrationJpa->meta_access_token, true);
+                // Obtener perfil del remitente — envuelto en try/catch para que,
+                // si Meta devuelve error de permisos (PSID no accesible en Live Mode sin
+                // App Review de pages_messaging), el webhook continúe con un nombre de respaldo
+                // en lugar de abortar todo el procesamiento del mensaje.
+                $senderId = $messaging['sender']['id'] ?? '';
+                try {
+                    switch ($origin) {
+                        case 'messenger':
+                            // Para Messenger PSIDs necesitamos el Page Access Token (meta_access_token
+                            // almacenado) — si no tiene permiso pages_messaging aprobado en Live Mode,
+                            // Meta devolverá error 100. Intentamos; si falla, usamos fallback.
+                            $graphUrl = config('services.meta.facebook_graph_url', 'https://graph.facebook.com/v22.0');
+                            $pageToken = $integrationJpa->meta_access_token;
+                            // Intentar obtener Page Access Token de larga duración si el token
+                            // almacenado es un User Token (para mejorar compatibilidad)
+                            $pageId = $entry['id'] ?? $integrationJpa->meta_business_id;
+                            $pageTokenRes = new Fetch("{$graphUrl}/{$pageId}?fields=access_token&access_token={$pageToken}");
+                            $pageTokenData = $pageTokenRes->json();
+                            if (isset($pageTokenData['access_token'])) {
+                                $pageToken = $pageTokenData['access_token'];
+                            }
+                            $profileData = MetaController::getFacebookProfile($senderId, $pageToken, true);
+                            $profileData['fullname'] = ($profileData['first_name'] ?? '') . ' ' . ($profileData['last_name'] ?? '');
+                            $profileData['fullname'] = trim($profileData['fullname']) ?: "Usuario Messenger ({$senderId})";
+                            break;
+                        case 'instagram':
+                            $profileData = MetaController::getInstagramProfile($senderId, $integrationJpa->meta_access_token, true);
+                            $profileData['fullname'] = ($profileData['first_name'] ?? '') . ' ' . ($profileData['last_name'] ?? '');
+                            $profileData['fullname'] = trim($profileData['fullname']) ?: "Usuario Instagram ({$senderId})";
+                            break;
+                        case 'whatsapp':
+                            $profileData = [
+                                'id' => $entry['changes'][0]['value']['contacts'][0]['wa_id'],
+                                'fullname' => $entry['changes'][0]['value']['contacts'][0]['profile']['name'],
+                            ];
+                            break;
+                        case 'forms':
+                            $profileData = MetaController::getMetaProfile($senderId, $integrationJpa->meta_access_token, true);
+                            $profileData['fullname'] = ($profileData['first_name'] ?? '') . ' ' . ($profileData['last_name'] ?? '');
+                            $profileData['fullname'] = trim($profileData['fullname']) ?: "Usuario Meta ({$senderId})";
+                            break;
+                        default:
+                            $profileData = MetaController::getFacebookProfile($senderId, $integrationJpa->meta_access_token, true);
+                    }
+                } catch (\Throwable $profileEx) {
+                    // Si Meta no permite leer el perfil del PSID (falta permiso pages_messaging
+                    // aprobado en App Review, o app en Development Mode con usuario externo),
+                    // continuamos el webhook con un nombre de respaldo para no perder el mensaje.
+                    Log::warning('No se pudo obtener el perfil del remitente de ' . $origin . ', usando nombre de respaldo.', [
+                        'sender_id' => $senderId,
+                        'error' => $profileEx->getMessage(),
+                    ]);
+                    $profileData = [
+                        'id'         => $senderId,
+                        'first_name' => 'Usuario',
+                        'last_name'  => Text::toTitleCase($origin),
+                        'fullname'   => 'Usuario ' . Text::toTitleCase($origin),
+                        'profile_pic' => null,
+                    ];
                 }
 
                 // CACHE PROFILE PICTURE FOR METADATA ORIGINS
