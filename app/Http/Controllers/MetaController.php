@@ -87,7 +87,11 @@ class MetaController extends Controller
             $igRest = new Fetch(env('INSTAGRAM_GRAPH_URL') . "/{$id}?fields=id,name,username&access_token={$accessToken}");
             $igData = $igRest->json();
 
-            if (isset($igData['error'])) throw new Exception('Error, token de acceso inválido');
+            if (isset($igData['error'])) {
+                $err = $igData['error']['message'] ?? 'Desconocido';
+                $code = $igData['error']['code'] ?? 0;
+                throw new Exception("Error en perfil de Instagram: {$err} (Código: {$code})");
+            }
 
             return $igData;
         }
@@ -98,7 +102,16 @@ class MetaController extends Controller
         $igMeData = $igMeRest->json();
         $igData = $igRest->json();
 
-        if (isset($igMeData['error']) || isset($igData['error'])) throw new Exception('Error, token de acceso inválido');
+        if (isset($igMeData['error'])) {
+            $err = $igMeData['error']['message'] ?? 'Desconocido';
+            $code = $igMeData['error']['code'] ?? 0;
+            throw new Exception("Error en perfil me de Instagram: {$err} (Código: {$code})");
+        }
+        if (isset($igData['error'])) {
+            $err = $igData['error']['message'] ?? 'Desconocido';
+            $code = $igData['error']['code'] ?? 0;
+            throw new Exception("Error en perfil de Instagram: {$err} (Código: {$code})");
+        }
         if ($igMeData['id'] != $igData['id']) throw new Exception('Error, el token de acceso no pertenece al negocio');
 
         return $igData;
@@ -109,7 +122,11 @@ class MetaController extends Controller
             $fbRest = new Fetch(env('FACEBOOK_GRAPH_URL') . "/{$id}?fields=first_name,last_name,profile_pic&access_token={$accessToken}");
             $fbData = $fbRest->json();
 
-            if (isset($fbData['error'])) throw new Exception('Error, token de acceso inválido');
+            if (isset($fbData['error'])) {
+                $err = $fbData['error']['message'] ?? 'Desconocido';
+                $code = $fbData['error']['code'] ?? 0;
+                throw new Exception("Error en perfil de Facebook: {$err} (Código: {$code})");
+            }
 
             return $fbData;
         }
@@ -120,7 +137,16 @@ class MetaController extends Controller
         $fbMeData = $fbMeRest->json();
         $fbData = $fbRest->json();
 
-        if (isset($fbMeData['error']) || isset($fbData['error'])) throw new Exception('Error, token de acceso inválido');
+        if (isset($fbMeData['error'])) {
+            $err = $fbMeData['error']['message'] ?? 'Desconocido';
+            $code = $fbMeData['error']['code'] ?? 0;
+            throw new Exception("Error en perfil me de Facebook: {$err} (Código: {$code})");
+        }
+        if (isset($fbData['error'])) {
+            $err = $fbData['error']['message'] ?? 'Desconocido';
+            $code = $fbData['error']['code'] ?? 0;
+            throw new Exception("Error en perfil de Facebook: {$err} (Código: {$code})");
+        }
         if ($fbMeData['id'] != $fbData['id']) throw new Exception('Error, el token de acceso no pertenece al negocio');
 
         return $fbData;
@@ -131,7 +157,11 @@ class MetaController extends Controller
             $fbRest = new Fetch(env('FACEBOOK_GRAPH_URL') . "/{$id}?access_token={$accessToken}");
             $fbData = $fbRest->json();
 
-            if (isset($fbData['error'])) throw new Exception('Error, token de acceso inválido');
+            if (isset($fbData['error'])) {
+                $err = $fbData['error']['message'] ?? 'Desconocido';
+                $code = $fbData['error']['code'] ?? 0;
+                throw new Exception("Error en perfil de Meta: {$err} (Código: {$code})");
+            }
 
             return $fbData;
         }
@@ -140,7 +170,11 @@ class MetaController extends Controller
 
         $fbData = $fbRest->json();
 
-        if (isset($fbData['error'])) throw new Exception($fbData['error']['message'] ?? 'Error, token de acceso inválido');
+        if (isset($fbData['error'])) {
+            $err = $fbData['error']['message'] ?? 'Desconocido';
+            $code = $fbData['error']['code'] ?? 0;
+            throw new Exception("Error en perfil de Meta: {$err} (Código: {$code})");
+        }
 
         return $fbData;
     }
