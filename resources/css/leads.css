@@ -59,3 +59,42 @@
         box-shadow: 0 0 0 0 rgba(var(--pulse-color, 0, 0, 0), 0);
     }
 }
+
+/* Personalizacion de chevrons en DataGrid */
+.dx-datagrid-rowsview .dx-command-expand {
+    vertical-align: middle !important;
+    text-align: center !important;
+}
+.dx-command-expand .dx-datagrid-group-closed::before {
+    content: "\F0142" !important; /* mdi-chevron-right */
+    font-family: "Material Design Icons" !important;
+    font-size: 20px !important;
+    color: #6C757D !important;
+    display: inline-block;
+}
+.dx-command-expand .dx-datagrid-group-opened::before {
+    content: "\F0140" !important; /* mdi-chevron-down */
+    font-family: "Material Design Icons" !important;
+    font-size: 20px !important;
+    color: #315AFE !important;
+    display: inline-block;
+}
+.dx-command-expand .dx-datagrid-group-closed,
+.dx-command-expand .dx-datagrid-group-opened {
+    background-image: none !important;
+    text-align: center;
+    line-height: 1;
+    width: 28px !important;
+    height: 28px !important;
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.2s ease-in-out;
+    cursor: pointer;
+    margin: 0 auto;
+}
+.dx-command-expand .dx-datagrid-group-closed:hover,
+.dx-command-expand .dx-datagrid-group-opened:hover {
+    background-color: rgba(49, 90, 254, 0.08) !important;
+}

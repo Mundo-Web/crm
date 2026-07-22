@@ -280,6 +280,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/leads/{lead}', [LeadController::class, 'get']);
     Route::get('/leads', [LeadController::class, 'all']);
     Route::post('/leads', [LeadController::class, 'save']);
+    Route::post('/leads/import/preview', [LeadController::class, 'importPreview']);
     Route::post('/leads/import', [LeadController::class, 'import']);
     Route::post('/leads/sync-meta', [LeadController::class, 'syncMetaLeads']);
     Route::post('/leads/paginate/{suffix?}', [LeadController::class, 'paginate'])->withoutMiddleware('throttle:api');

@@ -103,6 +103,25 @@ class ClientController extends BasicController
         return $body;
     }
 
+    public function afterSave(Request $request, object $jpa, ?bool $isNew)
+    {
+        if ($isNew) {
+            \App\Models\ClientEntry::create([
+                'client_id'      => $jpa->id,
+                'campaign_id'    => $jpa->campaign_id ?? null,
+                'adset_name'     => $jpa->adset_name ?? null,
+                'ad_name'        => $jpa->ad_name ?? null,
+                'source'         => $jpa->source ?? 'Atalaya',
+                'origin'         => $jpa->origin ?? 'Directo',
+                'lead_origin'    => $jpa->lead_origin ?? 'internal',
+                'triggered_by'   => $jpa->triggered_by ?? 'Creación manual',
+                'source_channel' => $jpa->source_channel ?? null,
+                'entry_date'     => $jpa->created_at ?? now(),
+            ]);
+        }
+        return $jpa;
+    }
+
     public function assign(Request $request)
     {
         $response = new Response();

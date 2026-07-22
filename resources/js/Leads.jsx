@@ -66,6 +66,103 @@ const driverObj = driver({
     steps: driver_fn.leads,
 });
 
+/**
+ * Determina el ícono y color para un `ClientEntry` según su canal de origen.
+ */
+const getChannelStyle = (entry) => {
+    const source   = (entry.source   || '').toLowerCase();
+    const origin   = (entry.origin   || '').toLowerCase();
+    const trigger  = (entry.triggered_by || '').toLowerCase();
+    const hasCampaign = !!entry.campaign_id;
+
+    if (origin.includes('instagram') || trigger.includes('instagram')) {
+        return { icon: 'mdi-instagram', color: '#C13584', label: hasCampaign ? 'Instagram (Anuncio)' : 'Instagram (Orgánico)' };
+    }
+    if (origin.includes('facebook') || trigger.includes('facebook') || origin.includes('meta')) {
+        return { icon: 'mdi-facebook', color: '#1877F2', label: hasCampaign ? 'Facebook (Formulario)' : 'Facebook (Orgánico)' };
+    }
+    if (source.includes('whatsapp') || trigger.includes('whatsapp')) {
+        return { icon: 'mdi-whatsapp', color: '#25D366', label: hasCampaign ? 'WhatsApp (Anuncio)' : 'WhatsApp (Orgánico)' };
+    }
+    if (source.includes('google') || origin.includes('google')) {
+        return { icon: 'mdi-google', color: '#EA4335', label: 'Google Ads' };
+    }
+    if (source.includes('landing') || origin.includes('landing')) {
+        return { icon: 'mdi-web', color: '#6c757d', label: 'Landing Page' };
+    }
+    return { icon: 'mdi-account-arrow-right', color: '#adb5bd', label: origin || source || 'Otro' };
+};
+
+/**
+ * Renderiza una fila de badges de iconos con los canales de entrada del lead.
+ * Si el lead no tiene entries (migración pendiente), muestra el texto de origen.
+ */
+const OriginBadges = ({ entries, fallbackOrigin }) => {
+    if (!Array.isArray(entries) || entries.length === 0) {
+        return (
+            <small className="text-muted">
+                desde <b>{fallbackOrigin || 'Desconocido'}</b>
+            </small>
+        );
+    }
+
+    return (
+        <div className="d-flex flex-wrap gap-1 align-items-center mt-1">
+            <small className="text-muted me-1">canales:</small>
+            {entries.filter(Boolean).map((entry, idx) => {
+                const style = getChannelStyle(entry);
+                
+                let entryDate = '';
+                if (entry.entry_date) {
+                    const parsedDate = new Date(entry.entry_date);
+                    if (!isNaN(parsedDate.getTime())) {
+                        entryDate = parsedDate.toLocaleDateString('es-PE', { day:'2-digit', month:'short', year:'numeric' });
+                    }
+                }
+
+                const tooltipLines = [
+                    entryDate ? `📅 ${entryDate}` : null,
+                    (entry.campaign && typeof entry.campaign === 'object' && entry.campaign.title) ? `🎯 Campaña: ${entry.campaign.title}` : null,
+                    entry.adset_name       ? `📁 Conjunto: ${entry.adset_name}`   : null,
+                    entry.ad_name          ? `📌 Anuncio: ${entry.ad_name}`       : null,
+                    entry.triggered_by     ? `🔗 Vía: ${entry.triggered_by}`      : null,
+                ].filter(Boolean).join('\n');
+
+                return (
+                    <Tippy
+                        key={idx}
+                        content={
+                            <div style={{ whiteSpace: 'pre-line', fontSize: '12px', textAlign: 'left' }}>
+                                <b>{style.label}</b>{'\n'}{tooltipLines}
+                            </div>
+                        }
+                        placement="top"
+                        interactive={false}
+                    >
+                        <span
+                            style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                width: 26,
+                                height: 26,
+                                borderRadius: '50%',
+                                backgroundColor: style.color,
+                                color: '#fff',
+                                fontSize: 14,
+                                cursor: 'default',
+                                position: 'relative',
+                            }}
+                        >
+                            <i className={`mdi ${style.icon}`} />
+                        </span>
+                    </Tippy>
+                );
+            })}
+        </div>
+    );
+};
+
 const Leads = (properties) => {
     const {
         statuses: statusesFromDB,
@@ -1194,14 +1291,192 @@ const Leads = (properties) => {
             return;
         }
 
+        // ── 1. Llamar al preview/dry-run primero ────────────────────────────
         const formData = new FormData();
         formData.append("file", excelFile);
         formData.append("mapping", JSON.stringify(leadMapping));
 
         setImportSaving(true);
-        await leadsRest.import(formData);
+        const preview = await leadsRest.importPreview(formData);
         setImportSaving(false);
+
+        if (!preview || !preview.status) {
+            Swal.fire({
+                title: "Error al analizar el archivo",
+                text: preview?.message || "No se pudo procesar el archivo para el preview.",
+                icon: "error",
+                confirmButtonText: "Entendido",
+            });
+            return;
+        }
+
+        // ── 2. Mostrar resumen detallado ─────────────────────────────────────
+        const s = preview.data?.summary || {};
+        const sampleNew      = (preview.data?.sample_new      || []).slice(0, 10);
+        const sampleExisting = (preview.data?.sample_existing || []).slice(0, 20);
+        const campaigns      = (preview.data?.campaign_breakdown || []);
+
+        const campaignRows = campaigns.map(c =>
+            `<tr>
+                <td style="padding:3px 8px;border:1px solid #e2e8f0;font-size:11px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${c.campaign_code}">
+                    ${c.has_campaign ? `<span style="color:#10b981">✔</span>` : `<span style="color:#f43f5e">✘</span>`}
+                    <code style="font-size:10px">${String(c.campaign_code).slice(0,20)}${String(c.campaign_code).length>20?'…':''}</code>
+                </td>
+                <td style="padding:3px 8px;border:1px solid #e2e8f0;text-align:center;font-size:11px">${c.total}</td>
+                <td style="padding:3px 8px;border:1px solid #e2e8f0;text-align:center;color:#6366f1;font-size:11px">${c.new}</td>
+                <td style="padding:3px 8px;border:1px solid #e2e8f0;text-align:center;color:#f59e0b;font-size:11px">${c.existing}</td>
+            </tr>`
+        ).join('');
+
+        const newRows = sampleNew.map((r, i) =>
+            `<tr style="background:${i%2===0?'#f8fafc':'#fff'}">
+                <td style="padding:3px 6px;border:1px solid #e2e8f0;font-size:10px">${r.name||'-'}</td>
+                <td style="padding:3px 6px;border:1px solid #e2e8f0;font-size:10px">${r.contact_phone||'-'}</td>
+                <td style="padding:3px 6px;border:1px solid #e2e8f0;font-size:10px">${r.origin||'-'}</td>
+                <td style="padding:3px 6px;border:1px solid #e2e8f0;font-size:10px">${r.date?.slice(0,10)||'-'}</td>
+                <td style="padding:3px 6px;border:1px solid #e2e8f0;font-size:10px;color:${r._has_campaign?'#10b981':'#94a3b8'}">${r._has_campaign?'✔ Sí':'✘ No'}</td>
+            </tr>`
+        ).join('');
+
+        const existingRows = sampleExisting.map((r, i) =>
+            `<tr style="background:${i%2===0?'#fefce8':'#fffbeb'}">
+                <td style="padding:3px 6px;border:1px solid #e2e8f0;font-size:10px">${r.name||'-'}</td>
+                <td style="padding:3px 6px;border:1px solid #e2e8f0;font-size:10px">${r.contact_phone||'-'}</td>
+                <td style="padding:3px 6px;border:1px solid #e2e8f0;font-size:10px;color:#f59e0b">↩ ${r._existing_name||'Mismo cliente'}</td>
+                <td style="padding:3px 6px;border:1px solid #e2e8f0;font-size:10px">${r._existing_since?.slice?.(0,10)||'-'}</td>
+            </tr>`
+        ).join('');
+
+        const { isConfirmed } = await Swal.fire({
+            title: `<span style="font-size:16px;font-weight:700">📋 Log de Importación — Preview</span>`,
+            width: 780,
+            html: `
+                <div style="text-align:left;font-family:'Inter',sans-serif">
+                    <!-- Resumen general -->
+                    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px">
+                        <div style="flex:1;min-width:100px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:10px;text-align:center">
+                            <div style="font-size:22px;font-weight:800;color:#16a34a">${s.total_rows}</div>
+                            <div style="font-size:11px;color:#64748b">Total filas</div>
+                        </div>
+                        <div style="flex:1;min-width:100px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:10px;text-align:center">
+                            <div style="font-size:22px;font-weight:800;color:#2563eb">${s.new_count}</div>
+                            <div style="font-size:11px;color:#64748b">🆕 Nuevos</div>
+                        </div>
+                        <div style="flex:1;min-width:100px;background:#fefce8;border:1px solid #fde68a;border-radius:10px;padding:10px;text-align:center">
+                            <div style="font-size:22px;font-weight:800;color:#d97706">${s.existing_count}</div>
+                            <div style="font-size:11px;color:#64748b">↩ Existentes</div>
+                        </div>
+                        <div style="flex:1;min-width:100px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:10px;text-align:center">
+                            <div style="font-size:22px;font-weight:800;color:#10b981">${s.with_campaign}</div>
+                            <div style="font-size:11px;color:#64748b">Con campaña</div>
+                        </div>
+                        <div style="flex:1;min-width:100px;background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:10px;text-align:center">
+                            <div style="font-size:22px;font-weight:800;color:#ef4444">${s.without_campaign}</div>
+                            <div style="font-size:11px;color:#64748b">Sin campaña</div>
+                        </div>
+                    </div>
+
+                    <!-- Desglose por campaña -->
+                    ${campaigns.length > 0 ? `
+                    <p style="font-size:12px;font-weight:700;color:#374151;margin-bottom:4px">📊 Desglose por Campaña</p>
+                    <div style="max-height:120px;overflow-y:auto;margin-bottom:12px;border-radius:6px">
+                        <table style="width:100%;border-collapse:collapse;font-size:11px">
+                            <thead>
+                                <tr style="background:#f8fafc">
+                                    <th style="padding:4px 8px;border:1px solid #e2e8f0;text-align:left;font-size:10px">Campaña (code)</th>
+                                    <th style="padding:4px 8px;border:1px solid #e2e8f0;text-align:center;font-size:10px">Total</th>
+                                    <th style="padding:4px 8px;border:1px solid #e2e8f0;text-align:center;font-size:10px">Nuevos</th>
+                                    <th style="padding:4px 8px;border:1px solid #e2e8f0;text-align:center;font-size:10px">Existentes</th>
+                                </tr>
+                            </thead>
+                            <tbody>${campaignRows}</tbody>
+                        </table>
+                    </div>` : ''}
+
+                    <!-- Muestra de nuevos -->
+                    ${sampleNew.length > 0 ? `
+                    <p style="font-size:12px;font-weight:700;color:#374151;margin-bottom:4px">🆕 Primeros ${sampleNew.length} leads NUEVOS que se agregarán</p>
+                    <div style="max-height:150px;overflow-y:auto;margin-bottom:12px;border-radius:6px">
+                        <table style="width:100%;border-collapse:collapse">
+                            <thead>
+                                <tr style="background:#eff6ff">
+                                    <th style="padding:4px 6px;border:1px solid #e2e8f0;font-size:10px;text-align:left">Nombre</th>
+                                    <th style="padding:4px 6px;border:1px solid #e2e8f0;font-size:10px;text-align:left">Teléfono</th>
+                                    <th style="padding:4px 6px;border:1px solid #e2e8f0;font-size:10px;text-align:left">Origen</th>
+                                    <th style="padding:4px 6px;border:1px solid #e2e8f0;font-size:10px;text-align:left">Fecha</th>
+                                    <th style="padding:4px 6px;border:1px solid #e2e8f0;font-size:10px;text-align:center">Campaña</th>
+                                </tr>
+                            </thead>
+                            <tbody>${newRows}</tbody>
+                        </table>
+                    </div>` : ''}
+
+                    <!-- Muestra de existentes -->
+                    ${sampleExisting.length > 0 ? `
+                    <p style="font-size:12px;font-weight:700;color:#d97706;margin-bottom:4px">↩ Primeros ${sampleExisting.length} leads EXISTENTES (solo se actualizarán datos vacíos)</p>
+                    <div style="max-height:130px;overflow-y:auto;border-radius:6px">
+                        <table style="width:100%;border-collapse:collapse">
+                            <thead>
+                                <tr style="background:#fefce8">
+                                    <th style="padding:4px 6px;border:1px solid #e2e8f0;font-size:10px;text-align:left">Nombre (Excel)</th>
+                                    <th style="padding:4px 6px;border:1px solid #e2e8f0;font-size:10px;text-align:left">Teléfono</th>
+                                    <th style="padding:4px 6px;border:1px solid #e2e8f0;font-size:10px;text-align:left">Match en DB</th>
+                                    <th style="padding:4px 6px;border:1px solid #e2e8f0;font-size:10px;text-align:left">Registrado</th>
+                                </tr>
+                            </thead>
+                            <tbody>${existingRows}</tbody>
+                        </table>
+                    </div>` : ''}
+                </div>`,
+            showCancelButton: true,
+            confirmButtonText: `✅ Confirmar e Importar ${s.new_count} nuevos`,
+            cancelButtonText: "❌ Cancelar",
+            confirmButtonColor: "#4f46e5",
+            cancelButtonColor: "#94a3b8",
+        });
+
+        if (!isConfirmed) return;
+
+        // ── 3. Ejecutar el import real ───────────────────────────────────────
+        const formData2 = new FormData();
+        formData2.append("file", excelFile);
+        formData2.append("mapping", JSON.stringify(leadMapping));
+
         $(importModalRef.current).modal("hide");
+        setImportSaving(true);
+        const result = await leadsRest.import(formData2);
+        setImportSaving(false);
+
+        if (result) {
+            if (result.status) {
+                const { created = 0, updated = 0 } = result.data || {};
+                Swal.fire({
+                    title: "Importación Exitosa",
+                    html: `Se procesaron correctamente los registros:<br><br>` +
+                          `<div style="text-align: left; max-width: 250px; margin: 0 auto;">` +
+                          `🟢 <b>Nuevos agregados:</b> ${created}<br>` +
+                          `🔵 <b>Re-registrados (Existentes):</b> ${updated}` +
+                          `</div>`,
+                    icon: "success",
+                    confirmButtonText: "Genial",
+                });
+            } else {
+                Swal.fire({
+                    title: "Error en la Importación",
+                    text: result.message || "Ocurrió un error inesperado al procesar el archivo.",
+                    icon: "error",
+                    confirmButtonText: "Entendido",
+                });
+            }
+        } else {
+            Swal.fire({
+                title: "Error de Conexión",
+                text: "No se pudo establecer comunicación con el servidor. Revisa los logs del sistema.",
+                icon: "error",
+                confirmButtonText: "Entendido",
+            });
+        }
+
         if (defaultView === "kanban") getLeads();
         else {
             $(gridRef.current).dxDataGrid("instance").refresh();
@@ -1241,106 +1516,79 @@ const Leads = (properties) => {
             form: [],
         };
 
+        // Primera pasada: Coincidencias exactas / prioritarias
         excelFields.forEach((col) => {
-            const lower = col.toLowerCase();
-            if (!mapping.name) {
-                if (lower === "full_name" || lower === "full name") {
-                    mapping.name = col; // exact match wins
-                } else if (
-                    !mapping.name &&
-                    (lower.includes("name") || lower.includes("nombre")) &&
-                    col.trim().split(/\s+/).length <= 2 &&
-                    !lower.includes("campaign")
-                ) {
-                    mapping.name = col; // fallback if no exact full_name
-                }
-            } else if (
-                !mapping.source &&
-                (lower.includes("platform") || lower.includes("plataforma")) &&
-                col.trim().split(/\s+/).length <= 2
-            ) {
-                mapping.source = col;
-            } else if (
-                !mapping.email &&
-                (lower.includes("email") || lower.includes("correo")) &&
-                col.trim().split(/\s+/).length <= 2
-            ) {
+            const lower = col.toLowerCase().trim();
+            
+            if (!mapping.name && (lower === "full_name" || lower === "full name" || lower === "nombre completo")) {
+                mapping.name = col;
+            }
+            if (!mapping.email && (lower === "email" || lower === "correo" || lower === "correo electronico" || lower === "correo electrónico")) {
                 mapping.email = col;
-            } else if (
-                !mapping.phone &&
-                (lower.includes("phone") ||
-                    lower.includes("telefono") ||
-                    lower.includes("celular")) &&
-                col.trim().split(/\s+/).length <= 2
-            ) {
+            }
+            if (!mapping.phone && (lower === "phone" || lower === "phone_number" || lower === "phone number" || lower === "telefono" || lower === "teléfono" || lower === "celular")) {
                 mapping.phone = col;
-            } else if (!mapping.triggered_by && lower.includes("form_name")) {
-                mapping.triggered_by = col;
-            } else if (
-                !mapping.date &&
-                (lower.includes("date") ||
-                    lower.includes("fecha") ||
-                    lower.includes("creacion") ||
-                    lower.includes("creado") ||
-                    lower.includes("created") ||
-                    lower.includes("fecha de registro") ||
-                    lower.includes("fecha registro") ||
-                    lower.includes("fecha de creacion") ||
-                    lower.includes("fecha creacion")) &&
-                col.trim().split(/\s+/).length <= 3
-            ) {
+            }
+            if (!mapping.date && (lower === "created_time" || lower === "created time" || lower === "fecha_creacion" || lower === "fecha creacion" || lower === "created_at")) {
                 mapping.date = col;
-            } else if (
-                !mapping.campaign_id &&
-                (lower === "campaign_id" ||
-                    lower === "campaign id" ||
-                    lower === "id de campaña" ||
-                    lower === "id campaña" ||
-                    lower === "codigo de campaña" ||
-                    lower === "codigo campaña" ||
-                    lower === "id de campana" ||
-                    lower === "id campana" ||
-                    lower === "codigo de campana" ||
-                    lower === "codigo campana")
-            ) {
+            }
+            if (!mapping.source && (lower === "platform" || lower === "plataforma")) {
+                mapping.source = col;
+            }
+            if (!mapping.triggered_by && (lower === "form_name" || lower === "form name" || lower === "nombre de formulario")) {
+                mapping.triggered_by = col;
+            }
+            if (!mapping.campaign_id && (lower === "campaign_id" || lower === "campaign id" || lower === "id de campaña" || lower === "id de campana")) {
                 mapping.campaign_id = col;
-            } else if (
-                !mapping.campaign_name &&
-                (lower === "campaign_name" ||
-                    lower === "campaign name" ||
-                    lower === "nombre de campaña" ||
-                    lower === "nombre campaña" ||
-                    lower === "nombre de campana" ||
-                    lower === "nombre campana")
-            ) {
+            }
+            if (!mapping.campaign_name && (lower === "campaign_name" || lower === "campaign name" || lower === "nombre de campaña" || lower === "nombre de campana")) {
                 mapping.campaign_name = col;
-            } else if (
-                !mapping.adset_name &&
-                (lower === "adset_name" ||
-                    lower === "adset name" ||
-                    lower === "adset" ||
-                    lower === "grupo de anuncios" ||
-                    lower === "grupo de anuncio" ||
-                    lower === "grupo anuncios" ||
-                    lower === "grupo anuncio" ||
-                    lower.includes("adset") ||
-                    lower.includes("grupo de anuncio"))
-            ) {
+            }
+            if (!mapping.adset_name && (lower === "adset_name" || lower === "adset name" || lower === "nombre del grupo de anuncios" || lower === "grupo de anuncios")) {
                 mapping.adset_name = col;
-            } else if (
-                !mapping.ad_name &&
-                (lower === "ad_name" ||
-                    lower === "ad name" ||
-                    lower === "anuncio" ||
-                    lower === "nombre del anuncio" ||
-                    lower === "nombre anuncio" ||
-                    lower.includes("ad_name") ||
-                    lower.includes("ad name") ||
-                    lower === "anuncio name" ||
-                    (lower.includes("anuncio") && !lower.includes("grupo")))
-            ) {
+            }
+            if (!mapping.ad_name && (lower === "ad_name" || lower === "ad name" || lower === "nombre del anuncio" || lower === "anuncio")) {
                 mapping.ad_name = col;
-            } else if (col.includes("?") && col.split(/\s+/).length >= 4) {
+            }
+        });
+
+        // Segunda pasada: Coincidencias parciales / difusas si no se encontraron en la primera
+        excelFields.forEach((col) => {
+            const lower = col.toLowerCase().trim();
+
+            if (!mapping.name && (lower.includes("name") || lower.includes("nombre")) && !lower.includes("campaign") && !lower.includes("adset") && !lower.includes("ad_") && !lower.includes("ad ")) {
+                mapping.name = col;
+            }
+            if (!mapping.email && (lower.includes("email") || lower.includes("correo"))) {
+                mapping.email = col;
+            }
+            if (!mapping.phone && (lower.includes("phone") || lower.includes("telefono") || lower.includes("teléfono") || lower.includes("celular"))) {
+                mapping.phone = col;
+            }
+            if (!mapping.date && (lower.includes("date") || lower.includes("fecha") || lower.includes("creacion") || lower.includes("creación") || lower.includes("created"))) {
+                mapping.date = col;
+            }
+            if (!mapping.source && (lower.includes("platform") || lower.includes("plataforma") || lower.includes("source") || lower.includes("origen"))) {
+                mapping.source = col;
+            }
+            if (!mapping.triggered_by && (lower.includes("form") || lower.includes("formulario"))) {
+                mapping.triggered_by = col;
+            }
+            if (!mapping.campaign_id && (lower.includes("campaign") && lower.includes("id")) || (lower.includes("campaña") && lower.includes("id")) || (lower.includes("campana") && lower.includes("id"))) {
+                mapping.campaign_id = col;
+            }
+            if (!mapping.campaign_name && (lower.includes("campaign") || lower.includes("campaña") || lower.includes("campana"))) {
+                mapping.campaign_name = col;
+            }
+            if (!mapping.adset_name && (lower.includes("adset") || lower.includes("grupo de anuncio") || lower.includes("grupo anuncios") || lower.includes("conjunto"))) {
+                mapping.adset_name = col;
+            }
+            if (!mapping.ad_name && (lower.includes("ad_name") || lower.includes("ad name") || (lower.includes("anuncio") && !lower.includes("grupo")))) {
+                mapping.ad_name = col;
+            }
+            
+            // Mapear preguntas de formulario (columnas que contienen un signo de interrogacion "?")
+            if (col.includes("?") && !mapping.form.includes(col)) {
                 mapping.form.push(col);
             }
         });
@@ -1552,9 +1800,8 @@ const Leads = (properties) => {
                                     {leadLoaded?.contact_position ||
                                         "Trabajador"}
                                 </span>{" "}
-                                <small className="text-muted">
-                                    desde <b>{leadLoaded?.origin}</b>
-                                </small>
+                                {/* ── Iconos de canales de entrada (orígenes) ── */}
+                                <OriginBadges entries={leadLoaded?.entries} fallbackOrigin={leadLoaded?.origin} />
                             </div>
                         </div>
                         <hr />

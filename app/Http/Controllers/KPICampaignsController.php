@@ -126,19 +126,25 @@ class KPICampaignsController extends BasicController
             // Acepta: date_from + date_to  O  el parámetro legacy "month"
             // ──────────────────────────────────────────────────────────
             if ($request->date_from && $request->date_to) {
-                $dateFrom = $request->date_from;
-                $dateTo   = $request->date_to;
+                // El frontend envía las fechas seleccionadas (ej. 2026-07-01 y 2026-07-21).
+                // Meta exporta tomando el rango exacto desde medianoche UTC (que coincide con la exportación de Meta).
+                $dateFromStr = substr($request->date_from, 0, 10) . ' 00:00:00';
+                $dateToStr   = substr($request->date_to, 0, 10) . ' 23:59:59';
+                
+                $dateFrom = \Carbon\Carbon::parse($dateFromStr, 'UTC')->setTimezone('America/Lima')->toDateTimeString();
+                $dateTo   = \Carbon\Carbon::parse($dateToStr, 'UTC')->setTimezone('America/Lima')->toDateTimeString();
             } elseif ($month || $request->month) {
                 // Compatibilidad legacy con parámetro del segmento de ruta
                 $m = $month ?? $request->month;
                 [$year, $mo] = \explode('-', $m);
-                $dateFrom = "{$year}-{$mo}-01 00:00:00";
-                $lastDay  = date('t', mktime(0, 0, 0, $mo, 1, $year));
-                $dateTo   = "{$year}-{$mo}-{$lastDay} 23:59:59";
+                // Meta registra desde medianoche UTC
+                $dateFrom = \Carbon\Carbon::parse("{$year}-{$mo}-01 00:00:00", 'UTC')->setTimezone('America/Lima')->toDateTimeString();
+                $lastDay  = date('t', mktime(0, 0, 0, (int)$mo, 1, (int)$year));
+                $dateTo   = \Carbon\Carbon::parse("{$year}-{$mo}-{$lastDay} 23:59:59", 'UTC')->setTimezone('America/Lima')->toDateTimeString();
             } else {
                 // Default: mes actual
-                $dateFrom = date('Y-m-01 00:00:00');
-                $dateTo   = date('Y-m-t 23:59:59');
+                $dateFrom = \Carbon\Carbon::now('UTC')->startOfMonth()->setTimezone('America/Lima')->toDateTimeString();
+                $dateTo   = \Carbon\Carbon::now('UTC')->endOfMonth()->setTimezone('America/Lima')->toDateTimeString();
             }
 
             $platform  = $request->platform  ?? null;
@@ -161,41 +167,49 @@ class KPICampaignsController extends BasicController
             $clientStatusesIds = array_map(fn($s) => $s['id'], $clientStatuses->toArray());
 
             // ──────────────────────────────────────────────────────────
-            // Query base: campaña válida + rango de fechas
+            // Query base: campaña válida + atribución registrada en client_entries
             // ──────────────────────────────────────────────────────────
             $queryBase = fn() => Client::where('clients.business_id', Auth::user()->business_id)
                 ->select('clients.*')
-                ->join('campaigns as campaign', 'campaign.id', '=', 'clients.campaign_id')
-                ->whereRaw('LENGTH(clients.campaign_id) > 10');
+                ->distinct()
+                ->join('client_entries as ce', 'ce.client_id', '=', 'clients.id')
+                ->join('campaigns as campaign', 'campaign.id', '=', 'ce.campaign_id')
+                ->whereRaw('LENGTH(ce.campaign_id) > 10');
 
-            
-
-            // Query con filtros de ad meta (adset + ad) + fecha actual con ajuste de zona horaria de Meta
+            // Query con filtros de ad meta (adset + ad) + fecha de entrada en client_entries con ajuste de zona horaria de Meta
             $query = function () use ($queryBase, $dateFrom, $dateTo, $platform, $advisorId) {
                 $q = $queryBase()
-                    ->whereNotNull('clients.adset_name')
-                    ->where('clients.adset_name', '<>', '')
-                    ->whereNotNull('clients.ad_name')
-                    ->where('clients.ad_name', '<>', '')
-                    ->whereBetween('clients.created_at', [$dateFrom, $dateTo]);
+                    ->whereNotNull('ce.adset_name')
+                    ->where('ce.adset_name', '<>', '')
+                    ->whereNotNull('ce.ad_name')
+                    ->where('ce.ad_name', '<>', '')
+                    ->whereBetween('ce.entry_date', [$dateFrom, $dateTo]);
                 return $this->applyOptionalFilters($q, $platform, $advisorId);
             };
 
             // Query equivalente para el periodo anterior con ajuste de zona horaria de Meta
             $queryPrev = function () use ($queryBase, $prevDateFrom, $prevDateTo, $platform, $advisorId) {
                 $q = $queryBase()
-                    ->whereNotNull('clients.adset_name')
-                    ->where('clients.adset_name', '<>', '')
-                    ->whereNotNull('clients.ad_name')
-                    ->where('clients.ad_name', '<>', '')
-                    ->whereBetween('clients.created_at', [$prevDateFrom, $prevDateTo]);
+                    ->whereNotNull('ce.adset_name')
+                    ->where('ce.adset_name', '<>', '')
+                    ->whereNotNull('ce.ad_name')
+                    ->where('ce.ad_name', '<>', '')
+                    ->whereBetween('ce.entry_date', [$prevDateFrom, $prevDateTo]);
                 return $this->applyOptionalFilters($q, $platform, $advisorId);
+            };
+
+            $countUnique = function ($q) {
+                return (clone $q)
+                    ->toBase()
+                    ->cloneWithout(['columns', 'distinct'])
+                    ->selectRaw('COUNT(DISTINCT COALESCE(NULLIF(RIGHT(REGEXP_REPLACE(clients.contact_phone, "[^0-9]", ""), 9), ""), LOWER(clients.contact_email))) as aggregate')
+                    ->value('aggregate') ?? 0;
             };
 
             // ──────────────────────────────────────────────────────────
             // Métricas del periodo actual
             // ──────────────────────────────────────────────────────────
-            $totalCount = (clone $query())->count();
+            $totalCount = $countUnique($query());
             $totalSum   = (clone $query())
                 ->join('client_has_products AS chp', 'chp.client_id', 'clients.id')
                 ->sum('chp.price');
@@ -206,7 +220,7 @@ class KPICampaignsController extends BasicController
                     'status.name',
                     'status.color',
                     'status.order',
-                    DB::raw('count(clients.id) AS quantity')
+                    DB::raw('COUNT(DISTINCT COALESCE(NULLIF(clients.contact_phone, ""), clients.contact_email)) AS quantity')
                 ])
                 ->leftJoin('statuses AS status', 'status.id', 'clients.status_id')
                 ->whereIn('clients.status_id', $leadStatusesIds)
@@ -250,18 +264,16 @@ class KPICampaignsController extends BasicController
                 return $this->applyOptionalFilters($q, $platform, $advisorId);
             };
 
-            $clientsCount = (clone $clientsQuery())->count();
+            $clientsCount = $countUnique($clientsQuery());
             $clientsSum   = (clone $clientsQuery())
                 ->join('client_has_products AS chp', 'chp.client_id', 'clients.id')
                 ->sum('chp.price');
 
-            $archivedCount     = (clone $managingBase)->whereNull('clients.status')->count();
-            $trueManagingCount = (clone $managingBase)->where('clients.status', true)->count();
-            $managingCount     = (clone $managingBase)->count();
+            $archivedCount     = $countUnique((clone $managingBase)->whereNull('clients.status'));
+            $trueManagingCount = $countUnique((clone $managingBase)->where('clients.status', true));
+            $managingCount     = $countUnique($managingBase);
 
-            $pendingCount = $query()
-                ->where('clients.status_id', $defaultLeadStatus)
-                ->count();
+            $pendingCount = $countUnique($query()->where('clients.status_id', $defaultLeadStatus));
 
             $managingSum = (clone $managingBase)
                 ->join('client_has_products AS chp', 'chp.client_id', 'clients.id')
@@ -270,17 +282,15 @@ class KPICampaignsController extends BasicController
             // ──────────────────────────────────────────────────────────
             // Métricas del periodo ANTERIOR (para comparativa ↑↓)
             // ──────────────────────────────────────────────────────────
-            $prevTotalCount   = (clone $queryPrev())->count();
-            $prevClientsCount = (clone $clientsQueryPrev())->count();
-            $prevArchivedCount = (clone $queryPrev())
+            $prevTotalCount   = $countUnique($queryPrev());
+            $prevClientsCount = $countUnique($clientsQueryPrev());
+            $prevArchivedCount = $countUnique((clone $queryPrev())
                 ->whereIn('clients.status_id', $leadStatusesIds)
                 ->where('clients.status_id', '<>', $defaultLeadStatus)
-                ->whereNull('clients.status')
-                ->count();
-            $prevManagingCount = (clone $queryPrev())
+                ->whereNull('clients.status'));
+            $prevManagingCount = $countUnique((clone $queryPrev())
                 ->whereIn('clients.status_id', $leadStatusesIds)
-                ->where('clients.status_id', '<>', $defaultLeadStatus)
-                ->count();
+                ->where('clients.status_id', '<>', $defaultLeadStatus));
 
             $calcVariation = function ($current, $previous) {
                 if ($previous == 0) return $current > 0 ? 100 : 0;
@@ -311,7 +321,7 @@ class KPICampaignsController extends BasicController
                     'status.id AS status_id',
                     'status.name AS status_name',
                     'status.color AS status_color',
-                    DB::raw('count(clients.id) AS quantity')
+                    DB::raw('COUNT(DISTINCT COALESCE(NULLIF(clients.contact_phone, ""), clients.contact_email)) AS quantity')
                 ])
                 ->leftJoin('statuses AS status', 'status.id', 'clients.status_id')
                 ->whereNotNull('status.status')
@@ -1046,10 +1056,10 @@ class KPICampaignsController extends BasicController
             'clients.name',
             'clients.contact_phone',
             'clients.contact_email',
-            'clients.campaign_id',
-            'clients.adset_name',
-            'clients.ad_name',
-            'clients.created_at',
+            'ce.campaign_id',
+            'ce.adset_name',
+            'ce.ad_name',
+            'ce.entry_date as created_at',
             'statuses.name as status_name',
             'statuses.color as status_color',
             'manage_status.name as manage_status_name',
@@ -1057,23 +1067,34 @@ class KPICampaignsController extends BasicController
             'users.name as assigned_name',
             'users.relative_id as assigned_relative_id'
         ])
+            ->distinct()
+            ->join('client_entries as ce', 'ce.client_id', '=', 'clients.id')
             ->leftJoin('statuses', 'statuses.id', '=', 'clients.status_id')
             ->leftJoin('statuses as manage_status', 'manage_status.id', '=', 'clients.manage_status_id')
             ->leftJoin('users', 'users.id', '=', 'clients.assigned_to')
             ->where(function ($query) use ($request) {
                 if ($request->date_from && $request->date_to) {
-                    $query->whereBetween('clients.created_at', [$request->date_from, $request->date_to]);
+                    $dateFromStr = substr($request->date_from, 0, 10) . ' 00:00:00';
+                    $dateToStr   = substr($request->date_to, 0, 10) . ' 23:59:59';
+                    $dateFrom = \Carbon\Carbon::parse($dateFromStr, 'UTC')->setTimezone('America/Lima')->toDateTimeString();
+                    $dateTo   = \Carbon\Carbon::parse($dateToStr, 'UTC')->setTimezone('America/Lima')->toDateTimeString();
+                    $query->whereBetween('ce.entry_date', [$dateFrom, $dateTo]);
                 } elseif ($request->month) {
-                    $query->whereRaw("DATE_FORMAT(clients.created_at, '%Y-%m') = ?", [$request->month]);
+                    // Si mandan solo mes, ajustarlo a la zona horaria correcta de Meta (UTC)
+                    [$year, $mo] = \explode('-', $request->month);
+                    $dateFrom = \Carbon\Carbon::parse("{$year}-{$mo}-01 00:00:00", 'UTC')->setTimezone('America/Lima')->toDateTimeString();
+                    $lastDay  = date('t', mktime(0, 0, 0, (int)$mo, 1, (int)$year));
+                    $dateTo   = \Carbon\Carbon::parse("{$year}-{$mo}-{$lastDay} 23:59:59", 'UTC')->setTimezone('America/Lima')->toDateTimeString();
+                    $query->whereBetween('ce.entry_date', [$dateFrom, $dateTo]);
                 }
                 if ($request->campaign_id) {
-                    $query->where('clients.campaign_id', $request->campaign_id);
+                    $query->where('ce.campaign_id', $request->campaign_id);
                 }
                 if ($request->adset_name) {
-                    $query->where('clients.adset_name', $request->adset_name);
+                    $query->where('ce.adset_name', $request->adset_name);
                 }
                 if ($request->ad_name) {
-                    $query->where('clients.ad_name', $request->ad_name);
+                    $query->where('ce.ad_name', $request->ad_name);
                 }
                 if ($request->platform && $request->platform !== 'all') {
                     $platformMap = [

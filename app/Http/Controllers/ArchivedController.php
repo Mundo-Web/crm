@@ -34,7 +34,7 @@ class ArchivedController extends BasicController
     {
         return $model::select('clients.*')
             // ->withCount(['notes', 'tasks', 'pendingTasks', 'projects'])
-            ->with(['status', 'assigned', 'manageStatus', 'campaign', 'businessSector', 'integration'])
+            ->with(['status', 'assigned', 'manageStatus', 'campaign', 'businessSector', 'integration', 'entries.campaign'])
             ->leftJoin('statuses AS status', 'status.id', 'status_id')
             ->leftJoin('statuses AS manage_status', 'manage_status.id', 'manage_status_id')
             ->leftJoin('users AS assigned', 'assigned.id', 'clients.assigned_to')

@@ -14,6 +14,43 @@ import ArrayJoin from "../../Utils/ArrayJoin";
 import { LeadsContext } from "./LeadsProvider";
 import sourceOptions from "../Campaigns/socials.json";
 
+/**
+ * Determina el ícono y color para un `ClientEntry` según su canal de origen.
+ * Misma lógica que getChannelStyle en Leads.jsx.
+ */
+const getChannelStyle = (entry) => {
+    const source = (entry.source || '').toLowerCase();
+    const origin = (entry.origin || '').toLowerCase();
+    const trigger = (entry.triggered_by || '').toLowerCase();
+    const hasCampaign = !!entry.campaign_id;
+
+    if (origin.includes('instagram') || trigger.includes('instagram')) {
+        return { icon: 'mdi-instagram', color: '#C13584', label: hasCampaign ? 'Instagram (Anuncio)' : 'Instagram (Orgánico)' };
+    }
+    if (origin.includes('facebook') || trigger.includes('facebook') || origin.includes('meta') || source.includes('meta')) {
+        return { icon: 'mdi-facebook', color: '#1877F2', label: hasCampaign ? 'Facebook (Formulario)' : 'Facebook (Orgánico)' };
+    }
+    if (source.includes('whatsapp') || trigger.includes('whatsapp') || origin.includes('whatsapp')) {
+        return { icon: 'mdi-whatsapp', color: '#25D366', label: hasCampaign ? 'WhatsApp (Anuncio)' : 'WhatsApp (Orgánico)' };
+    }
+    if (source.includes('google') || origin.includes('google')) {
+        return { icon: 'mdi-google', color: '#EA4335', label: 'Google Ads' };
+    }
+    if (source.includes('landing') || origin.includes('landing')) {
+        return { icon: 'mdi-web', color: '#6c757d', label: 'Landing Page' };
+    }
+    if (source.includes('organico') || origin.includes('organico') || source.includes('orgánico') || origin.includes('orgánico')) {
+        return { icon: 'mdi-account-circle-outline', color: '#17a2b8', label: 'Orgánico' };
+    }
+    if (source.toLowerCase().includes('crm') || source.toLowerCase().includes('atalaya') || source.toLowerCase().includes('interno') || source.toLowerCase().includes('internal')) {
+        return { icon: 'mdi-database-outline', color: '#6c757d', label: 'CRM Interno' };
+    }
+    if (source.includes('externo') || origin.includes('externo')) {
+        return { icon: 'mdi-link-variant', color: '#fd7e14', label: 'Externo' };
+    }
+    return { icon: 'mdi-account-arrow-right', color: '#adb5bd', label: origin || source || 'Otro' };
+};
+
 const leadsRest = new LeadsRest();
 const clientsRest = new ClientsRest();
 
@@ -351,13 +388,13 @@ const LeadTable = ({
                 filter={
                     filterAssignation
                         ? ArrayJoin(
-                              selectedUsersId.map((id) => [
-                                  "assigned_to",
-                                  "=",
-                                  id,
-                              ]),
-                              "or",
-                          )
+                            selectedUsersId.map((id) => [
+                                "assigned_to",
+                                "=",
+                                id,
+                            ]),
+                            "or",
+                        )
                         : []
                 }
                 toolBar={(container) => {
@@ -541,7 +578,7 @@ const LeadTable = ({
                                         )}
                                         <div className="text-truncate">
                                             {data.status_id ==
-                                            defaultLeadStatus ? (
+                                                defaultLeadStatus ? (
                                                 <b className="d-block text-truncate">
                                                     {data.contact_name}
                                                 </b>
@@ -560,7 +597,7 @@ const LeadTable = ({
                                             )}
                                         </div>
                                     </div>
-                                    <div className="d-flex gap-1">
+                                    <div className="d-none gap-1 " style={{ display: "none !important" }}>
                                         {completeRegistration && (
                                             <Tippy
                                                 content={
@@ -762,6 +799,45 @@ const LeadTable = ({
                             );
                         },
                     },
+                    /* {
+                         dataField: "entries",
+                         caption: "Canales",
+                         dataType: "string",
+                         width: 130,
+                         allowSorting: false,
+                         allowFiltering: false,
+                         cellTemplate: (container, { data }) => {
+                             container.attr("style", "height: 48px; overflow: visible");
+                             const entries = Array.isArray(data.entries) ? data.entries.filter(Boolean) : [];
+                             if (entries.length === 0) {
+                                 container.html(`<small class="text-muted">desde <b>${data.origin || 'Desconocido'}</b></small>`);
+                                 return;
+                             }
+                             ReactAppend(
+                                 container,
+                                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, alignItems: 'center' }}>
+                                     {entries.map((entry, idx) => {
+                                         const style = getChannelStyle(entry);
+                                         let label = style.label;
+                                         if (entry.campaign && entry.campaign.title) label += `\nCampaña: ${entry.campaign.title}`;
+                                         if (entry.ad_name) label += `\nAnuncio: ${entry.ad_name}`;
+                                         return (
+                                             <Tippy key={idx} content={<div style={{ whiteSpace: 'pre-line', fontSize: 12 }}>{label}</div>} placement="top">
+                                                 <span style={{
+                                                     display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                                                     width: 26, height: 26, borderRadius: '50%',
+                                                     backgroundColor: style.color, color: '#fff',
+                                                     fontSize: 14, cursor: 'default', position: 'relative',
+                                                 }}>
+                                                     <i className={`mdi ${style.icon}`} />
+                                                 </span>
+                                             </Tippy>
+                                         );
+                                     })}
+                                 </div>
+                             );
+                         },
+                     },*/
                     {
                         dataField: "origin",
                         caption: "Red Social (Campaña)",
@@ -1013,6 +1089,85 @@ const LeadTable = ({
                 ]}
                 cardStyle={{
                     borderRight: `6px solid ${borderColor}`,
+                }}
+                masterDetail={{
+                    enabled: true,
+                    autoExpandAll: false,
+                    template: (container, { data }) => {
+                        const entries = Array.isArray(data.entries) ? data.entries.filter(Boolean) : [];
+                        ReactAppend(
+                            container,
+                            <div style={{ padding: '16px 24px', backgroundColor: '#fafbfe', borderTop: '1px solid #eef2f7' }}>
+                                <div className="card shadow-sm border mb-0" style={{ borderRadius: '8px', overflow: 'hidden' }}>
+                                    <div className="card-header bg-light py-2 px-3 border-bottom d-flex align-items-center justify-content-between">
+                                        <h6 className="card-title my-0 text-dark font-weight-bold" style={{ fontSize: '13.5px', letterSpacing: '0.3px' }}>
+                                            <i className="mdi mdi-source-branch me-2 text-primary" style={{ fontSize: '16px', verticalAlign: 'middle' }} />
+                                            Historial de Orígenes de Registro ({entries.length})
+                                        </h6>
+                                        <small className="text-muted">Registro cronológico de orígenes</small>
+                                    </div>
+                                    <div className="card-body p-0">
+                                        <div className="table-responsive">
+                                            <table className="table table-sm table-striped table-hover mb-0" style={{ fontSize: '12.5px' }}>
+                                                <thead className="table-light">
+                                                    <tr>
+                                                        <th className="border-0 px-3 py-2 text-muted" style={{ width: '50px' }}>#</th>
+                                                        <th className="border-0 px-3 py-2 text-muted" style={{ width: '180px' }}>Origen / Canal</th>
+                                                        <th className="border-0 px-3 py-2 text-muted">Campaña</th>
+                                                        <th className="border-0 px-3 py-2 text-muted">Grupo de Anuncios</th>
+                                                        <th className="border-0 px-3 py-2 text-muted">Anuncio</th>
+                                                        <th className="border-0 px-3 py-2 text-muted" style={{ width: '150px' }}>Fecha</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {entries.length === 0 ? (
+                                                        <tr>
+                                                            <td colSpan={6} className="text-center py-3 text-muted">
+                                                                Sin historial de orígenes registrado.
+                                                            </td>
+                                                        </tr>
+                                                    ) : (
+                                                        entries.map((entry, idx) => {
+                                                            const style = getChannelStyle(entry);
+                                                            const entryDate = entry.entry_date
+                                                                ? new Date(entry.entry_date).toLocaleDateString('es-PE', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+                                                                : '—';
+                                                            return (
+                                                                <tr key={idx} style={{ verticalAlign: 'middle' }}>
+                                                                    <td className="px-3 py-2 text-secondary">{idx + 1}</td>
+                                                                    <td className="px-3 py-2">
+                                                                        <span className="badge px-2 py-1 rounded-pill" style={{
+                                                                            backgroundColor: style.color + '15',
+                                                                            color: style.color,
+                                                                            border: `1px solid ${style.color}25`,
+                                                                            fontSize: '11.5px',
+                                                                            display: 'inline-flex',
+                                                                            alignItems: 'center',
+                                                                            gap: '6px',
+                                                                            fontWeight: 600
+                                                                        }}>
+                                                                            <i className={`mdi ${style.icon}`} style={{ fontSize: '13px' }} />
+                                                                            {style.label}
+                                                                        </span>
+                                                                    </td>
+                                                                    <td className="px-3 py-2 text-dark font-weight-semibold">
+                                                                        {entry.campaign ? entry.campaign.title || entry.campaign.code || '—' : '—'}
+                                                                    </td>
+                                                                    <td className="px-3 py-2 text-secondary">{entry.adset_name || '—'}</td>
+                                                                    <td className="px-3 py-2 text-secondary">{entry.ad_name || '—'}</td>
+                                                                    <td className="px-3 py-2 text-secondary">{entryDate}</td>
+                                                                </tr>
+                                                            );
+                                                        })
+                                                    )}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    }
                 }}
             />
             <input

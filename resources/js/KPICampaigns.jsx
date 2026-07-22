@@ -446,17 +446,13 @@ const KPICampaigns = ({ months = [], currentMonth, currentYear, advisors = [], w
 
     const getAdjustedDates = (from, to) => {
         if (!from || !to) return { date_from: from, date_to: to };
-        const [y1, m1, d1] = from.split('-').map(Number);
-        const adjustedStartDate = new Date(y1, m1 - 1, d1, 0, 0, 0);
-        adjustedStartDate.setHours(-5, 0, 0, 0);
-
-        const [y2, m2, d2] = to.split('-').map(Number);
-        const adjustedEndDate = new Date(y2, m2 - 1, d2, 0, 0, 0);
-        adjustedEndDate.setHours(18, 59, 59, 999);
-
+        
+        // Return exactly the selected YYYY-MM-DD dates without any local timezone shift
+        // The backend will properly interpret these in America/Los_Angeles timezone (Meta's default)
+        // and convert them to the CRM's local timezone (America/Lima) for querying.
         return {
-            date_from: adjustedStartDate.toISOString(),
-            date_to: adjustedEndDate.toISOString()
+            date_from: from,
+            date_to: to
         };
     };
 

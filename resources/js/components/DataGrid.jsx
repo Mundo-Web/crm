@@ -122,6 +122,25 @@ const DataGrid = ({ gridRef: dataGridRef, rest, columns, toolBar, masterDetail, 
       },
       columns,
       masterDetail,
+      onCellPrepared: (e) => {
+        if (e.rowType === "data" && e.column.command === "expand") {
+          const entries = Array.isArray(e.data?.entries) ? e.data.entries.filter(Boolean) : [];
+          if (entries.length <= 1) {
+            $(e.cellElement).empty();
+            $(e.cellElement).removeClass("dx-datagrid-expand-col");
+          }
+        }
+      },
+      onRowExpanding: (e) => {
+        const rowIndex = e.component.getRowIndexByKey(e.key);
+        if (rowIndex >= 0) {
+          const rowData = e.component.getVisibleRows()[rowIndex]?.data;
+          const entries = Array.isArray(rowData?.entries) ? rowData.entries.filter(Boolean) : [];
+          if (entries.length <= 1) {
+            e.cancel = true;
+          }
+        }
+      },
       onContentReady: (...props) => {
         tippy('.tippy-here', { arrow: true, animation: 'scale' })
       },

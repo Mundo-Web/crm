@@ -311,19 +311,24 @@ class MetaController extends Controller
                     }
                     $email = $fieldData['email'] ?? $fieldData['correo_electrónico'] ?? $fieldData['work_email'] ?? $fieldData['correo'] ?? null;
 
-                    // Check if client already exists (By Phone or Email, since lead_id is unique per form)
-                    $clientJpa = Client::query()
-                        ->where('business_id', $businessJpa->id)
-                        ->where('status', true)
-                        ->where(function ($q) use ($phone, $email) {
-                            if ($phone) $q->where('contact_phone', $phone);
-                            if ($email) $q->orWhere('contact_email', $email);
-                        })
-                        ->first();
+                    // Búsqueda secuencial robusta de duplicados (por teléfono y luego por correo)
+                    $clientJpa = null;
+                    if ($phone) {
+                        // Limpiar y buscar por los últimos 9 dígitos (celulares en Perú)
+                        $cleanPhone = substr($phone, -9);
+                        $clientJpa = Client::query()
+                            ->where('business_id', $businessJpa->id)
+                            ->where('status', true)
+                            ->where('contact_phone', 'like', '%' . $cleanPhone)
+                            ->first();
+                    }
 
-                    if ($clientJpa && $clientJpa->campaign_id) {
-                        Log::info('Lead already exists and has a campaign, skipping', ['client_id' => $clientJpa->id]);
-                        return;
+                    if (!$clientJpa && $email) {
+                        $clientJpa = Client::query()
+                            ->where('business_id', $businessJpa->id)
+                            ->where('status', true)
+                            ->where('contact_email', $email)
+                            ->first();
                     }
 
                     $platforms = [
@@ -377,29 +382,34 @@ class MetaController extends Controller
                     }
 
                     $fullName = $fieldData['full_name'] ?? $fieldData['nombre_completo'] ?? $fieldData['nombre'] ?? 'Sin nombre';
+                    $wasReRegistered = false;
 
                     if ($clientJpa) {
-                        // Actualizar atribución para lead existente
+                        $wasReRegistered = true;
+                        // NUNCA se sobreescribe la atribución original (campaign/source/origin).
+                        // El historial de canales se guarda en ClientNotes.
+                        // Solo actualizamos el estado para que el asesor lo vea activo en el Kanban,
+                        // y enriquecemos datos de contacto vacíos si el formulario los trajo.
                         $updateData = [
-                            'campaign_id' => $campaignJpa->id,
-                            'adset_name' => $adSetJpa ? $adSetJpa->name : null,
-                            'ad_name' => ($leadData['ad_name'] ?? $adIdClean) ?: null,
-                            'source' => 'Meta',
-                            'origin' => $originName,
-                            'lead_origin' => $originName,
-                            'triggered_by' => "Formulario {$originName}",
-                            'source_channel' => "{$originName} Form"
+                            'complete_registration' => true,
+                            // Reactivar en el Kanban: volver a los estados por defecto
+                            'status_id' => Setting::get('default-lead-status', $businessJpa->id),
+                            'manage_status_id' => Setting::get('default-manage-lead-status', $businessJpa->id),
                         ];
-                        // Si el cliente existía pero no tenía email/teléfono, se lo agregamos ahora que llenó el form
-                        if ($email && !$clientJpa->contact_email) $updateData['contact_email'] = $email;
-                        if ($phone && !$clientJpa->contact_phone) $updateData['contact_phone'] = $phone;
+                        // Solo rellenar campos vacíos (no sobreescribir datos que ya tenía)
+                        if ($email && !$clientJpa->contact_email) {
+                            $updateData['contact_email'] = $email;
+                        }
+                        if ($phone && !$clientJpa->contact_phone) {
+                            $updateData['contact_phone'] = $phone;
+                        }
                         if ($fullName && $fullName !== 'Sin nombre' && (!$clientJpa->contact_name || $clientJpa->contact_name == $clientJpa->contact_phone)) {
                             $updateData['contact_name'] = $fullName;
                             $updateData['name'] = $fullName;
                         }
 
                         $clientJpa->update($updateData);
-                        Log::info('Existing lead updated via Form', ['client_id' => $clientJpa->id]);
+                        Log::info('Existing lead re-registered via Form (attribution preserved)', ['client_id' => $clientJpa->id]);
                     } else {
                         // Create new client
                         $clientJpa = Client::create([
@@ -430,8 +440,30 @@ class MetaController extends Controller
                         Log::info('New lead created from Form', ['client_id' => $clientJpa->id]);
                     }
 
+                    // ── Registrar la entrada en client_entries (fuente de verdad para KPIs y iconos) ──
+                    \App\Models\ClientEntry::create([
+                        'client_id'      => $clientJpa->id,
+                        'campaign_id'    => $campaignJpa->id,
+                        'adset_name'     => $adSetJpa ? $adSetJpa->name : null,
+                        'ad_name'        => ($leadData['ad_name'] ?? $adIdClean) ?: null,
+                        'source'         => 'Meta',
+                        'origin'         => $originName,
+                        'lead_origin'    => $originName,
+                        'triggered_by'   => "Formulario {$originName}",
+                        'source_channel' => "{$originName} Form",
+                        'entry_date'     => now(),
+                    ]);
+
                     // Build form answers note, ignoring full_name, phone_number and email
-                    $formString = "<b>Formulario {$originName} Forms</b><br>";
+                    $formString = "";
+                    if ($wasReRegistered) {
+                        $formString .= "<b>¡El cliente volvió a registrarse! (Entrada omnicanal)</b><br>";
+                        $formString .= "• Origen: Formulario {$originName} Forms<br>";
+                        $formString .= "• Campaña: " . ($leadData['campaign_name'] ?? 'Campaña Externa') . "<br>";
+                        $formString .= "• Anuncio: " . ($leadData['ad_name'] ?? 'Anuncio de Formulario') . "<br>";
+                        $formString .= "• Datos ingresados: Nombre: {$fullName} | Teléfono: {$phone} | Email: {$email}<br><br>";
+                    }
+                    $formString .= "<b>Formulario {$originName} Forms</b><br>";
                     $questionIndex = 1;
                     foreach ($leadData['field_data'] ?? [] as $field) {
                         $fieldName = $field['name'] ?? '';
@@ -445,13 +477,17 @@ class MetaController extends Controller
                     }
 
                     // Create note with form answers
+                    $campaignNameForNote = $leadData['campaign_name'] ?? null;
+                    $noteTitle = $wasReRegistered
+                        ? "Nueva entrada: Formulario {$originName}" . ($campaignNameForNote ? " — {$campaignNameForNote}" : '')
+                        : "Formulario {$originName} Forms";
                     ClientNote::create([
                         'note_type_id' => '8e895346-3d87-4a87-897a-4192b917c211',
                         'client_id' => $clientJpa->id,
-                        'name' => "Formulario {$originName} Forms",
+                        'name' => $noteTitle,
                         'description' => $formString,
                     ]);
-                    Log::info('Lead created and note added');
+                    Log::info('Lead note added', ['title' => $noteTitle, 'was_re_registered' => $wasReRegistered]);
 
                     return;
                 };
@@ -864,14 +900,21 @@ class MetaController extends Controller
                     }
                 }
 
-                $alreadyExists = Client::query()
-                    ->where('business_id', $businessJpa->id)
-                    ->where(function ($q) use ($profileData) {
-                        $q->where('contact_phone', 'like', '%' . $profileData['id'] . '%')
-                            ->orWhere('integration_user_id', $profileData['id']);
-                    })
-                    ->where('status', true)
-                    ->first();
+                $alreadyExists = null;
+                $searchId = $profileData['id'] ?? '';
+                if ($searchId) {
+                    $alreadyExists = Client::query()
+                        ->where('business_id', $businessJpa->id)
+                        ->where('status', true)
+                        ->where(function ($q) use ($searchId) {
+                            $q->where('integration_user_id', $searchId);
+                            $digits = preg_replace('/[^0-9]/', '', $searchId);
+                            if (strlen($digits) >= 9) {
+                                $q->orWhere('contact_phone', 'like', '%' . substr($digits, -9));
+                            }
+                        })
+                        ->first();
+                }
 
                 // Si el cliente existe, ya no hacemos "return" prematuro aquí, 
                 // permitiendo que el sistema actualice su integration_id al nuevo canal (WhatsApp)
@@ -989,29 +1032,25 @@ class MetaController extends Controller
                 }
 
                 if ($alreadyExists) {
-                    // Actualizar cliente existente protegiendo su origen original
+                    // NUNCA se sobreescribe la atribución original (campaign/source/origin).
+                    // El canal nuevo se documenta en una ClientNote para trazabilidad completa.
                     $updateData = [
                         'integration_id' => $integrationJpa->id,
                         'integration_user_id' => $profileData['id'],
-                        'status' => true
+                        'status' => true,
                     ];
 
-                    // Solo si el cliente actual no tiene una campaña y ahora nos escribe DESDE un anuncio (referral),
-                    // permitimos actualizar la atribución. Si ya tenía una campaña, respetamos la primera.
-                    if (!$alreadyExists->campaign_id && isset($preClient['campaign_id'])) {
-                        $updateData['campaign_id'] = $preClient['campaign_id'];
-                        $updateData['adset_name'] = $preClient['adset_name'];
-                        $updateData['ad_name'] = $preClient['ad_name'];
-                        $updateData['triggered_by'] = $preClient['triggered_by'];
-                        $updateData['source'] = $preClient['source'];
-                        $updateData['origin'] = $preClient['origin'];
-                        $updateData['lead_origin'] = $preClient['lead_origin'];
-                        $updateData['source_channel'] = $preClient['source_channel'];
+                    // Si viene DESDE un anuncio (click-to-WhatsApp referral), solo reseteamos
+                    // el estado para que el asesor lo vea activo en el Kanban.
+                    // La atribución de campaña original se preserva intacta.
+                    if (isset($preClient['campaign_id'])) {
+                        $updateData['status_id'] = Setting::get('default-lead-status', $businessJpa->id);
+                        $updateData['manage_status_id'] = Setting::get('default-manage-lead-status', $businessJpa->id);
                     }
 
                     $alreadyExists->update($updateData);
                     $clientJpa = $alreadyExists;
-                    Log::info('Lead omnicanal actualizado exitosamente', ['client_id' => $clientJpa->id, 'phone' => $profileData['id']]);
+                    Log::info('Lead omnicanal detectado — atribución original preservada', ['client_id' => $clientJpa->id, 'phone' => $profileData['id']]);
                 } else {
                     // Crear cliente totalmente nuevo
                     $clientJpa = Client::create(array_merge([
@@ -1024,16 +1063,33 @@ class MetaController extends Controller
 
                 $hasApikey = Setting::get('gemini-api-key', $businessJpa->id);
 
+                // \u2500\u2500 Registrar la entrada en client_entries (fuente de verdad para KPIs y iconos) \u2500\u2500
+                // Se crea SIEMPRE: tanto para leads nuevos como para re-ingresos por cualquier canal.
+                \App\Models\ClientEntry::create([
+                    'client_id'      => $clientJpa->id,
+                    'campaign_id'    => $preClient['campaign_id'] ?? null,
+                    'adset_name'     => $preClient['adset_name'] ?? null,
+                    'ad_name'        => $preClient['ad_name'] ?? null,
+                    'source'         => $preClient['source'] ?? null,
+                    'origin'         => $preClient['origin'] ?? null,
+                    'lead_origin'    => $preClient['lead_origin'] ?? null,
+                    'triggered_by'   => $preClient['triggered_by'] ?? null,
+                    'source_channel' => $preClient['source_channel'] ?? null,
+                    'entry_date'     => now(),
+                ]);
+
+                // Si es un lead de anuncio (nuevo o existente), registrar la nota de contexto
+                if (isset($preClient['ad_context_note'])) {
+                    \App\Models\ClientNote::create([
+                        'note_type_id' => '8e895346-3d87-4a87-897a-4192b917c211', // Tipo 'Nota'
+                        'client_id' => $clientJpa->id,
+                        'name' => $alreadyExists ? 'Volvió a ingresar desde Anuncio Meta' : 'Contexto de Anuncio Meta',
+                        'description' => $preClient['ad_context_note'],
+                    ]);
+                }
+
+
                 if ($hasApikey && !$clientJpa->complete_registration) {
-                    // Si es un lead de anuncio, le ponemos la nota de contexto antes de que Gemini responda
-                    if (isset($preClient['ad_context_note'])) {
-                        \App\Models\ClientNote::create([
-                            'note_type_id' => '8e895346-3d87-4a87-897a-4192b917c211', // Tipo 'Nota'
-                            'client_id' => $clientJpa->id,
-                            'name' => 'Contexto de Anuncio Meta',
-                            'description' => $preClient['ad_context_note'],
-                        ]);
-                    }
                     MetaAssistantJob::dispatchAfterResponse($clientJpa, $messageJpa, $origin);
                 }
 

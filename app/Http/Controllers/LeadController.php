@@ -183,7 +183,7 @@ class LeadController extends BasicController
                         ->limit(1)
                 ])
                 ->withCount(['notes', 'tasks', 'pendingTasks', 'products'])
-                ->with(['status', 'assigned', 'manageStatus', 'chatStatus', 'creator', 'businessSector'])
+                ->with(['status', 'assigned', 'manageStatus', 'chatStatus', 'creator', 'businessSector', 'entries.campaign'])
                 ->join('statuses AS status', 'status.id', 'status_id')
                 ->leftJoin('statuses AS manage_status', 'manage_status.id', 'manage_status_id')
                 ->whereIn('status.table_id', ['e05a43e5-b3a6-46ce-8d1f-381a73498f33', 'a8367789-666e-4929-aacb-7cbc2fbf74de'])
@@ -212,7 +212,7 @@ class LeadController extends BasicController
                     ->limit(1)
             ])
             ->withCount($request->withCount ?? ['notes', 'tasks', 'pendingTasks', 'products'])
-            ->with($request->with ?? ['status', 'assigned', 'manageStatus', 'chatStatus', 'creator', 'integration', 'campaign', 'businessSector'])
+            ->with($request->with ?? ['status', 'assigned', 'manageStatus', 'chatStatus', 'creator', 'integration', 'campaign', 'businessSector', 'entries.campaign'])
             ->leftJoin('statuses AS status', 'status.id', 'status_id')
             ->leftJoin('statuses AS manage_status', 'manage_status.id', 'manage_status_id')
             ->leftJoin('users AS assigned', 'assigned.id', 'clients.assigned_to')
@@ -257,10 +257,195 @@ class LeadController extends BasicController
         return $query;
     }
 
+    /**
+     * Preview / dry-run de la importación: procesa el Excel sin escribir nada en la DB.
+     * Devuelve un resumen detallado: totales, nuevos vs existentes, con/sin campaña, muestra de filas.
+     */
+    public function importPreview(Request $request)
+    {
+        $response = Response::simpleTryCatch(function (Response $response) use ($request) {
+            $file    = $request->file('file');
+            $mapping = json_decode($request->mapping, true);
+
+            $readerType = MaatwebsiteExcel::XLSX;
+            $extension  = strtolower($file->getClientOriginalExtension());
+            if ($extension === 'xls')      $readerType = MaatwebsiteExcel::XLS;
+            elseif ($extension === 'csv')  $readerType = MaatwebsiteExcel::CSV;
+
+            $rows    = Excel::toArray([], $file->getRealPath(), null, $readerType)[0];
+            $headers = array_shift($rows);
+
+            $cleanRows = [];
+            foreach ($rows as $row) {
+                $rowData = [];
+                foreach ($headers as $index => $header) {
+                    $rowData[$header] = $row[$index] ?? null;
+                }
+                if (collect($rowData)->filter(fn($v) => trim((string)$v) !== '')->isNotEmpty()) {
+                    $cleanRows[] = $rowData;
+                }
+            }
+
+            $business_id       = Auth::user()->business_id;
+            $campaignIdColumn  = $mapping['campaign_id']   ?? null;
+            $campaignNameColumn= $mapping['campaign_name'] ?? null;
+            $stripMetaPrefix   = fn(string $v): string => trim(preg_replace('/^[a-z]+:/i', '', $v));
+
+            // Recopilar códigos de campaña
+            $campaignCodes = [];
+            if ($campaignIdColumn) {
+                $campaignCodes = array_unique(array_filter(array_map(
+                    fn($v) => $stripMetaPrefix((string)$v),
+                    array_column($cleanRows, $campaignIdColumn)
+                )));
+            } elseif ($campaignNameColumn) {
+                $campaignCodes = array_unique(array_filter(array_map(
+                    fn($v) => $stripMetaPrefix((string)$v),
+                    array_column($cleanRows, $campaignNameColumn)
+                )));
+            }
+
+            $existingCampaigns = Campaign::where('business_id', $business_id)
+                ->whereIn('code', $campaignCodes)
+                ->pluck('id', 'code');
+
+            // Mapear filas (igual que en import real, pero solo en memoria)
+            $mappedRows = [];
+            foreach ($cleanRows as $row) {
+                $phone = \SoDe\Extend\Text::keep($row[$mapping['phone']], '0123456789');
+                if (strlen($phone) === 9 && str_starts_with($phone, '9')) {
+                    $phone = '51' . $phone;
+                }
+
+                $adId = null;
+                if ($campaignIdColumn)  $adId = $row[$campaignIdColumn]   ?? null;
+                elseif ($campaignNameColumn) $adId = $row[$campaignNameColumn] ?? null;
+                if ($adId !== null) $adId = trim(preg_replace('/^[a-z]+:/i', '', $adId));
+
+                $campaignId = ($adId && isset($existingCampaigns[$adId])) ? $existingCampaigns[$adId] : null;
+
+                $originRaw = strtolower($row[$mapping['source']] ?? '');
+                $origin = match ($originRaw) {
+                    'fb', 'facebook'   => 'Facebook',
+                    'ig', 'instagram'  => 'Instagram',
+                    default            => $row[$mapping['source']] ?? null,
+                };
+
+                $adsetColumn = $mapping['adset_name'] ?? null;
+                $adColumn    = $mapping['ad_name']    ?? null;
+                $adsetName   = $adsetColumn ? (trim(preg_replace('/^[a-z]+:/i', '', $row[$adsetColumn] ?? '')) ?: null) : null;
+                $adName      = $adColumn    ? (trim(preg_replace('/^[a-z]+:/i', '', $row[$adColumn]    ?? '')) ?: null) : null;
+
+                $dateRaw  = isset($mapping['date']) && !empty($row[$mapping['date']]) ? $row[$mapping['date']] : null;
+                $parsedDt = $dateRaw ? Carbon::parse($dateRaw) : Carbon::now();
+
+                $mappedRows[] = [
+                    'name'           => $row[$mapping['name']] ?? null,
+                    'contact_email'  => $row[$mapping['email']] ?? null,
+                    'contact_phone'  => $phone ?: null,
+                    'origin'         => $origin,
+                    'campaign_id'    => $campaignId,
+                    'adset_name'     => $adsetName,
+                    'ad_name'        => $adName,
+                    'date'           => $parsedDt->format('Y-m-d H:i:s'),
+                    '_has_campaign'  => !is_null($campaignId),
+                    '_raw_campaign'  => $adId,
+                ];
+            }
+
+            // Detectar existentes por email / teléfono
+            $emails       = array_filter(array_unique(array_map('strtolower', array_map('trim', array_column($mappedRows, 'contact_email')))));
+            $phoneSuffixes = [];
+            foreach ($mappedRows as $r) {
+                $c = preg_replace('/[^0-9]/', '', $r['contact_phone'] ?? '');
+                $s = substr($c, -9);
+                if (strlen($s) === 9) $phoneSuffixes[] = $s;
+            }
+            $phoneSuffixes = array_unique($phoneSuffixes);
+
+            $existingClients = collect();
+            if (!empty($emails) || !empty($phoneSuffixes)) {
+                $existingClients = Client::where('business_id', $business_id)
+                    ->where(function ($q) use ($emails, $phoneSuffixes) {
+                        $hasCond = false;
+                        if (!empty($emails)) {
+                            $q->whereIn(DB::raw('LOWER(contact_email)'), array_values($emails));
+                            $hasCond = true;
+                        }
+                        if (!empty($phoneSuffixes)) {
+                            $suffixesString = implode("','", array_map('addslashes', $phoneSuffixes));
+                            if ($hasCond) $q->orWhereRaw("RIGHT(REGEXP_REPLACE(contact_phone, '[^0-9]', ''), 9) IN ('{$suffixesString}')");
+                            else          $q->whereRaw("RIGHT(REGEXP_REPLACE(contact_phone, '[^0-9]', ''), 9) IN ('{$suffixesString}')");
+                        }
+                    })
+                    ->get(['id', 'name', 'contact_email', 'contact_phone', 'status_id', 'created_at']);
+            }
+
+            $newRows      = [];
+            $existingRows = [];
+            foreach ($mappedRows as $row) {
+                $rowEmail  = $row['contact_email'] ? strtolower(trim($row['contact_email'])) : null;
+                $rowPhoneC = preg_replace('/[^0-9]/', '', $row['contact_phone'] ?? '');
+                $rowPhoneS = substr($rowPhoneC, -9);
+
+                $found = $existingClients->first(function ($client) use ($rowEmail, $rowPhoneS) {
+                    if ($rowEmail && strtolower(trim($client->contact_email)) === $rowEmail) return true;
+                    if (strlen($rowPhoneS) === 9) {
+                        $cp = preg_replace('/[^0-9]/', '', $client->contact_phone ?? '');
+                        if (substr($cp, -9) === $rowPhoneS) return true;
+                    }
+                    return false;
+                });
+
+                $row['_status'] = $found ? 'existing' : 'new';
+                $row['_existing_id']   = $found?->id;
+                $row['_existing_name'] = $found?->name;
+                $row['_existing_since']= $found?->created_at;
+
+                if ($found) $existingRows[] = $row;
+                else        $newRows[]      = $row;
+            }
+
+            // Estadísticas por campaña — usar filas ya clasificadas
+            $allClassified = array_merge($newRows, $existingRows);
+            $campaignStats = [];
+            foreach ($allClassified as $row) {
+                $cKey = $row['_has_campaign'] ? ($row['_raw_campaign'] ?? 'sin_campaign') : 'sin_campaign';
+                if (!isset($campaignStats[$cKey])) {
+                    $campaignStats[$cKey] = ['campaign_code' => $cKey, 'has_campaign' => $row['_has_campaign'], 'total' => 0, 'new' => 0, 'existing' => 0];
+                }
+                $campaignStats[$cKey]['total']++;
+                if ($row['_status'] === 'new') $campaignStats[$cKey]['new']++;
+                else $campaignStats[$cKey]['existing']++;
+            }
+
+            $withCampaign    = count(array_filter($allClassified, fn($r) => $r['_has_campaign']));
+            $withoutCampaign = count(array_filter($allClassified, fn($r) => !$r['_has_campaign']));
+
+            $response->data = [
+                'summary' => [
+                    'total_rows'       => count($allClassified),
+                    'new_count'        => count($newRows),
+                    'existing_count'   => count($existingRows),
+                    'with_campaign'    => $withCampaign,
+                    'without_campaign' => $withoutCampaign,
+                    'campaigns_found'  => $existingCampaigns->count(),
+                    'new_campaigns'    => max(0, count($campaignCodes) - $existingCampaigns->count()),
+                ],
+                'campaign_breakdown' => array_values($campaignStats),
+                'sample_new'      => array_slice($newRows,      0, 10),
+                'sample_existing' => array_slice($existingRows, 0, 20),
+            ];
+        });
+
+        return response($response->toArray(), $response->status);
+    }
+
     public function import(Request $request)
     {
+
         DB::beginTransaction();
-        $response = Response::simpleTryCatch(function () use ($request) {
+        $response = Response::simpleTryCatch(function (Response $response) use ($request) {
             $file = $request->file('file');
             $mapping = json_decode($request->mapping, true);
 
@@ -297,11 +482,20 @@ class LeadController extends BasicController
             $campaignIdColumn = $mapping['campaign_id'] ?? null;
             $campaignNameColumn = $mapping['campaign_name'] ?? null;
 
+            // Helper: strip Meta export prefixes like ag:, ad:, adset: from a code
+            $stripMetaPrefix = fn(string $v): string => trim(preg_replace('/^[a-z]+:/i', '', $v));
+
             $campaignCodes = [];
             if ($campaignIdColumn) {
-                $campaignCodes = array_unique(array_filter(array_column($cleanRows, $campaignIdColumn)));
+                $campaignCodes = array_unique(array_filter(array_map(
+                    fn($v) => $stripMetaPrefix((string)$v),
+                    array_column($cleanRows, $campaignIdColumn)
+                )));
             } elseif ($campaignNameColumn) {
-                $campaignCodes = array_unique(array_filter(array_column($cleanRows, $campaignNameColumn)));
+                $campaignCodes = array_unique(array_filter(array_map(
+                    fn($v) => $stripMetaPrefix((string)$v),
+                    array_column($cleanRows, $campaignNameColumn)
+                )));
             }
 
             $existingCampaigns = Campaign::where('business_id', $business_id)
@@ -314,16 +508,17 @@ class LeadController extends BasicController
                 $adId = '';
                 $adTitle = null;
                 if ($campaignIdColumn) {
-                    $adId = trim($row[$campaignIdColumn] ?? '');
+                    $adId = $stripMetaPrefix((string)($row[$campaignIdColumn] ?? ''));
                     if ($campaignNameColumn) {
-                        $adTitle = $row[$campaignNameColumn] ?? null;
+                        $adTitle = $stripMetaPrefix((string)($row[$campaignNameColumn] ?? '')) ?: null;
                     }
                 } elseif ($campaignNameColumn) {
-                    $adId = trim($row[$campaignNameColumn] ?? '');
-                    $adTitle = $adId;
+                    $adId = $stripMetaPrefix((string)($row[$campaignNameColumn] ?? ''));
+                    $adTitle = $adId ?: null;
                 }
 
-                if ($adId === '' || isset($existingCampaigns[$adId])) {
+                // Skip if already in DB OR already queued for insertion
+                if ($adId === '' || isset($existingCampaigns[$adId]) || isset($campaignsToInsert[$adId])) {
                     continue;
                 }
 
@@ -378,6 +573,10 @@ class LeadController extends BasicController
                 } elseif ($campaignNameColumn) {
                     $adId = $row[$campaignNameColumn] ?? null;
                 }
+                // Strip Meta prefixes (ag:, ad:, adset:) from IDs
+                if ($adId !== null) {
+                    $adId = trim(preg_replace('/^[a-z]+:/i', '', $adId));
+                }
 
                 if ($adId !== null && trim($adId) !== '' && isset($campaignMap[$adId])) {
                     $campaignId = $campaignMap[$adId]['id'];
@@ -404,8 +603,9 @@ class LeadController extends BasicController
                 $adsetColumn = $mapping['adset_name'] ?? null;
                 $adColumn = $mapping['ad_name'] ?? null;
 
-                $adsetName = $adsetColumn ? ($row[$adsetColumn] ?? null) : null;
-                $adName = $adColumn ? ($row[$adColumn] ?? null) : null;
+                // Strip Meta export prefixes like ag:, ad:, adset: from ad/adset names
+                $adsetName = $adsetColumn ? trim(preg_replace('/^[a-z]+:/i', '', $row[$adsetColumn] ?? '')) ?: null : null;
+                $adName    = $adColumn    ? trim(preg_replace('/^[a-z]+:/i', '', $row[$adColumn]    ?? '')) ?: null : null;
 
                 $mapped = [
                     'id'     => Uuid::uuid1()->toString(),
@@ -445,9 +645,7 @@ class LeadController extends BasicController
                     'created_at' => isset($mapping['date']) && !empty($row[$mapping['date']])
                         ? $mappingDate
                         : now(),
-                    'updated_at' => isset($mapping['date']) && !empty($row[$mapping['date']])
-                        ? $mappingDate
-                        : now(),
+                    'updated_at' => now(),  // Siempre la fecha del import, no la del lead original
                     'status' => true,
                     'lead_origin' => $campaignId ? 'campaign' : 'import'
                 ];
@@ -463,94 +661,257 @@ class LeadController extends BasicController
                 $mappedRows[] = $mapped;
             }
 
-            $existing = Client::where('business_id', Auth::user()->business_id)
-                ->where(function ($q) use ($mappedRows) {
-                    $q->whereIn('contact_email', array_column($mappedRows, 'contact_email'))
-                        ->orWhereIn('contact_phone', array_column($mappedRows, 'contact_phone'));
-                })
-                ->whereNotNull('status')
-                ->get(['contact_email', 'contact_phone']);
-
-            $existingEmails = $existing->pluck('contact_email')->toArray();
-            $existingPhones = $existing->pluck('contact_phone')->toArray();
-
-            // Filter out rows that already exist by email or phone
-            $rowsToInsert = array_filter($mappedRows, function ($row) use ($existingEmails, $existingPhones) {
-                return !in_array($row['contact_email'], $existingEmails) && !in_array($row['contact_phone'], $existingPhones);
-            });
-
-            // Bulk insert only the new rows
-            if (!empty($rowsToInsert)) {
-                Client::insert(array_values($rowsToInsert));
-
-                // Build ClientNote records and Task records for the newly inserted leads
-                $notesToInsert = [];
-                $tasksToInsert = [];
-
-                $newLeadMessageTemplate = Setting::get('whatsapp-new-lead-notification-message', $business_id);
-
-                foreach ($rowsToInsert as $row) {
-                    $formString = '';
-                    $forms = JSON::parse((string) $row['form_answers']);
-                    foreach ($forms as $form) {
-                        $formString .= "<b>{$form['title']}</b><br>";
-                        foreach ($form['questions'] as $index => $question) {
-                            $formString .= ($index + 1) . ". {$question['text']}<br>&emsp;{$question['answer']}<br>";
-                        }
-                        $formString .= '<br>';
+            $emails = array_filter(array_unique(array_map('strtolower', array_map('trim', array_column($mappedRows, 'contact_email')))));
+            
+            $phoneSuffixes = [];
+            foreach ($mappedRows as $row) {
+                if ($row['contact_phone']) {
+                    $cleanPhone = preg_replace('/[^0-9]/', '', $row['contact_phone']);
+                    $phoneSuffix = substr($cleanPhone, -9);
+                    if (strlen($phoneSuffix) === 9) {
+                        $phoneSuffixes[] = $phoneSuffix;
                     }
-
-                    // 1. Form Answers Note
-                    $notesToInsert[] = [
-                        'id' => Uuid::uuid1()->toString(),
-                        'note_type_id' => '8e895346-3d87-4a87-897a-4192b917c211',
-                        'client_id' => $row['id'],
-                        'name' => 'Formulario ' . $row['source'],
-                        'description' => $formString,
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ];
-
-                    // 2. "Lead nuevo" Note (just like webhooks/manual)
-                    $newLeadNoteId = Uuid::uuid1()->toString();
-                    $description = UtilController::replaceData(
-                        $newLeadMessageTemplate,
-                        $row
-                    );
-                    $notesToInsert[] = [
-                        'id' => $newLeadNoteId,
-                        'note_type_id' => '8e895346-3d87-4a87-897a-4192b917c211',
-                        'client_id' => $row['id'],
-                        'name' => 'Lead nuevo',
-                        'description' => $description,
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ];
-
-                    // 3. "Revisar lead" Task (just like webhooks/manual)
-                    $tasksToInsert[] = [
-                        'id' => Uuid::uuid1()->toString(),
-                        'model_id' => ClientNote::class,
-                        'note_id' => $newLeadNoteId,
-                        'name' => 'Revisar lead',
-                        'description' => 'Debes revisar los requerimientos del lead',
-                        'ends_at' => Carbon::now()->addDay()->format('Y-m-d H:i:s'),
-                        'status' => 'Pendiente',
-                        'asignable' => true,
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ];
-                }
-
-                if (!empty($notesToInsert)) {
-                    ClientNote::insert($notesToInsert);
-                }
-                if (!empty($tasksToInsert)) {
-                    Task::insert($tasksToInsert);
                 }
             }
+            $phoneSuffixes = array_unique($phoneSuffixes);
+
+            if (empty($emails) && empty($phoneSuffixes)) {
+                $existingClients = collect();
+            } else {
+                $existingClients = Client::where('business_id', $business_id)
+                    ->where(function ($q) use ($emails, $phoneSuffixes) {
+                        $hasCond = false;
+                        if (!empty($emails)) {
+                            $q->whereIn(DB::raw('LOWER(contact_email)'), $emails);
+                            $hasCond = true;
+                        }
+                        if (!empty($phoneSuffixes)) {
+                            $suffixesString = implode("','", array_map('addslashes', $phoneSuffixes));
+                            if ($hasCond) {
+                                $q->orWhereRaw("RIGHT(REGEXP_REPLACE(contact_phone, '[^0-9]', ''), 9) IN ('{$suffixesString}')");
+                            } else {
+                                $q->whereRaw("RIGHT(REGEXP_REPLACE(contact_phone, '[^0-9]', ''), 9) IN ('{$suffixesString}')");
+                            }
+                        }
+                    })
+                    ->get();
+            }
+
+            $rowsToInsert = [];
+            $rowsToUpdate = [];
+
+            foreach ($mappedRows as $row) {
+                $rowEmail = $row['contact_email'] ? strtolower(trim($row['contact_email'])) : null;
+                $rowPhoneClean = preg_replace('/[^0-9]/', '', $row['contact_phone'] ?? '');
+                $rowPhoneSuffix = substr($rowPhoneClean, -9);
+
+                $existing = $existingClients->first(function ($client) use ($rowEmail, $rowPhoneSuffix) {
+                    if ($rowEmail && strtolower(trim($client->contact_email)) === $rowEmail) {
+                        return true;
+                    }
+                    if (strlen($rowPhoneSuffix) === 9) {
+                        $clientPhoneClean = preg_replace('/[^0-9]/', '', $client->contact_phone ?? '');
+                        $clientPhoneSuffix = substr($clientPhoneClean, -9);
+                        if (strlen($clientPhoneSuffix) === 9 && $clientPhoneSuffix === $rowPhoneSuffix) {
+                            return true;
+                        }
+                    }
+                    return false;
+                });
+
+                if ($existing) {
+                    $rowsToUpdate[] = [
+                        'client' => $existing,
+                        'data'   => $row
+                    ];
+                } else {
+                    $rowsToInsert[] = $row;
+                }
+            }
+
+            \Illuminate\Support\Facades\Log::info('Import matching details:', [
+                'emails_to_match' => $emails,
+                'phone_suffixes_to_match' => $phoneSuffixes,
+                'found_matches_count' => $existingClients->count(),
+                'rows_to_insert_count' => count($rowsToInsert),
+                'rows_to_update_count' => count($rowsToUpdate)
+            ]);
+
+            Client::withoutEvents(function () use ($rowsToInsert, $rowsToUpdate, $business_id) {
+                // 1. Procesar leads nuevos
+                if (!empty($rowsToInsert)) {
+                    Client::insert(array_values($rowsToInsert));
+
+                    $notesToInsert = [];
+                    $tasksToInsert = [];
+                    $newLeadMessageTemplate = Setting::get('whatsapp-new-lead-notification-message', $business_id);
+
+                    foreach ($rowsToInsert as $row) {
+                        $formString = '';
+                        $forms = JSON::parse((string) $row['form_answers']);
+                        foreach ($forms as $form) {
+                            $formString .= "<b>{$form['title']}</b><br>";
+                            foreach ($form['questions'] as $index => $question) {
+                                $formString .= ($index + 1) . ". {$question['text']}<br>&emsp;{$question['answer']}<br>";
+                            }
+                            $formString .= '<br>';
+                        }
+
+                        // 1.1. Nota de Respuestas de Formulario
+                        $notesToInsert[] = [
+                            'id' => Uuid::uuid1()->toString(),
+                            'note_type_id' => '8e895346-3d87-4a87-897a-4192b917c211',
+                            'client_id' => $row['id'],
+                            'name' => 'Formulario ' . $row['source'],
+                            'description' => $formString,
+                            'created_at' => now(),
+                            'updated_at' => now(),
+                        ];
+
+                        // 1.2. Nota de "Lead nuevo"
+                        $newLeadNoteId = Uuid::uuid1()->toString();
+                        $description = UtilController::replaceData($newLeadMessageTemplate, $row);
+                        $notesToInsert[] = [
+                            'id' => $newLeadNoteId,
+                            'note_type_id' => '8e895346-3d87-4a87-897a-4192b917c211',
+                            'client_id' => $row['id'],
+                            'name' => 'Lead nuevo',
+                            'description' => $description,
+                            'created_at' => now(),
+                            'updated_at' => now(),
+                        ];
+
+                        // 1.3. Tarea de "Revisar lead"
+                        $tasksToInsert[] = [
+                            'id' => Uuid::uuid1()->toString(),
+                            'model_id' => ClientNote::class,
+                            'note_id' => $newLeadNoteId,
+                            'name' => 'Revisar lead',
+                            'description' => 'Debes revisar los requerimientos del lead',
+                            'ends_at' => Carbon::now()->addDay()->format('Y-m-d H:i:s'),
+                            'status' => 'Pendiente',
+                            'asignable' => true,
+                            'created_at' => now(),
+                            'updated_at' => now(),
+                        ];
+                    }
+
+                    if (!empty($notesToInsert)) {
+                        ClientNote::insert($notesToInsert);
+                    }
+                    if (!empty($tasksToInsert)) {
+                        Task::insert($tasksToInsert);
+                    }
+
+                    // 1.4. Crear ClientEntry por cada lead nuevo (fuente de verdad para KPIs e iconos)
+                    $entriesToInsert = [];
+                    foreach ($rowsToInsert as $row) {
+                        $entriesToInsert[] = [
+                            'id'             => Uuid::uuid1()->toString(),
+                            'client_id'      => $row['id'],
+                            'campaign_id'    => $row['campaign_id'] ?? null,
+                            'adset_name'     => $row['adset_name'] ?? null,
+                            'ad_name'        => $row['ad_name'] ?? null,
+                            'source'         => $row['source'] ?? null,
+                            'origin'         => $row['origin'] ?? null,
+                            'lead_origin'    => $row['lead_origin'] ?? null,
+                            'triggered_by'   => $row['triggered_by'] ?? null,
+                            'source_channel' => $row['source_channel'] ?? null,
+                            'entry_date'     => $row['created_at'],
+                            'created_at'     => now(),
+                            'updated_at'     => now(),
+                        ];
+                    }
+                    if (!empty($entriesToInsert)) {
+                        \App\Models\ClientEntry::insert($entriesToInsert);
+                    }
+                }
+
+                // 2. Procesar leads existentes (actualización de datos vacíos, reactivación de Kanban y registro omnicanal)
+                foreach ($rowsToUpdate as $item) {
+                    $client = $item['client'];
+                    $row = $item['data'];
+
+                    // No sobreescribir el estado del cliente existente (mantiene su etapa actual: En gestión, Contactado, etc.)
+                    $updateData = [
+                        'complete_registration' => true,
+                    ];
+
+                    // Rellenar únicamente campos vacíos (no sobreescribir datos originales de atribución)
+                    if ($row['contact_email'] && !$client->contact_email) {
+                        $updateData['contact_email'] = $row['contact_email'];
+                    }
+                    if ($row['contact_phone'] && !$client->contact_phone) {
+                        $updateData['contact_phone'] = $row['contact_phone'];
+                    }
+                    if ($row['contact_name'] && (!$client->contact_name || $client->contact_name == $client->contact_phone)) {
+                        $updateData['contact_name'] = $row['contact_name'];
+                        $updateData['name'] = $row['contact_name'];
+                    }
+                    $client->update($updateData);
+
+                    // Evitar duplicar entradas del mismo origen/campaña/anuncio para este cliente
+                    $entryExists = \App\Models\ClientEntry::where('client_id', $client->id)
+                        ->where('campaign_id', $row['campaign_id'] ?? null)
+                        ->where('ad_name', $row['ad_name'] ?? null)
+                        ->where('adset_name', $row['adset_name'] ?? null)
+                        ->where('source', $row['source'] ?? null)
+                        ->where('origin', $row['origin'] ?? null)
+                        ->exists();
+
+                    if (!$entryExists) {
+                        // Registrar la entrada en client_entries
+                        \App\Models\ClientEntry::create([
+                            'client_id'      => $client->id,
+                            'campaign_id'    => $row['campaign_id'] ?? null,
+                            'adset_name'     => $row['adset_name'] ?? null,
+                            'ad_name'        => $row['ad_name'] ?? null,
+                            'source'         => $row['source'] ?? null,
+                            'origin'         => $row['origin'] ?? null,
+                            'lead_origin'    => $row['lead_origin'] ?? null,
+                            'triggered_by'   => $row['triggered_by'] ?? null,
+                            'source_channel' => $row['source_channel'] ?? null,
+                            'entry_date'     => $row['created_at'],
+                        ]);
+
+                        // Generar nota de re-registro con sus respuestas del formulario
+                        $formString = "<b>¡El cliente volvió a registrarse! (Nueva entrada por Importación)</b><br>";
+                        $formString .= "• Origen: Importación ({$row['source']})<br>";
+                        if ($row['ad_name']) {
+                            $formString .= "• Anuncio: {$row['ad_name']}<br>";
+                        }
+                        $formString .= "• Datos ingresados: Nombre: {$row['name']} | Teléfono: {$row['contact_phone']} | Email: {$row['contact_email']}<br><br>";
+
+                        $forms = JSON::parse((string) $row['form_answers']);
+                        foreach ($forms as $form) {
+                            $formString .= "<b>{$form['title']}</b><br>";
+                            foreach ($form['questions'] as $index => $question) {
+                                $formString .= ($index + 1) . ". {$question['text']}<br>&emsp;{$question['answer']}<br>";
+                            }
+                            $formString .= '<br>';
+                        }
+
+                        ClientNote::create([
+                            'note_type_id' => '8e895346-3d87-4a87-897a-4192b917c211',
+                            'client_id' => $client->id,
+                            'name' => 'Re-registro por Importación',
+                            'description' => $formString,
+                        ]);
+                    }
+                }
+            });
+
+            // Guardar conteos finales en la respuesta
+            $response->data = [
+                'created' => count($rowsToInsert),
+                'updated' => count($rowsToUpdate)
+            ];
+
             DB::commit();
-        }, fn() =>       DB::rollBack());
+        }, function ($response, $th) {
+            DB::rollBack();
+            \Illuminate\Support\Facades\Log::error($th);
+        });
 
         return response($response->toArray(), $response->status);
     }
@@ -710,6 +1071,20 @@ class LeadController extends BasicController
             'ends_at' => Carbon::now()->addDay()->format('Y-m-d H:i:s'),
             'status' => 'Pendiente',
             'asignable' => true
+        ]);
+
+        // Registrar entrada inicial en client_entries para nuevos leads creados
+        \App\Models\ClientEntry::create([
+            'client_id'      => $jpa->id,
+            'campaign_id'    => $jpa->campaign_id ?? null,
+            'adset_name'     => $jpa->adset_name ?? null,
+            'ad_name'        => $jpa->ad_name ?? null,
+            'source'         => $jpa->source ?? 'Meta',
+            'origin'         => $jpa->origin ?? 'Facebook',
+            'lead_origin'    => $jpa->lead_origin ?? 'integration',
+            'triggered_by'   => $jpa->triggered_by ?? 'API',
+            'source_channel' => $jpa->source_channel ?? null,
+            'entry_date'     => $jpa->created_at ?? now(),
         ]);
 
         // if ($jpa->created_by) {

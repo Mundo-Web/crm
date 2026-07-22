@@ -148,6 +148,11 @@ class Client extends Model
         return $this->hasMany(ClientNote::class, 'client_id', 'id');
     }
 
+    public function entries()
+    {
+        return $this->hasMany(ClientEntry::class, 'client_id', 'id')->orderBy('entry_date', 'asc');
+    }
+
     public function tasks()
     {
         return $this->hasManyThrough(Task::class, ClientNote::class, 'client_id', 'note_id', 'id', 'id');

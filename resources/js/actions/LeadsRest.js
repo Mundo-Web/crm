@@ -160,9 +160,11 @@ class LeadsRest extends BasicRest {
         body: request
       })
       const status = res.ok
-      const result = JSON.parseable(await res.text())
+      const raw = await res.text()
+      if (!JSON.parseable(raw)) throw new Error('La respuesta del servidor no es un JSON válido')
+      const result = JSON.parse(raw)
       if (!status) throw new Error(result?.message || 'Ocurrio un error inesperado')
-      return true
+      return result
     } catch (error) {
       Notify.add({
         icon: '/assets/img/logo-login.svg',
@@ -170,7 +172,33 @@ class LeadsRest extends BasicRest {
         body: error.message,
         type: 'danger'
       })
-      return false
+      return { status: false, message: error.message }
+    }
+  }
+
+  importPreview = async (request) => {
+    try {
+      const res = await fetch(`/api/${this.path}/import/preview`, {
+        method: 'POST',
+        headers: {
+          'X-Xsrf-Token': decodeURIComponent(Cookies.get('XSRF-TOKEN'))
+        },
+        body: request
+      })
+      const status = res.ok
+      const raw = await res.text()
+      if (!JSON.parseable(raw)) throw new Error('La respuesta del servidor no es un JSON válido')
+      const result = JSON.parse(raw)
+      if (!status) throw new Error(result?.message || 'Ocurrio un error inesperado')
+      return result
+    } catch (error) {
+      Notify.add({
+        icon: '/assets/img/logo-login.svg',
+        title: 'Error',
+        body: error.message,
+        type: 'danger'
+      })
+      return { status: false, message: error.message }
     }
   }
 
