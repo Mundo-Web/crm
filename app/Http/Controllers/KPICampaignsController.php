@@ -321,6 +321,8 @@ class KPICampaignsController extends BasicController
                     'status.id AS status_id',
                     'status.name AS status_name',
                     'status.color AS status_color',
+                    'status.table_id',
+                    'status.order',
                     DB::raw('COUNT(DISTINCT COALESCE(NULLIF(clients.contact_phone, ""), clients.contact_email)) AS quantity')
                 ])
                 ->leftJoin('statuses AS status', 'status.id', 'clients.status_id')
