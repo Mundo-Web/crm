@@ -126,25 +126,20 @@ class KPICampaignsController extends BasicController
             // Acepta: date_from + date_to  O  el parámetro legacy "month"
             // ──────────────────────────────────────────────────────────
             if ($request->date_from && $request->date_to) {
-                // El frontend envía las fechas seleccionadas (ej. 2026-07-01 y 2026-07-21).
-                // Meta exporta tomando el rango exacto desde medianoche UTC (que coincide con la exportación de Meta).
                 $dateFromStr = substr($request->date_from, 0, 10) . ' 00:00:00';
                 $dateToStr   = substr($request->date_to, 0, 10) . ' 23:59:59';
                 
-                $dateFrom = \Carbon\Carbon::parse($dateFromStr, 'UTC')->setTimezone('America/Lima')->toDateTimeString();
-                $dateTo   = \Carbon\Carbon::parse($dateToStr, 'UTC')->setTimezone('America/Lima')->toDateTimeString();
+                $dateFrom = \Carbon\Carbon::parse($dateFromStr, 'America/Lima')->toDateTimeString();
+                $dateTo   = \Carbon\Carbon::parse($dateToStr, 'America/Lima')->toDateTimeString();
             } elseif ($month || $request->month) {
-                // Compatibilidad legacy con parámetro del segmento de ruta
                 $m = $month ?? $request->month;
                 [$year, $mo] = \explode('-', $m);
-                // Meta registra desde medianoche UTC
-                $dateFrom = \Carbon\Carbon::parse("{$year}-{$mo}-01 00:00:00", 'UTC')->setTimezone('America/Lima')->toDateTimeString();
+                $dateFrom = \Carbon\Carbon::parse("{$year}-{$mo}-01 00:00:00", 'America/Lima')->toDateTimeString();
                 $lastDay  = date('t', mktime(0, 0, 0, (int)$mo, 1, (int)$year));
-                $dateTo   = \Carbon\Carbon::parse("{$year}-{$mo}-{$lastDay} 23:59:59", 'UTC')->setTimezone('America/Lima')->toDateTimeString();
+                $dateTo   = \Carbon\Carbon::parse("{$year}-{$mo}-{$lastDay} 23:59:59", 'America/Lima')->toDateTimeString();
             } else {
-                // Default: mes actual
-                $dateFrom = \Carbon\Carbon::now('UTC')->startOfMonth()->setTimezone('America/Lima')->toDateTimeString();
-                $dateTo   = \Carbon\Carbon::now('UTC')->endOfMonth()->setTimezone('America/Lima')->toDateTimeString();
+                $dateFrom = \Carbon\Carbon::now('America/Lima')->startOfMonth()->toDateTimeString();
+                $dateTo   = \Carbon\Carbon::now('America/Lima')->endOfMonth()->toDateTimeString();
             }
 
             $platform  = $request->platform  ?? null;
@@ -1078,15 +1073,14 @@ class KPICampaignsController extends BasicController
                 if ($request->date_from && $request->date_to) {
                     $dateFromStr = substr($request->date_from, 0, 10) . ' 00:00:00';
                     $dateToStr   = substr($request->date_to, 0, 10) . ' 23:59:59';
-                    $dateFrom = \Carbon\Carbon::parse($dateFromStr, 'UTC')->setTimezone('America/Lima')->toDateTimeString();
-                    $dateTo   = \Carbon\Carbon::parse($dateToStr, 'UTC')->setTimezone('America/Lima')->toDateTimeString();
+                    $dateFrom = \Carbon\Carbon::parse($dateFromStr, 'America/Lima')->toDateTimeString();
+                    $dateTo   = \Carbon\Carbon::parse($dateToStr, 'America/Lima')->toDateTimeString();
                     $query->whereBetween('ce.entry_date', [$dateFrom, $dateTo]);
                 } elseif ($request->month) {
-                    // Si mandan solo mes, ajustarlo a la zona horaria correcta de Meta (UTC)
                     [$year, $mo] = \explode('-', $request->month);
-                    $dateFrom = \Carbon\Carbon::parse("{$year}-{$mo}-01 00:00:00", 'UTC')->setTimezone('America/Lima')->toDateTimeString();
+                    $dateFrom = \Carbon\Carbon::parse("{$year}-{$mo}-01 00:00:00", 'America/Lima')->toDateTimeString();
                     $lastDay  = date('t', mktime(0, 0, 0, (int)$mo, 1, (int)$year));
-                    $dateTo   = \Carbon\Carbon::parse("{$year}-{$mo}-{$lastDay} 23:59:59", 'UTC')->setTimezone('America/Lima')->toDateTimeString();
+                    $dateTo   = \Carbon\Carbon::parse("{$year}-{$mo}-{$lastDay} 23:59:59", 'America/Lima')->toDateTimeString();
                     $query->whereBetween('ce.entry_date', [$dateFrom, $dateTo]);
                 }
                 if ($request->campaign_id) {
