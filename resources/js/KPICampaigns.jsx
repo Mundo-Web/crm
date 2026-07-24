@@ -344,9 +344,14 @@ const KPICampaigns = ({ months = [], currentMonth, currentYear, advisors = [], w
 
     // Gasto publicitario
     const [totalSpend, setTotalSpend] = useState(0);
+    const [totalSpendUsd, setTotalSpendUsd] = useState(0);
     const [cpl, setCpl] = useState(0);
+    const [cplUsd, setCplUsd] = useState(0);
     const [cpa, setCpa] = useState(0);
+    const [cpaUsd, setCpaUsd] = useState(0);
     const [roas, setRoas] = useState(0);
+    const [usdExchangeRate, setUsdExchangeRate] = useState(3.80);
+    const [showSpendModal, setShowSpendModal] = useState(false);
     const [syncingSpend, setSyncingSpend] = useState(false);
     const [spendsLoading, setSpendsLoading] = useState(false);
 
@@ -370,10 +375,22 @@ const KPICampaigns = ({ months = [], currentMonth, currentYear, advisors = [], w
     const [archivedLabelsCount, setArchivedLabelsCount] = useState(0);
     const [convertedLabelsCount, setConvertedLabelsCount] = useState(0);
     const [archivedBreakdown, setArchivedBreakdown] = useState([]);
-    const [totalConversionPercent, setTotalConversionPercent] = useState(0);
+    const [backendNoRespondieronCount, setBackendNoRespondieronCount] = useState(null);
 
-    // Calcular "No Respondieron" basado en fórmula: Contactados - Respondieron
-    const noRespondieronCount = managingCount - trueManagingCount;
+    const [contactedBreakdown, setContactedBreakdown] = useState([]);
+    const [respondedBreakdown, setRespondedBreakdown] = useState([]);
+    const [unrespondedBreakdown, setUnrespondedBreakdown] = useState([]);
+    const [salesBreakdown, setSalesBreakdown] = useState([]);
+    const [totalLeadsBreakdown, setTotalLeadsBreakdown] = useState([]);
+    const [cardDetailModal, setCardDetailModal] = useState(null);
+
+    const [unrespondedActiveCount, setUnrespondedActiveCount] = useState(0);
+    const [unrespondedArchivedCount, setUnrespondedArchivedCount] = useState(0);
+
+    // Calcular "No Respondieron" basado en backend o en fórmula fallback: Contactados - Respondieron
+    const noRespondieronCount = backendNoRespondieronCount !== null && backendNoRespondieronCount !== undefined
+        ? backendNoRespondieronCount
+        : (managingCount - trueManagingCount);
     const inactivosEnGestion = noRespondieronCount - archivedCount;
 
     // Seguimos calculando cuántos archivados fueron estrictamente por "no contesta" para dar más detalle
@@ -446,7 +463,7 @@ const KPICampaigns = ({ months = [], currentMonth, currentYear, advisors = [], w
 
     const getAdjustedDates = (from, to) => {
         if (!from || !to) return { date_from: from, date_to: to };
-        
+
         // Return exactly the selected YYYY-MM-DD dates without any local timezone shift
         // The backend will properly interpret these in America/Los_Angeles timezone (Meta's default)
         // and convert them to the CRM's local timezone (America/Lima) for querying.
@@ -486,7 +503,7 @@ const KPICampaigns = ({ months = [], currentMonth, currentYear, advisors = [], w
 
     // ─── Fetch principal ──────────────────────────────────────────────────────
     // ─── Fetch principal ──────────────────────────────────────────────────────
-    const fetchSpendsOnly = (from, to, plt, adv) => {
+    const fetchSpendsOnly = (from, to, plt, adv, startDay = localWeekStartDay) => {
         const adjusted = getAdjustedDates(from, to);
         KPICampaignsRest.kpi({
             date_from: adjusted.date_from,
@@ -494,6 +511,7 @@ const KPICampaigns = ({ months = [], currentMonth, currentYear, advisors = [], w
             platform: plt !== "all" ? plt : null,
             advisor_id: adv !== "all" ? adv : null,
             exclude_spend: 0,
+            weekStartDay: startDay !== undefined ? startDay : localWeekStartDay,
         }).then(({ summary }) => {
             setTotalSpend(summary.totalSpend ?? 0);
             setCpl(summary.cpl ?? 0);
@@ -507,7 +525,7 @@ const KPICampaigns = ({ months = [], currentMonth, currentYear, advisors = [], w
         });
     };
 
-    const fetchGraph = (from, to, plt, adv, skipSpend = false, silent = false) => {
+    const fetchGraph = (from, to, plt, adv, skipSpend = false, silent = false, startDay = localWeekStartDay) => {
         if (!silent) {
             setLoading(true);
             setLeadSources({});
@@ -525,6 +543,7 @@ const KPICampaigns = ({ months = [], currentMonth, currentYear, advisors = [], w
             platform: plt !== "all" ? plt : null,
             advisor_id: adv !== "all" ? adv : null,
             exclude_spend: skipSpend ? 1 : 0,
+            weekStartDay: startDay !== undefined ? startDay : localWeekStartDay,
         }).then(({ data, summary }) => {
             setGroupedByManageStatus(data);
             setGrouped(summary.grouped ?? []);
@@ -535,6 +554,16 @@ const KPICampaigns = ({ months = [], currentMonth, currentYear, advisors = [], w
             setArchivedCount(summary.archivedCount ?? 0);
             setTrueManagingCount(summary.trueManagingCount ?? 0);
             setManagingCount(summary.managingCount ?? 0);
+            setBackendNoRespondieronCount(summary.noRespondieronCount ?? null);
+
+            setContactedBreakdown(summary.contactedBreakdown ?? []);
+            setRespondedBreakdown(summary.respondedBreakdown ?? []);
+            setUnrespondedBreakdown(summary.unrespondedBreakdown ?? []);
+            setSalesBreakdown(summary.salesBreakdown ?? []);
+            setTotalLeadsBreakdown(summary.totalLeadsBreakdown ?? []);
+
+            setUnrespondedActiveCount(summary.unrespondedActiveCount ?? 0);
+            setUnrespondedArchivedCount(summary.unrespondedArchivedCount ?? 0);
 
             setTotalSum(summary.totalSum ?? 0);
             setClientsSum(summary.clientsSum ?? 0);
@@ -544,9 +573,13 @@ const KPICampaigns = ({ months = [], currentMonth, currentYear, advisors = [], w
             // Gasto
             if (!skipSpend) {
                 setTotalSpend(summary.totalSpend ?? 0);
+                setTotalSpendUsd(summary.totalSpendUsd ?? 0);
                 setCpl(summary.cpl ?? 0);
+                setCplUsd(summary.cplUsd ?? 0);
                 setCpa(summary.cpa ?? 0);
+                setCpaUsd(summary.cpaUsd ?? 0);
                 setRoas(summary.roas ?? 0);
+                setUsdExchangeRate(summary.exchangeRate ?? 3.80);
                 setWeeklyEvolution(summary.weeklyEvolution ?? []);
                 setSpendsLoading(false);
             } else {
@@ -1201,21 +1234,22 @@ const KPICampaigns = ({ months = [], currentMonth, currentYear, advisors = [], w
                             }
                         `}</style>
 
-                        <div className="row g-3 mb-3 mt-0">
+                        {/* ─── Fila 1: Cards Principales de Conversión ─── */}
+                        <div className="row g-3 mb-3">
                             {[
-                                { title: "Total Leads", value: formatNumber(totalCount), icon: "mdi-account-multiple", grad: "linear-gradient(135deg, #6366F1, #818CF8)", shadow: "rgba(99, 102, 241, 0.4)" },
-                                { title: "Contactados", value: formatNumber(managingCount), icon: "mdi-phone", grad: "linear-gradient(135deg, #F59E0B, #FBBF24)", shadow: "rgba(245, 158, 11, 0.4)" },
-                                { title: "Respondieron", value: formatNumber(trueManagingCount), icon: "mdi-account-clock", grad: "linear-gradient(135deg, #0EA5E9, #38BDF8)", shadow: "rgba(14, 165, 233, 0.4)" },
-                                { title: "No Respondieron", value: formatNumber(noRespondieronCount), icon: "mdi-phone-missed", grad: "linear-gradient(135deg, #EF4444, #F87171)", shadow: "rgba(239, 68, 68, 0.4)", onClick: () => setShowNoContestanModal(true) },
-                                /* { title: "Archivados", value: formatNumber(archivedCount), icon: "mdi-account-off", grad: "linear-gradient(135deg, #64748B, #94A3B8)", shadow: "rgba(100, 116, 139, 0.4)" }, */
-                                { title: "Ventas", value: formatNumber(clientsCount), icon: "mdi-trophy", grad: "linear-gradient(135deg, #10B981, #34D399)", shadow: "rgba(16, 185, 129, 0.4)" },
-                                { title: "Conversión", value: formatPercentage((clientsCount / totalCount) * 100 || 0), icon: "mdi-percent", grad: "linear-gradient(135deg, #8B5CF6, #A78BFA)", shadow: "rgba(139, 92, 246, 0.4)" },
+                                { title: "Total Leads", value: formatNumber(totalCount), icon: "mdi-account-group", grad: "linear-gradient(135deg, #6366F1, #818CF8)", shadow: "rgba(99, 102, 241, 0.4)", onClick: () => setCardDetailModal({ title: 'Detalle de "Total Leads"', count: totalCount, breakdown: totalLeadsBreakdown, color: '#6366F1' }), tooltip: `Total Leads: ${formatNumber(totalCount)} (Haz clic para ver el desglose por etiquetas)` },
+                                { title: "Contactados", value: formatNumber(managingCount), icon: "mdi-phone", grad: "linear-gradient(135deg, #F59E0B, #FBBF24)", shadow: "rgba(245, 158, 11, 0.4)", onClick: () => setCardDetailModal({ title: 'Detalle de "Leads Contactados"', count: managingCount, breakdown: contactedBreakdown, color: '#F59E0B' }), tooltip: contactedBreakdown.length > 0 ? contactedBreakdown.map(b => `${b.name}: ${b.quantity}`).join(' | ') : 'Haz clic para ver el desglose por etiquetas' },
+                                { title: "Respondieron", value: formatNumber(trueManagingCount), icon: "mdi-account-clock", grad: "linear-gradient(135deg, #0EA5E9, #38BDF8)", shadow: "rgba(14, 165, 233, 0.4)", onClick: () => setCardDetailModal({ title: 'Detalle de "Leads que Respondieron"', count: trueManagingCount, breakdown: respondedBreakdown, color: '#0EA5E9' }), tooltip: respondedBreakdown.length > 0 ? respondedBreakdown.map(b => `${b.name}: ${b.quantity}`).join(' | ') : 'Haz clic para ver el desglose por etiquetas' },
+                                { title: "No Respondieron", value: formatNumber(noRespondieronCount), icon: "mdi-phone-missed", grad: "linear-gradient(135deg, #EF4444, #F87171)", shadow: "rgba(239, 68, 68, 0.4)", onClick: () => setCardDetailModal({ title: 'Detalle de "Leads que No Respondieron"', count: noRespondieronCount, activeCount: unrespondedActiveCount, archivedCount: unrespondedArchivedCount, breakdown: unrespondedBreakdown, color: '#EF4444', isUnresponded: true }), tooltip: unrespondedBreakdown.length > 0 ? unrespondedBreakdown.map(b => `${b.name}: ${b.quantity}`).join(' | ') : 'Haz clic para ver el desglose por etiquetas' },
+                                { title: "Ventas", value: formatNumber(clientsCount), icon: "mdi-trophy", grad: "linear-gradient(135deg, #10B981, #34D399)", shadow: "rgba(16, 185, 129, 0.4)", onClick: () => setCardDetailModal({ title: 'Detalle de "Ventas / Clientes Cerrados"', count: clientsCount, breakdown: salesBreakdown, color: '#10B981' }), tooltip: salesBreakdown.length > 0 ? salesBreakdown.map(b => `${b.name}: ${b.quantity}`).join(' | ') : 'Haz clic para ver el desglose de Ventas' },
+                                { title: "Conversión", value: formatPercentage((clientsCount / totalCount) * 100 || 0), icon: "mdi-percent", grad: "linear-gradient(135deg, #8B5CF6, #A78BFA)", shadow: "rgba(139, 92, 246, 0.4)", onClick: () => setCardDetailModal({ title: 'Detalle de "Tasa de Conversión"', count: clientsCount, breakdown: salesBreakdown, color: '#8B5CF6' }), tooltip: `Tasa de Conversión: ${((clientsCount / totalCount) * 100 || 0).toFixed(1)}%` },
                             ].map((k, i) => (
                                 <div key={i} className="col-md-6 col-xl">
                                     <div
                                         className={`bento-card h-100 ${k.onClick && !loading ? 'clickable' : ''}`}
                                         style={{ background: k.grad, boxShadow: `0 15px 35px -10px ${k.shadow}` }}
                                         onClick={!loading ? k.onClick : undefined}
+                                        title={k.tooltip}
                                     >
                                         <i className={`mdi ${k.icon} bento-icon-bg`}></i>
                                         <div className="d-flex align-items-center justify-content-between mb-3">
@@ -1238,13 +1272,18 @@ const KPICampaigns = ({ months = [], currentMonth, currentYear, advisors = [], w
                         {(loading || spendsLoading || totalSpend > 0 || cpl > 0) && (
                             <div className="row g-3 mb-3">
                                 {[
-                                    { title: "Gasto Meta Ads", value: formatCurrency(totalSpend), sub: "", icon: "mdi-currency-usd", grad: "linear-gradient(135deg, #3B82F6, #60A5FA)", shadow: "rgba(59, 130, 246, 0.4)" },
-                                    { title: "CPL (Costo por Lead)", value: formatCurrency(cpl), sub: "Gasto / Total Leads", icon: "mdi-account-cash", grad: "linear-gradient(135deg, #F59E0B, #FBBF24)", shadow: "rgba(245, 158, 11, 0.4)" },
-                                    { title: "CPA (Costo por Venta)", value: formatCurrency(cpa), sub: "Gasto / Ventas Cerradas", icon: "mdi-handshake", grad: "linear-gradient(135deg, #10B981, #34D399)", shadow: "rgba(16, 185, 129, 0.4)" },
-                                    { title: "ROAS", value: `${(roas || 0).toFixed(2)}x`, sub: `S/ ${(totalSpend || 0).toLocaleString("es-PE", { minimumFractionDigits: 0 })} gastados`, icon: "mdi-chart-line", grad: "linear-gradient(135deg, #8B5CF6, #A78BFA)", shadow: "rgba(139, 92, 246, 0.4)" },
+                                    { title: "Gasto Meta Ads", value: formatCurrency(totalSpend), sub: `$ ${formatNumber(totalSpendUsd)} USD (T.C. S/ ${usdExchangeRate})`, icon: "mdi-currency-usd", grad: "linear-gradient(135deg, #3B82F6, #60A5FA)", shadow: "rgba(59, 130, 246, 0.4)", onClick: () => setShowSpendModal(true), tooltip: `Gasto: S/ ${formatNumber(totalSpend)} PEN = $ ${formatNumber(totalSpendUsd)} USD (T.C. S/ ${usdExchangeRate})` },
+                                    { title: "CPL (Costo por Lead)", value: formatCurrency(cpl), sub: `$ ${formatNumber(cplUsd)} USD / Lead`, icon: "mdi-account-cash", grad: "linear-gradient(135deg, #F59E0B, #FBBF24)", shadow: "rgba(245, 158, 11, 0.4)", onClick: () => setShowSpendModal(true), tooltip: `CPL: S/ ${formatNumber(cpl)} PEN = $ ${formatNumber(cplUsd)} USD / Lead` },
+                                    { title: "CPA (Costo por Venta)", value: formatCurrency(cpa), sub: `$ ${formatNumber(cpaUsd)} USD / Cierre`, icon: "mdi-handshake", grad: "linear-gradient(135deg, #10B981, #34D399)", shadow: "rgba(16, 185, 129, 0.4)", onClick: () => setShowSpendModal(true), tooltip: `CPA: S/ ${formatNumber(cpa)} PEN = $ ${formatNumber(cpaUsd)} USD / Cierre` },
+                                    { title: "ROAS", value: `${(roas || 0).toFixed(2)}x`, sub: "Retorno (Ventas / Inversión)", icon: "mdi-chart-line", grad: "linear-gradient(135deg, #8B5CF6, #A78BFA)", shadow: "rgba(139, 92, 246, 0.4)", onClick: () => setShowSpendModal(true), tooltip: `ROAS: ${(roas || 0).toFixed(2)}x` },
                                 ].map((k, i) => (
                                     <div key={i} className="col-md-6 col-xl-3">
-                                        <div className="bento-card h-100" style={{ background: k.grad, boxShadow: `0 15px 35px -10px ${k.shadow}` }}>
+                                        <div
+                                            className={`bento-card h-100 ${!loading && !spendsLoading ? 'clickable' : ''}`}
+                                            style={{ background: k.grad, boxShadow: `0 15px 35px -10px ${k.shadow}` }}
+                                            onClick={!loading && !spendsLoading ? k.onClick : undefined}
+                                            title={k.tooltip}
+                                        >
                                             <i className={`mdi ${k.icon} bento-icon-bg`}></i>
                                             <div className="d-flex align-items-center justify-content-between mb-3">
                                                 <h3 className="mb-0 bento-title">{k.title}</h3>
@@ -1308,7 +1347,7 @@ const KPICampaigns = ({ months = [], currentMonth, currentYear, advisors = [], w
                 }));
 
                 const fmtNum = (n) => (n ?? 0).toLocaleString('es-PE');
-                const fmtMon = (n) => `S/ ${(n ?? 0).toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                const fmtMon = (n) => `${(n ?? 0).toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
                 const fmtPct = (n) => `${(n ?? 0).toFixed(1)}%`;
                 const fmtRoas = (n) => `${(n ?? 0).toFixed(2)}x`;
 
@@ -1394,11 +1433,10 @@ const KPICampaigns = ({ months = [], currentMonth, currentYear, advisors = [], w
                                             <a
                                                 className={`dropdown-item py-2 px-3 d-flex align-items-center justify-content-between fw-semibold ${localWeekStartDay === val ? 'bg-light text-primary' : 'text-dark'}`}
                                                 href="#"
-                                                onClick={async (e) => {
+                                                onClick={(e) => {
                                                     e.preventDefault();
                                                     setLocalWeekStartDay(val);
-                                                    await settingsRest.save({ name: 'campaign-week-start-day', value: val });
-                                                    fetchGraph(dateFrom, dateTo, platform, advisorId);
+                                                    fetchGraph(dateFrom, dateTo, platform, advisorId, false, true, val);
                                                 }}
                                                 style={{ fontSize: '12px', transition: 'all 0.15s' }}
                                             >
@@ -1483,24 +1521,96 @@ const KPICampaigns = ({ months = [], currentMonth, currentYear, advisors = [], w
                                                     <td style={{ padding: '12px', textAlign: 'center', color: '#64748b', fontWeight: 600 }}>{wk.start_formatted}</td>
                                                     <td style={{ padding: '12px', textAlign: 'center', color: '#64748b', fontWeight: 600, borderRight: '1px solid #e2e8f0' }}>{wk.end_formatted}</td>
 
-                                                    {/* Inversión */}
-                                                    <td style={{ padding: '12px', textAlign: 'right', fontWeight: 700, color: '#0f172a', background: 'rgba(79, 70, 229, 0.02)' }}>{fmtNum(wk.registros)}</td>
-                                                    <td style={{ padding: '12px', textAlign: 'right', fontWeight: 600, color: '#4f46e5', background: 'rgba(79, 70, 229, 0.02)' }}>
-                                                        {spendsLoading ? <div className="skeleton-item" style={{ height: '18px', width: '75px', marginLeft: 'auto' }}></div> : fmtMon(wk.spend)}
-                                                    </td>
-                                                    <td style={{ padding: '12px', textAlign: 'right', fontWeight: 600, color: '#4f46e5', borderRight: '1px solid #e2e8f0', background: 'rgba(79, 70, 229, 0.02)' }}>
-                                                        {spendsLoading ? (
-                                                            <div className="skeleton-item" style={{ height: '18px', width: '60px', marginLeft: 'auto' }}></div>
-                                                        ) : (
-                                                            wk.spend > 0 && wk.registros > 0 ? fmtMon(wk.cpr) : <span style={{ color: '#cbd5e1' }}>—</span>
-                                                        )}
+                                                    {/* Registros — solo número, sin interacción */}
+                                                    <td style={{ padding: '12px', textAlign: 'right', fontWeight: 700, color: '#0f172a', background: 'rgba(79, 70, 229, 0.02)' }}>
+                                                        {fmtNum(wk.registros)}
                                                     </td>
 
-                                                    {/* Resultados */}
-                                                    <td style={{ padding: '12px', textAlign: 'right', fontWeight: 600, color: '#0f172a', background: 'rgba(5, 150, 105, 0.02)' }}>{fmtNum(wk.contactados)}</td>
-                                                    <td style={{ padding: '12px', textAlign: 'right', fontWeight: 600, color: '#ef4444', background: 'rgba(5, 150, 105, 0.02)' }}>{fmtNum(wk.noContesta)}</td>
-                                                    <td style={{ padding: '12px', textAlign: 'right', fontWeight: 600, color: '#10b981', background: 'rgba(5, 150, 105, 0.02)' }}>{fmtNum(wk.respondio)}</td>
-                                                    <td style={{ padding: '12px', textAlign: 'right', fontWeight: 800, color: '#10b981', borderRight: '1px solid #e2e8f0', background: 'rgba(5, 150, 105, 0.02)' }}>{fmtNum(wk.ventas)}</td>
+                                                    {/* Inversión — tooltip customizado PEN + USD */}
+                                                    <Tippy
+                                                        content={
+                                                            <div style={{ minWidth: 190, padding: '2px 0' }}>
+                                                                <div style={{ fontWeight: 700, fontSize: '11px', marginBottom: 6, color: '#6366f1', letterSpacing: '0.5px', textTransform: 'uppercase' }}>
+                                                                    Inversión · {wk.label}
+                                                                </div>
+                                                                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                                                                    <span style={{ fontSize: '17px', fontWeight: 800, color: '#0f172a' }}>S/ {fmtMon(wk.spend)}</span>
+                                                                    <span style={{ fontSize: '10px', fontWeight: 700, color: '#4f46e5', background: '#eef2ff', borderRadius: 4, padding: '2px 6px' }}>PEN</span>
+                                                                </div>
+                                                                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                                                    <span style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>$ {fmtMon(wk.spend_usd ?? (wk.spend / (usdExchangeRate || 3.80)))}</span>
+                                                                    <span style={{ fontSize: '10px', fontWeight: 700, color: '#0284c7', background: '#f0f9ff', borderRadius: 4, padding: '2px 6px' }}>USD</span>
+                                                                </div>
+                                                                <div style={{ marginTop: 6, fontSize: '10px', color: '#94a3b8', borderTop: '1px solid #f1f5f9', paddingTop: 5 }}>
+                                                                    T.C. S/ {usdExchangeRate || 3.80}
+                                                                </div>
+                                                            </div>
+                                                        }
+                                                        theme="kpi-light"
+                                                        placement="top"
+                                                        arrow={true}
+                                                    >
+                                                        <td style={{ padding: '12px', textAlign: 'right', fontWeight: 600, color: '#4f46e5', background: 'rgba(79, 70, 229, 0.02)', cursor: 'help' }}>
+                                                            {spendsLoading ? <div className="skeleton-item" style={{ height: '18px', width: '75px', marginLeft: 'auto' }}></div> : fmtMon(wk.spend)}
+                                                        </td>
+                                                    </Tippy>
+
+                                                    {/* CPL — tooltip customizado PEN + USD */}
+                                                    <Tippy
+                                                        content={
+                                                            wk.spend > 0 && wk.registros > 0
+                                                                ? <div style={{ minWidth: 190, padding: '2px 0' }}>
+                                                                    <div style={{ fontWeight: 700, fontSize: '11px', marginBottom: 6, color: '#6366f1', letterSpacing: '0.5px', textTransform: 'uppercase' }}>
+                                                                        Costo por Lead · {wk.label}
+                                                                    </div>
+                                                                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                                                                        <span style={{ fontSize: '17px', fontWeight: 800, color: '#0f172a' }}>S/ {fmtMon(wk.cpr)}</span>
+                                                                        <span style={{ fontSize: '10px', fontWeight: 700, color: '#4f46e5', background: '#eef2ff', borderRadius: 4, padding: '2px 6px' }}>PEN / Lead</span>
+                                                                    </div>
+                                                                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                                                        <span style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>$ {fmtMon(wk.cpr_usd ?? (wk.cpr / (usdExchangeRate || 3.80)))}</span>
+                                                                        <span style={{ fontSize: '10px', fontWeight: 700, color: '#0284c7', background: '#f0f9ff', borderRadius: 4, padding: '2px 6px' }}>USD / Lead</span>
+                                                                    </div>
+                                                                    <div style={{ marginTop: 6, fontSize: '10px', color: '#94a3b8', borderTop: '1px solid #f1f5f9', paddingTop: 5 }}>
+                                                                        {fmtNum(wk.registros)} registros · Inv. S/ {fmtMon(wk.spend)}
+                                                                    </div>
+                                                                </div>
+                                                                : <span style={{ fontSize: '12px', color: '#64748b' }}>Sin gasto registrado</span>
+                                                        }
+                                                        theme="kpi-light"
+                                                        placement="top"
+                                                        arrow={true}
+                                                    >
+                                                        <td style={{ padding: '12px', textAlign: 'right', fontWeight: 600, color: '#4f46e5', borderRight: '1px solid #e2e8f0', background: 'rgba(79, 70, 229, 0.02)', cursor: 'help' }}>
+                                                            {spendsLoading ? (
+                                                                <div className="skeleton-item" style={{ height: '18px', width: '60px', marginLeft: 'auto' }}></div>
+                                                            ) : (
+                                                                wk.spend > 0 && wk.registros > 0 ? fmtMon(wk.cpr) : <span style={{ color: '#cbd5e1' }}>—</span>
+                                                            )}
+                                                        </td>
+                                                    </Tippy>
+
+                                                    {/* Resultados — sin click, tooltip simple */}
+                                                    <Tippy content={<span style={{ fontSize: '12px', color: '#0f172a' }}>Contactados {wk.label}: <strong>{fmtNum(wk.contactados)}</strong> leads</span>} theme="kpi-light" placement="top" arrow>
+                                                        <td style={{ padding: '12px', textAlign: 'right', fontWeight: 600, color: '#0f172a', background: 'rgba(5, 150, 105, 0.02)', cursor: 'default' }}>
+                                                            {fmtNum(wk.contactados)}
+                                                        </td>
+                                                    </Tippy>
+                                                    <Tippy content={<span style={{ fontSize: '12px', color: '#0f172a' }}>No Respondieron {wk.label}: <strong>{fmtNum(wk.noContesta)}</strong> leads</span>} theme="kpi-light" placement="top" arrow>
+                                                        <td style={{ padding: '12px', textAlign: 'right', fontWeight: 600, color: '#ef4444', background: 'rgba(5, 150, 105, 0.02)', cursor: 'default' }}>
+                                                            {fmtNum(wk.noContesta)}
+                                                        </td>
+                                                    </Tippy>
+                                                    <Tippy content={<span style={{ fontSize: '12px', color: '#0f172a' }}>Respondieron {wk.label}: <strong>{fmtNum(wk.respondio)}</strong> leads</span>} theme="kpi-light" placement="top" arrow>
+                                                        <td style={{ padding: '12px', textAlign: 'right', fontWeight: 600, color: '#10b981', background: 'rgba(5, 150, 105, 0.02)', cursor: 'default' }}>
+                                                            {fmtNum(wk.respondio)}
+                                                        </td>
+                                                    </Tippy>
+                                                    <Tippy content={<span style={{ fontSize: '12px', color: '#0f172a' }}>Ventas {wk.label}: <strong>{fmtNum(wk.ventas)}</strong> clientes</span>} theme="kpi-light" placement="top" arrow>
+                                                        <td style={{ padding: '12px', textAlign: 'right', fontWeight: 800, color: '#10b981', borderRight: '1px solid #e2e8f0', background: 'rgba(5, 150, 105, 0.02)', cursor: 'default' }}>
+                                                            {fmtNum(wk.ventas)}
+                                                        </td>
+                                                    </Tippy>
 
                                                     {/* Variaciones */}
                                                     <td style={{ padding: '12px', textAlign: 'center', background: 'rgba(217, 119, 6, 0.02)' }}>{deltaBadge(wk.diffContactados)}</td>
@@ -2817,6 +2927,171 @@ const KPICampaigns = ({ months = [], currentMonth, currentYear, advisors = [], w
                             </div>
                             <div className="modal-footer border-top-0 pt-0 justify-content-center">
                                 <button type="button" className="btn btn-light rounded-pill px-4" onClick={() => setShowArchivadosModal(false)}>
+                                    Cerrar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Modal de Detalle por Etiquetas (Contactados, Respondieron, No Respondieron) */}
+            {cardDetailModal && (
+                <div className="modal fade show d-block" style={{ background: "rgba(0,0,0,0.5)", zIndex: 1055 }} tabIndex="-1">
+                    <div className="modal-dialog modal-dialog-centered">
+                        <div className="modal-content border-0 shadow-lg rounded-4">
+                            <div className="modal-header border-bottom-0 pb-0">
+                                <h5 className="modal-title fw-bold">{cardDetailModal.title}</h5>
+                                <button type="button" className="btn-close" onClick={() => setCardDetailModal(null)}></button>
+                            </div>
+                            <div className="modal-body py-3">
+                                <div className="text-center p-3 mb-3 rounded-3" style={{ background: "#f8fafc", border: "1px solid #e2e8f0" }}>
+                                    <span className="text-muted d-block small mb-1">Total acumulado en este periodo</span>
+                                    <h3 className="mb-0 fw-bold" style={{ color: cardDetailModal.color || "#0f172a" }}>
+                                        {formatNumber(cardDetailModal.count)} <small className="fs-6 text-muted">leads</small>
+                                    </h3>
+                                </div>
+
+                                {cardDetailModal.isUnresponded && (
+                                    <div className="row g-2 mb-3">
+                                        <div className="col-6">
+                                            <div className="p-3 rounded-3 border text-center" style={{ background: "rgba(245, 158, 11, 0.08)", borderColor: "rgba(245, 158, 11, 0.3)" }}>
+                                                <i className="mdi mdi-phone-in-talk fs-4 text-warning mb-1 d-block"></i>
+                                                <span className="text-muted d-block small" style={{ fontSize: "11px", fontWeight: 600 }}>En Gestión (Activos)</span>
+                                                <h4 className="mb-0 fw-bold text-dark">{formatNumber(cardDetailModal.activeCount)}</h4>
+                                            </div>
+                                        </div>
+                                        <div className="col-6">
+                                            <div className="p-3 rounded-3 border text-center" style={{ background: "rgba(100, 116, 139, 0.08)", borderColor: "rgba(100, 116, 139, 0.3)" }}>
+                                                <i className="mdi mdi-account-off fs-4 text-secondary mb-1 d-block"></i>
+                                                <span className="text-muted d-block small" style={{ fontSize: "11px", fontWeight: 600 }}>Ya Archivados</span>
+                                                <h4 className="mb-0 fw-bold text-dark">{formatNumber(cardDetailModal.archivedCount)}</h4>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                <h6 className="fw-bold mb-2 text-dark" style={{ fontSize: "13px" }}>
+                                    Desglose por etiqueta configurada:
+                                </h6>
+
+                                <div className="d-flex flex-column gap-2" style={{ maxHeight: "350px", overflowY: "auto" }}>
+                                    {cardDetailModal.breakdown && cardDetailModal.breakdown.length > 0 ? (
+                                        cardDetailModal.breakdown.map((item, idx) => {
+                                            const pct = cardDetailModal.count > 0 ? Math.round((item.quantity / cardDetailModal.count) * 100) : 0;
+                                            return (
+                                                <div key={idx} className="p-3 rounded-3 border" style={{ background: "#ffffff" }}>
+                                                    <div className="d-flex align-items-center justify-content-between mb-1">
+                                                        <div className="d-flex align-items-center gap-2">
+                                                            <span
+                                                                className="badge rounded-pill px-2 py-1"
+                                                                style={{
+                                                                    background: item.color || "#6366f1",
+                                                                    color: "#ffffff",
+                                                                    fontSize: "11px",
+                                                                    fontWeight: 600
+                                                                }}
+                                                            >
+                                                                {item.name}
+                                                            </span>
+                                                            {cardDetailModal.isUnresponded && item.active_qty !== undefined && (
+                                                                <small className="text-muted" style={{ fontSize: "10px" }}>
+                                                                    ({item.active_qty} en gestión / {item.archived_qty} archivados)
+                                                                </small>
+                                                            )}
+                                                        </div>
+                                                        <div className="d-flex align-items-center gap-2">
+                                                            <h5 className="mb-0 fw-bold text-dark" style={{ fontSize: "15px" }}>
+                                                                {formatNumber(item.quantity)}
+                                                            </h5>
+                                                            <span className="badge bg-soft-secondary text-secondary rounded-pill" style={{ fontSize: "10px" }}>
+                                                                {pct}%
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                    <div className="progress mt-2" style={{ height: "6px", borderRadius: "3px", background: "#f1f5f9" }}>
+                                                        <div
+                                                            className="progress-bar rounded-pill"
+                                                            style={{ width: `${pct}%`, backgroundColor: item.color || cardDetailModal.color || "#6366f1" }}
+                                                        ></div>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })
+                                    ) : (
+                                        <div className="text-center text-muted py-4">No hay registros etiquetados para esta categoría</div>
+                                    )}
+                                </div>
+                            </div>
+                            <div className="modal-footer border-top-0 pt-0 justify-content-center">
+                                <button type="button" className="btn btn-light rounded-pill px-4" onClick={() => setCardDetailModal(null)}>
+                                    Cerrar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Modal de Detalle de Inversión (USD & PEN) */}
+            {showSpendModal && (
+                <div className="modal fade show d-block" style={{ background: "rgba(0,0,0,0.5)", zIndex: 1055 }} tabIndex="-1">
+                    <div className="modal-dialog modal-dialog-centered">
+                        <div className="modal-content border-0 shadow-lg rounded-4">
+                            <div className="modal-header border-bottom-0 pb-0">
+                                <h5 className="modal-title fw-bold">Detalle de Inversión y Métricas (USD & PEN)</h5>
+                                <button type="button" className="btn-close" onClick={() => setShowSpendModal(false)}></button>
+                            </div>
+                            <div className="modal-body py-3">
+                                <div className="text-center p-3 mb-3 rounded-3" style={{ background: "linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)", border: "1px solid #bfdbfe" }}>
+                                    <span className="text-muted d-block small mb-1">Inversión Total en Meta Ads</span>
+                                    <h2 className="mb-1 fw-bold text-primary">S/ {formatNumber(totalSpend)} <small className="fs-6 text-muted">PEN</small></h2>
+                                    <h4 className="mb-0 fw-semibold text-dark">$ {formatNumber(totalSpendUsd)} <small className="fs-6 text-muted">USD</small></h4>
+                                    <small className="text-muted d-block mt-2" style={{ fontSize: "11px" }}>
+                                        Tipo de cambio aplicado: <strong>S/ {usdExchangeRate}</strong> por 1 USD (API Luna SUNAT en tiempo real)
+                                    </small>
+                                </div>
+
+                                <div className="d-flex flex-column gap-2">
+                                    <div className="d-flex align-items-center justify-content-between p-3 rounded-3 border" style={{ background: "#ffffff" }}>
+                                        <div>
+                                            <h6 className="mb-0 fw-bold text-dark">CPL (Costo por Lead)</h6>
+                                            <small className="text-muted">Inversión / Total Leads captados</small>
+                                        </div>
+                                        <div className="text-end">
+                                            <h5 className="mb-0 fw-bold text-dark">S/ {formatNumber(cpl)} PEN</h5>
+                                            <span className="badge bg-soft-primary text-primary fw-semibold" style={{ fontSize: "11px" }}>
+                                                $ {formatNumber(cplUsd)} USD
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <div className="d-flex align-items-center justify-content-between p-3 rounded-3 border" style={{ background: "#ffffff" }}>
+                                        <div>
+                                            <h6 className="mb-0 fw-bold text-dark">CPA (Costo por Adquisición)</h6>
+                                            <small className="text-muted">Inversión / Ventas concretadas</small>
+                                        </div>
+                                        <div className="text-end">
+                                            <h5 className="mb-0 fw-bold text-dark">S/ {formatNumber(cpa)} PEN</h5>
+                                            <span className="badge bg-soft-success text-success fw-semibold" style={{ fontSize: "11px" }}>
+                                                $ {formatNumber(cpaUsd)} USD
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <div className="d-flex align-items-center justify-content-between p-3 rounded-3 border" style={{ background: "#ffffff" }}>
+                                        <div>
+                                            <h6 className="mb-0 fw-bold text-dark">ROAS (Retorno de Inversión)</h6>
+                                            <small className="text-muted">Monto Ventas / Inversión</small>
+                                        </div>
+                                        <div className="text-end">
+                                            <h4 className="mb-0 fw-bold" style={{ color: "#7c3aed" }}>{roas}x</h4>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="modal-footer border-top-0 pt-0 justify-content-center">
+                                <button type="button" className="btn btn-light rounded-pill px-4" onClick={() => setShowSpendModal(false)}>
                                     Cerrar
                                 </button>
                             </div>

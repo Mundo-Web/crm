@@ -69,6 +69,13 @@ class Status extends Model
             ->where('statuses.business_id', Auth::user()->business_id);
     }
 
+    static function forManage()
+    {
+        return Status::where('statuses.table_id', '9c27e649-574a-47eb-82af-851c5d425434')
+            ->where('statuses.status', true)
+            ->where('statuses.business_id', Auth::user()->business_id);
+    }
+
     public function getChildrenCountAttribute()
     {
         $table = $this->table()->first();

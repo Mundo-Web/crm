@@ -43,6 +43,11 @@ const Settings = ({
     const defaultUnarchiveLeadStatusRef = useRef();
     const defaultUnarchiveManageLeadStatusRef = useRef();
 
+    const kpiContactedStatusRef = useRef();
+    const kpiRespondedStatusRef = useRef();
+    const kpiUnrespondedStatusRef = useRef();
+    const kpiSalesStatusRef = useRef();
+
     const [constantType, setConstantType] = useState();
     const [specification, setSpecification] = useState();
     const [activeTab, setActiveTab] = useState(
@@ -210,6 +215,35 @@ const Settings = ({
         location.reload();
     };
 
+    const onKpiSettingsSubmit = async (e) => {
+        e.preventDefault();
+
+        await Promise.all([
+            settingsRest.save({
+                type: "text",
+                name: "kpi-contacted-status",
+                value: JSON.stringify($(kpiContactedStatusRef.current).val() || []),
+            }),
+            settingsRest.save({
+                type: "text",
+                name: "kpi-responded-status",
+                value: JSON.stringify($(kpiRespondedStatusRef.current).val() || []),
+            }),
+            settingsRest.save({
+                type: "text",
+                name: "kpi-unresponded-status",
+                value: JSON.stringify($(kpiUnrespondedStatusRef.current).val() || []),
+            }),
+            settingsRest.save({
+                type: "text",
+                name: "kpi-sales-status",
+                value: JSON.stringify($(kpiSalesStatusRef.current).val() || []),
+            }),
+        ]);
+
+        location.reload();
+    };
+
     const onLeadStatusSubmit = async (e) => {
         e.preventDefault();
 
@@ -300,6 +334,11 @@ const Settings = ({
     const defaultUnarchiveLeadStatus = getConstant("default-unarchive-lead-status");
     const defaultUnarchiveManageLeadStatus = getConstant("default-unarchive-manage-lead-status");
 
+    const kpiContactedStatus = getConstant("kpi-contacted-status");
+    const kpiRespondedStatus = getConstant("kpi-responded-status");
+    const kpiUnrespondedStatus = getConstant("kpi-unresponded-status");
+    const kpiSalesStatus = getConstant("kpi-sales-status");
+
     useEffect(() => {
         window.location.hash = activeTab;
     }, [activeTab]);
@@ -325,6 +364,49 @@ const Settings = ({
         $(defaultLeadStatusRef.current).val(defaultLeadStatus.value).select2();
         $(defaultUnarchiveLeadStatusRef.current).val(defaultUnarchiveLeadStatus.value).select2();
         $(defaultUnarchiveManageLeadStatusRef.current).val(defaultUnarchiveManageLeadStatus.value).select2();
+
+        const manageStatusesList = statuses.filter(s => s.table_id === '9c27e649-574a-47eb-82af-851c5d425434');
+        const clientStatusesList = statuses.filter(s => s.table_id === 'a8367789-666e-4929-aacb-7cbc2fbf74de');
+
+        const defaultContactedIds = manageStatusesList
+            .filter(s => !/pendiente/i.test(s.name))
+            .map(s => s.id);
+
+        const defaultRespondedIds = manageStatusesList
+            .filter(s => /atend|reser|evalu|efectiv|cierre/i.test(s.name) && !/no responde|sin presu/i.test(s.name))
+            .map(s => s.id);
+
+        const defaultUnrespondedIds = manageStatusesList
+            .filter(s => /no responde|no contesta|sin respuesta/i.test(s.name))
+            .map(s => s.id);
+
+        const defaultSalesIds = clientStatusesList
+            .filter(s => /cliente|efectiv|venta|paciente/i.test(s.name))
+            .map(s => s.id);
+
+        if (kpiContactedStatus?.value) {
+            try { $(kpiContactedStatusRef.current).val(JSON.parse(kpiContactedStatus.value)).select2(); } catch(e){ $(kpiContactedStatusRef.current).val(defaultContactedIds).select2(); }
+        } else {
+            $(kpiContactedStatusRef.current).val(defaultContactedIds).select2();
+        }
+
+        if (kpiRespondedStatus?.value) {
+            try { $(kpiRespondedStatusRef.current).val(JSON.parse(kpiRespondedStatus.value)).select2(); } catch(e){ $(kpiRespondedStatusRef.current).val(defaultRespondedIds).select2(); }
+        } else {
+            $(kpiRespondedStatusRef.current).val(defaultRespondedIds).select2();
+        }
+
+        if (kpiUnrespondedStatus?.value) {
+            try { $(kpiUnrespondedStatusRef.current).val(JSON.parse(kpiUnrespondedStatus.value)).select2(); } catch(e){ $(kpiUnrespondedStatusRef.current).val(defaultUnrespondedIds).select2(); }
+        } else {
+            $(kpiUnrespondedStatusRef.current).val(defaultUnrespondedIds).select2();
+        }
+
+        if (kpiSalesStatus?.value) {
+            try { $(kpiSalesStatusRef.current).val(JSON.parse(kpiSalesStatus.value)).select2(); } catch(e){ $(kpiSalesStatusRef.current).val(defaultSalesIds).select2(); }
+        } else {
+            $(kpiSalesStatusRef.current).val(defaultSalesIds).select2();
+        }
     }, [null]);
 
     const questionsObj = getConstant("gemini-extra-questions");
@@ -440,10 +522,121 @@ const Settings = ({
                                             Chat IA{" "}
                                             <i className="mdi mdi-star-four-points"></i>
                                         </button>
+                                        <button
+                                            className={`nav-link mb-1 text-start ${activeTab === "kpis" ? "active show" : ""}`}
+                                            id="v-kpis-tab"
+                                            data-bs-toggle="pill"
+                                            href="#v-kpis"
+                                            role="tab"
+                                            aria-controls="v-kpis"
+                                            aria-selected="false"
+                                            onClick={() =>
+                                                setActiveTab("kpis")
+                                            }
+                                        >
+                                            Configuración de KPIs{" "}
+                                            <i className="mdi mdi-chart-box-outline ms-1"></i>
+                                        </button>
                                     </div>
                                 </div>
                                 <div className="col-sm-9">
                                     <div className="tab-content pt-0">
+                                        <div
+                                            className={`tab-pane fade ${activeTab === "kpis" ? "show active" : ""}`}
+                                            id="v-kpis"
+                                            role="tabpanel"
+                                            aria-labelledby="v-kpis-tab"
+                                        >
+                                            <h4>Configuración de KPIs (Métricas de Conversión)</h4>
+                                            <p className="text-muted mb-3">
+                                                Selecciona las etiquetas/estados correspondientes a cada tarjeta del panel de <strong>KPI Campañas</strong>.
+                                            </p>
+                                            <form onSubmit={onKpiSettingsSubmit}>
+                                                <div className="row">
+                                                    <div className="col-md-6 col-sm-12 mb-3">
+                                                        <div className="card card-body border p-3">
+                                                            <h5 className="card-title mb-1 text-warning">📞 Leads Contactados</h5>
+                                                            <p className="card-text text-muted mb-2 small">
+                                                                Etiquetas de gestión que identifican a un lead contactado.
+                                                            </p>
+                                                            <SelectFormGroup
+                                                                eRef={kpiContactedStatusRef}
+                                                                label="Escoge las etiquetas"
+                                                                multiple
+                                                            >
+                                                                {statuses
+                                                                    .filter((item) => item.table_id == "9c27e649-574a-47eb-82af-851c5d425434")
+                                                                    .map((status, index) => (
+                                                                        <option key={index} value={status.id}>{status.name}</option>
+                                                                    ))}
+                                                            </SelectFormGroup>
+                                                        </div>
+                                                    </div>
+                                                    <div className="col-md-6 col-sm-12 mb-3">
+                                                        <div className="card card-body border p-3">
+                                                            <h5 className="card-title mb-1 text-info">💬 Leads que Respondieron</h5>
+                                                            <p className="card-text text-muted mb-2 small">
+                                                                Etiquetas de gestión que indican una respuesta positiva o interacción efectiva.
+                                                            </p>
+                                                            <SelectFormGroup
+                                                                eRef={kpiRespondedStatusRef}
+                                                                label="Escoge las etiquetas"
+                                                                multiple
+                                                            >
+                                                                {statuses
+                                                                    .filter((item) => item.table_id == "9c27e649-574a-47eb-82af-851c5d425434")
+                                                                    .map((status, index) => (
+                                                                        <option key={index} value={status.id}>{status.name}</option>
+                                                                    ))}
+                                                            </SelectFormGroup>
+                                                        </div>
+                                                    </div>
+                                                    <div className="col-md-6 col-sm-12 mb-3">
+                                                        <div className="card card-body border p-3">
+                                                            <h5 className="card-title mb-1 text-danger">🔇 Leads que No Respondieron</h5>
+                                                            <p className="card-text text-muted mb-2 small">
+                                                                Etiquetas de gestión que marcan a leads no contactables o sin respuesta.
+                                                            </p>
+                                                            <SelectFormGroup
+                                                                eRef={kpiUnrespondedStatusRef}
+                                                                label="Escoge las etiquetas"
+                                                                multiple
+                                                            >
+                                                                {statuses
+                                                                    .filter((item) => item.table_id == "9c27e649-574a-47eb-82af-851c5d425434")
+                                                                    .map((status, index) => (
+                                                                        <option key={index} value={status.id}>{status.name}</option>
+                                                                    ))}
+                                                            </SelectFormGroup>
+                                                        </div>
+                                                    </div>
+                                                    <div className="col-md-6 col-sm-12 mb-3">
+                                                        <div className="card card-body border p-3">
+                                                            <h5 className="card-title mb-1 text-success">🏆 Estados de Venta (Conversión)</h5>
+                                                            <p className="card-text text-muted mb-2 small">
+                                                                Estados de cliente que cuentan como una venta o cierre exitoso.
+                                                            </p>
+                                                            <SelectFormGroup
+                                                                eRef={kpiSalesStatusRef}
+                                                                label="Escoge los estados"
+                                                                multiple
+                                                            >
+                                                                {statuses
+                                                                    .filter((item) => item.table_id == "a8367789-666e-4929-aacb-7cbc2fbf74de")
+                                                                    .map((status, index) => (
+                                                                        <option key={index} value={status.id}>{status.name}</option>
+                                                                    ))}
+                                                            </SelectFormGroup>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div className="mt-2 mb-4">
+                                                    <button type="submit" className="btn btn-primary">
+                                                        <i className="mdi mdi-content-save me-1"></i> Guardar Configuración de KPIs
+                                                    </button>
+                                                </div>
+                                            </form>
+                                        </div>
                                         <div
                                             className={`tab-pane fade ${activeTab === "general" ? "show active" : ""} coming-soon`}
                                             id="v-general"

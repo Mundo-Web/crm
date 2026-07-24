@@ -129,17 +129,17 @@ class KPICampaignsController extends BasicController
                 $dateFromStr = substr($request->date_from, 0, 10) . ' 00:00:00';
                 $dateToStr   = substr($request->date_to, 0, 10) . ' 23:59:59';
                 
-                $dateFrom = \Carbon\Carbon::parse($dateFromStr, 'America/Lima')->toDateTimeString();
-                $dateTo   = \Carbon\Carbon::parse($dateToStr, 'America/Lima')->toDateTimeString();
+                $dateFrom = \Carbon\Carbon::parse($dateFromStr, 'UTC')->setTimezone('America/Lima')->toDateTimeString();
+                $dateTo   = \Carbon\Carbon::parse($dateToStr, 'UTC')->setTimezone('America/Lima')->toDateTimeString();
             } elseif ($month || $request->month) {
                 $m = $month ?? $request->month;
                 [$year, $mo] = \explode('-', $m);
-                $dateFrom = \Carbon\Carbon::parse("{$year}-{$mo}-01 00:00:00", 'America/Lima')->toDateTimeString();
+                $dateFrom = \Carbon\Carbon::parse("{$year}-{$mo}-01 00:00:00", 'UTC')->setTimezone('America/Lima')->toDateTimeString();
                 $lastDay  = date('t', mktime(0, 0, 0, (int)$mo, 1, (int)$year));
-                $dateTo   = \Carbon\Carbon::parse("{$year}-{$mo}-{$lastDay} 23:59:59", 'America/Lima')->toDateTimeString();
+                $dateTo   = \Carbon\Carbon::parse("{$year}-{$mo}-{$lastDay} 23:59:59", 'UTC')->setTimezone('America/Lima')->toDateTimeString();
             } else {
-                $dateFrom = \Carbon\Carbon::now('America/Lima')->startOfMonth()->toDateTimeString();
-                $dateTo   = \Carbon\Carbon::now('America/Lima')->endOfMonth()->toDateTimeString();
+                $dateFrom = \Carbon\Carbon::now('UTC')->startOfMonth()->setTimezone('America/Lima')->toDateTimeString();
+                $dateTo   = \Carbon\Carbon::now('UTC')->endOfMonth()->setTimezone('America/Lima')->toDateTimeString();
             }
 
             $platform  = $request->platform  ?? null;
@@ -155,11 +155,47 @@ class KPICampaignsController extends BasicController
             $defaultLeadStatus   = Setting::get('default-lead-status');
             $asignationLeadStatus = JSON::parseable(Setting::get('assignation-lead-status')) ?? [];
 
+            $kpiContactedStatuses   = JSON::parseable(Setting::get('kpi-contacted-status')) ?? [];
+            $kpiRespondedStatuses   = JSON::parseable(Setting::get('kpi-responded-status')) ?? [];
+            $kpiUnrespondedStatuses = JSON::parseable(Setting::get('kpi-unresponded-status')) ?? [];
+            $kpiSalesStatuses       = JSON::parseable(Setting::get('kpi-sales-status')) ?? [];
+
             $leadStatuses   = Status::forLeads()->get();
             $clientStatuses = Status::forClients()->get();
 
             $leadStatusesIds   = array_map(fn($s) => $s['id'], $leadStatuses->toArray());
-            $clientStatusesIds = array_map(fn($s) => $s['id'], $clientStatuses->toArray());
+            $clientStatusesIds = !empty($kpiSalesStatuses) ? $kpiSalesStatuses : array_map(fn($s) => $s['id'], $clientStatuses->toArray());
+
+            // ──────────────────────────────────────────────────────────
+            // Si no hay configuración KPI guardada, usar defaults automáticos
+            // basados en los nombres de los statuses de gestión (misma lógica que Settings.jsx)
+            // ──────────────────────────────────────────────────────────
+            $manageStatuses = Status::forManage()->get();
+
+            if (empty($kpiContactedStatuses)) {
+                $kpiContactedStatuses = $manageStatuses
+                    ->filter(fn($s) => !preg_match('/pendiente/i', $s->name))
+                    ->pluck('id')
+                    ->values()
+                    ->toArray();
+            }
+
+            if (empty($kpiRespondedStatuses)) {
+                $kpiRespondedStatuses = $manageStatuses
+                    ->filter(fn($s) => preg_match('/atend|reser|evalu|efectiv|cierre/i', $s->name)
+                        && !preg_match('/no responde|sin presu/i', $s->name))
+                    ->pluck('id')
+                    ->values()
+                    ->toArray();
+            }
+
+            if (empty($kpiUnrespondedStatuses)) {
+                $kpiUnrespondedStatuses = $manageStatuses
+                    ->filter(fn($s) => preg_match('/no responde|no contesta|sin respuesta/i', $s->name))
+                    ->pluck('id')
+                    ->values()
+                    ->toArray();
+            }
 
             // ──────────────────────────────────────────────────────────
             // Query base: campaña válida + atribución registrada en client_entries
@@ -194,11 +230,42 @@ class KPICampaignsController extends BasicController
             };
 
             $countUnique = function ($q) {
-                return (clone $q)
-                    ->toBase()
-                    ->cloneWithout(['columns', 'distinct'])
-                    ->selectRaw('COUNT(DISTINCT COALESCE(NULLIF(RIGHT(REGEXP_REPLACE(clients.contact_phone, "[^0-9]", ""), 9), ""), LOWER(clients.contact_email))) as aggregate')
-                    ->value('aggregate') ?? 0;
+                $leads = (clone $q)
+                    ->select('clients.contact_phone', 'clients.contact_email', 'campaign.source')
+                    ->get();
+
+                $groups = [];
+                $whatsappCount = 0;
+                foreach ($leads as $l) {
+                    $source = strtolower($l->source ?? 'facebook');
+                    if ($source === 'whatsapp') {
+                        $whatsappCount++;
+                        continue;
+                    }
+
+                    $phone = preg_replace('/[^0-9]/', '', $l->contact_phone ?? '');
+                    if (strlen($phone) > 9) $phone = substr($phone, -9);
+                    $email = strtolower(trim($l->contact_email ?? ''));
+
+                    $foundGroup = null;
+                    foreach ($groups as $idx => $g) {
+                        if (($phone && in_array($phone, $g['phones'])) || ($email && in_array($email, $g['emails']))) {
+                            $foundGroup = $idx;
+                            break;
+                        }
+                    }
+
+                    if ($foundGroup !== null) {
+                        if ($phone && !in_array($phone, $groups[$foundGroup]['phones'])) $groups[$foundGroup]['phones'][] = $phone;
+                        if ($email && !in_array($email, $groups[$foundGroup]['emails'])) $groups[$foundGroup]['emails'][] = $email;
+                    } else {
+                        $groups[] = [
+                            'phones' => $phone ? [$phone] : [],
+                            'emails' => $email ? [$email] : []
+                        ];
+                    }
+                }
+                return count($groups) + $whatsappCount;
             };
 
             // ──────────────────────────────────────────────────────────
@@ -264,9 +331,154 @@ class KPICampaignsController extends BasicController
                 ->join('client_has_products AS chp', 'chp.client_id', 'clients.id')
                 ->sum('chp.price');
 
-            $archivedCount     = $countUnique((clone $managingBase)->whereNull('clients.status'));
-            $trueManagingCount = $countUnique((clone $managingBase)->where('clients.status', true));
-            $managingCount     = $countUnique($managingBase);
+            $archivedCount = $countUnique((clone $managingBase)->whereNull('clients.status'));
+
+            // ──────────────────────────────────────────────────────────
+            // Desgloses por etiqueta para los Modals de las Cards
+            // Deduplicación GLOBAL en una sola pasada (mismo algoritmo que $countUnique)
+            // → la suma del desglose siempre coincide con el total de la card.
+            // ──────────────────────────────────────────────────────────
+
+            // Helper: deduplicación global → cuenta única por etiqueta
+            $buildBreakdown = function (string $groupCol, array $statusesList) use ($query) {
+                if (empty($statusesList)) return [];
+
+                $statusMeta = Status::whereIn('id', $statusesList)
+                    ->select('id', 'name', 'color')
+                    ->get()
+                    ->keyBy('id');
+
+                // Una sola query con todos los leads de todos los statuses, ordenados por fecha descendente
+                $leads = (clone $query())
+                    ->whereIn("clients.{$groupCol}", $statusesList)
+                    ->select([
+                        "clients.{$groupCol} as _status_id",
+                        'clients.contact_phone',
+                        'clients.contact_email',
+                        'clients.status as client_status',
+                        'campaign.source',
+                        'clients.created_at',
+                        'clients.id',
+                    ])
+                    ->orderBy('clients.created_at', 'desc')
+                    ->orderBy('clients.id', 'desc')
+                    ->get();
+
+                // Deduplicación global con normalización de teléfono (igual que $countUnique)
+                $groups     = [];  // cada grupo = un lead único
+                $whatsappBySt = [];
+
+                foreach ($leads as $l) {
+                    $source = strtolower($l->source ?? 'facebook');
+                    $sid    = $l->_status_id;
+
+                    if ($source === 'whatsapp') {
+                        if (!isset($whatsappBySt[$sid])) {
+                            $whatsappBySt[$sid] = ['total' => 0, 'active' => 0, 'archived' => 0];
+                        }
+                        $whatsappBySt[$sid]['total']++;
+                        if ($l->client_status == 1) $whatsappBySt[$sid]['active']++;
+                        else                         $whatsappBySt[$sid]['archived']++;
+                        continue;
+                    }
+
+                    $phone = preg_replace('/[^0-9]/', '', $l->contact_phone ?? '');
+                    if (strlen($phone) > 9) $phone = substr($phone, -9);
+                    $email = strtolower(trim($l->contact_email ?? ''));
+
+                    // Buscar grupo existente (misma lógica transitiva que $countUnique)
+                    $foundGroup = null;
+                    foreach ($groups as $idx => $g) {
+                        if (($phone && in_array($phone, $g['phones']))
+                            || ($email && in_array($email, $g['emails']))) {
+                            $foundGroup = $idx;
+                            break;
+                        }
+                    }
+
+                    if ($foundGroup !== null) {
+                        // Ya existe: actualizar teléfonos/emails pero mantener el estado más reciente (ya asignado por la ordenación DESC)
+                        if ($phone && !in_array($phone, $groups[$foundGroup]['phones'])) {
+                            $groups[$foundGroup]['phones'][] = $phone;
+                        }
+                        if ($email && !in_array($email, $groups[$foundGroup]['emails'])) {
+                            $groups[$foundGroup]['emails'][] = $email;
+                        }
+                    } else {
+                        // Nuevo lead único
+                        $groups[] = [
+                            'phones'    => $phone ? [$phone] : [],
+                            'emails'    => $email ? [$email] : [],
+                            'status_id' => $sid,
+                            'is_active' => ($l->client_status == 1),
+                        ];
+                    }
+                }
+
+                // Agregar leads únicos al conteo de su etiqueta
+                $statusCounts = [];
+                foreach ($groups as $g) {
+                    $sid = $g['status_id'];
+                    if (!isset($statusCounts[$sid])) {
+                        $statusCounts[$sid] = ['total' => 0, 'active' => 0, 'archived' => 0];
+                    }
+                    $statusCounts[$sid]['total']++;
+                    if ($g['is_active']) $statusCounts[$sid]['active']++;
+                    else                 $statusCounts[$sid]['archived']++;
+                }
+
+                // Agregar WhatsApp
+                foreach ($whatsappBySt as $sid => $counts) {
+                    if (!isset($statusCounts[$sid])) {
+                        $statusCounts[$sid] = ['total' => 0, 'active' => 0, 'archived' => 0];
+                    }
+                    $statusCounts[$sid]['total']    += $counts['total'];
+                    $statusCounts[$sid]['active']   += $counts['active'];
+                    $statusCounts[$sid]['archived'] += $counts['archived'];
+                }
+
+                // Construir resultado final
+                $result = [];
+                foreach ($statusCounts as $sid => $counts) {
+                    $meta = $statusMeta[$sid] ?? null;
+                    if (!$meta || $counts['total'] === 0) continue;
+                    $result[] = (object)[
+                        'id'           => $meta->id,
+                        'name'         => $meta->name,
+                        'color'        => $meta->color,
+                        'quantity'     => $counts['total'],
+                        'active_qty'   => $counts['active'],
+                        'archived_qty' => $counts['archived'],
+                    ];
+                }
+
+                usort($result, fn($a, $b) => $b->quantity <=> $a->quantity);
+                return $result;
+            };
+
+            // ── Desgloses y Métricas de Contactados, Respondieron y No Respondieron ──
+            // Se calculan una sola vez de forma deduplicada para garantizar consistencia 100% exacta
+            $contactedBreakdown = $buildBreakdown('manage_status_id', $kpiContactedStatuses);
+
+            $respondedBreakdown = array_values(array_filter(
+                $contactedBreakdown,
+                fn($item) => in_array($item->id, $kpiRespondedStatuses)
+            ));
+
+            $unrespondedBreakdown = array_values(array_filter(
+                $contactedBreakdown,
+                fn($item) => in_array($item->id, $kpiUnrespondedStatuses)
+            ));
+
+            $salesBreakdown      = $buildBreakdown('status_id', $clientStatusesIds);
+            $totalLeadsBreakdown = $buildBreakdown('status_id', array_merge($leadStatusesIds, $clientStatusesIds));
+
+            $managingCount            = array_sum(array_column($contactedBreakdown, 'quantity'));
+            $trueManagingCount        = array_sum(array_column($respondedBreakdown, 'quantity'));
+            $noRespondieronCount      = array_sum(array_column($unrespondedBreakdown, 'quantity'));
+
+            $unrespondedActiveCount   = array_sum(array_column($unrespondedBreakdown, 'active_qty'));
+            $unrespondedArchivedCount = array_sum(array_column($unrespondedBreakdown, 'archived_qty'));
 
             $pendingCount = $countUnique($query()->where('clients.status_id', $defaultLeadStatus));
 
@@ -283,9 +495,38 @@ class KPICampaignsController extends BasicController
                 ->whereIn('clients.status_id', $leadStatusesIds)
                 ->where('clients.status_id', '<>', $defaultLeadStatus)
                 ->whereNull('clients.status'));
-            $prevManagingCount = $countUnique((clone $queryPrev())
-                ->whereIn('clients.status_id', $leadStatusesIds)
-                ->where('clients.status_id', '<>', $defaultLeadStatus));
+
+            if (!empty($kpiContactedStatuses)) {
+                $prevManagingCount = $countUnique((clone $queryPrev())->where(function ($sub) use ($kpiContactedStatuses) {
+                    $sub->whereIn('clients.manage_status_id', $kpiContactedStatuses)
+                        ->orWhereIn('clients.status_id', $kpiContactedStatuses);
+                }));
+            } else {
+                $prevManagingCount = $countUnique((clone $queryPrev())
+                    ->whereIn('clients.status_id', $leadStatusesIds)
+                    ->where('clients.status_id', '<>', $defaultLeadStatus));
+            }
+
+            if (!empty($kpiRespondedStatuses)) {
+                $prevTrueManagingCount = $countUnique((clone $queryPrev())->where(function ($sub) use ($kpiRespondedStatuses) {
+                    $sub->whereIn('clients.manage_status_id', $kpiRespondedStatuses)
+                        ->orWhereIn('clients.status_id', $kpiRespondedStatuses);
+                }));
+            } else {
+                $prevTrueManagingCount = $countUnique((clone $queryPrev())
+                    ->whereIn('clients.status_id', $leadStatusesIds)
+                    ->where('clients.status_id', '<>', $defaultLeadStatus)
+                    ->where('clients.status', true));
+            }
+
+            if (!empty($kpiUnrespondedStatuses)) {
+                $prevNoRespondieronCount = $countUnique((clone $queryPrev())->where(function ($sub) use ($kpiUnrespondedStatuses) {
+                    $sub->whereIn('clients.manage_status_id', $kpiUnrespondedStatuses)
+                        ->orWhereIn('clients.status_id', $kpiUnrespondedStatuses);
+                }));
+            } else {
+                $prevNoRespondieronCount = max(0, $prevManagingCount - $prevTrueManagingCount);
+            }
 
             $calcVariation = function ($current, $previous) {
                 if ($previous == 0) return $current > 0 ? 100 : 0;
@@ -293,20 +534,25 @@ class KPICampaignsController extends BasicController
             };
 
             $previousPeriod = [
-                'dateFrom'      => $prevDateFrom,
-                'dateTo'        => $prevDateTo,
-                'totalCount'    => $prevTotalCount,
-                'clientsCount'  => $prevClientsCount,
-                'archivedCount' => $prevArchivedCount,
-                'managingCount' => $prevManagingCount,
+                'dateFrom'            => $prevDateFrom,
+                'dateTo'              => $prevDateTo,
+                'totalCount'          => $prevTotalCount,
+                'clientsCount'        => $prevClientsCount,
+                'archivedCount'       => $prevArchivedCount,
+                'managingCount'       => $prevManagingCount,
+                'trueManagingCount'   => $prevTrueManagingCount,
+                'noRespondieronCount' => $prevNoRespondieronCount,
             ];
 
             $variations = [
-                'totalCount'   => $calcVariation($totalCount, $prevTotalCount),
-                'clientsCount' => $calcVariation($clientsCount, $prevClientsCount),
-                'archivedCount'=> $calcVariation($archivedCount, $prevArchivedCount),
-                'managingCount'=> $calcVariation($managingCount, $prevManagingCount),
+                'totalCount'          => $calcVariation($totalCount, $prevTotalCount),
+                'clientsCount'        => $calcVariation($clientsCount, $prevClientsCount),
+                'archivedCount'       => $calcVariation($archivedCount, $prevArchivedCount),
+                'managingCount'       => $calcVariation($managingCount, $prevManagingCount),
+                'trueManagingCount'   => $calcVariation($trueManagingCount, $prevTrueManagingCount),
+                'noRespondieronCount' => $calcVariation($noRespondieronCount, $prevNoRespondieronCount),
             ];
+
 
             // ──────────────────────────────────────────────────────────
             // Gráfico por estado de gestión
@@ -632,10 +878,12 @@ class KPICampaignsController extends BasicController
                 $groupedClients[$campaignName][$adsetName][$adName][] = $client;
             }
 
-            // lookup de anuncios (imagen y gasto)
+            // lookup de anuncios (imagen local y gasto del PERIODO en vivo desde Meta API)
             $adsLookup = [];
+            $periodAdSpends = $this->getPeriodAdSpends($dateFrom, $dateTo);
+
             try {
-                $businessAds = \App\Models\Ad::select('ads.name', 'ads.preview_image_url', 'ads.spend', 'ad_sets.name as adset_name')
+                $businessAds = \App\Models\Ad::select('ads.name', 'ads.preview_image_url', 'ad_sets.name as adset_name')
                     ->join('ad_sets', 'ad_sets.id', '=', 'ads.ad_set_id')
                     ->where('ads.business_id', Auth::user()->business_id)
                     ->get();
@@ -643,11 +891,25 @@ class KPICampaignsController extends BasicController
                     $key = $adModel->adset_name . '|||' . $adModel->name;
                     $adsLookup[$key] = [
                         'preview_image_url' => $adModel->preview_image_url,
-                        'spend' => (float)$adModel->spend
+                        'spend' => round((float)($periodAdSpends[$key] ?? 0.0), 2)
                     ];
                 }
+                foreach ($periodAdSpends as $key => $spendVal) {
+                    if (!isset($adsLookup[$key])) {
+                        $adsLookup[$key] = [
+                            'preview_image_url' => null,
+                            'spend' => round((float)$spendVal, 2)
+                        ];
+                    }
+                }
             } catch (\Throwable $e) {
-                // Si falla la tabla, continuar sin lookup
+                // Si falla la tabla, continuar con los datos de la API de Meta
+                foreach ($periodAdSpends as $key => $spendVal) {
+                    $adsLookup[$key] = [
+                        'preview_image_url' => null,
+                        'spend' => round((float)$spendVal, 2)
+                    ];
+                }
             }
 
             $clientsList = [];
@@ -791,44 +1053,44 @@ class KPICampaignsController extends BasicController
             // ──────────────────────────────────────────────────────────
             // Gasto publicitario (spend) de campañas del periodo
             // ──────────────────────────────────────────────────────────
-            $totalSpend = 0;
-            $cpl = 0;
-            $cpa = 0;
-            $roas = 0;
+            $totalSpend    = 0;
+            $totalSpendUsd = 0;
+            $cpl           = 0;
+            $cplUsd        = 0;
+            $cpa           = 0;
+            $cpaUsd        = 0;
+            $roas          = 0;
             if (!$excludeSpend) {
                 try {
                     // Tipo de cambio en tiempo real desde API Luna (tc_venta)
                     $exchangeRateCalc = $this->getLunaExchangeRate();
                     
-                    $activeCampaignIds = array_keys($hierarchy ?? []);
-                    if (!empty($activeCampaignIds)) {
-                        $campaignsForSpend = DB::table('campaigns')
-                            ->where('business_id', Auth::user()->business_id)
-                            ->whereIn('id', $activeCampaignIds)
-                            ->get(['spend', 'currency']);
-                            
-                        foreach ($campaignsForSpend as $c) {
-                            $cSpend = (float)$c->spend;
-                            if (strtoupper($c->currency) === 'USD') {
-                                $cSpend *= $exchangeRateCalc;
-                            }
-                            $totalSpend += $cSpend;
-                        }
-                    } else {
-                        $totalSpend = 0;
+                    // El gasto total del periodo se calcula sumando el gasto diario oficial de Meta Ads
+                    if (!isset($dailySpends) || empty($dailySpends)) {
+                        $dailySpends = $this->getDailySpendBreakdown($request->date_from ?: $dateFrom, $request->date_to ?: $dateTo);
                     }
+                    
+                    $dailyPen = $dailySpends['pen'] ?? [];
+                    $dailyUsd = $dailySpends['usd'] ?? [];
+
+                    $totalSpend    = round(array_sum($dailyPen), 2);
+                    $totalSpendUsd = round(array_sum($dailyUsd), 2);
 
                     if ($totalCount > 0 && $totalSpend > 0) {
-                        $cpl = round($totalSpend / $totalCount, 2);
+                        $cpl    = round($totalSpend / $totalCount, 2);
+                        $cplUsd = round($totalSpendUsd / $totalCount, 2);
                     }
                     if ($clientsCount > 0 && $totalSpend > 0) {
-                        $cpa = round($totalSpend / $clientsCount, 2);
+                        $cpa    = round($totalSpend / $clientsCount, 2);
+                        $cpaUsd = round($totalSpendUsd / $clientsCount, 2);
                     }
                     if ($totalSpend > 0 && $clientsSum > 0) {
-                        $roas = round($clientsSum / $totalSpend, 2);
+                        $roas   = round($clientsSum / $totalSpend, 2);
                     }
+
+                    $exchangeRate = round($exchangeRateCalc, 2);
                 } catch (\Throwable $e) {
-                    // Columna spend puede no existir aún
+                    // Log catch
                 }
             }
 
@@ -838,15 +1100,18 @@ class KPICampaignsController extends BasicController
             // ──────────────────────────────────────────────────────────
             $weeklyEvolution = [];
             try {
-                $weekStartDaySetting = (int)(Setting::get('campaign-week-start-day') ?? 1); // 1 = Lunes
+                $weekStartDaySetting = $request->has('weekStartDay') 
+                    ? (int)$request->get('weekStartDay') 
+                    : (int)(Setting::get('campaign-week-start-day') ?? 1); // 1 = Lunes
 
-                $startLimit = \Carbon\Carbon::parse($dateFrom)->startOfMonth()->startOfDay();
-                $endLimit   = \Carbon\Carbon::parse($dateTo)->endOfMonth()->endOfDay();
+                $startLimit = \Carbon\Carbon::parse($dateFrom);
+                $endLimit   = \Carbon\Carbon::parse($dateTo);
 
-                // Obtener desglose de inversión diaria de todas las plataformas
-                $dailySpends = [];
-                if (!$excludeSpend) {
-                    $dailySpends = $this->getDailySpendBreakdown($startLimit->toDateTimeString(), $endLimit->toDateTimeString());
+                // Usar desglose de inversión diaria en PEN y USD ya calculado
+                if (!isset($dailyPen) || !isset($dailyUsd)) {
+                    $dailySpends = $this->getDailySpendBreakdown($request->date_from ?: $dateFrom, $request->date_to ?: $dateTo);
+                    $dailyPen = $dailySpends['pen'] ?? [];
+                    $dailyUsd = $dailySpends['usd'] ?? [];
                 }
 
                 $currentStart = $startLimit->copy();
@@ -855,52 +1120,88 @@ class KPICampaignsController extends BasicController
                 // Día que cierra la semana: el día anterior al inicio de semana
                 $targetEndDay = ($weekStartDaySetting === 0) ? 6 : ($weekStartDaySetting - 1);
 
-                while ($currentStart->lte($endLimit)) {
-                    // Calcular el último día de esta semana
-                    $currentEnd = $currentStart->copy();
+                $weekQueryBase = function ($startStr, $endStr) use ($platform, $advisorId) {
+                    $q = Client::where('clients.business_id', Auth::user()->business_id)
+                        ->select('clients.*')
+                        ->distinct()
+                        ->join('client_entries as ce', 'ce.client_id', '=', 'clients.id')
+                        ->join('campaigns as campaign', 'campaign.id', '=', 'ce.campaign_id')
+                        ->whereRaw('LENGTH(ce.campaign_id) > 10')
+                        ->whereNotNull('ce.adset_name')
+                        ->where('ce.adset_name', '<>', '')
+                        ->whereNotNull('ce.ad_name')
+                        ->where('ce.ad_name', '<>', '')
+                        ->whereBetween('ce.entry_date', [$startStr, $endStr]);
+                    return $this->applyOptionalFilters($q, $platform, $advisorId);
+                };
+
+                while ($currentStart->lt($endLimit)) {
+                    // Work in UTC for calendar week calculation
+                    $utcCur = $currentStart->copy()->setTimezone('UTC');
+                    $utcEnd = $utcCur->copy();
+
                     for ($i = 0; $i < 6; $i++) {
-                        if ($currentEnd->dayOfWeek === $targetEndDay) break;
-                        $currentEnd->addDay();
+                        if ($utcEnd->dayOfWeek === $targetEndDay) break;
+                        $utcEnd->addDay();
                     }
+                    $utcEnd->endOfDay();
+
+                    $currentEnd = $utcEnd->copy()->setTimezone('America/Lima');
+
                     if ($currentEnd->gt($endLimit)) {
                         $currentEnd = $endLimit->copy();
                     }
-                    $currentEnd->endOfDay();
 
                     $startStr = $currentStart->toDateTimeString();
                     $endStr   = $currentEnd->toDateTimeString();
 
-                    // ── Registros (leads creados en la semana con ads) ─────
-                    $weekLeadBase = Client::where('clients.business_id', Auth::user()->business_id)
-                        ->join('campaigns as campaign', 'campaign.id', '=', 'clients.campaign_id')
-                        ->whereRaw('LENGTH(clients.campaign_id) > 10')
-                        ->whereBetween('clients.created_at', [$startStr, $endStr]);
-                    $weekLeadBase = $this->applyOptionalFilters($weekLeadBase, $platform, $advisorId);
+                    $qWeek = $weekQueryBase($startStr, $endStr);
 
-                    $registros = (clone $weekLeadBase)->count();
+                    // ── Registros (leads únicos creados en la semana con ads) ─────
+                    $registros = $countUnique($qWeek);
 
-                    // ── Inversión de la semana (sumando gastos diarios) ───
-                    $weekSpend  = 0.0;
-                    $tempDate   = $currentStart->copy();
-                    while ($tempDate->lte($currentEnd)) {
-                        $weekSpend += ($dailySpends[$tempDate->format('Y-m-d')] ?? 0);
+                    // ── Inversión de la semana (sumando gastos diarios por día calendario UTC) ───
+                    $weekSpendPen = 0.0;
+                    $weekSpendUsd = 0.0;
+                    $tempDate     = $utcCur->copy();
+                    while ($tempDate->lte($utcEnd)) {
+                        $dStr = $tempDate->format('Y-m-d');
+                        $valP = $dailyPen[$dStr] ?? 0;
+                        $valU = $dailyUsd[$dStr] ?? 0;
+                        $weekSpendPen += $valP;
+                        $weekSpendUsd += $valU;
                         $tempDate->addDay();
                     }
 
-                    // ── Contactados (status != default) ──────────────────
-                    $contactados = (clone $weekLeadBase)
-                        ->whereIn('clients.status_id', $leadStatusesIds)
-                        ->where('clients.status_id', '<>', $defaultLeadStatus)
-                        ->count();
+                    // ── Contactados ──────────────────
+                    if (!empty($kpiContactedStatuses)) {
+                        $contactados = $countUnique((clone $qWeek)->where(function ($sub) use ($kpiContactedStatuses) {
+                            $sub->whereIn('clients.manage_status_id', $kpiContactedStatuses)
+                                ->orWhereIn('clients.status_id', $kpiContactedStatuses);
+                        }));
+                    } else {
+                        $contactados = $countUnique((clone $qWeek)->whereIn('clients.status_id', $leadStatusesIds)->where('clients.status_id', '<>', $defaultLeadStatus));
+                    }
 
-                    // ── Respondió (contactados + status = true) ───────────
-                    $respondio = (clone $weekLeadBase)
-                        ->whereIn('clients.status_id', $leadStatusesIds)
-                        ->where('clients.status_id', '<>', $defaultLeadStatus)
-                        ->where('clients.status', true)
-                        ->count();
+                    // ── Respondió ───────────
+                    if (!empty($kpiRespondedStatuses)) {
+                        $respondio = $countUnique((clone $qWeek)->where(function ($sub) use ($kpiRespondedStatuses) {
+                            $sub->whereIn('clients.manage_status_id', $kpiRespondedStatuses)
+                                ->orWhereIn('clients.status_id', $kpiRespondedStatuses);
+                        }));
+                    } else {
+                        $respondio = $countUnique((clone $qWeek)->whereIn('clients.status_id', $leadStatusesIds)->where('clients.status_id', '<>', $defaultLeadStatus)->where('clients.status', true));
+                    }
 
-                    $noContesta = max(0, $contactados - $respondio);
+                    // ── No Contesta ───────────
+                    if (!empty($kpiUnrespondedStatuses)) {
+                        $noContesta = $countUnique((clone $qWeek)->where(function ($sub) use ($kpiUnrespondedStatuses) {
+                            $sub->whereIn('clients.manage_status_id', $kpiUnrespondedStatuses)
+                                ->orWhereIn('clients.status_id', $kpiUnrespondedStatuses);
+                        }));
+                    } else {
+                        $noContesta = max(0, $contactados - $respondio);
+                    }
 
                     // ── Ventas (cierres trazados en esta semana) ──────────
                     $ventasBase = Client::where('clients.business_id', Auth::user()->business_id)
@@ -924,18 +1225,21 @@ class KPICampaignsController extends BasicController
                         ->sum('chp.price');
 
                     // ── Ratios ────────────────────────────────────────────
-                    $cpr        = ($registros > 0 && $weekSpend > 0) ? round($weekSpend / $registros, 2)   : 0;
+                    $cpr        = ($registros > 0 && $weekSpendPen > 0) ? round($weekSpendPen / $registros, 2) : 0;
+                    $cprUsd     = ($registros > 0 && $weekSpendUsd > 0) ? round($weekSpendUsd / $registros, 2) : 0;
                     $pctContact = ($registros > 0) ? round(($contactados / $registros) * 100, 1) : 0;
                     $pctCierre  = ($registros > 0) ? round(($ventas / $registros) * 100, 1)      : 0;
-                    $weekRoas   = ($weekSpend > 0 && $salesAmount > 0) ? round($salesAmount / $weekSpend, 2) : 0;
+                    $weekRoas   = ($weekSpendPen > 0 && $salesAmount > 0) ? round($salesAmount / $weekSpendPen, 2) : 0;
 
                     $weeklyEvolution[] = [
                         'label'           => 'S' . $weekNumber,
-                        'start_formatted' => $currentStart->format('d/m'),
-                        'end_formatted'   => $currentEnd->format('d/m'),
+                        'start_formatted' => $utcCur->format('d/m'),
+                        'end_formatted'   => $utcEnd->format('d/m'),
                         'registros'       => $registros,
-                        'spend'           => round($weekSpend, 2),
+                        'spend'           => round($weekSpendPen, 2),
+                        'spend_usd'       => round($weekSpendUsd, 2),
                         'cpr'             => $cpr,
+                        'cpr_usd'         => $cprUsd,
                         'contactados'     => $contactados,
                         'noContesta'      => $noContesta,
                         'respondio'       => $respondio,
@@ -951,7 +1255,7 @@ class KPICampaignsController extends BasicController
                     ];
 
                     // Avanzar al inicio de la siguiente semana
-                    $currentStart = $currentEnd->copy()->addDay()->startOfDay();
+                    $currentStart = $currentEnd->copy()->addSecond();
                     $weekNumber++;
                 }
 
@@ -986,17 +1290,31 @@ class KPICampaignsController extends BasicController
                 'pendingCount' => $pendingCount,
                 'managingCount'=> $managingCount,
                 'trueManagingCount' => $trueManagingCount,
+                'noRespondieronCount' => $noRespondieronCount,
+                'unrespondedActiveCount' => $unrespondedActiveCount,
+                'unrespondedArchivedCount' => $unrespondedArchivedCount,
                 'managingSum'  => $managingSum,
+
+                // Desgloses por etiqueta para modals
+                'contactedBreakdown'   => $contactedBreakdown,
+                'respondedBreakdown'   => $respondedBreakdown,
+                'unrespondedBreakdown' => $unrespondedBreakdown,
+                'salesBreakdown'       => $salesBreakdown,
+                'totalLeadsBreakdown'  => $totalLeadsBreakdown,
 
                 // Comparativa con periodo anterior
                 'previousPeriod' => $previousPeriod,
                 'variations'     => $variations,
 
                 // Gasto publicitario
-                'totalSpend'  => $totalSpend,
-                'cpl'         => $cpl,
-                'cpa'         => $cpa,
-                'roas'        => $roas,
+                'totalSpend'    => $totalSpend,
+                'totalSpendUsd' => $totalSpendUsd ?? 0,
+                'cpl'           => $cpl,
+                'cplUsd'        => $cplUsd ?? 0,
+                'cpa'           => $cpa,
+                'cpaUsd'        => $cpaUsd ?? 0,
+                'roas'          => $roas,
+                'exchangeRate'  => $exchangeRate ?? 3.80,
 
                 // Meta de leads
                 'goalProgress' => $goalProgress,
@@ -1073,14 +1391,14 @@ class KPICampaignsController extends BasicController
                 if ($request->date_from && $request->date_to) {
                     $dateFromStr = substr($request->date_from, 0, 10) . ' 00:00:00';
                     $dateToStr   = substr($request->date_to, 0, 10) . ' 23:59:59';
-                    $dateFrom = \Carbon\Carbon::parse($dateFromStr, 'America/Lima')->toDateTimeString();
-                    $dateTo   = \Carbon\Carbon::parse($dateToStr, 'America/Lima')->toDateTimeString();
+                    $dateFrom = \Carbon\Carbon::parse($dateFromStr, 'UTC')->setTimezone('America/Lima')->toDateTimeString();
+                    $dateTo   = \Carbon\Carbon::parse($dateToStr, 'UTC')->setTimezone('America/Lima')->toDateTimeString();
                     $query->whereBetween('ce.entry_date', [$dateFrom, $dateTo]);
                 } elseif ($request->month) {
                     [$year, $mo] = \explode('-', $request->month);
-                    $dateFrom = \Carbon\Carbon::parse("{$year}-{$mo}-01 00:00:00", 'America/Lima')->toDateTimeString();
+                    $dateFrom = \Carbon\Carbon::parse("{$year}-{$mo}-01 00:00:00", 'UTC')->setTimezone('America/Lima')->toDateTimeString();
                     $lastDay  = date('t', mktime(0, 0, 0, (int)$mo, 1, (int)$year));
-                    $dateTo   = \Carbon\Carbon::parse("{$year}-{$mo}-{$lastDay} 23:59:59", 'America/Lima')->toDateTimeString();
+                    $dateTo   = \Carbon\Carbon::parse("{$year}-{$mo}-{$lastDay} 23:59:59", 'UTC')->setTimezone('America/Lima')->toDateTimeString();
                     $query->whereBetween('ce.entry_date', [$dateFrom, $dateTo]);
                 }
                 if ($request->campaign_id) {
@@ -1155,16 +1473,17 @@ class KPICampaignsController extends BasicController
     }
 
     /**
-     * Obtiene el gasto diario desglosado para Meta, Google Ads y TikTok.
+     * Obtiene el gasto diario desglosado para Meta, Google Ads y TikTok (PEN y USD).
      */
     private function getDailySpendBreakdown(string $dateFrom, string $dateTo): array
     {
         $businessId = Auth::user()->business_id;
         $exchangeRateCalc = $this->getLunaExchangeRate();
-        $dailySpends = [];
+        $dailySpendsPen = [];
+        $dailySpendsUsd = [];
 
         $startDateStr = substr($dateFrom, 0, 10);
-        $endDateStr = substr($dateTo, 0, 10);
+        $endDateStr   = substr($dateTo, 0, 10);
 
         // 1. Meta Ads Daily Spend
         try {
@@ -1181,37 +1500,42 @@ class KPICampaignsController extends BasicController
             if ($integration) {
                 $accessToken = $integration->meta_app_token ?: $integration->meta_access_token;
                 $adAccountId = ltrim($integration->meta_ad_account_id, 'act_');
-                $graphUrl = env('FACEBOOK_GRAPH_URL', 'https://graph.facebook.com/v22.0');
+                $graphUrl    = env('FACEBOOK_GRAPH_URL', 'https://graph.facebook.com/v22.0');
 
                 // Obtener moneda
                 $accountUrl = "{$graphUrl}/act_{$adAccountId}?fields=currency&access_token={$accessToken}";
-                $accRes = new \SoDe\Extend\Fetch($accountUrl);
-                $accBody = $accRes->json();
-                $currency = $accBody['currency'] ?? 'PEN';
+                $accRes     = new \SoDe\Extend\Fetch($accountUrl);
+                $accBody    = $accRes->json();
+                $currency   = strtoupper($accBody['currency'] ?? 'PEN');
 
                 // Llamar a Meta Ads API con time_increment=1
                 $timeRange = json_encode(['since' => $startDateStr, 'until' => $endDateStr]);
-                $url = "{$graphUrl}/act_{$adAccountId}/insights?level=campaign&time_increment=1&time_range=" . urlencode($timeRange)
-                     . "&fields=spend,date_start"
-                     . "&limit=500"
-                     . "&access_token={$accessToken}";
+                $url       = "{$graphUrl}/act_{$adAccountId}/insights?level=campaign&time_increment=1&time_range=" . urlencode($timeRange)
+                           . "&fields=spend,date_start"
+                           . "&limit=500"
+                           . "&access_token={$accessToken}";
 
                 $nextUrl = $url;
-                $pages = 0;
+                $pages   = 0;
                 while ($nextUrl && $pages < 10) {
-                    $res = new \SoDe\Extend\Fetch($nextUrl);
+                    $res  = new \SoDe\Extend\Fetch($nextUrl);
                     $body = $res->json();
                     if (isset($body['error'])) break;
 
                     if (!empty($body['data'])) {
                         foreach ($body['data'] as $item) {
-                            $day = $item['date_start'] ?? null;
-                            $spend = (float)($item['spend'] ?? 0);
+                            $day      = $item['date_start'] ?? null;
+                            $rawSpend = (float)($item['spend'] ?? 0);
                             if ($day) {
-                                if (strtoupper($currency) === 'USD') {
-                                    $spend *= $exchangeRateCalc;
+                                if ($currency === 'USD') {
+                                    $spendUsd = $rawSpend;
+                                    $spendPen = $rawSpend * $exchangeRateCalc;
+                                } else {
+                                    $spendPen = $rawSpend;
+                                    $spendUsd = $exchangeRateCalc > 0 ? $rawSpend / $exchangeRateCalc : 0;
                                 }
-                                $dailySpends[$day] = ($dailySpends[$day] ?? 0) + $spend;
+                                $dailySpendsPen[$day] = ($dailySpendsPen[$day] ?? 0) + $spendPen;
+                                $dailySpendsUsd[$day] = ($dailySpendsUsd[$day] ?? 0) + $spendUsd;
                             }
                         }
                     }
@@ -1231,30 +1555,30 @@ class KPICampaignsController extends BasicController
                 ->first();
 
             if ($integration && $integration->meta_access_token) {
-                $refreshToken = $integration->meta_app_token ?? $integration->meta_access_token;
+                $refreshToken   = $integration->meta_app_token ?? $integration->meta_access_token;
                 $developerToken = env('GOOGLE_ADS_DEVELOPER_TOKEN') ?: Setting::get('google-ads-developer-token');
-                $customerId = $integration->meta_business_id;
+                $customerId     = $integration->meta_business_id;
 
                 if ($developerToken && $customerId) {
                     $client = new \Google\Client();
                     $client->setAuthConfig(storage_path('app/google/credentials.json'));
-                    $token = $client->fetchAccessTokenWithRefreshToken($refreshToken);
-                    $accessToken = $token['access_token'] ?? null;
+                    $token        = $client->fetchAccessTokenWithRefreshToken($refreshToken);
+                    $accessToken  = $token['access_token'] ?? null;
 
                     if ($accessToken) {
                         $googleAdsController = new GoogleAdsController();
-                        $gaql = "SELECT segments.date, metrics.cost_micros FROM campaign WHERE segments.date BETWEEN '{$startDateStr}' AND '{$endDateStr}'";
-                        $results = $googleAdsController->queryGoogleAds($customerId, $accessToken, $developerToken, $gaql);
+                        $gaql     = "SELECT segments.date, metrics.cost_micros FROM campaign WHERE segments.date BETWEEN '{$startDateStr}' AND '{$endDateStr}'";
+                        $results  = $googleAdsController->queryGoogleAds($customerId, $accessToken, $developerToken, $gaql);
                         
                         foreach ($results as $row) {
-                            $day = $row['segments']['date'] ?? null;
+                            $day        = $row['segments']['date'] ?? null;
                             $costMicros = (float)($row['metrics']['costMicros'] ?? 0);
-                            $spend = $costMicros / 1000000;
-                            // Conversión a PEN (Google Ads se almacena en USD)
-                            $spend *= $exchangeRateCalc;
+                            $spendUsd   = $costMicros / 1000000;
+                            $spendPen   = $spendUsd * $exchangeRateCalc;
 
                             if ($day) {
-                                $dailySpends[$day] = ($dailySpends[$day] ?? 0) + $spend;
+                                $dailySpendsPen[$day] = ($dailySpendsPen[$day] ?? 0) + $spendPen;
+                                $dailySpendsUsd[$day] = ($dailySpendsUsd[$day] ?? 0) + $spendUsd;
                             }
                         }
                     }
@@ -1272,7 +1596,7 @@ class KPICampaignsController extends BasicController
                 ->first();
 
             if ($integration && $integration->meta_access_token) {
-                $accessToken = $integration->meta_access_token;
+                $accessToken  = $integration->meta_access_token;
                 $advertiserId = $integration->meta_ad_account_id ?? $integration->meta_business_id;
 
                 if ($advertiserId) {
@@ -1289,12 +1613,13 @@ class KPICampaignsController extends BasicController
                     
                     foreach ($list as $item) {
                         $metrics = $item['metrics'] ?? [];
-                        $dayRaw = $item['dimensions']['stat_time_day'] ?? null;
+                        $dayRaw  = $item['dimensions']['stat_time_day'] ?? null;
                         if ($dayRaw) {
-                            $day = substr($dayRaw, 0, 10);
-                            $spend = (float)($metrics['spend'] ?? 0);
-                            $spend *= $exchangeRateCalc;
-                            $dailySpends[$day] = ($dailySpends[$day] ?? 0) + $spend;
+                            $day      = substr($dayRaw, 0, 10);
+                            $spendUsd = (float)($metrics['spend'] ?? 0);
+                            $spendPen = $spendUsd * $exchangeRateCalc;
+                            $dailySpendsPen[$day] = ($dailySpendsPen[$day] ?? 0) + $spendPen;
+                            $dailySpendsUsd[$day] = ($dailySpendsUsd[$day] ?? 0) + $spendUsd;
                         }
                     }
                 }
@@ -1303,6 +1628,83 @@ class KPICampaignsController extends BasicController
             \Illuminate\Support\Facades\Log::warning("Error fetching daily TikTok spend: " . $e->getMessage());
         }
 
-        return $dailySpends;
+        return [
+            'pen' => $dailySpendsPen,
+            'usd' => $dailySpendsUsd,
+        ];
+    }
+
+    /**
+     * Obtiene el gasto por anuncio (Ad) desde Meta Insights API para el rango de fechas seleccionado.
+     */
+    private function getPeriodAdSpends(string $dateFrom, string $dateTo): array
+    {
+        $businessId = Auth::user()->business_id;
+        $exchangeRateCalc = $this->getLunaExchangeRate();
+        $adSpends = [];
+
+        $startDateStr = substr($dateFrom, 0, 10);
+        $endDateStr   = substr($dateTo, 0, 10);
+
+        try {
+            $integration = \App\Models\Integration::where('business_id', $businessId)
+                ->where(function($q) {
+                    $q->where('meta_service', 'forms')
+                      ->orWhere('meta_service', 'messenger');
+                })
+                ->whereNotNull('meta_access_token')
+                ->whereNotNull('meta_ad_account_id')
+                ->where('meta_ad_account_id', '<>', '')
+                ->first();
+
+            if ($integration) {
+                $accessToken = $integration->meta_app_token ?: $integration->meta_access_token;
+                $adAccountId = ltrim($integration->meta_ad_account_id, 'act_');
+                $graphUrl    = env('FACEBOOK_GRAPH_URL', 'https://graph.facebook.com/v22.0');
+
+                // Obtener moneda de la cuenta publicitaria
+                $accountUrl = "{$graphUrl}/act_{$adAccountId}?fields=currency&access_token={$accessToken}";
+                $accRes     = new \SoDe\Extend\Fetch($accountUrl);
+                $accBody    = $accRes->json();
+                $currency   = $accBody['currency'] ?? 'PEN';
+
+                // Llamar a Meta Ads API con level=ad para el rango de fechas exacto
+                $timeRange = json_encode(['since' => $startDateStr, 'until' => $endDateStr]);
+                $url       = "{$graphUrl}/act_{$adAccountId}/insights?level=ad&time_range=" . urlencode($timeRange)
+                           . "&fields=adset_name,ad_name,spend"
+                           . "&limit=500"
+                           . "&access_token={$accessToken}";
+
+                $nextUrl = $url;
+                $pages   = 0;
+                while ($nextUrl && $pages < 10) {
+                    $res  = new \SoDe\Extend\Fetch($nextUrl);
+                    $body = $res->json();
+                    if (isset($body['error'])) break;
+
+                    if (!empty($body['data'])) {
+                        foreach ($body['data'] as $item) {
+                            $asName = $item['adset_name'] ?? '';
+                            $aName  = $item['ad_name'] ?? '';
+                            $spend  = (float)($item['spend'] ?? 0);
+
+                            if ($asName && $aName) {
+                                if (strtoupper($currency) === 'USD') {
+                                    $spend *= $exchangeRateCalc;
+                                }
+                                $key = $asName . '|||' . $aName;
+                                $adSpends[$key] = ($adSpends[$key] ?? 0) + $spend;
+                            }
+                        }
+                    }
+                    $nextUrl = $body['paging']['next'] ?? null;
+                    $pages++;
+                }
+            }
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning("Error fetching period ad spends: " . $e->getMessage());
+        }
+
+        return $adSpends;
     }
 }
