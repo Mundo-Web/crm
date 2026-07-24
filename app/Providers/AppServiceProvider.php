@@ -24,6 +24,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        date_default_timezone_set('America/Lima');
         Client::observe([
             ClientAssignationObserver::class,
             ClientStatusObserver::class

@@ -119,6 +119,7 @@ class KPICampaignsController extends BasicController
 
     public function kpi(Request $request, ?string $month = null)
     {
+        date_default_timezone_set('America/Lima');
         $response = Response::simpleTryCatch(function ($response) use ($request, $month) {
 
             // ──────────────────────────────────────────────────────────
