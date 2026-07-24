@@ -19,7 +19,7 @@ use Illuminate\Support\Facades\DB;
 $businessId = 3; // Empresa Papaya
 
 $dateFrom = $argv[1] ?? '2026-07-01';
-$dateTo   = $argv[2] ?? '2026-07-22';
+$dateTo   = $argv[2] ?? '2026-07-24';
 
 $startStr = substr($dateFrom, 0, 10) . ' 00:00:00';
 $endStr   = substr($dateTo, 0, 10) . ' 23:59:59';
