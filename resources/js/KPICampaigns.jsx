@@ -473,10 +473,14 @@ const KPICampaigns = ({ months = [], currentMonth, currentYear, advisors = [], w
         };
     };
 
+    const [selectedWeekDates, setSelectedWeekDates] = useState(null);
+
     // ─── REST: paginación de leads con nuevos filtros ────────────────────────
     const leadsRest = {
         paginate: (params) => {
-            const adjusted = getAdjustedDates(dateFrom, dateTo);
+            const adjustedFrom = selectedWeekDates ? selectedWeekDates.start_date : dateFrom;
+            const adjustedTo   = selectedWeekDates ? selectedWeekDates.end_date   : dateTo;
+            const adjusted     = getAdjustedDates(adjustedFrom, adjustedTo);
             return axios
                 .post(`/api/dashboard/campaigns/leads/paginate`, {
                     ...params,
@@ -491,8 +495,14 @@ const KPICampaigns = ({ months = [], currentMonth, currentYear, advisors = [], w
         },
     };
 
-    const fetchLeads = (campaignId, campaignName, adSetName) => {
-        setModalTitle(`Leads: ${campaignName} / ${adSetName ? adSetName : "Todos"}`);
+    const fetchLeads = (campaignId, campaignName, adSetName, datesOverride = null) => {
+        if (datesOverride) {
+            setSelectedWeekDates(datesOverride);
+            setModalTitle(`Registros · ${datesOverride.label} (${datesOverride.start_formatted} - ${datesOverride.end_formatted}): ${datesOverride.registros} leads`);
+        } else {
+            setSelectedWeekDates(null);
+            setModalTitle(`Leads: ${campaignName || 'Todos'} / ${adSetName ? adSetName : "Todos"}`);
+        }
         setSelectedCampaignId(campaignId);
         setSelectedAdSetName(adSetName);
         setTimeout(() => {
@@ -1521,10 +1531,25 @@ const KPICampaigns = ({ months = [], currentMonth, currentYear, advisors = [], w
                                                     <td style={{ padding: '12px', textAlign: 'center', color: '#64748b', fontWeight: 600 }}>{wk.start_formatted}</td>
                                                     <td style={{ padding: '12px', textAlign: 'center', color: '#64748b', fontWeight: 600, borderRight: '1px solid #e2e8f0' }}>{wk.end_formatted}</td>
 
-                                                    {/* Registros — solo número, sin interacción */}
-                                                    <td style={{ padding: '12px', textAlign: 'right', fontWeight: 700, color: '#0f172a', background: 'rgba(79, 70, 229, 0.02)' }}>
-                                                        {fmtNum(wk.registros)}
-                                                    </td>
+                                                    {/* Registros — click para ver el detalle de leads de la semana */}
+                                                    <Tippy content={<span style={{ fontSize: '12px', color: '#0f172a' }}>Ver los <strong>{fmtNum(wk.registros)}</strong> leads de {wk.label} ({wk.start_formatted} - {wk.end_formatted})</span>} theme="kpi-light" placement="top" arrow>
+                                                        <td
+                                                            onClick={() => fetchLeads(null, null, null, wk)}
+                                                            style={{
+                                                                padding: '12px',
+                                                                textAlign: 'right',
+                                                                fontWeight: 800,
+                                                                color: '#4f46e5',
+                                                                background: 'rgba(79, 70, 229, 0.05)',
+                                                                cursor: 'pointer',
+                                                                textDecoration: 'underline',
+                                                                textDecorationColor: 'rgba(79, 70, 229, 0.4)',
+                                                                textUnderlineOffset: '3px'
+                                                            }}
+                                                        >
+                                                            {fmtNum(wk.registros)}
+                                                        </td>
+                                                    </Tippy>
 
                                                     {/* Inversión — tooltip customizado PEN + USD */}
                                                     <Tippy

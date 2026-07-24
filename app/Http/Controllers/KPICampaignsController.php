@@ -1236,6 +1236,8 @@ class KPICampaignsController extends BasicController
                         'label'           => 'S' . $weekNumber,
                         'start_formatted' => $utcCur->format('d/m'),
                         'end_formatted'   => $utcEnd->format('d/m'),
+                        'start_date'      => $startStr,
+                        'end_date'        => $endStr,
                         'registros'       => $registros,
                         'spend'           => round($weekSpendPen, 2),
                         'spend_usd'       => round($weekSpendUsd, 2),
