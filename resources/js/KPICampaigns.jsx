@@ -2750,6 +2750,7 @@ const KPICampaigns = ({ months = [], currentMonth, currentYear, advisors = [], w
                                     advisorId,
                                     selectedCampaignId,
                                     selectedAdSetName,
+                                    selectedWeekDates,
                                 ]}
                                 columns={[
                                     {
