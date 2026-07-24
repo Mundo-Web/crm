@@ -76,41 +76,53 @@ class GoogleAdsController extends Controller
             $developerToken = env('GOOGLE_ADS_DEVELOPER_TOKEN') ?: Setting::get('google-ads-developer-token');
             
             if ($developerToken) {
-                $url = "https://googleads.googleapis.com/v17/customers:listAccessibleCustomers";
-                $res = new Fetch($url, [
-                    'method' => 'GET',
-                    'headers' => [
-                        'Authorization' => "Bearer {$accessToken}",
-                        'developer-token' => $developerToken
-                    ]
-                ]);
-                $listData = $res->json();
-                
-                if (isset($listData['resourceNames'])) {
-                    foreach ($listData['resourceNames'] as $resName) {
-                        $cId = str_replace('customers/', '', $resName);
-                        $profileUrl = "https://googleads.googleapis.com/v17/customers/{$cId}/googleAds:search";
-                        $profileRes = new Fetch($profileUrl, [
-                            'method' => 'POST',
-                            'headers' => [
-                                'Authorization' => "Bearer {$accessToken}",
-                                'developer-token' => $developerToken,
-                                'Content-Type' => 'application/json'
-                            ],
-                            'body' => [
-                                'query' => "SELECT customer.id, customer.descriptive_name FROM customer LIMIT 1"
-                            ]
-                        ]);
-                        $profileData = $profileRes->json();
-                        $custName = 'Cuenta de Google Ads ' . $cId;
-                        if (isset($profileData['results'][0]['customer']['descriptiveName'])) {
-                            $custName = $profileData['results'][0]['customer']['descriptiveName'];
+                try {
+                    $url = "https://googleads.googleapis.com/v17/customers:listAccessibleCustomers";
+                    $res = new Fetch($url, [
+                        'method' => 'GET',
+                        'headers' => [
+                            'Authorization' => "Bearer {$accessToken}",
+                            'developer-token' => $developerToken
+                        ]
+                    ]);
+                    $listData = $res->json();
+                    
+                    if (is_array($listData) && isset($listData['resourceNames'])) {
+                        foreach ($listData['resourceNames'] as $resName) {
+                            $cId = str_replace('customers/', '', $resName);
+                            $profileUrl = "https://googleads.googleapis.com/v17/customers/{$cId}/googleAds:search";
+                            try {
+                                $profileRes = new Fetch($profileUrl, [
+                                    'method' => 'POST',
+                                    'headers' => [
+                                        'Authorization' => "Bearer {$accessToken}",
+                                        'developer-token' => $developerToken,
+                                        'Content-Type' => 'application/json'
+                                    ],
+                                    'body' => [
+                                        'query' => "SELECT customer.id, customer.descriptive_name FROM customer LIMIT 1"
+                                    ]
+                                ]);
+                                $profileData = $profileRes->json();
+                                $custName = 'Cuenta de Google Ads ' . $cId;
+                                if (is_array($profileData) && isset($profileData['results'][0]['customer']['descriptiveName'])) {
+                                    $custName = $profileData['results'][0]['customer']['descriptiveName'];
+                                }
+                                $accounts[] = [
+                                    'id' => $cId,
+                                    'name' => $custName
+                                ];
+                            } catch (\Throwable $profileError) {
+                                Log::warning("No se pudo obtener el nombre descriptivo para la cuenta Google Ads {$cId}: " . $profileError->getMessage());
+                                $accounts[] = [
+                                    'id' => $cId,
+                                    'name' => 'Cuenta de Google Ads ' . $cId
+                                ];
+                            }
                         }
-                        $accounts[] = [
-                            'id' => $cId,
-                            'name' => $custName
-                        ];
                     }
+                } catch (\Throwable $listError) {
+                    Log::warning("Error consultando listAccessibleCustomers de Google Ads: " . $listError->getMessage());
                 }
             }
 
