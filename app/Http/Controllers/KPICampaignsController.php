@@ -1105,8 +1105,10 @@ class KPICampaignsController extends BasicController
                     ? (int)$request->get('weekStartDay') 
                     : (int)(Setting::get('campaign-week-start-day') ?? 1); // 1 = Lunes
 
-                $startLimit = \Carbon\Carbon::parse($dateFrom);
-                $endLimit   = \Carbon\Carbon::parse($dateTo);
+                $rawFrom = $request->date_from ?: $dateFrom;
+                $rawTo   = $request->date_to   ?: $dateTo;
+                $startLimit = \Carbon\Carbon::parse(substr($rawFrom, 0, 10) . ' 00:00:00');
+                $endLimit   = \Carbon\Carbon::parse(substr($rawTo, 0, 10) . ' 23:59:59');
 
                 // Usar desglose de inversión diaria en PEN y USD ya calculado
                 if (!isset($dailyPen) || !isset($dailyUsd)) {
@@ -1137,8 +1139,7 @@ class KPICampaignsController extends BasicController
                 };
 
                 while ($currentStart->lt($endLimit)) {
-                    // Work in UTC for calendar week calculation
-                    $utcCur = $currentStart->copy()->setTimezone('UTC');
+                    $utcCur = $currentStart->copy();
                     $utcEnd = $utcCur->copy();
 
                     for ($i = 0; $i < 6; $i++) {
@@ -1147,14 +1148,14 @@ class KPICampaignsController extends BasicController
                     }
                     $utcEnd->endOfDay();
 
-                    $currentEnd = $utcEnd->copy()->setTimezone('America/Lima');
+                    $currentEnd = $utcEnd->copy();
 
                     if ($currentEnd->gt($endLimit)) {
                         $currentEnd = $endLimit->copy();
                     }
 
-                    $startStr = $currentStart->toDateTimeString();
-                    $endStr   = $currentEnd->toDateTimeString();
+                    $startStr = $currentStart->copy()->subHours(5)->toDateTimeString();
+                    $endStr   = $currentEnd->copy()->subHours(5)->toDateTimeString();
 
                     $qWeek = $weekQueryBase($startStr, $endStr);
 
@@ -1164,8 +1165,8 @@ class KPICampaignsController extends BasicController
                     // ── Inversión de la semana (sumando gastos diarios por día calendario UTC) ───
                     $weekSpendPen = 0.0;
                     $weekSpendUsd = 0.0;
-                    $tempDate     = $utcCur->copy();
-                    while ($tempDate->lte($utcEnd)) {
+                    $tempDate = $currentStart->copy();
+                    while ($tempDate->lte($currentEnd)) {
                         $dStr = $tempDate->format('Y-m-d');
                         $valP = $dailyPen[$dStr] ?? 0;
                         $valU = $dailyUsd[$dStr] ?? 0;
@@ -1234,8 +1235,8 @@ class KPICampaignsController extends BasicController
 
                     $weeklyEvolution[] = [
                         'label'           => 'S' . $weekNumber,
-                        'start_formatted' => $utcCur->format('d/m'),
-                        'end_formatted'   => $utcEnd->format('d/m'),
+                        'start_formatted' => $currentStart->format('d/m'),
+                        'end_formatted'   => $currentEnd->format('d/m'),
                         'start_date'      => $startStr,
                         'end_date'        => $endStr,
                         'registros'       => $registros,
