@@ -474,18 +474,32 @@ const KPICampaigns = ({ months = [], currentMonth, currentYear, advisors = [], w
     };
 
     const [selectedWeekDates, setSelectedWeekDates] = useState(null);
+    const selectedWeekDatesRef = useRef(null);
 
     // ─── REST: paginación de leads con nuevos filtros ────────────────────────
     const leadsRest = {
         paginate: (params) => {
-            const adjustedFrom = selectedWeekDates ? selectedWeekDates.start_date : dateFrom;
-            const adjustedTo   = selectedWeekDates ? selectedWeekDates.end_date   : dateTo;
-            const adjusted     = getAdjustedDates(adjustedFrom, adjustedTo);
+            const override = selectedWeekDatesRef.current;
+            let dateFromParam = dateFrom;
+            let dateToParam   = dateTo;
+            let isWeekly      = 0;
+
+            if (override) {
+                dateFromParam = override.start_date;
+                dateToParam   = override.end_date;
+                isWeekly      = 1;
+            } else {
+                const adjusted = getAdjustedDates(dateFrom, dateTo);
+                dateFromParam  = adjusted.date_from;
+                dateToParam    = adjusted.date_to;
+            }
+
             return axios
                 .post(`/api/dashboard/campaigns/leads/paginate`, {
                     ...params,
-                    date_from: adjusted.date_from,
-                    date_to: adjusted.date_to,
+                    date_from: dateFromParam,
+                    date_to: dateToParam,
+                    is_weekly: isWeekly,
                     platform,
                     advisor_id: advisorId !== "all" ? advisorId : null,
                     campaign_id: selectedCampaignId,
@@ -496,11 +510,11 @@ const KPICampaigns = ({ months = [], currentMonth, currentYear, advisors = [], w
     };
 
     const fetchLeads = (campaignId, campaignName, adSetName, datesOverride = null) => {
+        selectedWeekDatesRef.current = datesOverride;
+        setSelectedWeekDates(datesOverride);
         if (datesOverride) {
-            setSelectedWeekDates(datesOverride);
             setModalTitle(`Registros · ${datesOverride.label} (${datesOverride.start_formatted} - ${datesOverride.end_formatted}): ${datesOverride.registros} leads`);
         } else {
-            setSelectedWeekDates(null);
             setModalTitle(`Leads: ${campaignName || 'Todos'} / ${adSetName ? adSetName : "Todos"}`);
         }
         setSelectedCampaignId(campaignId);
@@ -1459,8 +1473,8 @@ const KPICampaigns = ({ months = [], currentMonth, currentYear, advisors = [], w
                             </div>
                         </div>
 
-                        {/* Table container */}
-                        <div style={{ overflowX: 'auto', borderBottomLeftRadius: '24px', borderBottomRightRadius: '24px' }}>
+                        {/* Desktop Table container (pantallas medianas y grandes) */}
+                        <div className="d-none d-md-block" style={{ overflowX: 'auto', borderBottomLeftRadius: '24px', borderBottomRightRadius: '24px' }}>
                             <table style={{
                                 width: '100%',
                                 borderCollapse: 'collapse',
@@ -1723,6 +1737,58 @@ const KPICampaigns = ({ months = [], currentMonth, currentYear, advisors = [], w
                                     </tr>
                                 </tfoot>
                             </table>
+                        </div>
+
+                        {/* Mobile View: Tarjetas por Semana (solo en pantallas móviles < 768px) */}
+                        <div className="d-block d-md-none p-3" style={{ background: '#f8fafc', borderBottomLeftRadius: '24px', borderBottomRightRadius: '24px' }}>
+                            {loading ? (
+                                <div className="text-center py-4 text-muted">Cargando semanas...</div>
+                            ) : (
+                                (weeklyEvolution.filter(w => (w.registros ?? 0) > 0 || (w.spend ?? 0) > 0).length > 0
+                                    ? weeklyEvolution.filter(w => (w.registros ?? 0) > 0 || (w.spend ?? 0) > 0)
+                                    : weeklyEvolution
+                                ).map((wk) => (
+                                    <div key={wk.label} className="card border-0 shadow-sm mb-3" style={{ borderRadius: '16px', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
+                                        <div className="p-3 d-flex align-items-center justify-content-between" style={{ background: 'linear-gradient(135deg, #4f46e5 0%, #6366f1 100%)', color: '#fff' }}>
+                                            <div>
+                                                <span className="badge bg-white text-primary fw-bold me-2" style={{ fontSize: '11px' }}>{wk.label}</span>
+                                                <span className="fw-semibold" style={{ fontSize: '13px' }}>{wk.start_formatted} al {wk.end_formatted}</span>
+                                            </div>
+                                            <button
+                                                onClick={() => fetchLeads(null, null, null, wk)}
+                                                className="btn btn-sm btn-light rounded-pill fw-bold text-primary px-3 shadow-sm"
+                                                style={{ fontSize: '11px' }}
+                                            >
+                                                <i className="mdi mdi-account-group me-1"></i>
+                                                {fmtNum(wk.registros)} Leads
+                                            </button>
+                                        </div>
+                                        <div className="p-3" style={{ background: '#ffffff' }}>
+                                            <div className="row g-2 mb-2">
+                                                <div className="col-6">
+                                                    <div className="p-2 rounded-3" style={{ background: '#eef2ff', border: '1px solid #c7d2fe' }}>
+                                                        <small className="text-muted d-block" style={{ fontSize: '10px', fontWeight: 600 }}>Inversión PEN</small>
+                                                        <span className="fw-bold text-dark" style={{ fontSize: '14px' }}>S/ {fmtMon(wk.spend)}</span>
+                                                        <small className="text-primary d-block fw-semibold" style={{ fontSize: '10px' }}>$ {fmtMon(wk.spend_usd ?? (wk.spend / (usdExchangeRate || 3.80)))} USD</small>
+                                                    </div>
+                                                </div>
+                                                <div className="col-6">
+                                                    <div className="p-2 rounded-3" style={{ background: '#f0fdf4', border: '1px solid #bbf7d0' }}>
+                                                        <small className="text-muted d-block" style={{ fontSize: '10px', fontWeight: 600 }}>Costo/Lead (CPR)</small>
+                                                        <span className="fw-bold text-dark" style={{ fontSize: '14px' }}>S/ {fmtMon(wk.cpr)}</span>
+                                                        <small className="text-success d-block fw-semibold" style={{ fontSize: '10px' }}>$ {fmtMon(wk.cpr_usd ?? (wk.cpr / (usdExchangeRate || 3.80)))} USD</small>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className="d-flex align-items-center justify-content-between pt-2 border-top text-muted" style={{ fontSize: '11px' }}>
+                                                <span>Contactados: <strong className="text-dark">{fmtNum(wk.contactados)}</strong></span>
+                                                <span>Respondió: <strong className="text-success">{fmtNum(wk.respondio)}</strong></span>
+                                                <span>Ventas: <strong className="text-primary">{fmtNum(wk.ventas)}</strong></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))
+                            )}
                         </div>
                     </div>
 

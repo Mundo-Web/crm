@@ -1367,9 +1367,41 @@ class KPICampaignsController extends BasicController
         return $this->paginate($request);
     }
 
+    public function paginate(Request $request): \Illuminate\Http\Response|\Illuminate\Routing\ResponseFactory
+    {
+        $request->merge(['requireTotalCount' => true]);
+        $res = parent::paginate($request);
+        $content = $res->getContent();
+        $data = json_decode($content, true);
+        if (is_array($data) && !empty($data['data'])) {
+            $uniqueData = [];
+            $seenPhones = [];
+            $seenEmails = [];
+            foreach ($data['data'] as $item) {
+                $phone = preg_replace('/[^0-9]/', '', $item['contact_phone'] ?? '');
+                if (strlen($phone) > 9) $phone = substr($phone, -9);
+                $email = strtolower(trim($item['contact_email'] ?? ''));
+
+                $isDuplicate = false;
+                if ($phone && isset($seenPhones[$phone])) $isDuplicate = true;
+                if ($email && isset($seenEmails[$email])) $isDuplicate = true;
+
+                if (!$isDuplicate) {
+                    if ($phone) $seenPhones[$phone] = true;
+                    if ($email) $seenEmails[$email] = true;
+                    $uniqueData[] = $item;
+                }
+            }
+            $data['data'] = array_values($uniqueData);
+            $data['totalCount'] = count($uniqueData);
+            return response($data, 200, ['Content-Type' => 'application/json']);
+        }
+        return $res;
+    }
+
     public function setPaginationInstance(Request $request, string $model)
     {
-        return Client::select([
+        $instance = Client::select([
             'clients.id',
             'clients.name',
             'clients.contact_phone',
@@ -1387,46 +1419,59 @@ class KPICampaignsController extends BasicController
         ])
             ->distinct()
             ->join('client_entries as ce', 'ce.client_id', '=', 'clients.id')
+            ->join('campaigns as campaign', 'campaign.id', '=', 'ce.campaign_id')
             ->leftJoin('statuses', 'statuses.id', '=', 'clients.status_id')
             ->leftJoin('statuses as manage_status', 'manage_status.id', '=', 'clients.manage_status_id')
-            ->leftJoin('users', 'users.id', '=', 'clients.assigned_to')
-            ->where(function ($query) use ($request) {
-                if ($request->date_from && $request->date_to) {
+            ->leftJoin('users', 'users.id', '=', 'clients.assigned_to');
+
+        return $instance->where(function ($query) use ($request) {
+            $query->whereRaw('LENGTH(ce.campaign_id) > 10')
+                ->whereNotNull('ce.adset_name')
+                ->where('ce.adset_name', '<>', '')
+                ->whereNotNull('ce.ad_name')
+                ->where('ce.ad_name', '<>', '');
+
+            if ($request->date_from && $request->date_to) {
+                if (strlen($request->date_from) > 10 || $request->is_weekly) {
+                    $dateFrom = $request->date_from;
+                    $dateTo   = $request->date_to;
+                } else {
                     $dateFromStr = substr($request->date_from, 0, 10) . ' 00:00:00';
                     $dateToStr   = substr($request->date_to, 0, 10) . ' 23:59:59';
                     $dateFrom = \Carbon\Carbon::parse($dateFromStr, 'UTC')->setTimezone('America/Lima')->toDateTimeString();
                     $dateTo   = \Carbon\Carbon::parse($dateToStr, 'UTC')->setTimezone('America/Lima')->toDateTimeString();
-                    $query->whereBetween('ce.entry_date', [$dateFrom, $dateTo]);
-                } elseif ($request->month) {
-                    [$year, $mo] = \explode('-', $request->month);
-                    $dateFrom = \Carbon\Carbon::parse("{$year}-{$mo}-01 00:00:00", 'UTC')->setTimezone('America/Lima')->toDateTimeString();
-                    $lastDay  = date('t', mktime(0, 0, 0, (int)$mo, 1, (int)$year));
-                    $dateTo   = \Carbon\Carbon::parse("{$year}-{$mo}-{$lastDay} 23:59:59", 'UTC')->setTimezone('America/Lima')->toDateTimeString();
-                    $query->whereBetween('ce.entry_date', [$dateFrom, $dateTo]);
                 }
-                if ($request->campaign_id) {
-                    $query->where('ce.campaign_id', $request->campaign_id);
-                }
-                if ($request->adset_name) {
-                    $query->where('ce.adset_name', $request->adset_name);
-                }
-                if ($request->ad_name) {
-                    $query->where('ce.ad_name', $request->ad_name);
-                }
-                if ($request->platform && $request->platform !== 'all') {
-                    $platformMap = [
-                        'fb'      => ['Facebook', 'fb', 'Meta', 'facebook', 'facebook&instagram'],
-                        'ig'      => ['Instagram', 'ig', 'instagram', 'facebook&instagram'],
-                        'wa'      => ['WhatsApp', 'Whatsapp', 'whatsapp', 'wa'],
-                        'landing' => ['Landing', 'landing', 'integration', 'Formulario', 'CRM Atalaya'],
-                    ];
-                    $origins = $platformMap[$request->platform] ?? [$request->platform];
-                    $query->whereIn('clients.origin', $origins);
-                }
-                if ($request->advisor_id && $request->advisor_id !== 'all') {
-                    $query->where('clients.assigned_to', $request->advisor_id);
-                }
-            });
+                $query->whereBetween('ce.entry_date', [$dateFrom, $dateTo]);
+            } elseif ($request->month) {
+                [$year, $mo] = \explode('-', $request->month);
+                $dateFrom = \Carbon\Carbon::parse("{$year}-{$mo}-01 00:00:00", 'UTC')->setTimezone('America/Lima')->toDateTimeString();
+                $lastDay  = date('t', mktime(0, 0, 0, (int)$mo, 1, (int)$year));
+                $dateTo   = \Carbon\Carbon::parse("{$year}-{$mo}-{$lastDay} 23:59:59", 'UTC')->setTimezone('America/Lima')->toDateTimeString();
+                $query->whereBetween('ce.entry_date', [$dateFrom, $dateTo]);
+            }
+            if ($request->campaign_id) {
+                $query->where('ce.campaign_id', $request->campaign_id);
+            }
+            if ($request->adset_name) {
+                $query->where('ce.adset_name', $request->adset_name);
+            }
+            if ($request->ad_name) {
+                $query->where('ce.ad_name', $request->ad_name);
+            }
+            if ($request->platform && $request->platform !== 'all') {
+                $platformMap = [
+                    'fb'      => ['Facebook', 'fb', 'Meta', 'facebook', 'facebook&instagram'],
+                    'ig'      => ['Instagram', 'ig', 'instagram', 'facebook&instagram'],
+                    'wa'      => ['WhatsApp', 'Whatsapp', 'whatsapp', 'wa'],
+                    'landing' => ['Landing', 'landing', 'integration', 'Formulario', 'CRM Atalaya'],
+                ];
+                $origins = $platformMap[$request->platform] ?? [$request->platform];
+                $query->whereIn('clients.origin', $origins);
+            }
+            if ($request->advisor_id && $request->advisor_id !== 'all') {
+                $query->where('clients.assigned_to', $request->advisor_id);
+            }
+        });
     }
 
     /**
