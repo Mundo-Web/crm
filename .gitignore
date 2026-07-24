@@ -19,6 +19,7 @@ yarn-error.log
 /.vscode
 /storage/profile
 /storage/app/images/
+/storage/app/google/
 /vite.config.js.*
 
 # Fixes
