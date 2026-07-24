@@ -11,6 +11,7 @@ Esta guía documenta los pasos necesarios para configurar desde cero la integrac
 4. [Paso 4: Crear Credenciales OAuth 2.0](#paso-4-crear-credenciales-oauth-20)
 5. [Paso 5: Descargar e Instalar `credentials.json`](#paso-5-descargar-e-instalar-credentialsjson)
 6. [Paso 6: Configurar el Google Ads Developer Token (Explicación Detallada)](#paso-6-configurar-el-google-ads-developer-token)
+7. [Paso 7: Verificación de Marca en Google (Para Quitar el Límite de 100 Usuarios)](#paso-7-verificacion-de-marca-en-google)
 
 ---
 
@@ -124,3 +125,35 @@ Para entender el Developer Token, imagínalo como una **"Licencia de Software pa
      GOOGLE_ADS_DEVELOPER_TOKEN=tu_token_de_22_caracteres_aqui
      ```
    - O bien asegúrate de que esté guardado en la base de datos del CRM bajo la configuración `google-ads-developer-token`.
+
+---
+
+## 📌 Paso 7: Verificación de Marca en Google (Para Quitar el Límite de 100 Usuarios)
+
+### 🧐 ¿Qué significa el "Límite de 100 usuarios" de Google OAuth?
+Al poner la aplicación **"En Producción"**, Google le otorga a la app un **límite inicial de 100 cuentas de Google distintas** para otorgar permisos. Este límite es una medida de seguridad temporal de Google para aplicaciones que no han sido verificadas oficialmente.
+
+> ℹ️ **Nota:** Tu CRM **NO está limitado permanentemente a 100 clientes**. Puedes empezar a conectar hasta 100 cuentas de inmediato y luego solicitar la verificación para eliminar el límite por completo.
+
+---
+
+### 🛡️ Paso a Paso para Solicitar la Verificación Oficial de Google:
+
+1. **Acceder a la Consola de Google Auth:**
+   - En [Google Cloud Console](https://console.cloud.google.com/), ve al menú lateral izquierdo **Google Auth Platform** (o *APIs y servicios*).
+   - Haz clic en **Centro de verificación (Verification Center)** o **Información de la marca (Brand Information)**.
+
+2. **Completar los Datos de Marca:**
+   - **Nombre de la app:** `Atalaya CRM`
+   - **Logotipo de la app:** Sube el logo oficial de la empresa (formato PNG o JPG cuadrado).
+   - **Dominio de la app:** `atalaya.pe`
+   - **Enlace a la Política de Privacidad:** `https://atalaya.pe/politica-de-privacidad` (o tu URL de privacidad).
+   - **Enlace a los Términos de Servicio:** `https://atalaya.pe/terminos` (opcional).
+
+3. **Enviar para Revisión:**
+   - Revisa que toda la información esté completa y haz clic en **"Enviar para verificación"**.
+   - El equipo de revisión de Google procesará la solicitud en un plazo de **2 a 5 días hábiles**.
+
+4. **Resultado de la Verificación:**
+   - **Límite de usuarios eliminado:** El tope de 100 usuarios desaparece y tu CRM podrá conectar **clientes ilimitados**.
+   - **Sin pantallas de advertencia:** Tus clientes se conectarán directamente mediante el flujo OAuth oficial de Google sin ver ninguna advertencia de "app no verificada".
