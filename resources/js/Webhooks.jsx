@@ -632,11 +632,9 @@ const IntegrationWizardModal = ({
             }
         } else if (service === 'google-ads') {
             const selectedAcc = authPayload?.accounts?.find(a => a.id === assetId);
-            if (selectedAcc) {
-                targetAccountId = selectedAcc.id;
-                targetAccessToken = authPayload.user_token;
-                targetPhoneId = "";
-            }
+            targetAccountId = selectedAcc ? selectedAcc.id : assetId.replace(/\D/g, '');
+            targetAccessToken = authPayload?.user_token || accessToken;
+            targetPhoneId = "";
         } else if (service === 'whatsapp') {
             const selectedPhone = authPayload?.waba_phones?.find(p => p.id === assetId);
             if (selectedPhone) {
@@ -1631,55 +1629,84 @@ const IntegrationWizardModal = ({
                                             )}
 
                                             {/* Caso 2: Conectado pero no verificado/seleccionado todavía */}
-                                            {authPayload && !accountVerified && (
-                                                <div className="col-12">
-                                                    <div>
-                                                        <label className="form-label fw-semibold text-dark">
-                                                            <i className="mdi mdi-google text-warning me-2 fs-5"></i>
-                                                            Selecciona tu Cuenta Publicitaria de Google Ads (Customer ID):
-                                                        </label>
-                                                        <select
-                                                            className="form-select border-2 p-2"
-                                                            value={selectedAssetId}
-                                                            onChange={(e) => handleAssetSelect(e.target.value)}
-                                                            style={{ borderRadius: "8px" }}
-                                                            disabled={verifying}
-                                                        >
-                                                            <option value="">-- Selecciona una cuenta --</option>
-                                                            {authPayload?.accounts?.map((acc) => (
-                                                                <option key={acc.id} value={acc.id}>
-                                                                    {acc.name} (ID: {acc.id})
-                                                                </option>
-                                                            ))}
-                                                        </select>
-                                                        {(!authPayload?.accounts || authPayload.accounts.length === 0) && (
-                                                            <div className="alert alert-warning border-0 mt-3 small">
-                                                                <i className="mdi mdi-alert-circle me-1"></i>
-                                                                No se encontraron cuentas de Google Ads autorizadas. Asegúrate de configurar un Developer Token válido.
-                                                            </div>
-                                                        )}
-                                                    </div>
+                                             {authPayload && !accountVerified && (
+                                                 <div className="col-12">
+                                                     {authPayload?.accounts && authPayload.accounts.length > 0 && (
+                                                         <div className="mb-3">
+                                                             <label className="form-label fw-semibold text-dark">
+                                                                 <i className="mdi mdi-google text-warning me-2 fs-5"></i>
+                                                                 Selecciona tu Cuenta Publicitaria (Customer ID):
+                                                             </label>
+                                                             <select
+                                                                 className="form-select border-2 p-2"
+                                                                 value={selectedAssetId}
+                                                                 onChange={(e) => handleAssetSelect(e.target.value)}
+                                                                 style={{ borderRadius: "8px" }}
+                                                                 disabled={verifying}
+                                                             >
+                                                                 <option value="">-- Selecciona una cuenta --</option>
+                                                                 {authPayload.accounts.map((acc) => (
+                                                                     <option key={acc.id} value={acc.id}>
+                                                                         {acc.name} (ID: {acc.id})
+                                                                     </option>
+                                                                 ))}
+                                                             </select>
+                                                         </div>
+                                                     )}
 
-                                                    {verifying && (
-                                                        <div className="text-center py-3 mt-3">
-                                                            <i className="mdi mdi-loading mdi-spin me-2 fs-4 text-primary"></i>
-                                                            Verificando perfil seleccionado...
-                                                        </div>
-                                                    )}
+                                                     <div className="mb-3">
+                                                         <label className="form-label fw-semibold text-dark">
+                                                             <i className="mdi mdi-numeric me-2 text-warning fs-5"></i>
+                                                             Ingresa tu Customer ID de Google Ads (10 dígitos):
+                                                         </label>
+                                                         <div className="input-group">
+                                                             <input
+                                                                 type="text"
+                                                                 className="form-control border-2 p-2"
+                                                                 placeholder="Ej. 123-456-7890 o 1234567890"
+                                                                 value={selectedAssetId}
+                                                                 onChange={(e) => setSelectedAssetId(e.target.value)}
+                                                                 disabled={verifying}
+                                                             />
+                                                             <button
+                                                                 type="button"
+                                                                 className="btn btn-warning text-white fw-bold px-3"
+                                                                 onClick={() => handleAssetSelect(selectedAssetId)}
+                                                                 disabled={verifying || !selectedAssetId}
+                                                             >
+                                                                 {verifying ? (
+                                                                     <i className="mdi mdi-loading mdi-spin me-1"></i>
+                                                                 ) : (
+                                                                     <i className="mdi mdi-check me-1"></i>
+                                                                 )}
+                                                                 Verificar
+                                                             </button>
+                                                         </div>
+                                                         <small className="text-muted d-block mt-1">
+                                                             Encontrarás tu Customer ID de 10 dígitos en la esquina superior derecha de tu panel de Google Ads.
+                                                         </small>
+                                                     </div>
 
-                                                    <div className="text-end mt-4">
-                                                        <button
-                                                            type="button"
-                                                            className="btn btn-outline-danger btn-sm"
-                                                            onClick={handleDisconnectMeta}
-                                                            disabled={verifying}
-                                                        >
-                                                            <i className="mdi mdi-logout me-1"></i>
-                                                            Cancelar / Desconectar
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            )}
+                                                     {verifying && (
+                                                         <div className="text-center py-3 mt-3">
+                                                             <i className="mdi mdi-loading mdi-spin me-2 fs-4 text-primary"></i>
+                                                             Verificando perfil seleccionado...
+                                                         </div>
+                                                     )}
+
+                                                     <div className="text-end mt-4">
+                                                         <button
+                                                             type="button"
+                                                             className="btn btn-outline-danger btn-sm"
+                                                             onClick={handleDisconnectMeta}
+                                                             disabled={verifying}
+                                                         >
+                                                             <i className="mdi mdi-logout me-1"></i>
+                                                             Cancelar / Desconectar
+                                                         </button>
+                                                     </div>
+                                                 </div>
+                                             )}
 
                                             {/* Caso 3: Cuenta verificada exitosamente */}
                                             {accountVerified && (

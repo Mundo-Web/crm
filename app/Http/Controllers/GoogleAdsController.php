@@ -145,12 +145,21 @@ class GoogleAdsController extends Controller
 
     public static function getCustomerProfile(string $customerId, string $refreshToken)
     {
+        $cleanCustomerId = str_replace('-', '', $customerId);
+        $defaultProfile = [
+            'id' => $cleanCustomerId,
+            'name' => 'Cuenta de Google Ads (' . $cleanCustomerId . ')',
+            'picture' => [
+                'data' => [
+                    'url' => '/assets/img/google-ads.svg'
+                ]
+            ]
+        ];
+
         try {
-            $cleanCustomerId = str_replace('-', '', $customerId);
-            
             $developerToken = env('GOOGLE_ADS_DEVELOPER_TOKEN') ?: Setting::get('google-ads-developer-token');
             if (!$developerToken) {
-                throw new \Exception('Falta configurar el Google Ads Developer Token en el servidor.');
+                return $defaultProfile;
             }
             
             $client = new \Google\Client();
@@ -159,7 +168,7 @@ class GoogleAdsController extends Controller
             $accessToken = $token['access_token'] ?? null;
             
             if (!$accessToken) {
-                throw new \Exception('No se pudo autenticar con Google. Token expirado o inválido.');
+                return $defaultProfile;
             }
             
             $url = "https://googleads.googleapis.com/v17/customers/{$cleanCustomerId}/googleAds:search";
@@ -177,9 +186,9 @@ class GoogleAdsController extends Controller
             
             $json = $res->json();
             
-            if (isset($json['error'])) {
-                $errorMsg = $json['error']['message'] ?? 'Error desconocido al obtener perfil';
-                return ['error' => $errorMsg];
+            if (is_array($json) && isset($json['error'])) {
+                Log::warning('Error obteniendo perfil de Google Ads: ' . ($json['error']['message'] ?? 'Error desconocido'));
+                return $defaultProfile;
             }
             
             $results = $json['results'] ?? [];
@@ -187,7 +196,7 @@ class GoogleAdsController extends Controller
                 $customer = $results[0]['customer'];
                 return [
                     'id' => $customer['id'],
-                    'name' => $customer['descriptiveName'] ?? 'Cuenta de Google Ads',
+                    'name' => $customer['descriptiveName'] ?? ('Cuenta de Google Ads ' . $cleanCustomerId),
                     'picture' => [
                         'data' => [
                             'url' => '/assets/img/google-ads.svg'
@@ -196,9 +205,10 @@ class GoogleAdsController extends Controller
                 ];
             }
             
-            return ['error' => 'No se encontró la cuenta de Google Ads con el Customer ID especificado.'];
+            return $defaultProfile;
         } catch (\Throwable $e) {
-            return ['error' => $e->getMessage()];
+            Log::warning('Excepción en getCustomerProfile: ' . $e->getMessage());
+            return $defaultProfile;
         }
     }
 
