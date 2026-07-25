@@ -73,8 +73,12 @@ class GoogleAdsController extends Controller
             }
 
             $accounts = [];
-            $developerToken = env('GOOGLE_ADS_DEVELOPER_TOKEN') ?: Setting::get('google-ads-developer-token');
+            $developerToken = config('services.google_ads.developer_token') ?: env('GOOGLE_ADS_DEVELOPER_TOKEN') ?: Setting::get('google-ads-developer-token');
             
+            Log::info('Google Ads OAuth callback checking accounts', [
+                'has_developer_token' => !empty($developerToken)
+            ]);
+
             if ($developerToken) {
                 try {
                     $url = "https://googleads.googleapis.com/v17/customers:listAccessibleCustomers";
@@ -87,6 +91,10 @@ class GoogleAdsController extends Controller
                     ]);
                     $listData = $res->json();
                     
+                    Log::info('Google Ads listAccessibleCustomers response:', [
+                        'data' => $listData
+                    ]);
+
                     if (is_array($listData) && isset($listData['resourceNames'])) {
                         foreach ($listData['resourceNames'] as $resName) {
                             $cId = str_replace('customers/', '', $resName);
