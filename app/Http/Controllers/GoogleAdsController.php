@@ -81,7 +81,7 @@ class GoogleAdsController extends Controller
 
             if ($developerToken) {
                 try {
-                    $url = "https://googleads.googleapis.com/v17/customers:listAccessibleCustomers";
+                    $url = "https://googleads.googleapis.com/v18/customers:listAccessibleCustomers";
                     $res = new Fetch($url, [
                         'method' => 'GET',
                         'headers' => [
@@ -100,7 +100,7 @@ class GoogleAdsController extends Controller
                         if (is_array($listData) && isset($listData['resourceNames'])) {
                             foreach ($listData['resourceNames'] as $resName) {
                                 $cId = str_replace('customers/', '', $resName);
-                                $profileUrl = "https://googleads.googleapis.com/v17/customers/{$cId}/googleAds:search";
+                                $profileUrl = "https://googleads.googleapis.com/v18/customers/{$cId}/googleAds:search";
                                 try {
                                     $profileRes = new Fetch($profileUrl, [
                                         'method' => 'POST',
@@ -189,7 +189,7 @@ class GoogleAdsController extends Controller
                 return $defaultProfile;
             }
             
-            $url = "https://googleads.googleapis.com/v17/customers/{$cleanCustomerId}/googleAds:search";
+            $url = "https://googleads.googleapis.com/v18/customers/{$cleanCustomerId}/googleAds:search";
             $res = new Fetch($url, [
                 'method' => 'POST',
                 'headers' => [
@@ -422,7 +422,7 @@ class GoogleAdsController extends Controller
     public function queryGoogleAds(string $customerId, string $accessToken, string $developerToken, string $gaql)
     {
         $cleanCustomerId = str_replace('-', '', $customerId);
-        $url = "https://googleads.googleapis.com/v17/customers/{$cleanCustomerId}/googleAds:search";
+        $url = "https://googleads.googleapis.com/v18/customers/{$cleanCustomerId}/googleAds:search";
         
         $res = new Fetch($url, [
             'method' => 'POST',
