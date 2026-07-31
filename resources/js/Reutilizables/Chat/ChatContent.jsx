@@ -175,6 +175,17 @@ const ChatContent = ({ leadId, setLeadId, theme, contactDetails, setContactDetai
     return diffHours < 72;
   };
 
+  // Para Messenger/Instagram: HUMAN_AGENT tag permite hasta 7 días
+  const is7DayWindowOpen = () => {
+    if (!messages || messages.length === 0) return false;
+    const humanMessages = messages.filter(m => m.role === 'Human');
+    if (humanMessages.length === 0) return false;
+    const maxMicrotime = Math.max(...humanMessages.map(m => Number(m.microtime)));
+    const latestTimestamp = maxMicrotime / 1000;
+    const diffHours = (Date.now() - latestTimestamp) / (1000 * 60 * 60);
+    return diffHours < 168; // 7 días = 168 horas
+  };
+
   const getRemaining72HourTime = () => {
     if (!messages || messages.length === 0) return '';
     const humanMessages = messages.filter(m => m.role === 'Human');
@@ -473,6 +484,17 @@ const ChatContent = ({ leadId, setLeadId, theme, contactDetails, setContactDetai
       return
     }
 
+    // Para Messenger/Instagram: bloquear solo si la ventana de 7 días también expiró
+    if (isMetaIntegration && !is24HourWindowOpen() && !is7DayWindowOpen()) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Conversación cerrada',
+        text: 'Han pasado más de 7 días desde el último mensaje del cliente. El cliente debe escribirte primero para reabrir la conversación.',
+        confirmButtonColor: '#d9534f'
+      })
+      return
+    }
+
     const text = messageText.trim()
     if (!text && !audioBlob && !attachment) return
 
@@ -480,30 +502,37 @@ const ChatContent = ({ leadId, setLeadId, theme, contactDetails, setContactDetai
 
     const activeRest = isTikTokIntegration ? tiktokRest : (isMetaIntegration ? metaRest : whatsAppRest);
 
+    let sent = false
+
     if (attachment) {
       switch (attachmentType) {
         case 'audio':
-          await activeRest.sendAudio(contact.id, audioBlob);
-          break;
+          sent = await activeRest.sendAudio(contact.id, audioBlob)
+          break
         case 'image':
-          await activeRest.sendImage(contact.id, attachment, text);
-          break;
+          sent = await activeRest.sendImage(contact.id, attachment, text)
+          break
         default:
-          await activeRest.sendDocument(contact.id, attachment, text);
-          break;
+          sent = await activeRest.sendDocument(contact.id, attachment, text)
+          break
       }
-      setAttachment(null)
-      setAttachmentType(null)
+      // Solo limpiar adjunto si el envío fue exitoso
+      if (sent) {
+        setAttachment(null)
+        setAttachmentType(null)
+      }
     } else {
-      await activeRest.send(contact.id, text)
+      sent = await activeRest.send(contact.id, text)
     }
-    setMessageText('')
     setIsSending(false)
 
-    // Focus the input again so the user can type a new message
-    setTimeout(() => {
-      inputMessageRef.current?.focus()
-    }, 100)
+    // Solo limpiar texto y re-enfocar si el envío fue exitoso.
+    // Si falló, MetaRest/WhatsAppRest ya mostró la notificación de error
+    // y el texto permanece en el input para que el usuario pueda reintentar.
+    if (sent) {
+      setMessageText('')
+      setTimeout(() => inputMessageRef.current?.focus(), 100)
+    }
   }
 
   const handleFileChange = (e) => {
@@ -815,6 +844,25 @@ const ChatContent = ({ leadId, setLeadId, theme, contactDetails, setContactDetai
                           <i className="mdi mdi-alert-circle-outline font-16 me-2 text-warning animate__animated animate__flash"></i>
                           <span>
                             La ventana de 24h ha expirado. Escribe <strong>"/"</strong> para seleccionar una plantilla autorizada.
+                          </span>
+                        </div>
+                      )
+                    )}
+
+                    {/* Banner para Messenger/Instagram cuando ventana de 24h expiró */}
+                    {isMetaIntegration && !is24HourWindowOpen() && (
+                      is7DayWindowOpen() ? (
+                        <div className="mx-3 mb-2 p-2 rounded border d-flex align-items-center animate__animated animate__fadeIn" style={{ backgroundColor: 'rgba(0, 149, 246, 0.08)', color: '#0095f6', borderColor: 'rgba(0, 149, 246, 0.25)', fontSize: '11px', textAlign: 'left', zIndex: 2 }}>
+                          <i className="mdi mdi-information-outline font-16 me-2 animate__animated animate__pulse"></i>
+                          <span>
+                            <strong>Ventana de 24h expirada.</strong> Tu mensaje se enviará con permiso extendido de Meta (hasta 7 días). El cliente lo recibirá normalmente.
+                          </span>
+                        </div>
+                      ) : (
+                        <div className="mx-3 mb-2 p-2 rounded border d-flex align-items-center animate__animated animate__fadeIn" style={{ backgroundColor: 'rgba(240, 173, 78, 0.1)', color: '#d9534f', borderLeft: '4px solid #f0ad4e', fontSize: '11px', textAlign: 'left', zIndex: 2 }}>
+                          <i className="mdi mdi-alert-circle-outline font-16 me-2 text-warning animate__animated animate__flash"></i>
+                          <span>
+                            <strong>Ventana de 7 días expirada.</strong> No es posible enviar mensajes. El cliente debe escribirte primero para reabrir la conversación.
                           </span>
                         </div>
                       )

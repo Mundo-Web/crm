@@ -903,17 +903,25 @@ class MetaController extends Controller
                 $alreadyExists = null;
                 $searchId = $profileData['id'] ?? '';
                 if ($searchId) {
-                    $alreadyExists = Client::query()
-                        ->where('business_id', $businessJpa->id)
-                        ->where('status', true)
-                        ->where(function ($q) use ($searchId) {
-                            $q->where('integration_user_id', $searchId);
-                            $digits = preg_replace('/[^0-9]/', '', $searchId);
-                            if (strlen($digits) >= 9) {
-                                $q->orWhere('contact_phone', 'like', '%' . substr($digits, -9));
-                            }
-                        })
-                        ->first();
+                    // Usar transacción con lockForUpdate para prevenir race conditions
+                    // (Meta puede enviar el mismo webhook 2 veces simultáneamente).
+                    // Se busca SIN restricción de status=true para poder re-activar clientes inactivos.
+                    $alreadyExists = DB::transaction(function () use ($searchId, $businessJpa, $origin) {
+                        $q = Client::query()
+                            ->where('business_id', $businessJpa->id)
+                            ->where(function ($query) use ($searchId, $origin) {
+                                $query->where('integration_user_id', $searchId);
+                                // Para WhatsApp también buscar por teléfono como fallback
+                                if ($origin === 'whatsapp') {
+                                    $digits = preg_replace('/[^0-9]/', '', $searchId);
+                                    if (strlen($digits) >= 9) {
+                                        $query->orWhere('contact_phone', 'like', '%' . substr($digits, -9));
+                                    }
+                                }
+                            })
+                            ->lockForUpdate();
+                        return $q->first();
+                    });
                 }
 
                 // Si el cliente existe, ya no hacemos "return" prematuro aquí, 
@@ -1035,12 +1043,14 @@ class MetaController extends Controller
                     // NUNCA se sobreescribe la atribución original (campaign/source/origin).
                     // El canal nuevo se documenta en una ClientNote para trazabilidad completa.
                     $updateData = [
-                        'integration_id' => $integrationJpa->id,
-                        'integration_user_id' => $profileData['id'],
-                        'status' => true,
+                        'integration_id'       => $integrationJpa->id,
+                        'integration_user_id'  => $profileData['id'],
+                        'status'               => true, // Re-activar si estaba inactivo
+                        'last_message'         => $messageJpa->message,
+                        'last_message_microtime' => $messageJpa->microtime,
                     ];
 
-                    // Si viene DESDE un anuncio (click-to-WhatsApp referral), solo reseteamos
+                    // Si viene DESDE un anuncio (click-to-WhatsApp/Messenger referral), resetear
                     // el estado para que el asesor lo vea activo en el Kanban.
                     // La atribución de campaña original se preserva intacta.
                     if (isset($preClient['campaign_id'])) {
@@ -1050,7 +1060,7 @@ class MetaController extends Controller
 
                     $alreadyExists->update($updateData);
                     $clientJpa = $alreadyExists;
-                    Log::info('Lead omnicanal detectado — atribución original preservada', ['client_id' => $clientJpa->id, 'phone' => $profileData['id']]);
+                    Log::info('Lead omnicanal detectado — atribución original preservada', ['client_id' => $clientJpa->id, 'integration_user_id' => $profileData['id']]);
                 } else {
                     // Crear cliente totalmente nuevo
                     $clientJpa = Client::create(array_merge([
@@ -1368,6 +1378,30 @@ class MetaController extends Controller
             // Messenger and Instagram both send messages via Facebook Graph API
             $messageEndpoint = env('FACEBOOK_GRAPH_URL') . "/me/messages";
 
+            // Detectar si la ventana de 24h de Meta ha expirado para esta conversación.
+            // Si expiró, se añade messaging_type=MESSAGE_TAG + tag=HUMAN_AGENT, que permite
+            // enviar mensajes hasta 7 días después del último mensaje del cliente.
+            $needsHumanAgentTag = false;
+            $metaService = $integrationJpa->meta_service ?? '';
+            if (in_array($metaService, ['messenger', 'instagram'])) {
+                $lastHumanMessage = Message::where('business_id', $clientJpa->business_id)
+                    ->where('wa_id', $clientJpa->integration_user_id)
+                    ->where('role', 'Human')
+                    ->orderByDesc('microtime')
+                    ->first();
+
+                $windowMicros = 24 * 3600 * 1_000_000; // 24 horas en microsegundos
+                $nowMicros = (int) (microtime(true) * 1_000_000);
+
+                if (!$lastHumanMessage || ($nowMicros - $lastHumanMessage->microtime) > $windowMicros) {
+                    $needsHumanAgentTag = true;
+                    Log::info('Meta 24h window expired — using HUMAN_AGENT tag', [
+                        'client_id' => $clientJpa->id,
+                        'service'   => $metaService,
+                    ]);
+                }
+            }
+
             $messageData = [
                 'recipient' => ['id' => $clientJpa->integration_user_id]
             ];
@@ -1395,6 +1429,11 @@ class MetaController extends Controller
                         ]
                     ]
                 ];
+                // HUMAN_AGENT tag también aplica a adjuntos fuera de la ventana de 24h
+                if ($needsHumanAgentTag) {
+                    $messageData['messaging_type'] = 'MESSAGE_TAG';
+                    $messageData['tag'] = 'HUMAN_AGENT';
+                }
 
                 if ($caption) {
                     new Fetch($messageEndpoint, [
@@ -1403,16 +1442,18 @@ class MetaController extends Controller
                             'Content-Type' => 'application/json',
                             'Authorization' => "Bearer {$integrationJpa->meta_access_token}"
                         ],
-                        'body' => [
-                            'recipient' => ['id' => $clientJpa->integration_user_id],
-                            'message' => ['text' => Text::html2wa($caption)]
-                        ]
+                        'body' => array_filter([
+                            'recipient'      => ['id' => $clientJpa->integration_user_id],
+                            'message'        => ['text' => Text::html2wa($caption)],
+                            'messaging_type' => $needsHumanAgentTag ? 'MESSAGE_TAG' : null,
+                            'tag'            => $needsHumanAgentTag ? 'HUMAN_AGENT' : null,
+                        ])
                     ]);
                     Message::create([
-                        'wa_id' => $clientJpa->integration_user_id,
-                        'role' => 'User',
-                        'message' => Text::html2wa($caption),
-                        'microtime' => (int) (microtime(true) * 1_000_000) - 1000,
+                        'wa_id'       => $clientJpa->integration_user_id,
+                        'role'        => 'User',
+                        'message'     => Text::html2wa($caption),
+                        'microtime'   => (int) (microtime(true) * 1_000_000) - 1000,
                         'business_id' => $clientJpa->business_id
                     ]);
                 }
@@ -1427,6 +1468,11 @@ class MetaController extends Controller
                         ]
                     ]
                 ];
+                // HUMAN_AGENT tag también aplica a audios fuera de la ventana de 24h
+                if ($needsHumanAgentTag) {
+                    $messageData['messaging_type'] = 'MESSAGE_TAG';
+                    $messageData['tag'] = 'HUMAN_AGENT';
+                }
             } else if (Text::startsWith($message, '/image:') || Text::startsWith($message, '/document:')) {
                 [$fileTag] = explode(Text::lineBreak(), $message);
                 $caption = trim(str_replace($fileTag, '', $message) ?: '');
@@ -1448,6 +1494,11 @@ class MetaController extends Controller
                         ]
                     ]
                 ];
+                // HUMAN_AGENT tag también aplica a imágenes/documentos fuera de la ventana de 24h
+                if ($needsHumanAgentTag) {
+                    $messageData['messaging_type'] = 'MESSAGE_TAG';
+                    $messageData['tag'] = 'HUMAN_AGENT';
+                }
 
                 if ($caption) {
                     new Fetch($messageEndpoint, [
@@ -1456,21 +1507,28 @@ class MetaController extends Controller
                             'Content-Type' => 'application/json',
                             'Authorization' => "Bearer {$integrationJpa->meta_access_token}"
                         ],
-                        'body' => [
-                            'recipient' => ['id' => $clientJpa->integration_user_id],
-                            'message' => ['text' => Text::html2wa($caption)]
-                        ]
+                        'body' => array_filter([
+                            'recipient'      => ['id' => $clientJpa->integration_user_id],
+                            'message'        => ['text' => Text::html2wa($caption)],
+                            'messaging_type' => $needsHumanAgentTag ? 'MESSAGE_TAG' : null,
+                            'tag'            => $needsHumanAgentTag ? 'HUMAN_AGENT' : null,
+                        ])
                     ]);
                     Message::create([
-                        'wa_id' => $clientJpa->integration_user_id,
-                        'role' => 'User',
-                        'message' => Text::html2wa($caption),
-                        'microtime' => (int) (microtime(true) * 1_000_000) - 1000,
+                        'wa_id'       => $clientJpa->integration_user_id,
+                        'role'        => 'User',
+                        'message'     => Text::html2wa($caption),
+                        'microtime'   => (int) (microtime(true) * 1_000_000) - 1000,
                         'business_id' => $clientJpa->business_id
                     ]);
                 }
             } else {
                 $messageData['message'] = ['text' => Text::html2wa($message)];
+                // Añadir HUMAN_AGENT tag si la ventana de 24h expiró
+                if ($needsHumanAgentTag) {
+                    $messageData['messaging_type'] = 'MESSAGE_TAG';
+                    $messageData['tag'] = 'HUMAN_AGENT';
+                }
             }
 
             $sendRest = new Fetch($messageEndpoint, [
@@ -1587,10 +1645,22 @@ class MetaController extends Controller
                 } else {
                     // Messenger / Instagram direct messages both go through facebook graph API
                     $messageEndpoint = env('FACEBOOK_GRAPH_URL') . "/me/messages";
-                    $messageData = [
-                        'recipient' => ['id' => $clientJpa->integration_user_id],
-                        'message' => ['text' => Text::html2wa($message)]
-                    ];
+
+                    // Verificar si la ventana de 24h ha expirado para aplicar HUMAN_AGENT tag
+                    $lastHumanMsg = Message::where('business_id', $clientJpa->business_id)
+                        ->where('wa_id', $clientJpa->integration_user_id)
+                        ->where('role', 'Human')
+                        ->orderByDesc('microtime')
+                        ->first();
+                    $aiNeedsTag = !$lastHumanMsg ||
+                        ((int)(microtime(true) * 1_000_000) - $lastHumanMsg->microtime) > (24 * 3600 * 1_000_000);
+
+                    $messageData = array_filter([
+                        'recipient'      => ['id' => $clientJpa->integration_user_id],
+                        'message'        => ['text' => Text::html2wa($message)],
+                        'messaging_type' => $aiNeedsTag ? 'MESSAGE_TAG' : null,
+                        'tag'            => $aiNeedsTag ? 'HUMAN_AGENT' : null,
+                    ]);
                 }
 
                 $fetchRes = new Fetch($messageEndpoint, [
@@ -1628,16 +1698,26 @@ class MetaController extends Controller
             $waId = $number;
         }
 
-        // Store message in database
-        Message::create([
-            'wa_id' => $waId,
-            'role' => 'AI',
-            'message' => Text::html2wa($message),
-            'prompt' => $prompt2save,
-            'microtime' => (int) (microtime(true) * 1_000_000),
-            'business_id' => $clientJpa->business_id,
-            'message_id' => $messageId
-        ]);
+        // Guardar en DB SOLO si el mensaje fue aceptado por la API de destino.
+        // Si Meta (o evoapi) rechazó el mensaje, NO guardarlo para evitar mensajes
+        // "fantasma" que aparecen como enviados en el CRM pero nunca llegaron al cliente.
+        $delivered = !isset($fetchRes) || $fetchRes->ok;
+        if ($delivered) {
+            Message::create([
+                'wa_id'       => $waId,
+                'role'        => 'AI',
+                'message'     => Text::html2wa($message),
+                'prompt'      => $prompt2save,
+                'microtime'   => (int) (microtime(true) * 1_000_000),
+                'business_id' => $clientJpa->business_id,
+                'message_id'  => $messageId
+            ]);
+        } else {
+            Log::warning('sendWithOrigin: message NOT saved to DB because Meta API rejected it', [
+                'client_id' => $clientJpa->id,
+                'waId'      => $waId,
+            ]);
+        }
     }
 
     private static function getFlowItems($businessId)
