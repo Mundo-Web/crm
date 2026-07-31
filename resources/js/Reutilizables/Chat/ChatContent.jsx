@@ -139,13 +139,22 @@ const ChatContent = ({ leadId, setLeadId, theme, contactDetails, setContactDetai
     }
   }
 
-  const service = contact?.integration?.meta_service || contact?.origin?.toLowerCase();
-  const isWhatsApp = service === 'whatsapp' || 
-                     service === 'forms' || 
-                     (!['messenger', 'instagram', 'tiktok'].includes(contact?.integration?.meta_service) && contact?.contact_phone);
-  const isMetaIntegration = !isWhatsApp && (service === 'messenger' || service === 'instagram');
-  const isTikTokIntegration = !isWhatsApp && service === 'tiktok';
-  const chatIdentifier = isWhatsApp ? contact?.contact_phone : (contact?.integration_user_id || contact?.contact_phone);
+  const originLower = (contact?.origin || '').toLowerCase();
+  const metaServiceLower = (contact?.integration?.meta_service || '').toLowerCase();
+  
+  const isMessenger = metaServiceLower === 'messenger' || originLower === 'messenger';
+  const isInstagram = metaServiceLower === 'instagram' || originLower === 'instagram';
+  const isTikTok = metaServiceLower === 'tiktok' || originLower === 'tiktok';
+
+  const isMetaIntegration = isMessenger || isInstagram;
+  const isTikTokIntegration = isTikTok;
+
+  // Solo es WhatsApp si NO es Messenger, Instagram o TikTok
+  const isWhatsApp = !isMetaIntegration && !isTikTokIntegration;
+
+  const chatIdentifier = isMetaIntegration 
+    ? (contact?.integration_user_id || contact?.contact_phone) 
+    : contact?.contact_phone;
 
   const is24HourWindowOpen = () => {
     if (!messages || messages.length === 0) return false;
