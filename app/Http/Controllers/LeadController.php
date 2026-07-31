@@ -312,7 +312,8 @@ class LeadController extends BasicController
             // Mapear filas (igual que en import real, pero solo en memoria)
             $mappedRows = [];
             foreach ($cleanRows as $row) {
-                $phone = \SoDe\Extend\Text::keep($row[$mapping['phone']], '0123456789');
+                $phoneRaw = ($mapping['phone'] ?? null) ? ($row[$mapping['phone']] ?? '') : '';
+                $phone = \SoDe\Extend\Text::keep($phoneRaw, '0123456789');
                 if (strlen($phone) === 9 && str_starts_with($phone, '9')) {
                     $phone = '51' . $phone;
                 }
@@ -324,11 +325,11 @@ class LeadController extends BasicController
 
                 $campaignId = ($adId && isset($existingCampaigns[$adId])) ? $existingCampaigns[$adId] : null;
 
-                $originRaw = strtolower($row[$mapping['source']] ?? '');
+                $originRaw = strtolower(($mapping['source'] ?? null) ? ($row[$mapping['source']] ?? '') : '');
                 $origin = match ($originRaw) {
                     'fb', 'facebook'   => 'Facebook',
                     'ig', 'instagram'  => 'Instagram',
-                    default            => $row[$mapping['source']] ?? null,
+                    default            => (($mapping['source'] ?? null) ? ($row[$mapping['source']] ?? null) : null),
                 };
 
                 $adsetColumn = $mapping['adset_name'] ?? null;
@@ -336,12 +337,12 @@ class LeadController extends BasicController
                 $adsetName   = $adsetColumn ? (trim(preg_replace('/^[a-z]+:/i', '', $row[$adsetColumn] ?? '')) ?: null) : null;
                 $adName      = $adColumn    ? (trim(preg_replace('/^[a-z]+:/i', '', $row[$adColumn]    ?? '')) ?: null) : null;
 
-                $dateRaw  = isset($mapping['date']) && !empty($row[$mapping['date']]) ? $row[$mapping['date']] : null;
+                $dateRaw  = ($mapping['date'] ?? null) && !empty($row[$mapping['date']]) ? $row[$mapping['date']] : null;
                 $parsedDt = $dateRaw ? Carbon::parse($dateRaw) : Carbon::now();
 
                 $mappedRows[] = [
-                    'name'           => $row[$mapping['name']] ?? null,
-                    'contact_email'  => $row[$mapping['email']] ?? null,
+                    'name'           => ($mapping['name'] ?? null) ? ($row[$mapping['name']] ?? null) : null,
+                    'contact_email'  => ($mapping['email'] ?? null) ? ($row[$mapping['email']] ?? null) : null,
                     'contact_phone'  => $phone ?: null,
                     'origin'         => $origin,
                     'campaign_id'    => $campaignId,
@@ -522,7 +523,7 @@ class LeadController extends BasicController
                     continue;
                 }
 
-                $source = strtolower($row[$mapping['source']] ?? '');
+                $source = strtolower(($mapping['source'] ?? null) ? ($row[$mapping['source']] ?? '') : '');
                 $campaignsToInsert[$adId] = [
                     'id'          => Uuid::uuid1()->toString(),
                     'code'        => $adId,
@@ -559,11 +560,13 @@ class LeadController extends BasicController
             // Map rows to desired format using mapping
             $mappedRows = [];
             foreach ($cleanRows as $row) {
-                $phone = Text::keep($row[$mapping['phone']], '0123456789');
+                $phoneRaw = ($mapping['phone'] ?? null) ? ($row[$mapping['phone']] ?? '') : '';
+                $phone = Text::keep($phoneRaw, '0123456789');
                 if (strlen($phone) === 9 && str_starts_with($phone, '9')) {
                     $phone = '51' . $phone;
                 }
-                $mappingDate = Carbon::parse($row[$mapping['date']]);
+                $dateRaw = ($mapping['date'] ?? null) && !empty($row[$mapping['date']]) ? $row[$mapping['date']] : null;
+                $mappingDate = $dateRaw ? Carbon::parse($dateRaw) : Carbon::now();
 
                 // Determine campaign_id
                 $campaignId = null;
@@ -583,15 +586,15 @@ class LeadController extends BasicController
                 }
 
                 // Determine attribution and channels
-                $originRaw = strtolower($row[$mapping['source']] ?? '');
+                $originRaw = strtolower(($mapping['source'] ?? null) ? ($row[$mapping['source']] ?? '') : '');
                 $origin = match ($originRaw) {
                     'fb', 'facebook' => 'Facebook',
                     'ig', 'instagram' => 'Instagram',
-                    default => $row[$mapping['source']] ?? null,
+                    default => ($mapping['source'] ?? null) ? ($row[$mapping['source']] ?? null) : null,
                 };
 
                 $source = 'Importación';
-                $triggeredBy = $row[$mapping['triggered_by']] ?? 'Importación';
+                $triggeredBy = ($mapping['triggered_by'] ?? null) ? ($row[$mapping['triggered_by']] ?? 'Importación') : 'Importación';
                 $sourceChannel = null;
 
                 if ($origin === 'Facebook' || $origin === 'Instagram') {
@@ -612,7 +615,7 @@ class LeadController extends BasicController
                     'business_id' => $business_id,
                     'name' => $row[$mapping['name']] ?? null,
                     'contact_name'   => $row[$mapping['name']] ?? null,
-                    'contact_email'  => $row[$mapping['email']] ?? null,
+                    'contact_email'  => ($mapping['email'] ?? null) ? ($row[$mapping['email']] ?? null) : null,
                     'contact_phone' => $phone ?: null,
                     'source' => $source,
                     'origin' => $origin,
@@ -634,15 +637,15 @@ class LeadController extends BasicController
                     'complete_registration' => true,
                     'message' => 'Sin mensaje',
                     'ip' => $request->ip(),
-                    'date' => isset($mapping['date']) && !empty($row[$mapping['date']])
+                    'date' => $dateRaw
                         ? $mappingDate->format('Y-m-d')
                         : now()->subHours(5)->format('Y-m-d'),
-                    'time' => isset($mapping['date']) && !empty($row[$mapping['date']])
+                    'time' => $dateRaw
                         ? ($mappingDate->format('H:i:s') !== '00:00:00'
                             ? $mappingDate->format('H:i:s')
                             : '12:00:00')
                         : now()->subHours(5)->format('H:i:s'),
-                    'created_at' => isset($mapping['date']) && !empty($row[$mapping['date']])
+                    'created_at' => $dateRaw
                         ? $mappingDate
                         : now(),
                     'updated_at' => now(),  // Siempre la fecha del import, no la del lead original

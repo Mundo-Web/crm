@@ -5,7 +5,12 @@ const ImportModal = ({ modalRef, fields, onSubmit, disabled, onClose, mapping, s
         <div className="row">
             {/* Campos primarios a la izquierda */}
             <div className="col-6">
-                <label className="form-label text-muted small fw-semibold mb-2">Campos primarios</label>
+                <label className="form-label text-muted small fw-semibold mb-2">
+                    Campos del lead
+                    <span className="ms-2 text-muted fw-normal" style={{ fontSize: '10px' }}>
+                        (* obligatorio)
+                    </span>
+                </label>
                 <div className="mb-2">
                     <label className="form-label small">Fecha creación</label>
                     <div className="dropdown">
@@ -34,7 +39,7 @@ const ImportModal = ({ modalRef, fields, onSubmit, disabled, onClose, mapping, s
                 </div>
                 {/* Nombre */}
                 <div className="mb-2">
-                    <label className="form-label small">Nombre</label>
+                    <label className="form-label small">Nombre <span className="text-danger">*</span></label>
                     <div className="dropdown">
                         <button
                             className="btn btn-sm btn-white dropdown-toggle w-100 text-start border text-truncate"
@@ -62,7 +67,7 @@ const ImportModal = ({ modalRef, fields, onSubmit, disabled, onClose, mapping, s
 
                 {/* Correo */}
                 <div className="mb-2">
-                    <label className="form-label small">Correo</label>
+                    <label className="form-label small">Correo <span className="text-muted" style={{fontSize:'10px'}}>(obligatorio si no hay teléfono)</span></label>
                     <div className="dropdown">
                         <button
                             className="btn btn-sm btn-white dropdown-toggle w-100 text-start border text-truncate"
@@ -90,7 +95,7 @@ const ImportModal = ({ modalRef, fields, onSubmit, disabled, onClose, mapping, s
 
                 {/* Teléfono */}
                 <div className="mb-2">
-                    <label className="form-label small">Teléfono</label>
+                    <label className="form-label small">Teléfono <span className="text-muted" style={{fontSize:'10px'}}>(obligatorio si no hay correo)</span></label>
                     <div className="dropdown">
                         <button
                             className="btn btn-sm btn-white dropdown-toggle w-100 text-start border text-truncate"
@@ -161,7 +166,7 @@ const ImportModal = ({ modalRef, fields, onSubmit, disabled, onClose, mapping, s
             <div className="col-6">
                 {/* Teléfono */}
                 <div className="mb-2">
-                    <label className="form-label small">Plataforma de importación</label>
+                    <label className="form-label small">Plataforma de importación <span className="text-muted" style={{fontSize:'10px'}}>(opcional)</span></label>
                     <div className="dropdown">
                         <button
                             className="btn btn-sm btn-white dropdown-toggle w-100 text-start border text-truncate"
@@ -187,7 +192,7 @@ const ImportModal = ({ modalRef, fields, onSubmit, disabled, onClose, mapping, s
                     </div>
                 </div>
                 <div className="mb-2">
-                    <label className="form-label small">Disparado por</label>
+                    <label className="form-label small">Disparado por <span className="text-muted" style={{fontSize:'10px'}}>(opcional)</span></label>
                     <div className="dropdown">
                         <button
                             className="btn btn-sm btn-white dropdown-toggle w-100 text-start border text-truncate"

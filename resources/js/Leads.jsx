@@ -1276,15 +1276,20 @@ const Leads = (properties) => {
     const handleImportSubmit = async (e) => {
         e.preventDefault();
 
-        if (
-            !leadMapping.name ||
-            !leadMapping.email ||
-            !leadMapping.phone ||
-            !leadMapping.source
-        ) {
+        if (!leadMapping.name) {
             Swal.fire({
-                title: "Campos faltantes",
-                text: "Por favor asigna las columnas de nombre, email, teléfono y fuente antes de continuar.",
+                title: "Campo obligatorio faltante",
+                text: "Por favor asigna al menos la columna de Nombre antes de continuar.",
+                icon: "warning",
+                confirmButtonText: "Entendido",
+            });
+            return;
+        }
+
+        if (!leadMapping.phone && !leadMapping.email) {
+            Swal.fire({
+                title: "Campo de contacto faltante",
+                text: "Por favor asigna al menos una columna de contacto: Teléfono o Correo.",
                 icon: "warning",
                 confirmButtonText: "Entendido",
             });
