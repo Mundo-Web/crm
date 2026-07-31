@@ -1075,18 +1075,28 @@ class MetaController extends Controller
 
                 // \u2500\u2500 Registrar la entrada en client_entries (fuente de verdad para KPIs y iconos) \u2500\u2500
                 // Se crea SIEMPRE: tanto para leads nuevos como para re-ingresos por cualquier canal.
-                \App\Models\ClientEntry::create([
-                    'client_id'      => $clientJpa->id,
-                    'campaign_id'    => $preClient['campaign_id'] ?? null,
-                    'adset_name'     => $preClient['adset_name'] ?? null,
-                    'ad_name'        => $preClient['ad_name'] ?? null,
-                    'source'         => $preClient['source'] ?? null,
-                    'origin'         => $preClient['origin'] ?? null,
-                    'lead_origin'    => $preClient['lead_origin'] ?? null,
-                    'triggered_by'   => $preClient['triggered_by'] ?? null,
-                    'source_channel' => $preClient['source_channel'] ?? null,
-                    'entry_date'     => now(),
-                ]);
+                // Registrar la entrada en client_entries SOLO si:
+                // 1. Es un cliente NUEVO (!alreadyExists)
+                // 2. Viene desde un Anuncio / Campaña (!empty($preClient['campaign_id']))
+                // 3. Cambió de Canal (el último ClientEntry registrado tenía un origin distinto)
+                $lastEntry = $alreadyExists ? \App\Models\ClientEntry::where('client_id', $clientJpa->id)->latest('entry_date')->first() : null;
+                $isChannelChange = $lastEntry && strtolower((string)$lastEntry->origin) !== strtolower((string)($preClient['origin'] ?? ''));
+                $isFromAd = !empty($preClient['campaign_id']);
+
+                if (!$alreadyExists || $isFromAd || $isChannelChange) {
+                    \App\Models\ClientEntry::create([
+                        'client_id'      => $clientJpa->id,
+                        'campaign_id'    => $preClient['campaign_id'] ?? null,
+                        'adset_name'     => $preClient['adset_name'] ?? null,
+                        'ad_name'        => $preClient['ad_name'] ?? null,
+                        'source'         => $preClient['source'] ?? null,
+                        'origin'         => $preClient['origin'] ?? null,
+                        'lead_origin'    => $preClient['lead_origin'] ?? null,
+                        'triggered_by'   => $preClient['triggered_by'] ?? null,
+                        'source_channel' => $preClient['source_channel'] ?? null,
+                        'entry_date'     => now(),
+                    ]);
+                }
 
                 // Si es un lead de anuncio (nuevo o existente), registrar la nota de contexto
                 if (isset($preClient['ad_context_note'])) {
