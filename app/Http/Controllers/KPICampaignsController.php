@@ -119,8 +119,19 @@ class KPICampaignsController extends BasicController
 
     public function kpi(Request $request, ?string $month = null)
     {
+        if ($month) {
+            $request->merge(['month' => $month]);
+        }
+        return $this->paginate($request);
+    }
+
+    public function setPaginationSummary(Request $request, string $model, \Illuminate\Database\Eloquent\Builder $queryBuilder)
+    {
         date_default_timezone_set('America/Lima');
-        $response = Response::simpleTryCatch(function ($response) use ($request, $month) {
+        $month = $request->month;
+        $summary = [];
+
+        try {
 
             // ──────────────────────────────────────────────────────────
             // Parsear parámetros de fecha (nuevo sistema flexible)
@@ -199,33 +210,26 @@ class KPICampaignsController extends BasicController
             }
 
             // ──────────────────────────────────────────────────────────
-            // Query base: campaña válida + fecha de creación del lead en el CRM
+            // Query base: clientes de campaña con soporte para client_entries + created_at
             // ──────────────────────────────────────────────────────────
             $queryBase = fn() => Client::where('clients.business_id', Auth::user()->business_id)
                 ->select('clients.*')
                 ->distinct()
+                ->leftJoin('client_entries as ce', 'ce.client_id', '=', 'clients.id')
                 ->join('campaigns as campaign', 'campaign.id', '=', 'clients.campaign_id')
                 ->whereRaw('LENGTH(clients.campaign_id) > 10');
 
-            // Query con filtros de ad meta (adset + ad) + fecha de entrada en client_entries con ajuste de zona horaria de Meta
+            // Query filtrada por fecha de entrada (coalesce entre entry_date y created_at)
             $query = function () use ($queryBase, $dateFrom, $dateTo, $platform, $advisorId) {
                 $q = $queryBase()
-                    ->whereNotNull('ce.adset_name')
-                    ->where('ce.adset_name', '<>', '')
-                    ->whereNotNull('ce.ad_name')
-                    ->where('ce.ad_name', '<>', '')
-                    ->whereBetween('ce.entry_date', [$dateFrom, $dateTo]);
+                    ->whereBetween(DB::raw('COALESCE(ce.entry_date, clients.created_at)'), [$dateFrom, $dateTo]);
                 return $this->applyOptionalFilters($q, $platform, $advisorId);
             };
 
-            // Query equivalente para el periodo anterior con ajuste de zona horaria de Meta
+            // Query equivalente para el periodo anterior
             $queryPrev = function () use ($queryBase, $prevDateFrom, $prevDateTo, $platform, $advisorId) {
                 $q = $queryBase()
-                    ->whereNotNull('ce.adset_name')
-                    ->where('ce.adset_name', '<>', '')
-                    ->whereNotNull('ce.ad_name')
-                    ->where('ce.ad_name', '<>', '')
-                    ->whereBetween('ce.entry_date', [$prevDateFrom, $prevDateTo]);
+                    ->whereBetween(DB::raw('COALESCE(ce.entry_date, clients.created_at)'), [$prevDateFrom, $prevDateTo]);
                 return $this->applyOptionalFilters($q, $platform, $advisorId);
             };
 
@@ -1128,9 +1132,10 @@ class KPICampaignsController extends BasicController
                     $q = Client::where('clients.business_id', Auth::user()->business_id)
                         ->select('clients.*')
                         ->distinct()
+                        ->leftJoin('client_entries as ce', 'ce.client_id', '=', 'clients.id')
                         ->join('campaigns as campaign', 'campaign.id', '=', 'clients.campaign_id')
                         ->whereRaw('LENGTH(clients.campaign_id) > 10')
-                        ->whereBetween('clients.created_at', [$startStr, $endStr]);
+                        ->whereBetween(DB::raw('COALESCE(ce.entry_date, clients.created_at)'), [$startStr, $endStr]);
 
                     if ($campaignId) {
                         $q->where('clients.campaign_id', $campaignId);
@@ -1410,7 +1415,7 @@ class KPICampaignsController extends BasicController
                 \Illuminate\Support\Facades\Log::warning('Error calculando evolución semanal: ' . $e->getMessage());
             }
 
-            $response->summary = [
+            $summary = [
                 // Datos del periodo
                 'dateFrom'     => $dateFrom,
                 'dateTo'       => $dateTo,
@@ -1491,12 +1496,14 @@ class KPICampaignsController extends BasicController
                 'leadWinningAd'      => $leadWinningAd,
 
                 // Evolución Semanal
-                'weeklyEvolution'            => $weeklyEvolution,
-                'campaignWeeklyEvolutions'   => $campaignWeeklyEvolutions ?? [],
+                'weeklyEvolution'          => $weeklyEvolution,
+                'campaignWeeklyEvolutions' => $campaignWeeklyEvolutions ?? [],
             ];
-            $response->data = $groupedByManageStatus;
-        });
-        return \response($response->toArray(), $response->status);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Error calculando setPaginationSummary: ' . $e->getMessage());
+        }
+
+        return $summary;
     }
 
     public function leadsPaginate(Request $request)
@@ -1543,10 +1550,9 @@ class KPICampaignsController extends BasicController
             'clients.name',
             'clients.contact_phone',
             'clients.contact_email',
-            'ce.campaign_id',
-            'ce.adset_name',
-            'ce.ad_name',
-            'ce.entry_date as created_at',
+            DB::raw('COALESCE(ce.campaign_id, clients.campaign_id) as campaign_id'),
+            'campaign.title as campaign_title',
+            DB::raw('COALESCE(ce.entry_date, clients.created_at) as created_at'),
             'statuses.name as status_name',
             'statuses.color as status_color',
             'manage_status.name as manage_status_name',
@@ -1555,39 +1561,33 @@ class KPICampaignsController extends BasicController
             'users.relative_id as assigned_relative_id'
         ])
             ->distinct()
-            ->join('client_entries as ce', 'ce.client_id', '=', 'clients.id')
-            ->join('campaigns as campaign', 'campaign.id', '=', 'ce.campaign_id')
+            ->leftJoin('client_entries as ce', 'ce.client_id', '=', 'clients.id')
+            ->join('campaigns as campaign', 'campaign.id', '=', 'clients.campaign_id')
             ->leftJoin('statuses', 'statuses.id', '=', 'clients.status_id')
             ->leftJoin('statuses as manage_status', 'manage_status.id', '=', 'clients.manage_status_id')
             ->leftJoin('users', 'users.id', '=', 'clients.assigned_to');
 
         return $instance->where(function ($query) use ($request) {
-            $query->whereRaw('LENGTH(ce.campaign_id) > 10')
-                ->whereNotNull('ce.adset_name')
-                ->where('ce.adset_name', '<>', '')
-                ->whereNotNull('ce.ad_name')
-                ->where('ce.ad_name', '<>', '');
+            $query->whereRaw('LENGTH(clients.campaign_id) > 10');
 
             if ($request->date_from && $request->date_to) {
                 if (strlen($request->date_from) > 10 || $request->is_weekly) {
                     $dateFrom = $request->date_from;
                     $dateTo   = $request->date_to;
                 } else {
-                    $dateFromStr = substr($request->date_from, 0, 10) . ' 00:00:00';
-                    $dateToStr   = substr($request->date_to, 0, 10) . ' 23:59:59';
-                    $dateFrom = \Carbon\Carbon::parse($dateFromStr, 'UTC')->setTimezone('America/Lima')->toDateTimeString();
-                    $dateTo   = \Carbon\Carbon::parse($dateToStr, 'UTC')->setTimezone('America/Lima')->toDateTimeString();
+                    $dateFrom = substr($request->date_from, 0, 10) . ' 00:00:00';
+                    $dateTo   = substr($request->date_to, 0, 10) . ' 23:59:59';
                 }
-                $query->whereBetween('ce.entry_date', [$dateFrom, $dateTo]);
+                $query->whereBetween(DB::raw('COALESCE(ce.entry_date, clients.created_at)'), [$dateFrom, $dateTo]);
             } elseif ($request->month) {
                 [$year, $mo] = \explode('-', $request->month);
-                $dateFrom = \Carbon\Carbon::parse("{$year}-{$mo}-01 00:00:00", 'UTC')->setTimezone('America/Lima')->toDateTimeString();
+                $dateFrom = "{$year}-{$mo}-01 00:00:00";
                 $lastDay  = date('t', mktime(0, 0, 0, (int)$mo, 1, (int)$year));
-                $dateTo   = \Carbon\Carbon::parse("{$year}-{$mo}-{$lastDay} 23:59:59", 'UTC')->setTimezone('America/Lima')->toDateTimeString();
-                $query->whereBetween('ce.entry_date', [$dateFrom, $dateTo]);
+                $dateTo   = "{$year}-{$mo}-{$lastDay} 23:59:59";
+                $query->whereBetween(DB::raw('COALESCE(ce.entry_date, clients.created_at)'), [$dateFrom, $dateTo]);
             }
             if ($request->campaign_id) {
-                $query->where('ce.campaign_id', $request->campaign_id);
+                $query->where('clients.campaign_id', $request->campaign_id);
             }
             if ($request->adset_name) {
                 $query->where('ce.adset_name', $request->adset_name);
