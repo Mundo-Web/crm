@@ -409,18 +409,31 @@ const Menu = ({
                                 Procesos
                             </MenuItem>
                         )}
-                        {/* {can('campaigns', 'root', 'all', 'list') &&  */}
                         {can("campaigns", "root", "all", "list") && (
-                            <MenuItem
-                                pinned={pinned}
-                                setPinned={setPinned}
-                                href="/campaigns"
-                                icon="mdi mdi-google-ads"
+                            <MenuItemContainer
+                                title="Meta"
+                                icon="mdi mdi-facebook"
                             >
-                                Campañas
-                            </MenuItem>
+                                <MenuItem
+                                    pinned={pinned}
+                                    setPinned={setPinned}
+                                    href="/campaigns"
+                                    icon="mdi mdi-google-ads"
+                                    pinLabel="Meta • Campañas"
+                                >
+                                    Campañas
+                                </MenuItem>
+                                <MenuItem
+                                    pinned={pinned}
+                                    setPinned={setPinned}
+                                    href="/meta-forms"
+                                    icon="mdi mdi-form-select"
+                                    pinLabel="Meta • Formularios"
+                                >
+                                    Formularios
+                                </MenuItem>
+                            </MenuItemContainer>
                         )}
-                        {/* } */}
 
                         {can("projects", "root", "all", "list") && (
                             <MenuItemContainer

@@ -381,6 +381,28 @@ class MetaController extends Controller
                         ]);
                     }
 
+                    $formIdReceived = $leadData['form_id'] ?? null;
+                    $formNameResolved = null;
+                    if ($formIdReceived) {
+                        $ruleForm = \App\Models\MetaFormRule::where('form_id', $formIdReceived)
+                            ->where('business_id', $businessJpa->id)
+                            ->whereNotNull('form_name')
+                            ->first();
+                        if ($ruleForm) {
+                            $formNameResolved = $ruleForm->form_name;
+                        } else {
+                            try {
+                                $facebookGraphUrl = env('FACEBOOK_GRAPH_URL', 'https://graph.facebook.com/v22.0');
+                                $formRes = new Fetch("{$facebookGraphUrl}/{$formIdReceived}?fields=name&access_token={$accessToken}");
+                                $formData = $formRes->ok ? $formRes->json() : [];
+                                if (isset($formData['name'])) {
+                                    $formNameResolved = $formData['name'];
+                                }
+                            } catch (\Throwable $th) {
+                            }
+                        }
+                    }
+
                     $fullName = $fieldData['full_name'] ?? $fieldData['nombre_completo'] ?? $fieldData['nombre'] ?? 'Sin nombre';
                     $wasReRegistered = false;
 
@@ -396,6 +418,12 @@ class MetaController extends Controller
                             'status_id' => Setting::get('default-lead-status', $businessJpa->id),
                             'manage_status_id' => Setting::get('default-manage-lead-status', $businessJpa->id),
                         ];
+                        if ($formIdReceived) {
+                            $updateData['form_id'] = $formIdReceived;
+                        }
+                        if ($formNameResolved) {
+                            $updateData['form_name'] = $formNameResolved;
+                        }
                         // Solo rellenar campos vacíos (no sobreescribir datos que ya tenía)
                         if ($email && !$clientJpa->contact_email) {
                             $updateData['contact_email'] = $email;
@@ -433,6 +461,8 @@ class MetaController extends Controller
                             'campaign_id' => $campaignJpa->id,
                             'adset_name' => $adSetJpa ? $adSetJpa->name : null,
                             'ad_name' => ($leadData['ad_name'] ?? $adIdClean) ?: null,
+                            'form_id' => $formIdReceived,
+                            'form_name' => $formNameResolved,
                             'status' => true,
                             'complete_registration' => true,
                             'source_channel' => "{$originName} Form"
@@ -446,6 +476,8 @@ class MetaController extends Controller
                         'campaign_id'    => $campaignJpa->id,
                         'adset_name'     => $adSetJpa ? $adSetJpa->name : null,
                         'ad_name'        => ($leadData['ad_name'] ?? $adIdClean) ?: null,
+                        'form_id'        => $formIdReceived,
+                        'form_name'      => $formNameResolved,
                         'source'         => 'Meta',
                         'origin'         => $originName,
                         'lead_origin'    => $originName,
@@ -488,6 +520,105 @@ class MetaController extends Controller
                         'description' => $formString,
                     ]);
                     Log::info('Lead note added', ['title' => $noteTitle, 'was_re_registered' => $wasReRegistered]);
+
+                    // Evaluate Meta Form Automation Rules
+                    $formIdReceived = $leadData['form_id'] ?? null;
+                    if ($formIdReceived && $clientJpa) {
+                        try {
+                            $rules = \App\Models\MetaFormRule::where('business_id', $businessJpa->id)
+                                ->where('status', true)
+                                ->where(function($q) use ($formIdReceived) {
+                                    $q->where('form_id', $formIdReceived)
+                                      ->orWhere('form_id', '*');
+                                })
+                                ->get();
+
+                            $normalizeMetaStr = function ($str) {
+                                if (empty($str)) return '';
+                                $s = mb_strtolower(trim($str));
+                                $s = str_replace(['_', '-'], ' ', $s);
+                                $s = preg_replace('/[^\p{L}\p{N}\s]/u', '', $s);
+                                return trim(preg_replace('/\s+/', ' ', $s));
+                            };
+
+                            foreach ($rules as $rule) {
+                                $conditions = $rule->conditions ?? [];
+                                $allMatched = true;
+
+                                if (!empty($conditions)) {
+                                    foreach ($conditions as $cond) {
+                                        $fieldName = $cond['field_name'] ?? '';
+                                        $operator  = $cond['operator'] ?? 'equals';
+                                        $expectedRaw = strtolower(trim($cond['value'] ?? ''));
+                                        $expectedNorm = $normalizeMetaStr($cond['value'] ?? '');
+                                        $fieldNorm = $normalizeMetaStr($fieldName);
+
+                                        $actualValRaw = null;
+                                        $actualValNorm = null;
+
+                                        foreach ($leadData['field_data'] ?? [] as $fd) {
+                                            $fdNameRaw = $fd['name'] ?? '';
+                                            $fdNameNorm = $normalizeMetaStr($fdNameRaw);
+
+                                            if ($fdNameRaw === $fieldName || ($fieldNorm !== '' && $fdNameNorm === $fieldNorm)) {
+                                                $val0 = $fd['values'][0] ?? '';
+                                                $actualValRaw = strtolower(trim($val0));
+                                                $actualValNorm = $normalizeMetaStr($val0);
+                                                break;
+                                            }
+                                        }
+
+                                        if ($actualValRaw === null) {
+                                            $allMatched = false;
+                                            break;
+                                        }
+
+                                        if ($operator === 'equals') {
+                                            $match = ($actualValRaw === $expectedRaw) || ($actualValNorm !== '' && $actualValNorm === $expectedNorm);
+                                            if (!$match) {
+                                                $allMatched = false;
+                                                break;
+                                            }
+                                        } else if ($operator === 'contains') {
+                                            $match = str_contains($actualValRaw, $expectedRaw) || ($expectedNorm !== '' && str_contains($actualValNorm, $expectedNorm));
+                                            if (!$match) {
+                                                $allMatched = false;
+                                                break;
+                                            }
+                                        }
+                                    }
+                                }
+
+                                if ($allMatched) {
+                                    $clientUpdates = [];
+                                    if (!empty($rule->chat_status_id)) {
+                                        $clientUpdates['chat_status_id'] = $rule->chat_status_id;
+                                    }
+                                    if (!empty($rule->manage_status_id)) {
+                                        $clientUpdates['manage_status_id'] = $rule->manage_status_id;
+                                    }
+                                    if (!empty($rule->status_id)) {
+                                        $clientUpdates['status_id'] = $rule->status_id;
+                                    }
+                                    if (!empty($rule->assigned_to)) {
+                                        $clientUpdates['assigned_to'] = $rule->assigned_to;
+                                    }
+
+                                    if (!empty($clientUpdates)) {
+                                        $clientJpa->update($clientUpdates);
+                                        Log::info('Meta Form Rule applied to lead', [
+                                            'lead_id' => $clientJpa->id,
+                                            'rule_id' => $rule->id,
+                                            'updates' => $clientUpdates
+                                        ]);
+                                    }
+                                    break;
+                                }
+                            }
+                        } catch (\Throwable $th) {
+                            Log::error('Error evaluating Meta Form Rules: ' . $th->getMessage());
+                        }
+                    }
 
                     return;
                 };

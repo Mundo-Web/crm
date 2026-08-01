@@ -16,6 +16,7 @@ use App\Http\Controllers\LeadController;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\PixelController;
 use App\Http\Controllers\MetaController;
+use App\Http\Controllers\MetaFormRuleController;
 use App\Http\Controllers\PlanController;
 use App\Http\Controllers\ProcessController;
 use App\Http\Controllers\ProductController;
@@ -87,6 +88,7 @@ Route::middleware(['auth', 'firstTime', 'hasPlan'])->group(function () {
     Route::get('/products', [ProductController::class, 'reactView'])->name('Products.jsx');
     Route::get('/processes', [ProcessController::class, 'reactView'])->name('Processes.jsx');
     Route::get('/campaigns', [CampaignController::class, 'reactView'])->name('Campaigns.jsx');
+    Route::get('/meta-forms', [MetaFormRuleController::class, 'reactView'])->name('MetaForms.jsx');
     Route::get('/views', [ViewController::class, 'reactView'])->name('Views.jsx');
     Route::get('/projects', [ProjectController::class, 'reactView'])->name('Projects.jsx');
     Route::get('/projects/done', [ProjectDoneController::class, 'reactView'])->name('ProjectsDone.jsx');

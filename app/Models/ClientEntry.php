@@ -19,6 +19,8 @@ class ClientEntry extends Model
         'campaign_id',
         'adset_name',
         'ad_name',
+        'form_id',
+        'form_name',
         'source',
         'origin',
         'lead_origin',

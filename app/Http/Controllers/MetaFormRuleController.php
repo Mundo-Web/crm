@@ -1,0 +1,285 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Integration;
+use App\Models\MetaFormRule;
+use App\Models\Status;
+use App\Models\User;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use SoDe\Extend\Fetch;
+use SoDe\Extend\Response;
+
+class MetaFormRuleController extends BasicController
+{
+    public $model = MetaFormRule::class;
+    public $reactView = 'MetaForms';
+    public $prefix4filter = 'meta_form_rules';
+
+    public static function fetchMetaFormsForBusiness($businessId)
+    {
+        $integrations = Integration::where('business_id', $businessId)
+            ->where('status', true)
+            ->get();
+
+        $forms = [];
+        $formIdsMap = [];
+        $graphUrl = env('FACEBOOK_GRAPH_URL', 'https://graph.facebook.com/v22.0');
+
+        foreach ($integrations as $integration) {
+            $tokens = array_unique(array_filter([
+                $integration->meta_access_token,
+                $integration->meta_app_token,
+            ]));
+
+            foreach ($tokens as $token) {
+                // A. Consultar páginas del usuario vía /me/accounts
+                try {
+                    $pagesRes = new Fetch("{$graphUrl}/me/accounts?fields=id,name,access_token&limit=100&access_token={$token}");
+                    if ($pagesRes->ok) {
+                        $pagesData = $pagesRes->json();
+                        foreach ($pagesData['data'] ?? [] as $page) {
+                            $pageId = $page['id'] ?? null;
+                            $pageToken = $page['access_token'] ?? $token;
+                            if ($pageId) {
+                                try {
+                                    $formsRes = new Fetch("{$graphUrl}/{$pageId}/leadgen_forms?fields=id,name,questions,status,created_time&limit=100&access_token={$pageToken}");
+                                    if ($formsRes->ok) {
+                                        $fData = $formsRes->json();
+                                        foreach ($fData['data'] ?? [] as $f) {
+                                            if (isset($f['id']) && !isset($formIdsMap[$f['id']])) {
+                                                $formIdsMap[$f['id']] = true;
+                                                $forms[] = $f;
+                                            }
+                                        }
+                                    }
+                                } catch (\Throwable $th) {
+                                }
+                            }
+                        }
+                    }
+                } catch (\Throwable $th) {
+                }
+
+                // B. Consultar ID de negocio/página directo si existe
+                if (!empty($integration->meta_business_id)) {
+                    try {
+                        $formsRes = new Fetch("{$graphUrl}/{$integration->meta_business_id}/leadgen_forms?fields=id,name,questions,status,created_time&limit=100&access_token={$token}");
+                        if ($formsRes->ok) {
+                            $fData = $formsRes->json();
+                            foreach ($fData['data'] ?? [] as $f) {
+                                if (isset($f['id']) && !isset($formIdsMap[$f['id']])) {
+                                    $formIdsMap[$f['id']] = true;
+                                    $forms[] = $f;
+                                }
+                            }
+                        }
+                    } catch (\Throwable $th) {
+                    }
+                }
+
+                // C. Consultar Cuenta Publicitaria si existe
+                if (!empty($integration->meta_ad_account_id)) {
+                    $adAccountId = $integration->meta_ad_account_id;
+                    if (!str_starts_with($adAccountId, 'act_')) {
+                        $adAccountId = 'act_' . $adAccountId;
+                    }
+                    try {
+                        $formsRes = new Fetch("{$graphUrl}/{$adAccountId}/leadgen_forms?fields=id,name,questions,status,created_time&limit=100&access_token={$token}");
+                        if ($formsRes->ok) {
+                            $fData = $formsRes->json();
+                            foreach ($fData['data'] ?? [] as $f) {
+                                if (isset($f['id']) && !isset($formIdsMap[$f['id']])) {
+                                    $formIdsMap[$f['id']] = true;
+                                    $forms[] = $f;
+                                }
+                            }
+                        }
+                    } catch (\Throwable $th) {
+                    }
+
+                    // D. Buscar form_ids desde Anuncios
+                    try {
+                        $creativesUrl = "{$graphUrl}/{$adAccountId}/ads?fields=id,creative{object_story_spec,asset_feed_spec}&limit=100&access_token={$token}";
+                        $creativesRes = new Fetch($creativesUrl);
+                        if ($creativesRes->ok) {
+                            $cData = $creativesRes->json();
+                            $specs = ['video_data', 'link_data', 'photo_data', 'template_data'];
+                            foreach ($cData['data'] ?? [] as $adItem) {
+                                $creative = $adItem['creative'] ?? [];
+                                $foundFormId = null;
+                                foreach ($specs as $spec) {
+                                    if (isset($creative['object_story_spec'][$spec]['call_to_action']['value']['lead_gen_form_id'])) {
+                                        $foundFormId = $creative['object_story_spec'][$spec]['call_to_action']['value']['lead_gen_form_id'];
+                                        break;
+                                    }
+                                }
+                                if ($foundFormId && !isset($formIdsMap[$foundFormId])) {
+                                    try {
+                                        $fRes = new Fetch("{$graphUrl}/{$foundFormId}?fields=id,name,questions,status&access_token={$token}");
+                                        if ($fRes->ok) {
+                                            $fObj = $fRes->json();
+                                            if (isset($fObj['id'])) {
+                                                $formIdsMap[$fObj['id']] = true;
+                                                $forms[] = $fObj;
+                                            }
+                                        }
+                                    } catch (\Throwable $th) {
+                                    }
+                                }
+                            }
+                        }
+                    } catch (\Throwable $th) {
+                    }
+                }
+            }
+        }
+
+        // E. Fallback: Formularios detectados en la tabla Ads
+        try {
+            $adsWithForms = \App\Models\Ad::where('business_id', $businessId)
+                ->whereNotNull('form_name')
+                ->where('form_name', '!=', 'WhatsApp')
+                ->get();
+
+            foreach ($adsWithForms as $ad) {
+                $adFormName = $ad->form_name;
+                $alreadyExists = false;
+                foreach ($forms as $f) {
+                    if (($f['name'] ?? '') === $adFormName) {
+                        $alreadyExists = true;
+                        break;
+                    }
+                }
+                if (!$alreadyExists && $adFormName) {
+                    $fallbackId = 'form_' . md5($adFormName);
+                    if (!isset($formIdsMap[$fallbackId])) {
+                        $formIdsMap[$fallbackId] = true;
+                        $forms[] = [
+                            'id' => $fallbackId,
+                            'name' => $adFormName,
+                            'questions' => []
+                        ];
+                    }
+                }
+            }
+        } catch (\Throwable $th) {
+        }
+
+        return $forms;
+    }
+
+    public function setReactViewProperties(Request $request)
+    {
+        $businessId = Auth::user()->business_id;
+
+        // Fetch all statuses for current business
+        $statuses = Status::with(['table'])
+            ->where('business_id', $businessId)
+            ->whereNotNull('status')
+            ->get();
+
+        // Lead statuses (table e05a43e5-b3a6-46ce-8d1f-381a73498f33 or a8367789-666e-4929-aacb-7cbc2fbf74de)
+        $leadStatuses = $statuses->filter(function ($s) {
+            return $s->table_id === 'e05a43e5-b3a6-46ce-8d1f-381a73498f33' || $s->table_id === 'a8367789-666e-4929-aacb-7cbc2fbf74de';
+        })->values();
+
+        // Manage statuses / etiquetas (table 9c27e649-574a-47eb-82af-851c5d425434)
+        $manageStatuses = $statuses->filter(function ($s) {
+            return $s->table_id === '9c27e649-574a-47eb-82af-851c5d425434';
+        })->values();
+
+        // Chat statuses / temperaturas (icon is set or chat status)
+        $chatStatuses = $statuses->filter(function ($s) {
+            return !empty($s->icon);
+        })->values();
+
+        // System users / asesores
+        $users = User::where('business_id', $businessId)->get();
+
+        // Existing rules
+        $rules = MetaFormRule::with(['chatStatus', 'manageStatus', 'statusRef', 'assigned'])
+            ->where('business_id', $businessId)
+            ->get();
+
+        // Fetch connected Meta Lead Forms
+        $forms = self::fetchMetaFormsForBusiness($businessId);
+
+        return [
+            'leadStatuses'   => $leadStatuses,
+            'manageStatuses' => $manageStatuses,
+            'chatStatuses'   => $chatStatuses,
+            'users'          => $users,
+            'rules'          => $rules,
+            'metaForms'      => $forms,
+        ];
+    }
+
+    public function setPaginationInstance(Request $request, string $model)
+    {
+        $businessId = Auth::user()->business_id;
+        return $model::where('business_id', $businessId)
+            ->with(['chatStatus', 'manageStatus', 'statusRef', 'assigned']);
+    }
+
+    public function getMetaForms(Request $request)
+    {
+        $response = Response::simpleTryCatch(function () {
+            $businessId = Auth::user()->business_id;
+            return self::fetchMetaFormsForBusiness($businessId);
+        });
+
+        return response($response->toArray(), $response->status);
+    }
+
+    public function getFormQuestions(Request $request, string $formId)
+    {
+        $response = Response::simpleTryCatch(function () use ($formId) {
+            $businessId = Auth::user()->business_id;
+            $integrations = Integration::where('business_id', $businessId)
+                ->where('status', true)
+                ->get();
+
+            if ($integrations->isEmpty()) {
+                throw new \Exception('No hay integraciones activas con Meta');
+            }
+
+            $graphUrl = env('FACEBOOK_GRAPH_URL', 'https://graph.facebook.com/v22.0');
+            $data = null;
+
+            foreach ($integrations as $integration) {
+                $tokens = array_unique(array_filter([
+                    $integration->meta_access_token,
+                    $integration->meta_app_token,
+                ]));
+
+                foreach ($tokens as $token) {
+                    try {
+                        $res = new Fetch("{$graphUrl}/{$formId}?fields=id,name,questions,status&access_token={$token}");
+                        if ($res->ok) {
+                            $json = $res->json();
+                            if (isset($json['id'])) {
+                                $data = $json;
+                                break 2;
+                            }
+                        }
+                    } catch (\Throwable $th) {
+                    }
+                }
+            }
+
+            if (!$data) {
+                throw new \Exception('No se pudieron consultar las preguntas de este formulario en Meta');
+            }
+
+            return [
+                'id' => $data['id'],
+                'name' => $data['name'] ?? 'Formulario ' . $formId,
+                'questions' => $data['questions'] ?? []
+            ];
+        });
+
+        return response($response->toArray(), $response->status);
+    }
+}

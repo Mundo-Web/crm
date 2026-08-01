@@ -18,6 +18,7 @@ use App\Http\Controllers\KPILeadsController;
 use App\Http\Controllers\LeadController;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\MetaController;
+use App\Http\Controllers\MetaFormRuleController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\PaymentController;
@@ -267,6 +268,14 @@ Route::middleware('auth')->group(function () {
     Route::post('/settings/paginate', [SettingController::class, 'paginate']);
     Route::patch('/settings/status', [SettingController::class, 'status']);
     Route::delete('/settings/{id}', [SettingController::class, 'delete']);
+
+    // Meta Form Rules routes
+    Route::get('/meta-form-rules/forms', [MetaFormRuleController::class, 'getMetaForms']);
+    Route::post('/meta-form-rules', [MetaFormRuleController::class, 'save']);
+    Route::post('/meta-form-rules/paginate', [MetaFormRuleController::class, 'paginate']);
+    Route::patch('/meta-form-rules/status', [MetaFormRuleController::class, 'status']);
+    Route::delete('/meta-form-rules/{id}', [MetaFormRuleController::class, 'delete']);
+    Route::get('/meta-form-rules/questions/{formId}', [MetaFormRuleController::class, 'getFormQuestions']);
 
     Route::get('/remainings-history/{month}', [RemainingHistoryController::class, 'get']);
 

@@ -125,6 +125,7 @@ const OriginBadges = ({ entries, fallbackOrigin }) => {
                     (entry.campaign && typeof entry.campaign === 'object' && entry.campaign.title) ? `🎯 Campaña: ${entry.campaign.title}` : null,
                     entry.adset_name       ? `📁 Conjunto: ${entry.adset_name}`   : null,
                     entry.ad_name          ? `📌 Anuncio: ${entry.ad_name}`       : null,
+                    (entry.form_name || entry.form_id) ? `📋 Formulario: ${entry.form_name || entry.form_id}` : null,
                     entry.triggered_by     ? `🔗 Vía: ${entry.triggered_by}`      : null,
                 ].filter(Boolean).join('\n');
 

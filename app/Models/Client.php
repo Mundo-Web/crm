@@ -71,6 +71,8 @@ class Client extends Model
         'business_sector_id',
         'adset_name',
         'ad_name',
+        'form_id',
+        'form_name',
         'chat_status_id',
         'is_pinned'
     ];
