@@ -2759,6 +2759,14 @@ class MetaController extends Controller
             }
         }
 
+        // 4. Permissions Webhook (Meta System Notifications)
+        if ($object === 'permissions') {
+            Log::info('Global Webhook: Meta permissions update notification received', [
+                'entry' => $entry
+            ]);
+            return response()->json(['status' => 'permissions_acknowledged'], 200);
+        }
+
         Log::warning('Global Webhook: Unknown object type or unhandled field', ['object' => $object]);
         return response()->json(['status' => 'unhandled_event'], 200);
     }
