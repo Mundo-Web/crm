@@ -570,8 +570,19 @@ const MetaForms = ({
                                         <div key={idx} className="p-2 bg-light border rounded mb-2">
                                             <div className="row g-2 align-items-center">
                                                 <div className="col-md-5">
-                                                    <label className="font-11 text-muted fw-bold mb-1">Pregunta del Formulario</label>
-                                                    {formQs.length > 0 ? (
+                                                    <div className="d-flex justify-content-between align-items-center mb-1">
+                                                        <label className="font-11 text-muted fw-bold my-0">Pregunta del Formulario</label>
+                                                        {formQs.length > 0 && (
+                                                            <button
+                                                                type="button"
+                                                                className="btn btn-link btn-xs p-0 text-decoration-none font-10"
+                                                                onClick={() => updateCondition(idx, "isCustomQuestion", !cond.isCustomQuestion)}
+                                                            >
+                                                                {cond.isCustomQuestion ? "Elegir de lista" : "Escribir manual"}
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                    {formQs.length > 0 && !cond.isCustomQuestion ? (
                                                         <select
                                                             className="form-select form-select-sm"
                                                             value={cond.field_name}
@@ -591,7 +602,7 @@ const MetaForms = ({
                                                         <input
                                                             type="text"
                                                             className="form-control form-control-sm"
-                                                            placeholder="Nombre de la pregunta Meta"
+                                                            placeholder="Nombre o clave de la pregunta"
                                                             value={cond.field_name}
                                                             onChange={(e) => updateCondition(idx, "field_name", e.target.value)}
                                                         />
