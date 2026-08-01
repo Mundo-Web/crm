@@ -135,12 +135,19 @@ class WhatsAppController extends Controller
                 return response()->json(['error' => 'Invalid remote JID'], 400);
             }
 
-            // Paso 0: Verificar si existe en caché local
+            // Paso 0a: Si el número ya dio 404 previamente, responder de inmediato sin llamar a EvoAPI
+            if (\Illuminate\Support\Facades\Storage::exists("whatsapp/{$cleanJid}.404")) {
+                return response()->json(['error' => 'Profile image not found'], 404, [
+                    'Cache-Control' => 'public, max-age=86400',
+                ]);
+            }
+
+            // Paso 0b: Verificar si la imagen existe en caché local
             if (\Illuminate\Support\Facades\Storage::exists("whatsapp/{$cleanJid}.jpg")) {
                 $imageContent = \Illuminate\Support\Facades\Storage::get("whatsapp/{$cleanJid}.jpg");
                 return FacadesResponse::make($imageContent, 200, [
                     'Content-Type' => 'image/jpeg',
-                    'Cache-Control' => 'public, max-age=86400',
+                    'Cache-Control' => 'public, max-age=604800, immutable',
                 ]);
             }
 
@@ -153,8 +160,8 @@ class WhatsAppController extends Controller
             // Para EvoAPI, el remoteJid individual debe terminar en @s.whatsapp.net
             $evoJid = $cleanJid . '@s.whatsapp.net';
 
-            // Paso 1: Llamar al endpoint de profile picture
-            $res = Http::withHeaders([
+            // Paso 1: Llamar al endpoint de profile picture con timeout de 3 segundos
+            $res = Http::timeout(3)->withHeaders([
                 'Content-Type' => 'application/json',
                 'apikey' => $business->uuid,
             ])->post(env('EVOAPI_URL') . '/chat/fetchProfilePictureUrl/' . $business->person->document_number, [
@@ -162,19 +169,25 @@ class WhatsAppController extends Controller
             ]);
 
             if (!$res->ok()) {
-                return response()->json(['error' => 'Contact not found'], $res->status());
+                \Illuminate\Support\Facades\Storage::put("whatsapp/{$cleanJid}.404", (string)now()->timestamp);
+                return response()->json(['error' => 'Contact not found'], 404, [
+                    'Cache-Control' => 'public, max-age=86400',
+                ]);
             }
 
             $data = $res->json();
 
             if (empty($data) || empty($data['profilePictureUrl'])) {
-                return response()->json(['error' => 'Profile image not found'], 404);
+                \Illuminate\Support\Facades\Storage::put("whatsapp/{$cleanJid}.404", (string)now()->timestamp);
+                return response()->json(['error' => 'Profile image not found'], 404, [
+                    'Cache-Control' => 'public, max-age=86400',
+                ]);
             }
 
             $imageUrl = $data['profilePictureUrl'];
 
-            // Paso 2: Descargar la imagen
-            $imageRes = Http::get($imageUrl);
+            // Paso 2: Descargar la imagen con timeout
+            $imageRes = Http::timeout(5)->get($imageUrl);
 
             if (!$imageRes->ok()) {
                 return response()->json(['error' => 'Failed to fetch image'], 500);
@@ -187,10 +200,10 @@ class WhatsAppController extends Controller
             // Paso 3: Obtener tipo MIME
             $contentType = $imageRes->header('Content-Type', 'image/jpeg');
 
-            // Paso 4: Retornar la imagen directamente
+            // Paso 4: Retornar la imagen con caché de 7 días
             return FacadesResponse::make($imageBody, 200, [
                 'Content-Type' => $contentType,
-                'Cache-Control' => 'public, max-age=86400',
+                'Cache-Control' => 'public, max-age=604800, immutable',
             ]);
         } catch (Exception $e) {
             // Manejo general de errores

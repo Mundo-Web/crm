@@ -11,7 +11,9 @@ const LeadAvatar = ({ lead, className = "avatar-sm", style = {}, ...props }) => 
 
     if (!lead) return null;
 
-    if (imgError) {
+    const identifier = lead.contact_phone || lead.integration_user_id;
+
+    if (!identifier || identifier === 'undefined' || identifier === 'null' || imgError) {
         const name = lead.contact_name || lead.name || '';
         const initials = name
             .split(' ')
@@ -22,7 +24,6 @@ const LeadAvatar = ({ lead, className = "avatar-sm", style = {}, ...props }) => 
             .toUpperCase();
 
         const colors = ['primary', 'success', 'danger', 'warning', 'info', 'purple', 'pink'];
-        // Generate a consistent color based on name length or phone number
         const val = (lead.contact_phone || name || '').split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
         const color = colors[val % colors.length];
 
@@ -39,7 +40,7 @@ const LeadAvatar = ({ lead, className = "avatar-sm", style = {}, ...props }) => 
 
     return (
         <img 
-            src={`/api/whatsapp/profile/${lead.contact_phone || lead.integration_user_id}`}
+            src={`/api/whatsapp/profile/${identifier}`}
             className={`rounded-circle bg-light ${className}`}
             alt={lead.name} 
             style={{ padding: 0, border: 'none', objectFit: 'cover', ...style }}
