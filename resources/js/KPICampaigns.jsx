@@ -375,6 +375,7 @@ const KPICampaigns = ({ months = [], currentMonth, currentYear, advisors = [], w
     const [archivedLabelsCount, setArchivedLabelsCount] = useState(0);
     const [convertedLabelsCount, setConvertedLabelsCount] = useState(0);
     const [archivedBreakdown, setArchivedBreakdown] = useState([]);
+    const [totalConversionPercent, setTotalConversionPercent] = useState(0);
     const [backendNoRespondieronCount, setBackendNoRespondieronCount] = useState(null);
 
     const [contactedBreakdown, setContactedBreakdown] = useState([]);
@@ -416,6 +417,7 @@ const KPICampaigns = ({ months = [], currentMonth, currentYear, advisors = [], w
 
     // Evolución Semanal
     const [weeklyEvolution, setWeeklyEvolution] = useState([]);
+    const [campaignWeeklyEvolutions, setCampaignWeeklyEvolutions] = useState([]);
     const [loading, setLoading] = useState(true);
 
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -449,15 +451,22 @@ const KPICampaigns = ({ months = [], currentMonth, currentYear, advisors = [], w
             setDateFrom(prevStart); setDateTo(prevEnd);
         } else if (preset === "month") {
             const d = new Date();
-            setDateFrom(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`);
-            setDateTo(t);
+            const year = d.getFullYear();
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            setDateFrom(`${year}-${month}-01`);
+            setDateTo(`${year}-${month}-${day}`);
         } else if (preset === "last_month") {
             const d = new Date();
-            d.setDate(0);
-            const lastDay = d.toISOString().slice(0, 10);
-            d.setDate(1);
-            setDateFrom(d.toISOString().slice(0, 10));
-            setDateTo(lastDay);
+            const firstOfPrevMonth = new Date(d.getFullYear(), d.getMonth() - 1, 1);
+            const lastOfPrevMonth = new Date(d.getFullYear(), d.getMonth(), 0);
+
+            const prevYear = firstOfPrevMonth.getFullYear();
+            const prevMonth = String(firstOfPrevMonth.getMonth() + 1).padStart(2, '0');
+            const lastDayNum = String(lastOfPrevMonth.getDate()).padStart(2, '0');
+
+            setDateFrom(`${prevYear}-${prevMonth}-01`);
+            setDateTo(`${prevYear}-${prevMonth}-${lastDayNum}`);
         }
     };
 
@@ -481,17 +490,17 @@ const KPICampaigns = ({ months = [], currentMonth, currentYear, advisors = [], w
         paginate: (params) => {
             const override = selectedWeekDatesRef.current;
             let dateFromParam = dateFrom;
-            let dateToParam   = dateTo;
-            let isWeekly      = 0;
+            let dateToParam = dateTo;
+            let isWeekly = 0;
 
             if (override) {
                 dateFromParam = override.start_date;
-                dateToParam   = override.end_date;
-                isWeekly      = 1;
+                dateToParam = override.end_date;
+                isWeekly = 1;
             } else {
                 const adjusted = getAdjustedDates(dateFrom, dateTo);
-                dateFromParam  = adjusted.date_from;
-                dateToParam    = adjusted.date_to;
+                dateFromParam = adjusted.date_from;
+                dateToParam = adjusted.date_to;
             }
 
             return axios
@@ -605,9 +614,11 @@ const KPICampaigns = ({ months = [], currentMonth, currentYear, advisors = [], w
                 setRoas(summary.roas ?? 0);
                 setUsdExchangeRate(summary.exchangeRate ?? 3.80);
                 setWeeklyEvolution(summary.weeklyEvolution ?? []);
+                setCampaignWeeklyEvolutions(summary.campaignWeeklyEvolutions ?? []);
                 setSpendsLoading(false);
             } else {
                 setWeeklyEvolution(summary.weeklyEvolution ?? []);
+                setCampaignWeeklyEvolutions(summary.campaignWeeklyEvolutions ?? []);
                 fetchSpendsOnly(from, to, plt, adv);
             }
 
@@ -1545,8 +1556,44 @@ const KPICampaigns = ({ months = [], currentMonth, currentYear, advisors = [], w
                                                     <td style={{ padding: '12px', textAlign: 'center', color: '#64748b', fontWeight: 600 }}>{wk.start_formatted}</td>
                                                     <td style={{ padding: '12px', textAlign: 'center', color: '#64748b', fontWeight: 600, borderRight: '1px solid #e2e8f0' }}>{wk.end_formatted}</td>
 
-                                                    {/* Registros — click para ver el detalle de leads de la semana */}
-                                                    <Tippy content={<span style={{ fontSize: '12px', color: '#0f172a' }}>Ver los <strong>{fmtNum(wk.registros)}</strong> leads de {wk.label} ({wk.start_formatted} - {wk.end_formatted})</span>} theme="kpi-light" placement="top" arrow>
+                                                    {/* Registros — tooltip con comparativa Meta API vs CRM Local */}
+                                                    <Tippy
+                                                        content={
+                                                            <div style={{ minWidth: 250, padding: '6px 4px' }}>
+                                                                <div style={{ fontWeight: 700, fontSize: '11px', marginBottom: 8, color: '#4f46e5', letterSpacing: '0.5px', textTransform: 'uppercase', borderBottom: '1px solid #eef2ff', paddingBottom: 4 }}>
+                                                                    Auditoría de Leads · {wk.label} ({wk.start_formatted} - {wk.end_formatted})
+                                                                </div>
+                                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 5 }}>
+                                                                    <span style={{ fontSize: '12px', color: '#475569' }}>Leads en CRM:</span>
+                                                                    <span style={{ fontSize: '13px', fontWeight: 800, color: '#4f46e5' }}>{fmtNum(wk.registros)}</span>
+                                                                </div>
+                                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                                                                    <span style={{ fontSize: '12px', color: '#475569' }}>Plataforma Meta:</span>
+                                                                    <span style={{ fontSize: '13px', fontWeight: 800, color: '#0284c7' }}>{fmtNum(wk.meta_leads ?? wk.registros)}</span>
+                                                                </div>
+                                                                <div style={{ marginTop: 6, fontSize: '11px', color: '#64748b', borderTop: '1px solid #f1f5f9', paddingTop: 6, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                                    <span>Diferencia Auditada:</span>
+                                                                    <span className={`badge ${((wk.registros - (wk.meta_leads ?? wk.registros)) === 0) ? 'bg-success' : ((wk.registros - (wk.meta_leads ?? wk.registros)) > 0 ? 'bg-primary' : 'bg-warning text-dark')}`}>
+                                                                        {(wk.registros - (wk.meta_leads ?? wk.registros) > 0 ? '+' : '') + (wk.registros - (wk.meta_leads ?? wk.registros))}
+                                                                    </span>
+                                                                </div>
+                                                                <div style={{ marginTop: 8, padding: '6px 8px', borderRadius: '6px', backgroundColor: (wk.registros - (wk.meta_leads ?? wk.registros)) === 0 ? '#f0fdf4' : '#eff6ff', fontSize: '10.5px', color: (wk.registros - (wk.meta_leads ?? wk.registros)) === 0 ? '#166534' : '#1e40af', lineHeight: '1.4' }}>
+                                                                    {(wk.registros - (wk.meta_leads ?? wk.registros)) === 0
+                                                                        ? 'Datos sincronizados: El CRM local y Meta Ads concuerdan al 100%.'
+                                                                        : (wk.registros - (wk.meta_leads ?? wk.registros)) > 0
+                                                                            ? `El CRM tiene ${wk.registros - (wk.meta_leads ?? wk.registros)} lead(s) adicional(es) registrado(s) por mensajes o entradas del cliente.`
+                                                                            : `Meta reporta ${Math.abs(wk.registros - (wk.meta_leads ?? wk.registros))} lead(s) adicional(es) atribuidos en Meta Ads.`
+                                                                    }
+                                                                </div>
+                                                                <div style={{ fontSize: '10px', color: '#94a3b8', marginTop: 6, textAlign: 'center' }}>
+                                                                    <i className="mdi mdi-cursor-pointer me-1"></i>Clic para ver los leads en CRM
+                                                                </div>
+                                                            </div>
+                                                        }
+                                                        theme="kpi-light"
+                                                        placement="top"
+                                                        arrow={true}
+                                                    >
                                                         <td
                                                             onClick={() => fetchLeads(null, null, null, wk)}
                                                             style={{
@@ -1791,6 +1838,108 @@ const KPICampaigns = ({ months = [], currentMonth, currentYear, advisors = [], w
                             )}
                         </div>
                     </div>
+
+                    {/* Evolución Semanal por Campaña Individual (un bloque completo por cada campaña) */}
+                    {campaignWeeklyEvolutions.length > 0 && campaignWeeklyEvolutions.map((cEv, cIdx) => (
+                        <div key={cEv.campaign_id || cIdx} className="card border-0 shadow-sm mb-5" style={{ borderRadius: '24px', border: '1px solid rgba(226, 232, 240, 0.8)', overflow: 'hidden' }}>
+                            <div className="p-4 bg-white border-bottom border-light d-flex flex-wrap align-items-center justify-content-between gap-3">
+                                <div>
+                                    <h5 className="fw-bold text-dark mb-1 d-flex align-items-center" style={{ fontSize: '15px' }}>
+                                        <i className="mdi mdi-bullseye-arrow text-danger me-2 fs-4"></i>
+                                        Evolución Semanal &mdash; <span className="text-primary ms-1">{cEv.campaign_name}</span>
+                                    </h5>
+                                    <small className="text-muted">Desglose de rendimiento semana a semana (S1..S5) para esta campaña</small>
+                                </div>
+                                <span className="badge bg-soft-primary text-primary px-3 py-2 rounded-pill fw-bold" style={{ fontSize: '12px' }}>
+                                    <i className="mdi mdi-account-group me-1"></i>
+                                    {fmtNum(cEv.total_leads)} Leads en el periodo
+                                </span>
+                            </div>
+
+                            <div className="table-responsive">
+                                <table className="table table-hover align-middle mb-0" style={{ fontSize: '12px' }}>
+                                    <thead className="table-light">
+                                        <tr>
+                                            <th style={{ textAlign: 'center' }}>Semana</th>
+                                            <th style={{ textAlign: 'center' }}>Inicio</th>
+                                            <th style={{ textAlign: 'center', borderRight: '1px solid #e2e8f0' }}>Fin</th>
+                                            <th style={{ textAlign: 'right' }}>Registros</th>
+                                            <th style={{ textAlign: 'right' }}>Contactados</th>
+                                            <th style={{ textAlign: 'right' }}>No Contesta</th>
+                                            <th style={{ textAlign: 'right' }}>Respondieron</th>
+                                            <th style={{ textAlign: 'right', borderRight: '1px solid #e2e8f0' }}>Ventas</th>
+                                            <th style={{ textAlign: 'right' }}>% Contacto</th>
+                                            <th style={{ textAlign: 'right' }}>% Cierre</th>
+                                            <th style={{ textAlign: 'right' }}>Monto Vendido (S/)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {cEv.weeks.map((wk) => (
+                                            <tr key={wk.label}>
+                                                <td style={{ textAlign: 'center', fontWeight: 800, color: '#0f172a' }}>{wk.label}</td>
+                                                <td style={{ textAlign: 'center', color: '#64748b' }}>{wk.start_formatted}</td>
+                                                <td style={{ textAlign: 'center', color: '#64748b', borderRight: '1px solid #e2e8f0' }}>{wk.end_formatted}</td>
+
+                                                {/* Registros con Tooltip Comparativo Meta vs CRM */}
+                                                <Tippy
+                                                    content={
+                                                        <div style={{ minWidth: 250, padding: '6px 4px' }}>
+                                                            <div style={{ fontWeight: 700, fontSize: '11px', marginBottom: 8, color: '#4f46e5', letterSpacing: '0.5px', textTransform: 'uppercase', borderBottom: '1px solid #eef2ff', paddingBottom: 4 }}>
+                                                                🔍 Auditoría de Leads · {wk.label} ({cEv.campaign_name})
+                                                            </div>
+                                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 5 }}>
+                                                                <span style={{ fontSize: '12px', color: '#475569' }}>🏠 Leads en CRM Local:</span>
+                                                                <span style={{ fontSize: '13px', fontWeight: 800, color: '#4f46e5' }}>{fmtNum(wk.registros)}</span>
+                                                            </div>
+                                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                                                                <span style={{ fontSize: '12px', color: '#475569' }}>🌐 Leads en Meta API:</span>
+                                                                <span style={{ fontSize: '13px', fontWeight: 800, color: '#0284c7' }}>{fmtNum(wk.meta_leads ?? wk.registros)}</span>
+                                                            </div>
+                                                            <div style={{ marginTop: 6, fontSize: '11px', color: '#64748b', borderTop: '1px solid #f1f5f9', paddingTop: 6, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                                <span>Diferencia Auditada:</span>
+                                                                <span className={`badge ${((wk.registros - (wk.meta_leads ?? wk.registros)) === 0) ? 'bg-success' : ((wk.registros - (wk.meta_leads ?? wk.registros)) > 0 ? 'bg-primary' : 'bg-warning text-dark')}`}>
+                                                                    {(wk.registros - (wk.meta_leads ?? wk.registros) > 0 ? '+' : '') + (wk.registros - (wk.meta_leads ?? wk.registros))}
+                                                                </span>
+                                                            </div>
+                                                            <div style={{ marginTop: 8, padding: '6px 8px', borderRadius: '6px', backgroundColor: (wk.registros - (wk.meta_leads ?? wk.registros)) === 0 ? '#f0fdf4' : '#eff6ff', fontSize: '10.5px', color: (wk.registros - (wk.meta_leads ?? wk.registros)) === 0 ? '#166534' : '#1e40af', lineHeight: '1.4' }}>
+                                                                {(wk.registros - (wk.meta_leads ?? wk.registros)) === 0
+                                                                    ? '✅ Datos sincronizados: El CRM local y Meta Ads concuerdan al 100%.'
+                                                                    : (wk.registros - (wk.meta_leads ?? wk.registros)) > 0
+                                                                        ? `💡 El CRM tiene ${wk.registros - (wk.meta_leads ?? wk.registros)} lead(s) adicional(es) registrado(s) por mensajes o entradas del cliente.`
+                                                                        : `⚠️ Meta reporta ${Math.abs(wk.registros - (wk.meta_leads ?? wk.registros))} lead(s) adicional(es) atribuidos en Meta Ads.`
+                                                                }
+                                                            </div>
+                                                            <div style={{ fontSize: '10px', color: '#94a3b8', marginTop: 6, textAlign: 'center' }}>
+                                                                <i className="mdi mdi-cursor-pointer me-1"></i>Clic para ver los leads en CRM
+                                                            </div>
+                                                        </div>
+                                                    }
+                                                    theme="kpi-light"
+                                                    placement="top"
+                                                    arrow={true}
+                                                >
+                                                    <td
+                                                        onClick={() => fetchLeads(cEv.campaign_id, cEv.campaign_name, null, wk)}
+                                                        style={{ textAlign: 'right', fontWeight: 800, color: '#4f46e5', cursor: 'pointer', textDecoration: 'underline' }}
+                                                    >
+                                                        {fmtNum(wk.registros)}
+                                                    </td>
+                                                </Tippy>
+
+                                                <td style={{ textAlign: 'right', fontWeight: 600 }}>{fmtNum(wk.contactados)}</td>
+                                                <td style={{ textAlign: 'right', fontWeight: 600, color: '#ef4444' }}>{fmtNum(wk.noContesta)}</td>
+                                                <td style={{ textAlign: 'right', fontWeight: 600, color: '#10b981' }}>{fmtNum(wk.respondio)}</td>
+                                                <td style={{ textAlign: 'right', fontWeight: 800, color: '#10b981', borderRight: '1px solid #e2e8f0' }}>{fmtNum(wk.ventas)}</td>
+                                                <td style={{ textAlign: 'right', color: '#7c3aed', fontWeight: 700 }}>{fmtPct(wk.pctContact)}</td>
+                                                <td style={{ textAlign: 'right', color: '#7c3aed', fontWeight: 700 }}>{fmtPct(wk.pctCierre)}</td>
+                                                <td style={{ textAlign: 'right', fontWeight: 800, color: '#059669' }}>S/ {fmtMon(wk.salesAmount)}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    ))}
 
                     {/* Gráficos de Evolución Semanal */}
                     <div className="row g-4 mb-5">
