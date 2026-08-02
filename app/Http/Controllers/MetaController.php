@@ -118,8 +118,9 @@ class MetaController extends Controller
     }
     public static function getFacebookProfile(string $id, string $accessToken, bool $external = false)
     {
+        $facebookGraphUrl = config('services.meta.facebook_graph_url', 'https://graph.facebook.com/v22.0');
         if ($external) {
-            $fbRest = new Fetch(env('FACEBOOK_GRAPH_URL') . "/{$id}?fields=first_name,last_name,profile_pic&access_token={$accessToken}");
+            $fbRest = new Fetch("{$facebookGraphUrl}/{$id}?fields=first_name,last_name,profile_pic&access_token={$accessToken}");
             $fbData = $fbRest->json();
 
             if (isset($fbData['error'])) {
@@ -131,8 +132,8 @@ class MetaController extends Controller
             return $fbData;
         }
 
-        $fbMeRest = new Fetch(env('FACEBOOK_GRAPH_URL') . "/me?fields=id,name,username,picture&access_token={$accessToken}");
-        $fbRest = new Fetch(env('FACEBOOK_GRAPH_URL') . "/{$id}?fields=id,name,username,picture&access_token={$accessToken}");
+        $fbMeRest = new Fetch("{$facebookGraphUrl}/me?fields=id,name,username,picture&access_token={$accessToken}");
+        $fbRest = new Fetch("{$facebookGraphUrl}/{$id}?fields=id,name,username,picture&access_token={$accessToken}");
 
         $fbMeData = $fbMeRest->json();
         $fbData = $fbRest->json();
@@ -153,8 +154,9 @@ class MetaController extends Controller
     }
     public static function getMetaProfile(string $id, string $accessToken, bool $external = false)
     {
+        $facebookGraphUrl = config('services.meta.facebook_graph_url', 'https://graph.facebook.com/v22.0');
         if ($external) {
-            $fbRest = new Fetch(env('FACEBOOK_GRAPH_URL') . "/{$id}?access_token={$accessToken}");
+            $fbRest = new Fetch("{$facebookGraphUrl}/{$id}?access_token={$accessToken}");
             $fbData = $fbRest->json();
 
             if (isset($fbData['error'])) {
@@ -166,7 +168,7 @@ class MetaController extends Controller
             return $fbData;
         }
 
-        $fbRest = new Fetch(env('FACEBOOK_GRAPH_URL') . "/{$id}?fields=id,name,username,picture&access_token={$accessToken}");
+        $fbRest = new Fetch("{$facebookGraphUrl}/{$id}?fields=id,name,username,picture&access_token={$accessToken}");
 
         $fbData = $fbRest->json();
 
@@ -180,7 +182,8 @@ class MetaController extends Controller
     }
     public static function getWhatsAppProfile(string $id, string $accessToken)
     {
-        $rest = new Fetch(env('FACEBOOK_GRAPH_URL') . "/{$id}?fields=id,name,currency,owner_business_info&access_token={$accessToken}");
+        $facebookGraphUrl = config('services.meta.facebook_graph_url', 'https://graph.facebook.com/v22.0');
+        $rest = new Fetch("{$facebookGraphUrl}/{$id}?fields=id,name,currency,owner_business_info&access_token={$accessToken}");
         $data = $rest->json();
 
         if (isset($data['error'])) throw new Exception($data['error']['message'] ?? 'Error, token inválido o sin permisos');

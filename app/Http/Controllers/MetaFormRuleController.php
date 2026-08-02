@@ -69,6 +69,7 @@ class MetaFormRuleController extends BasicController
     public static function fetchMetaFormsForBusiness($businessId)
     {
         $integrations = Integration::where('business_id', $businessId)
+            ->where('meta_service', 'forms')
             ->where('status', true)
             ->get();
 
@@ -81,16 +82,36 @@ class MetaFormRuleController extends BasicController
             $graphUrl = 'https://graph.facebook.com/v22.0';
         }
 
-        Log::info("fetchMetaFormsForBusiness started", ['businessId' => $businessId, 'integrations_count' => $integrations->count(), 'graphUrl' => $graphUrl]);
+        Log::info("fetchMetaFormsForBusiness started", ['businessId' => $businessId, 'forms_integrations_count' => $integrations->count(), 'graphUrl' => $graphUrl]);
 
         foreach ($integrations as $integration) {
-            $tokens = array_unique(array_filter([
-                $integration->meta_access_token,
-                $integration->meta_app_token,
-            ]));
+            $token = $integration->meta_access_token;
+            if (empty($token)) continue;
 
-            foreach ($tokens as $token) {
-                // A. Consultar páginas del usuario vía /me/accounts
+            // A. Consultar ID de negocio/página directo si existe
+            if (!empty($integration->meta_business_id)) {
+                try {
+                    $formsUrl = "{$graphUrl}/{$integration->meta_business_id}/leadgen_forms?fields=id,name,questions,status,created_time&limit=100&access_token={$token}";
+                    $formsRes = new Fetch($formsUrl);
+                    if ($formsRes->ok) {
+                        $fData = $formsRes->json();
+                        Log::info("Meta Forms from Page ID {$integration->meta_business_id}", ['forms_found' => count($fData['data'] ?? [])]);
+                        foreach ($fData['data'] ?? [] as $f) {
+                            if (isset($f['id']) && !isset($formIdsMap[$f['id']])) {
+                                $formIdsMap[$f['id']] = true;
+                                $forms[] = $f;
+                            }
+                        }
+                    } else {
+                        Log::warning("Page leadgen_forms non-200", ['res' => $formsRes->json()]);
+                    }
+                } catch (\Throwable $th) {
+                    Log::error("Error querying page leadgen_forms: " . $th->getMessage());
+                }
+            }
+
+            // B. Consultar páginas del usuario vía /me/accounts si aún no hay formularios
+            if (empty($forms)) {
                 try {
                     $url = "{$graphUrl}/me/accounts?fields=id,name,access_token&limit=100&access_token={$token}";
                     $pagesRes = new Fetch($url);
@@ -105,114 +126,46 @@ class MetaFormRuleController extends BasicController
                                     $formsRes = new Fetch($formsUrl);
                                     if ($formsRes->ok) {
                                         $fData = $formsRes->json();
-                                        Log::info("Meta Forms from Page {$pageId}", ['forms_found' => count($fData['data'] ?? [])]);
                                         foreach ($fData['data'] ?? [] as $f) {
                                             if (isset($f['id']) && !isset($formIdsMap[$f['id']])) {
                                                 $formIdsMap[$f['id']] = true;
                                                 $forms[] = $f;
                                             }
                                         }
-                                    } else {
-                                        Log::warning("Page leadgen_forms non-200", ['pageId' => $pageId, 'res' => $formsRes->json()]);
                                     }
                                 } catch (\Throwable $th) {
-                                    Log::error("Error querying page {$pageId} leadgen_forms: " . $th->getMessage());
                                 }
                             }
                         }
-                    } else {
-                        Log::warning("me/accounts non-200", ['res' => $pagesRes->json()]);
                     }
                 } catch (\Throwable $th) {
-                    Log::error("Error querying /me/accounts: " . $th->getMessage());
                 }
+            }
 
-                // B. Consultar ID de negocio/página directo si existe
-                if (!empty($integration->meta_business_id)) {
-                    try {
-                        $formsUrl = "{$graphUrl}/{$integration->meta_business_id}/leadgen_forms?fields=id,name,questions,status,created_time&limit=100&access_token={$token}";
-                        $formsRes = new Fetch($formsUrl);
-                        if ($formsRes->ok) {
-                            $fData = $formsRes->json();
-                            Log::info("Meta Forms from Business ID {$integration->meta_business_id}", ['forms_found' => count($fData['data'] ?? [])]);
-                            foreach ($fData['data'] ?? [] as $f) {
-                                if (isset($f['id']) && !isset($formIdsMap[$f['id']])) {
-                                    $formIdsMap[$f['id']] = true;
-                                    $forms[] = $f;
-                                }
-                            }
-                        } else {
-                            Log::warning("meta_business_id leadgen_forms non-200", ['res' => $formsRes->json()]);
-                        }
-                    } catch (\Throwable $th) {
-                        Log::error("Error querying meta_business_id leadgen_forms: " . $th->getMessage());
-                    }
+            // C. Consultar Cuenta Publicitaria si existe
+            if (!empty($integration->meta_ad_account_id)) {
+                $adAccountId = $integration->meta_ad_account_id;
+                if (!str_starts_with($adAccountId, 'act_')) {
+                    $adAccountId = 'act_' . $adAccountId;
                 }
-
-                // C. Consultar Cuenta Publicitaria si existe
-                if (!empty($integration->meta_ad_account_id)) {
-                    $adAccountId = $integration->meta_ad_account_id;
-                    if (!str_starts_with($adAccountId, 'act_')) {
-                        $adAccountId = 'act_' . $adAccountId;
-                    }
-                    try {
-                        $formsUrl = "{$graphUrl}/{$adAccountId}/leadgen_forms?fields=id,name,questions,status,created_time&limit=100&access_token={$token}";
-                        $formsRes = new Fetch($formsUrl);
-                        if ($formsRes->ok) {
-                            $fData = $formsRes->json();
-                            Log::info("Meta Forms from AdAccount {$adAccountId}", ['forms_found' => count($fData['data'] ?? [])]);
-                            foreach ($fData['data'] ?? [] as $f) {
-                                if (isset($f['id']) && !isset($formIdsMap[$f['id']])) {
-                                    $formIdsMap[$f['id']] = true;
-                                    $forms[] = $f;
-                                }
-                            }
-                        } else {
-                            Log::warning("ad_account leadgen_forms non-200", ['res' => $formsRes->json()]);
-                        }
-                    } catch (\Throwable $th) {
-                        Log::error("Error querying ad account leadgen_forms: " . $th->getMessage());
-                    }
-
-                    // D. Buscar form_ids desde Anuncios
-                    try {
-                        $creativesUrl = "{$graphUrl}/{$adAccountId}/ads?fields=id,creative{object_story_spec,asset_feed_spec}&limit=100&access_token={$token}";
-                        $creativesRes = new Fetch($creativesUrl);
-                        if ($creativesRes->ok) {
-                            $cData = $creativesRes->json();
-                            $specs = ['video_data', 'link_data', 'photo_data', 'template_data'];
-                            foreach ($cData['data'] ?? [] as $adItem) {
-                                $creative = $adItem['creative'] ?? [];
-                                $foundFormId = null;
-                                foreach ($specs as $spec) {
-                                    if (isset($creative['object_story_spec'][$spec]['call_to_action']['value']['lead_gen_form_id'])) {
-                                        $foundFormId = $creative['object_story_spec'][$spec]['call_to_action']['value']['lead_gen_form_id'];
-                                        break;
-                                    }
-                                }
-                                if ($foundFormId && !isset($formIdsMap[$foundFormId])) {
-                                    try {
-                                        $fRes = new Fetch("{$graphUrl}/{$foundFormId}?fields=id,name,questions,status&access_token={$token}");
-                                        if ($fRes->ok) {
-                                            $fObj = $fRes->json();
-                                            if (isset($fObj['id'])) {
-                                                $formIdsMap[$fObj['id']] = true;
-                                                $forms[] = $fObj;
-                                            }
-                                        }
-                                    } catch (\Throwable $th) {
-                                    }
-                                }
+                try {
+                    $formsUrl = "{$graphUrl}/{$adAccountId}/leadgen_forms?fields=id,name,questions,status,created_time&limit=100&access_token={$token}";
+                    $formsRes = new Fetch($formsUrl);
+                    if ($formsRes->ok) {
+                        $fData = $formsRes->json();
+                        foreach ($fData['data'] ?? [] as $f) {
+                            if (isset($f['id']) && !isset($formIdsMap[$f['id']])) {
+                                $formIdsMap[$f['id']] = true;
+                                $forms[] = $f;
                             }
                         }
-                    } catch (\Throwable $th) {
-                        Log::error("Error querying ad creatives: " . $th->getMessage());
                     }
+                } catch (\Throwable $th) {
                 }
             }
         }
 
-        // E. Fallback: Formularios detectados en la tabla Ads
+        // D. Fallback: Formularios detectados en la tabla Ads
         try {
             $adsWithForms = \App\Models\Ad::where('business_id', $businessId)
                 ->whereNotNull('form_name')
