@@ -1809,26 +1809,61 @@ const IntegrationWizardModal = ({
                                                                 <i className="mdi mdi-facebook me-2 text-primary fs-5"></i>
                                                                 Selecciona tu página de Facebook:
                                                             </label>
-                                                            <select
-                                                                className="form-select border-2 p-2"
-                                                                value={selectedAssetId}
-                                                                onChange={(e) => handleAssetSelect(e.target.value)}
-                                                                style={{ borderRadius: "8px" }}
-                                                                disabled={verifying}
-                                                            >
-                                                                <option value="">-- Selecciona una página --</option>
-                                                                {authPayload?.pages?.map((page) => (
-                                                                    <option key={page.id} value={page.id}>
-                                                                        {page.name} (ID: {page.id})
-                                                                    </option>
-                                                                ))}
-                                                            </select>
+                                                            {authPayload?.pages && authPayload.pages.length > 0 ? (
+                                                                <select
+                                                                    className="form-select border-2 p-2 mb-3"
+                                                                    value={selectedAssetId}
+                                                                    onChange={(e) => handleAssetSelect(e.target.value)}
+                                                                    style={{ borderRadius: "8px" }}
+                                                                    disabled={verifying}
+                                                                >
+                                                                    <option value="">-- Selecciona una página --</option>
+                                                                    {authPayload.pages.map((page) => (
+                                                                        <option key={page.id} value={page.id}>
+                                                                            {page.name} (ID: {page.id})
+                                                                        </option>
+                                                                    ))}
+                                                                </select>
+                                                            ) : null}
+
                                                             {(!authPayload?.pages || authPayload.pages.length === 0) && (
-                                                                <div className="alert alert-warning border-0 mt-3 small">
-                                                                    <i className="mdi mdi-alert-circle me-1"></i>
-                                                                    No se encontraron páginas de Facebook asociadas a esta cuenta.
+                                                                <div className="alert alert-warning border-0 mb-3 small">
+                                                                    <i className="mdi mdi-clock-alert-outline me-1"></i>
+                                                                    Meta ha aplicado un límite temporal de tasa de peticiones (Rate Limit #4). Puedes ingresar el <b>ID de tu Página de Facebook</b> manualmente a continuación:
                                                                 </div>
                                                             )}
+
+                                                            <div className="mt-2">
+                                                                <label className="form-label small text-muted fw-semibold mb-1">
+                                                                    O ingresa el ID de tu Página de Facebook manualmente:
+                                                                </label>
+                                                                <div className="input-group">
+                                                                    <input
+                                                                        type="text"
+                                                                        className="form-control"
+                                                                        placeholder="Ej: 1006394395666643"
+                                                                        value={accountId}
+                                                                        onChange={(e) => {
+                                                                            setAccountId(e.target.value);
+                                                                            if (authPayload?.user_token) {
+                                                                                setAccessToken(authPayload.user_token);
+                                                                                if (service === 'forms') {
+                                                                                    setAppToken(authPayload.user_token);
+                                                                                }
+                                                                            }
+                                                                        }}
+                                                                        disabled={verifying}
+                                                                    />
+                                                                    <button
+                                                                        type="button"
+                                                                        className="btn btn-primary"
+                                                                        onClick={() => handleAssetSelect(accountId)}
+                                                                        disabled={!accountId || verifying}
+                                                                    >
+                                                                        Verificar y Vincular
+                                                                    </button>
+                                                                </div>
+                                                            </div>
                                                         </div>
                                                     )}
 
