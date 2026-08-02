@@ -95,13 +95,35 @@ class MetaFormRuleController extends BasicController
         Log::info("fetchMetaFormsForBusiness started", ['businessId' => $businessId, 'forms_integrations_count' => $integrations->count(), 'graphUrl' => $graphUrl]);
 
         foreach ($integrations as $integration) {
-            $tokens = array_unique(array_filter([
-                $integration->meta_app_token,
-                $integration->meta_access_token,
-            ]));
-            if (empty($tokens)) continue;
+            $pageTokens = [];
 
-            foreach ($tokens as $token) {
+            // Extraer Tokens de Página frescos consultando /me/accounts con meta_app_token (User Token de larga duración)
+            if (!empty($integration->meta_app_token)) {
+                try {
+                    $meAccountsUrl = "{$graphUrl}/me/accounts?fields=id,name,access_token&limit=100&access_token={$integration->meta_app_token}";
+                    $meRes = new Fetch($meAccountsUrl);
+                    if ($meRes->ok) {
+                        $meData = $meRes->json();
+                        foreach ($meData['data'] ?? [] as $pData) {
+                            if (!empty($pData['access_token'])) {
+                                $pageTokens[] = $pData['access_token'];
+                            }
+                        }
+                    }
+                } catch (\Throwable $th) {
+                    Log::error("Error fetching me/accounts page tokens: " . $th->getMessage());
+                }
+            }
+
+            // Añadir el meta_access_token estático de la BD como respaldo
+            if (!empty($integration->meta_access_token)) {
+                $pageTokens[] = $integration->meta_access_token;
+            }
+
+            $pageTokens = array_unique(array_filter($pageTokens));
+            if (empty($pageTokens)) continue;
+
+            foreach ($pageTokens as $token) {
                 $foundCountBefore = count($forms);
 
                 // A. Consultar ID de negocio/página directo si existe
@@ -111,7 +133,7 @@ class MetaFormRuleController extends BasicController
                         $formsRes = new Fetch($formsUrl);
                         if ($formsRes->ok) {
                             $fData = $formsRes->json();
-                            Log::info("Meta Forms from Page ID {$integration->meta_business_id}", ['forms_found' => count($fData['data'] ?? [])]);
+                            Log::info("Meta Forms fetched successfully from Page ID {$integration->meta_business_id}", ['forms_found' => count($fData['data'] ?? [])]);
                             foreach ($fData['data'] ?? [] as $f) {
                                 if (isset($f['id']) && !isset($formIdsMap[$f['id']])) {
                                     $formIdsMap[$f['id']] = true;
@@ -126,7 +148,7 @@ class MetaFormRuleController extends BasicController
                     }
                 }
 
-                // B. Consultar páginas del usuario vía /me/accounts si aún no hay formularios
+                // B. Consultar todas las páginas devueltas por /me/accounts si aún no hay formularios
                 if (empty($forms)) {
                     try {
                         $url = "{$graphUrl}/me/accounts?fields=id,name,access_token&limit=100&access_token={$token}";
@@ -158,68 +180,48 @@ class MetaFormRuleController extends BasicController
                     }
                 }
 
-                // C. Consultar Cuenta Publicitaria si existe
-                if (!empty($integration->meta_ad_account_id)) {
-                    $adAccountId = $integration->meta_ad_account_id;
-                    if (!str_starts_with($adAccountId, 'act_')) {
-                        $adAccountId = 'act_' . $adAccountId;
-                    }
-                    try {
-                        $formsUrl = "{$graphUrl}/{$adAccountId}/leadgen_forms?fields=id,name,questions,status,created_time&limit=100&access_token={$token}";
-                        $formsRes = new Fetch($formsUrl);
-                        if ($formsRes->ok) {
-                            $fData = $formsRes->json();
-                            foreach ($fData['data'] ?? [] as $f) {
-                                if (isset($f['id']) && !isset($formIdsMap[$f['id']])) {
-                                    $formIdsMap[$f['id']] = true;
-                                    $forms[] = $f;
-                                }
-                            }
-                        }
-                    } catch (\Throwable $th) {
-                    }
-                }
-
-                // Si este token obtuvo formularios exitosamente, salir del bucle de tokens para esta integración
+                // Si este token obtuvo formularios exitosamente de Meta, salir del bucle de tokens
                 if (count($forms) > $foundCountBefore) {
                     break;
                 }
             }
         }
 
-        // D. Fallback: Formularios detectados en la tabla Ads
-        try {
-            $adsWithForms = \App\Models\Ad::where('business_id', $businessId)
-                ->whereNotNull('form_name')
-                ->where('form_name', '!=', 'WhatsApp')
-                ->get();
+        // C. Fallback: ÚNICAMENTE si Meta no retornó formularios reales, buscar en la tabla Ads
+        if (empty($forms)) {
+            try {
+                $adsWithForms = \App\Models\Ad::where('business_id', $businessId)
+                    ->whereNotNull('form_name')
+                    ->where('form_name', '!=', 'WhatsApp')
+                    ->get();
 
-            foreach ($adsWithForms as $ad) {
-                $adFormName = $ad->form_name;
-                $alreadyExists = false;
-                foreach ($forms as $f) {
-                    if (($f['name'] ?? '') === $adFormName) {
-                        $alreadyExists = true;
-                        break;
+                foreach ($adsWithForms as $ad) {
+                    $adFormName = $ad->form_name;
+                    $alreadyExists = false;
+                    foreach ($forms as $f) {
+                        if (($f['name'] ?? '') === $adFormName) {
+                            $alreadyExists = true;
+                            break;
+                        }
+                    }
+                    if (!$alreadyExists && $adFormName) {
+                        $fallbackId = 'form_' . md5($adFormName);
+                        if (!isset($formIdsMap[$fallbackId])) {
+                            $formIdsMap[$fallbackId] = true;
+                            $forms[] = [
+                                'id' => $fallbackId,
+                                'name' => $adFormName,
+                                'questions' => []
+                            ];
+                        }
                     }
                 }
-                if (!$alreadyExists && $adFormName) {
-                    $fallbackId = 'form_' . md5($adFormName);
-                    if (!isset($formIdsMap[$fallbackId])) {
-                        $formIdsMap[$fallbackId] = true;
-                        $forms[] = [
-                            'id' => $fallbackId,
-                            'name' => $adFormName,
-                            'questions' => []
-                        ];
-                    }
-                }
+            } catch (\Throwable $th) {
+                Log::error("Error querying Ads table fallback: " . $th->getMessage());
             }
-        } catch (\Throwable $th) {
-            Log::error("Error querying Ads table fallback: " . $th->getMessage());
         }
 
-        // Fallback: Populate missing questions from ClientNotes
+        // D. Complementar preguntas faltantes usando notas previas de clientes si fuera necesario
         foreach ($forms as &$f) {
             if (empty($f['questions'])) {
                 $f['questions'] = self::extractQuestionsFromClientNotes($businessId, $f['id'] ?? null, $f['name'] ?? null);
@@ -227,7 +229,7 @@ class MetaFormRuleController extends BasicController
         }
         unset($f);
 
-        Log::info("fetchMetaFormsForBusiness completed [CACHE MISS - fetched from Meta]", ['businessId' => $businessId, 'total_forms' => count($forms)]);
+        Log::info("fetchMetaFormsForBusiness completed", ['businessId' => $businessId, 'total_forms' => count($forms)]);
 
         // Guardar en caché solo si encontramos formularios
         if (!empty($forms)) {
@@ -344,12 +346,31 @@ class MetaFormRuleController extends BasicController
             $data = null;
 
             foreach ($integrations as $integration) {
-                $tokens = array_unique(array_filter([
-                    $integration->meta_app_token,
-                    $integration->meta_access_token,
-                ]));
+                $pageTokens = [];
 
-                foreach ($tokens as $token) {
+                if (!empty($integration->meta_app_token)) {
+                    try {
+                        $meAccountsUrl = "{$graphUrl}/me/accounts?fields=id,name,access_token&limit=100&access_token={$integration->meta_app_token}";
+                        $meRes = new Fetch($meAccountsUrl);
+                        if ($meRes->ok) {
+                            $meData = $meRes->json();
+                            foreach ($meData['data'] ?? [] as $pData) {
+                                if (!empty($pData['access_token'])) {
+                                    $pageTokens[] = $pData['access_token'];
+                                }
+                            }
+                        }
+                    } catch (\Throwable $th) {
+                    }
+                }
+
+                if (!empty($integration->meta_access_token)) {
+                    $pageTokens[] = $integration->meta_access_token;
+                }
+
+                $pageTokens = array_unique(array_filter($pageTokens));
+
+                foreach ($pageTokens as $token) {
                     try {
                         $res = new Fetch("{$graphUrl}/{$formId}?fields=id,name,questions,status&access_token={$token}");
                         if ($res->ok) {
@@ -358,8 +379,6 @@ class MetaFormRuleController extends BasicController
                                 $data = $json;
                                 break 2;
                             }
-                        } else {
-                            Log::warning("getFormQuestions non-200 for form {$formId}", ['res' => $res->json()]);
                         }
                     } catch (\Throwable $th) {
                         Log::error("getFormQuestions exception for form {$formId}: " . $th->getMessage());
