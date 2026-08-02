@@ -2473,7 +2473,7 @@ class MetaController extends Controller
 
         // Scopes específicos por servicio — solo pedimos lo que cada canal necesita
         $scopesMap = [
-            'forms'     => ['pages_show_list', 'pages_manage_metadata', 'pages_read_engagement', 'leads_retrieval', 'ads_read'],
+            'forms'     => ['pages_show_list', 'pages_manage_metadata', 'pages_read_engagement', 'leads_retrieval', 'ads_read', 'pages_manage_ads'],
             'messenger' => ['pages_show_list', 'pages_read_engagement', 'pages_messaging'],
             'instagram' => ['pages_show_list', 'instagram_basic', 'instagram_manage_messages'],
             'whatsapp'  => ['whatsapp_business_messaging', 'whatsapp_business_management', 'business_management', 'ads_read'],

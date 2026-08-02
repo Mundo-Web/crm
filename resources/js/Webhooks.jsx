@@ -234,7 +234,7 @@ const IntegrationWizardModal = ({
             product_name: "Webhooks",
             account_type: "página",
             permissions:
-                "pages_show_list, pages_manage_metadata, pages_read_engagement, leads_retrieval",
+                "pages_show_list, pages_manage_metadata, pages_read_engagement, leads_retrieval, pages_manage_ads",
             steps: [
                 '<strong>Iniciar conexión:</strong> Haz clic en la pestaña "Autenticación" arriba o en el botón "Siguiente" para iniciar el flujo de conexión automático con Meta.',
                 '<strong>Autorizar permisos:</strong> Se abrirá una ventana emergente de Meta. Inicia sesión y autoriza a Atalaya CRM a gestionar tus páginas y recuperar tus clientes potenciales (leads).',
