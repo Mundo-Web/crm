@@ -79,8 +79,8 @@ class MetaFormRuleController extends BasicController
         }
 
         $integrations = Integration::where('business_id', $businessId)
-            ->where('meta_service', 'forms')
             ->where('status', true)
+            ->whereIn('meta_service', ['forms', 'messenger', 'facebook', 'instagram'])
             ->get();
 
         $forms = [];
@@ -92,35 +92,41 @@ class MetaFormRuleController extends BasicController
             $graphUrl = 'https://graph.facebook.com/v22.0';
         }
 
-        Log::info("fetchMetaFormsForBusiness started", ['businessId' => $businessId, 'forms_integrations_count' => $integrations->count(), 'graphUrl' => $graphUrl]);
+        Log::info("fetchMetaFormsForBusiness started", ['businessId' => $businessId, 'integrations_count' => $integrations->count(), 'graphUrl' => $graphUrl]);
 
-        foreach ($integrations as $integration) {
-            $pageTokens = [];
+        $pageTokens = [];
 
-            // Extraer Tokens de Página frescos consultando /me/accounts con meta_app_token (User Token de larga duración)
-            if (!empty($integration->meta_app_token)) {
-                try {
-                    $meAccountsUrl = "{$graphUrl}/me/accounts?fields=id,name,access_token&limit=100&access_token={$integration->meta_app_token}";
-                    $meRes = new Fetch($meAccountsUrl);
-                    if ($meRes->ok) {
-                        $meData = $meRes->json();
-                        foreach ($meData['data'] ?? [] as $pData) {
-                            if (!empty($pData['access_token'])) {
-                                $pageTokens[] = $pData['access_token'];
-                            }
+        // 1. Recopilar todos los meta_app_token (User Tokens) activos de cualquier servicio Meta del negocio
+        $userTokens = $integrations->pluck('meta_app_token')->filter()->unique();
+
+        foreach ($userTokens as $uToken) {
+            try {
+                $meAccountsUrl = "{$graphUrl}/me/accounts?fields=id,name,access_token&limit=100&access_token={$uToken}";
+                $meRes = new Fetch($meAccountsUrl);
+                if ($meRes->ok) {
+                    $meData = $meRes->json();
+                    foreach ($meData['data'] ?? [] as $pData) {
+                        if (!empty($pData['access_token'])) {
+                            $pageTokens[] = $pData['access_token'];
+                            Log::info("Derived fresh Page Token from me/accounts", ['page_id' => $pData['id'] ?? null, 'page_name' => $pData['name'] ?? null]);
                         }
                     }
-                } catch (\Throwable $th) {
-                    Log::error("Error fetching me/accounts page tokens: " . $th->getMessage());
                 }
+            } catch (\Throwable $th) {
+                Log::error("Error fetching me/accounts page tokens: " . $th->getMessage());
             }
+        }
 
-            // Añadir el meta_access_token estático de la BD como respaldo
-            if (!empty($integration->meta_access_token)) {
-                $pageTokens[] = $integration->meta_access_token;
+        // 2. Añadir los meta_access_token guardados en la BD como respaldo
+        foreach ($integrations as $integ) {
+            if (!empty($integ->meta_access_token)) {
+                $pageTokens[] = $integ->meta_access_token;
             }
+        }
 
-            $pageTokens = array_unique(array_filter($pageTokens));
+        $pageTokens = array_unique(array_filter($pageTokens));
+
+        foreach ($integrations as $integration) {
             if (empty($pageTokens)) continue;
 
             foreach ($pageTokens as $token) {
@@ -337,8 +343,8 @@ class MetaFormRuleController extends BasicController
             }
 
             $integrations = Integration::where('business_id', $businessId)
-                ->where('meta_service', 'forms')
                 ->where('status', true)
+                ->whereIn('meta_service', ['forms', 'messenger', 'facebook', 'instagram'])
                 ->get();
 
             $graphUrl = config('services.meta.facebook_graph_url', 'https://graph.facebook.com/v22.0');
