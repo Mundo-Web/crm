@@ -2476,9 +2476,7 @@ class MetaController extends Controller
                 $wabas = [];
 
                 // Intento 1: Directo a /me/whatsapp_business_accounts
-                $wabaRes  = new Fetch("{$graphUrl}/me/whatsapp_business_accounts?fields=id,name&limit=100", [
-                    'headers' => ['Authorization' => 'Bearer ' . $longLivedUserToken]
-                ]);
+                $wabaRes  = new Fetch("{$graphUrl}/me/whatsapp_business_accounts?fields=id,name&limit=100&access_token={$longLivedUserToken}");
                 $wabaData = $wabaRes->json();
                 \Illuminate\Support\Facades\Log::info('WABA Try 1 response', ['wabaData' => $wabaData]);
                 if (isset($wabaData['data'])) {
@@ -2487,9 +2485,7 @@ class MetaController extends Controller
 
                 // Intento 2: Si no funcionó, probar /me?fields=whatsapp_business_accounts
                 if (empty($wabas)) {
-                    $wabaRes2  = new Fetch("{$graphUrl}/me?fields=whatsapp_business_accounts{id,name}&limit=100", [
-                        'headers' => ['Authorization' => 'Bearer ' . $longLivedUserToken]
-                    ]);
+                    $wabaRes2  = new Fetch("{$graphUrl}/me?fields=whatsapp_business_accounts{id,name}&limit=100&access_token={$longLivedUserToken}");
                     $wabaData2 = $wabaRes2->json();
                     \Illuminate\Support\Facades\Log::info('WABA Try 2 response', ['wabaData2' => $wabaData2]);
                     if (isset($wabaData2['whatsapp_business_accounts']['data'])) {
@@ -2499,9 +2495,7 @@ class MetaController extends Controller
 
                 // Intento 3: Si no funcionó, buscar por negocios /me/businesses
                 if (empty($wabas)) {
-                    $businessRes = new Fetch("{$graphUrl}/me/businesses?fields=id,name&limit=100", [
-                        'headers' => ['Authorization' => 'Bearer ' . $longLivedUserToken]
-                    ]);
+                    $businessRes = new Fetch("{$graphUrl}/me/businesses?fields=id,name&limit=100&access_token={$longLivedUserToken}");
                     $businessData = $businessRes->json();
                     \Illuminate\Support\Facades\Log::info('WABA Try 3 businesses response', ['businessData' => $businessData]);
                     $businesses = $businessData['data'] ?? [];
@@ -2510,9 +2504,7 @@ class MetaController extends Controller
                         $bizId = $biz['id'];
 
                         // Cuentas WABA de las que es propietario
-                        $bizWabaRes = new Fetch("{$graphUrl}/{$bizId}/owned_whatsapp_business_accounts?fields=id,name&limit=100", [
-                            'headers' => ['Authorization' => 'Bearer ' . $longLivedUserToken]
-                        ]);
+                        $bizWabaRes = new Fetch("{$graphUrl}/{$bizId}/owned_whatsapp_business_accounts?fields=id,name&limit=100&access_token={$longLivedUserToken}");
                         $bizWabaData = $bizWabaRes->json();
                         \Illuminate\Support\Facades\Log::info('WABA Try 3 Business Owned WABAs response', ['business_id' => $bizId, 'bizWabaData' => $bizWabaData]);
                         if (isset($bizWabaData['data'])) {
@@ -2522,9 +2514,7 @@ class MetaController extends Controller
                         }
 
                         // Cuentas WABA compartidas por clientes
-                        $clientWabaRes = new Fetch("{$graphUrl}/{$bizId}/client_whatsapp_business_accounts?fields=id,name&limit=100", [
-                            'headers' => ['Authorization' => 'Bearer ' . $longLivedUserToken]
-                        ]);
+                        $clientWabaRes = new Fetch("{$graphUrl}/{$bizId}/client_whatsapp_business_accounts?fields=id,name&limit=100&access_token={$longLivedUserToken}");
                         $clientWabaData = $clientWabaRes->json();
                         \Illuminate\Support\Facades\Log::info('WABA Try 3 Business Client WABAs response', ['business_id' => $bizId, 'clientWabaData' => $clientWabaData]);
                         if (isset($clientWabaData['data'])) {
@@ -2548,9 +2538,7 @@ class MetaController extends Controller
 
                 foreach ($wabas as $waba) {
                     $wabaId   = $waba['id'];
-                    $phoneRes = new Fetch("{$graphUrl}/{$wabaId}/phone_numbers?fields=id,display_phone_number,verified_name&limit=100", [
-                        'headers' => ['Authorization' => 'Bearer ' . $longLivedUserToken]
-                    ]);
+                    $phoneRes = new Fetch("{$graphUrl}/{$wabaId}/phone_numbers?fields=id,display_phone_number,verified_name&limit=100&access_token={$longLivedUserToken}");
                     $phoneData = $phoneRes->json();
                     \Illuminate\Support\Facades\Log::info('WABA phone numbers response', ['waba_id' => $wabaId, 'phoneData' => $phoneData]);
                     if (isset($phoneData['data'])) {
@@ -2566,32 +2554,26 @@ class MetaController extends Controller
                 }
             } else {
                 // Forms, Messenger, Instagram — todos usan Páginas de Facebook
-                $pagesRes  = new Fetch("{$graphUrl}/me/accounts?fields=id,name,access_token&limit=100", [
-                    'headers' => ['Authorization' => 'Bearer ' . $longLivedUserToken]
-                ]);
+                $pagesRes  = new Fetch("{$graphUrl}/me/accounts?fields=id,name,access_token&limit=100&access_token={$longLivedUserToken}");
                 $pagesData = $pagesRes->json();
+                \Illuminate\Support\Facades\Log::info('Meta OAuth me/accounts response', ['pagesData' => $pagesData]);
                 $pages     = $pagesData['data'] ?? [];
 
                 // Fallback: Si no vinieron páginas directas, consultar las páginas de los Negocios (Business Manager)
                 if (empty($pages)) {
                     try {
-                        $bizRes = new Fetch("{$graphUrl}/me/businesses?fields=id,name&limit=100", [
-                            'headers' => ['Authorization' => 'Bearer ' . $longLivedUserToken]
-                        ]);
+                        $bizRes = new Fetch("{$graphUrl}/me/businesses?fields=id,name&limit=100&access_token={$longLivedUserToken}");
                         $bizData = $bizRes->json();
+                        \Illuminate\Support\Facades\Log::info('Meta OAuth me/businesses response', ['bizData' => $bizData]);
                         foreach ($bizData['data'] ?? [] as $biz) {
                             $bizId = $biz['id'];
-                            $pRes1 = new Fetch("{$graphUrl}/{$bizId}/owned_pages?fields=id,name,access_token&limit=100", [
-                                'headers' => ['Authorization' => 'Bearer ' . $longLivedUserToken]
-                            ]);
+                            $pRes1 = new Fetch("{$graphUrl}/{$bizId}/owned_pages?fields=id,name,access_token&limit=100&access_token={$longLivedUserToken}");
                             $pData1 = $pRes1->json();
                             foreach ($pData1['data'] ?? [] as $p) {
                                 $pages[] = $p;
                             }
 
-                            $pRes2 = new Fetch("{$graphUrl}/{$bizId}/client_pages?fields=id,name,access_token&limit=100", [
-                                'headers' => ['Authorization' => 'Bearer ' . $longLivedUserToken]
-                            ]);
+                            $pRes2 = new Fetch("{$graphUrl}/{$bizId}/client_pages?fields=id,name,access_token&limit=100&access_token={$longLivedUserToken}");
                             $pData2 = $pRes2->json();
                             foreach ($pData2['data'] ?? [] as $p) {
                                 $pages[] = $p;
