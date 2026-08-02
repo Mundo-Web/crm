@@ -38,6 +38,7 @@ return [
         'client_secret' => env('META_CLIENT_SECRET'),
         'redirect_uri' => env('META_REDIRECT_URI'),
         'webhook_verify_token' => env('META_WEBHOOK_VERIFY_TOKEN'),
+        'config_id' => env('META_CONFIG_ID'),
     ],
 
     'gemini' => [

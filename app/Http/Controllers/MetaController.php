@@ -207,7 +207,7 @@ class MetaController extends Controller
             $sbbJpa = ServicesByBusiness::query()
                 ->join('businesses', 'services_by_businesses.business_id', '=', 'businesses.id')
                 ->join('services', 'services_by_businesses.service_id', '=', 'services.id')
-                ->where('services.correlative', env('APP_CORRELATIVE'))
+                ->where('services.correlative', config('app.correlative', 'crm'))
                 ->where('businesses.uuid', $business_uuid)
                 ->where('businesses.status', true)
                 ->first();
@@ -273,7 +273,7 @@ class MetaController extends Controller
 
                     $leadData = [];
                     try {
-                        $facebookGraphUrl = env('FACEBOOK_GRAPH_URL');
+                        $facebookGraphUrl = config('services.meta.facebook_graph_url', 'https://graph.facebook.com/v22.0');
                         $accessToken = $integrationJpa->meta_access_token;
 
                         // Step 1: Try to get Page Access Token if it's a user token
@@ -392,7 +392,7 @@ class MetaController extends Controller
                             $formNameResolved = $ruleForm->form_name;
                         } else {
                             try {
-                                $facebookGraphUrl = env('FACEBOOK_GRAPH_URL', 'https://graph.facebook.com/v22.0');
+                                $facebookGraphUrl = config('services.meta.facebook_graph_url', 'https://graph.facebook.com/v22.0');
                                 $formRes = new Fetch("{$facebookGraphUrl}/{$formIdReceived}?fields=name&access_token={$accessToken}");
                                 $formData = $formRes->ok ? $formRes->json() : [];
                                 if (isset($formData['name'])) {
@@ -2390,7 +2390,7 @@ class MetaController extends Controller
     {
         $clientId   = config('services.meta.client_id');
         $redirectUri = config('services.meta.redirect_uri');
-        $configId   = env('META_CONFIG_ID');
+        $configId   = config('services.meta.config_id');
         $service    = $request->query('service', 'forms');
 
         // Scopes específicos por servicio — solo pedimos lo que cada canal necesita
@@ -2571,7 +2571,55 @@ class MetaController extends Controller
                 ]);
                 $pagesData = $pagesRes->json();
                 $pages     = $pagesData['data'] ?? [];
+
+                // Fallback: Si no vinieron páginas directas, consultar las páginas de los Negocios (Business Manager)
+                if (empty($pages)) {
+                    try {
+                        $bizRes = new Fetch("{$graphUrl}/me/businesses?fields=id,name&limit=100", [
+                            'headers' => ['Authorization' => 'Bearer ' . $longLivedUserToken]
+                        ]);
+                        $bizData = $bizRes->json();
+                        foreach ($bizData['data'] ?? [] as $biz) {
+                            $bizId = $biz['id'];
+                            $pRes1 = new Fetch("{$graphUrl}/{$bizId}/owned_pages?fields=id,name,access_token&limit=100", [
+                                'headers' => ['Authorization' => 'Bearer ' . $longLivedUserToken]
+                            ]);
+                            $pData1 = $pRes1->json();
+                            foreach ($pData1['data'] ?? [] as $p) {
+                                $pages[] = $p;
+                            }
+
+                            $pRes2 = new Fetch("{$graphUrl}/{$bizId}/client_pages?fields=id,name,access_token&limit=100", [
+                                'headers' => ['Authorization' => 'Bearer ' . $longLivedUserToken]
+                            ]);
+                            $pData2 = $pRes2->json();
+                            foreach ($pData2['data'] ?? [] as $p) {
+                                $pages[] = $p;
+                            }
+                        }
+                    } catch (\Throwable $th) {
+                        Log::error('Error consultando páginas de Business Manager: ' . $th->getMessage());
+                    }
+                }
+
+                // Deduplicar páginas por id
+                $uniquePages = [];
+                $pageIds = [];
+                foreach ($pages as $p) {
+                    if (!empty($p['id']) && !in_array($p['id'], $pageIds)) {
+                        $pageIds[] = $p['id'];
+                        $uniquePages[] = $p;
+                    }
+                }
+                $pages = $uniquePages;
             }
+
+            Log::info('Meta OAuth callback completed', [
+                'service' => $service,
+                'pages_count' => count($pages),
+                'pages' => array_map(fn($p) => ['id' => $p['id'] ?? null, 'name' => $p['name'] ?? null], $pages),
+                'waba_phones_count' => count($wabaPhones),
+            ]);
 
             // Para el servicio 'forms', también obtenemos las cuentas publicitarias
             // usando el user token (Standard Access funciona para cuentas propias del usuario)

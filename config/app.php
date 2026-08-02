@@ -18,6 +18,7 @@ return [
     */
 
     'name' => env('APP_NAME', 'Laravel'),
+    'correlative' => env('APP_CORRELATIVE', 'crm'),
 
     /*
     |--------------------------------------------------------------------------
