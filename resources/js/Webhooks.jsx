@@ -646,11 +646,21 @@ const IntegrationWizardModal = ({
             const selectedPage = authPayload?.pages?.find(p => p.id === assetId);
             if (selectedPage) {
                 targetAccountId = selectedPage.id;
-                targetAccessToken = selectedPage.access_token;
+                // Preferir el Page Access Token; si no hay, usar el User Token
+                targetAccessToken = selectedPage.access_token || authPayload?.user_token || accessToken;
                 targetPhoneId = "";
 
                 // Para 'forms': guardar automáticamente el User Token como appToken
-                // Este token tiene ads_read y permite sincronizar campañas sin Advanced Access
+                if (service === 'forms' && authPayload?.user_token) {
+                    setAppToken(authPayload.user_token);
+                }
+            } else {
+                // Modo manual: no se encontró la página en el listado (puede estar vacío por Rate Limit)
+                // Usar el ID escrito manualmente y el User Token del callback OAuth
+                targetAccountId = assetId;
+                targetAccessToken = authPayload?.user_token || accessToken;
+                targetPhoneId = "";
+
                 if (service === 'forms' && authPayload?.user_token) {
                     setAppToken(authPayload.user_token);
                 }
