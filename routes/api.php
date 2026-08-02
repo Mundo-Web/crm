@@ -271,7 +271,9 @@ Route::middleware('auth')->group(function () {
 
     // Meta Form Rules routes
     Route::get('/meta-form-rules/forms', [MetaFormRuleController::class, 'getMetaForms']);
+    Route::get('/meta-form-rules/last-sync', [MetaFormRuleController::class, 'getLastSync']);
     Route::post('/meta-form-rules', [MetaFormRuleController::class, 'save']);
+    Route::post('/meta-form-rules/tree', [MetaFormRuleController::class, 'saveTree']);
     Route::post('/meta-form-rules/paginate', [MetaFormRuleController::class, 'paginate']);
     Route::patch('/meta-form-rules/status', [MetaFormRuleController::class, 'status']);
     Route::delete('/meta-form-rules/{id}', [MetaFormRuleController::class, 'delete']);

@@ -6,6 +6,7 @@ use App\Models\Campaign;
 use App\Models\Integration;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use SoDe\Extend\Fetch;
 use SoDe\Extend\Response;
@@ -43,10 +44,20 @@ class MetaSpendController extends Controller
             // Priorizar meta_app_token (token de usuario para campañas) sobre meta_access_token (token de página)
             $accessToken  = $integration->meta_app_token ?: $integration->meta_access_token;
             $adAccountId  = $integration->meta_ad_account_id;
-            $graphUrl     = env('FACEBOOK_GRAPH_URL', 'https://graph.facebook.com/v22.0');
+            $graphUrl     = config('services.meta.facebook_graph_url', 'https://graph.facebook.com/v22.0');
 
             // Eliminar prefijo "act_" si ya viene incluido
             $adAccountId = ltrim($adAccountId, 'act_');
+
+            // Clave de caché — 30 min para el período actual, 24h para períodos pasados
+            $cacheKey = "meta_spend_sync_{$businessId}_{$adAccountId}_{$dateFrom}_{$dateTo}";
+            $isCurrentPeriod = $dateTo >= date('Y-m-d');
+            $cacheTtl = $isCurrentPeriod ? 1800 : 86400;
+
+            if (Cache::has($cacheKey)) {
+                Log::info("meta_spend_sync [CACHE HIT]", ['key' => $cacheKey]);
+                $campaignsList = Cache::get($cacheKey);
+            } else {
 
             // ── Obtener Moneda de la Cuenta Publicitaria ─────────────
             $accountUrl = "{$graphUrl}/act_{$adAccountId}?fields=currency&access_token={$accessToken}";
@@ -90,6 +101,12 @@ class MetaSpendController extends Controller
                 $nextUrl = $body['paging']['next'] ?? null;
                 $pages++;
             }
+
+            // Guardar en caché para futuros requests
+            if (!empty($campaignsList)) {
+                Cache::put($cacheKey, $campaignsList, $cacheTtl);
+            }
+            } // end else (cache miss)
 
             if (empty($campaignsList)) {
                 $response->message = 'No se encontraron campañas en Meta para el periodo indicado.';

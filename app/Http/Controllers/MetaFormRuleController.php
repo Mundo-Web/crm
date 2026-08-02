@@ -4,10 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Models\Integration;
 use App\Models\MetaFormRule;
+use App\Models\Setting;
 use App\Models\Status;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use SoDe\Extend\Fetch;
 use SoDe\Extend\Response;
@@ -66,8 +68,16 @@ class MetaFormRuleController extends BasicController
         }
     }
 
-    public static function fetchMetaFormsForBusiness($businessId)
+    public static function fetchMetaFormsForBusiness($businessId, bool $force = false)
     {
+        $cacheKey = "meta_forms_business_{$businessId}";
+        $cacheTtl = 6 * 3600; // 6 horas
+
+        if (!$force && Cache::has($cacheKey)) {
+            Log::info("fetchMetaFormsForBusiness [CACHE HIT]", ['businessId' => $businessId]);
+            return Cache::get($cacheKey);
+        }
+
         $integrations = Integration::where('business_id', $businessId)
             ->where('meta_service', 'forms')
             ->where('status', true)
@@ -205,7 +215,12 @@ class MetaFormRuleController extends BasicController
         }
         unset($f);
 
-        Log::info("fetchMetaFormsForBusiness completed", ['businessId' => $businessId, 'total_forms' => count($forms)]);
+        Log::info("fetchMetaFormsForBusiness completed [CACHE MISS - fetched from Meta]", ['businessId' => $businessId, 'total_forms' => count($forms)]);
+
+        // Guardar en caché solo si encontramos formularios
+        if (!empty($forms)) {
+            Cache::put($cacheKey, $forms, $cacheTtl);
+        }
 
         return $forms;
     }
@@ -237,7 +252,9 @@ class MetaFormRuleController extends BasicController
             ->where('business_id', $businessId)
             ->get();
 
-        $forms = self::fetchMetaFormsForBusiness($businessId);
+        $force = $request->boolean('force', false);
+        $forms = self::fetchMetaFormsForBusiness($businessId, $force);
+        $lastSync = Setting::get('meta_forms_last_sync', $businessId);
 
         return [
             'leadStatuses'   => $leadStatuses,
@@ -246,6 +263,7 @@ class MetaFormRuleController extends BasicController
             'users'          => $users,
             'rules'          => $rules,
             'metaForms'      => $forms,
+            'lastSync'       => $lastSync,
         ];
     }
 
@@ -256,11 +274,38 @@ class MetaFormRuleController extends BasicController
             ->with(['chatStatus', 'manageStatus', 'statusRef', 'assigned']);
     }
 
+    public function getLastSync(Request $request)
+    {
+        $businessId = Auth::user()->business_id;
+        $lastSync = Setting::get('meta_forms_last_sync', $businessId);
+        return response()->json(['status' => true, 'lastSync' => $lastSync]);
+    }
+
     public function getMetaForms(Request $request)
     {
-        $response = Response::simpleTryCatch(function () {
+        $response = Response::simpleTryCatch(function () use ($request) {
             $businessId = Auth::user()->business_id;
-            return self::fetchMetaFormsForBusiness($businessId);
+            $force = $request->boolean('force', false);
+            $lastSync = Setting::get('meta_forms_last_sync', $businessId);
+
+            if ($force && $lastSync) {
+                $lastSyncDate = \Carbon\Carbon::parse($lastSync);
+                if ($lastSyncDate->isToday()) {
+                    throw new \Exception("La sincronización con Meta solo se permite 1 vez al día para evitar bloqueos. Última sincronización: " . $lastSyncDate->format('d/m/Y H:i'));
+                }
+            }
+
+            if ($force) {
+                Cache::forget("meta_forms_business_{$businessId}");
+            }
+
+            $forms = self::fetchMetaFormsForBusiness($businessId, $force);
+
+            if ($force && !empty($forms)) {
+                Setting::set('meta_forms_last_sync', now()->toIso8601String(), $businessId);
+            }
+
+            return $forms;
         });
 
         return response($response->toArray(), $response->status);
@@ -268,50 +313,93 @@ class MetaFormRuleController extends BasicController
 
     public function getFormQuestions(Request $request, string $formId)
     {
-        $response = Response::simpleTryCatch(function () use ($formId) {
+        $response = Response::simpleTryCatch(function () use ($formId, $request) {
             $businessId = Auth::user()->business_id;
+            $cacheKey   = "meta_form_questions_{$businessId}_{$formId}";
+            $force      = $request->boolean('force', false);
+
+            if (!$force && Cache::has($cacheKey)) {
+                return Cache::get($cacheKey);
+            }
+
             $integrations = Integration::where('business_id', $businessId)
+                ->where('meta_service', 'forms')
                 ->where('status', true)
                 ->get();
 
-            $graphUrl = config('services.meta.facebook_graph_url') ?: env('FACEBOOK_GRAPH_URL', 'https://graph.facebook.com/v22.0');
-            if (empty($graphUrl) || !str_starts_with($graphUrl, 'http')) {
-                $graphUrl = 'https://graph.facebook.com/v22.0';
-            }
+            $graphUrl = config('services.meta.facebook_graph_url', 'https://graph.facebook.com/v22.0');
 
             $data = null;
 
             foreach ($integrations as $integration) {
-                $tokens = array_unique(array_filter([
-                    $integration->meta_access_token,
-                    $integration->meta_app_token,
-                ]));
-
-                foreach ($tokens as $token) {
-                    try {
-                        $res = new Fetch("{$graphUrl}/{$formId}?fields=id,name,questions,status&access_token={$token}");
-                        if ($res->ok) {
-                            $json = $res->json();
-                            if (isset($json['id']) && !empty($json['questions'])) {
-                                $data = $json;
-                                break 2;
-                            }
-                        } else {
-                            Log::warning("getFormQuestions non-200 for form {$formId}", ['res' => $res->json()]);
+                $token = $integration->meta_access_token;
+                if (empty($token)) continue;
+                try {
+                    $res = new Fetch("{$graphUrl}/{$formId}?fields=id,name,questions,status&access_token={$token}");
+                    if ($res->ok) {
+                        $json = $res->json();
+                        if (isset($json['id']) && !empty($json['questions'])) {
+                            $data = $json;
+                            break;
                         }
-                    } catch (\Throwable $th) {
-                        Log::error("getFormQuestions exception for form {$formId}: " . $th->getMessage());
                     }
+                } catch (\Throwable $th) {
+                    Log::error("getFormQuestions exception for form {$formId}: " . $th->getMessage());
                 }
             }
 
             $extractedQuestions = self::extractQuestionsFromClientNotes($businessId, $formId);
 
-            return [
-                'id' => $formId,
-                'name' => $data['name'] ?? 'Formulario ' . $formId,
+            $result = [
+                'id'        => $formId,
+                'name'      => $data['name'] ?? 'Formulario ' . $formId,
                 'questions' => !empty($data['questions']) ? $data['questions'] : $extractedQuestions
             ];
+
+            // Cachear preguntas por 12 horas (cambian muy poco)
+            if (!empty($result['questions'])) {
+                Cache::put($cacheKey, $result, 12 * 3600);
+            }
+
+            return $result;
+        });
+
+        return response($response->toArray(), $response->status);
+    }
+
+    public function saveTree(Request $request)
+    {
+        $response = Response::simpleTryCatch(function () use ($request) {
+            $businessId = Auth::user()->business_id;
+            $formId     = $request->input('form_id');
+            $formName   = $request->input('form_name');
+            $ruleName   = $request->input('rule_name', 'Árbol de Decisión');
+            $tree       = $request->input('tree');
+            $ruleId     = $request->input('id');
+
+            if (empty($formId)) {
+                throw new \Exception('El ID del formulario es requerido');
+            }
+
+            if ($ruleId) {
+                $rule = MetaFormRule::where('business_id', $businessId)->find($ruleId);
+            } else {
+                $rule = MetaFormRule::where('business_id', $businessId)->where('form_id', $formId)->first();
+            }
+
+            if (!$rule) {
+                $rule = new MetaFormRule();
+                $rule->business_id = $businessId;
+                $rule->form_id     = $formId;
+            }
+
+            $rule->form_name = $formName ?: ($rule->form_name ?? "Formulario {$formId}");
+            $rule->rule_name = $ruleName;
+            $rule->tree      = $tree;
+            $rule->status    = true;
+            $rule->save();
+
+            return $rule->fresh(['chatStatus', 'manageStatus', 'statusRef', 'assigned']);
         });
 
         return response($response->toArray(), $response->status);

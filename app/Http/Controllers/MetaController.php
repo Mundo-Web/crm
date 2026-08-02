@@ -544,76 +544,151 @@ class MetaController extends Controller
                                 return trim(preg_replace('/\s+/', ' ', $s));
                             };
 
-                            foreach ($rules as $rule) {
-                                $conditions = $rule->conditions ?? [];
-                                $allMatched = true;
+                            $evaluateTree = function ($node, $fieldData) use (&$evaluateTree, $normalizeMetaStr) {
+                                if (empty($node) || !is_array($node)) return null;
 
-                                if (!empty($conditions)) {
-                                    foreach ($conditions as $cond) {
-                                        $fieldName = $cond['field_name'] ?? '';
-                                        $operator  = $cond['operator'] ?? 'equals';
-                                        $expectedRaw = strtolower(trim($cond['value'] ?? ''));
-                                        $expectedNorm = $normalizeMetaStr($cond['value'] ?? '');
-                                        $fieldNorm = $normalizeMetaStr($fieldName);
+                                $qKey   = $normalizeMetaStr($node['question_key'] ?? '');
+                                $qLabel = $normalizeMetaStr($node['question_label'] ?? '');
 
-                                        $actualValRaw = null;
-                                        $actualValNorm = null;
+                                $actualAnswerNorm = null;
+                                foreach ($fieldData as $fd) {
+                                    $fdNameRaw  = $fd['name'] ?? '';
+                                    $fdNameNorm = $normalizeMetaStr($fdNameRaw);
+                                    if (($node['question_key'] ?? '') !== '' && $fdNameRaw === $node['question_key']) {
+                                        $actualAnswerNorm = $normalizeMetaStr($fd['values'][0] ?? '');
+                                        break;
+                                    }
+                                    if ($qKey !== '' && $fdNameNorm === $qKey) {
+                                        $actualAnswerNorm = $normalizeMetaStr($fd['values'][0] ?? '');
+                                        break;
+                                    }
+                                    if ($qLabel !== '' && $fdNameNorm === $qLabel) {
+                                        $actualAnswerNorm = $normalizeMetaStr($fd['values'][0] ?? '');
+                                        break;
+                                    }
+                                }
 
-                                        foreach ($leadData['field_data'] ?? [] as $fd) {
-                                            $fdNameRaw = $fd['name'] ?? '';
-                                            $fdNameNorm = $normalizeMetaStr($fdNameRaw);
+                                if ($actualAnswerNorm === null) return null;
 
-                                            if ($fdNameRaw === $fieldName || ($fieldNorm !== '' && $fdNameNorm === $fieldNorm)) {
-                                                $val0 = $fd['values'][0] ?? '';
-                                                $actualValRaw = strtolower(trim($val0));
-                                                $actualValNorm = $normalizeMetaStr($val0);
-                                                break;
-                                            }
+                                foreach ($node['branches'] ?? [] as $branch) {
+                                    $branchAnsNorm = $normalizeMetaStr($branch['answer'] ?? '');
+                                    $isMatch = ($branchAnsNorm === $actualAnswerNorm) || (($branch['answer'] ?? '') === '*');
+                                    if ($isMatch) {
+                                        if (!empty($branch['result'])) {
+                                            return $branch['result'];
                                         }
-
-                                        if ($actualValRaw === null) {
-                                            $allMatched = false;
-                                            break;
-                                        }
-
-                                        if ($operator === 'equals') {
-                                            $match = ($actualValRaw === $expectedRaw) || ($actualValNorm !== '' && $actualValNorm === $expectedNorm);
-                                            if (!$match) {
-                                                $allMatched = false;
-                                                break;
-                                            }
-                                        } else if ($operator === 'contains') {
-                                            $match = str_contains($actualValRaw, $expectedRaw) || ($expectedNorm !== '' && str_contains($actualValNorm, $expectedNorm));
-                                            if (!$match) {
-                                                $allMatched = false;
-                                                break;
-                                            }
+                                        if (!empty($branch['next'])) {
+                                            return $evaluateTree($branch['next'], $fieldData);
                                         }
                                     }
                                 }
 
-                                if ($allMatched) {
+                                return null;
+                            };
+
+                            foreach ($rules as $rule) {
+                                $appliedResult = null;
+
+                                // 1. Evaluar si tiene Árbol de Decisión
+                                if (!empty($rule->tree) && is_array($rule->tree)) {
+                                    $appliedResult = $evaluateTree($rule->tree, $leadData['field_data'] ?? []);
+                                }
+
+                                // 2. Si no hay resultado por árbol, evaluar condiciones planas (fallback)
+                                if (!$appliedResult) {
+                                    $conditions = $rule->conditions ?? [];
+                                    $allMatched = true;
+
+                                    if (!empty($conditions)) {
+                                        foreach ($conditions as $cond) {
+                                            $fieldName = $cond['field_name'] ?? '';
+                                            $operator  = $cond['operator'] ?? 'equals';
+                                            $expectedRaw = strtolower(trim($cond['value'] ?? ''));
+                                            $expectedNorm = $normalizeMetaStr($cond['value'] ?? '');
+                                            $fieldNorm = $normalizeMetaStr($fieldName);
+
+                                            $actualValRaw = null;
+                                            $actualValNorm = null;
+
+                                            foreach ($leadData['field_data'] ?? [] as $fd) {
+                                                $fdNameRaw = $fd['name'] ?? '';
+                                                $fdNameNorm = $normalizeMetaStr($fdNameRaw);
+
+                                                if ($fdNameRaw === $fieldName || ($fieldNorm !== '' && $fdNameNorm === $fieldNorm)) {
+                                                    $val0 = $fd['values'][0] ?? '';
+                                                    $actualValRaw = strtolower(trim($val0));
+                                                    $actualValNorm = $normalizeMetaStr($val0);
+                                                    break;
+                                                }
+                                            }
+
+                                            if ($actualValRaw === null) {
+                                                $allMatched = false;
+                                                break;
+                                            }
+
+                                            if ($operator === 'equals') {
+                                                $match = ($actualValRaw === $expectedRaw) || ($actualValNorm !== '' && $actualValNorm === $expectedNorm);
+                                                if (!$match) {
+                                                    $allMatched = false;
+                                                    break;
+                                                }
+                                            } else if ($operator === 'contains') {
+                                                $match = str_contains($actualValRaw, $expectedRaw) || ($expectedNorm !== '' && str_contains($actualValNorm, $expectedNorm));
+                                                if (!$match) {
+                                                    $allMatched = false;
+                                                    break;
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    if ($allMatched) {
+                                        $appliedResult = [
+                                            'chat_status_id'   => $rule->chat_status_id,
+                                            'manage_status_id' => $rule->manage_status_id,
+                                            'status_id'        => $rule->status_id,
+                                            'assigned_to'      => $rule->assigned_to,
+                                        ];
+                                    }
+                                }
+
+                                if (!empty($appliedResult)) {
                                     $clientUpdates = [];
-                                    if (!empty($rule->chat_status_id)) {
-                                        $clientUpdates['chat_status_id'] = $rule->chat_status_id;
+                                    if (!empty($appliedResult['chat_status_id'])) {
+                                        $clientUpdates['chat_status_id'] = $appliedResult['chat_status_id'];
                                     }
-                                    if (!empty($rule->manage_status_id)) {
-                                        $clientUpdates['manage_status_id'] = $rule->manage_status_id;
+                                    if (!empty($appliedResult['manage_status_id'])) {
+                                        $clientUpdates['manage_status_id'] = $appliedResult['manage_status_id'];
                                     }
-                                    if (!empty($rule->status_id)) {
-                                        $clientUpdates['status_id'] = $rule->status_id;
+                                    if (!empty($appliedResult['status_id'])) {
+                                        $clientUpdates['status_id'] = $appliedResult['status_id'];
                                     }
-                                    if (!empty($rule->assigned_to)) {
-                                        $clientUpdates['assigned_to'] = $rule->assigned_to;
+                                    if (!empty($appliedResult['assigned_to'])) {
+                                        $clientUpdates['assigned_to'] = $appliedResult['assigned_to'];
                                     }
 
                                     if (!empty($clientUpdates)) {
                                         $clientJpa->update($clientUpdates);
-                                        Log::info('Meta Form Rule applied to lead', [
+                                        Log::info('Meta Form Rule / Tree applied to lead', [
                                             'lead_id' => $clientJpa->id,
                                             'rule_id' => $rule->id,
                                             'updates' => $clientUpdates
                                         ]);
+                                    }
+
+                                    // Si el resultado incluye etiqueta (tag), registrar en notas del cliente
+                                    if (!empty($appliedResult['tag'])) {
+                                        try {
+                                            ClientNote::create([
+                                                'note_type_id' => '8e895346-3d87-4a87-897a-4192b917c211',
+                                                'client_id'    => $clientJpa->id,
+                                                'name'         => "Etiqueta por Árbol de Decisión: #" . trim($appliedResult['tag'], '#'),
+                                                'description'  => "Regla aplicada: " . ($rule->rule_name ?: "Formulario {$rule->form_id}"),
+                                            ]);
+                                        } catch (\Throwable $nte) {
+                                            Log::warning("Error creating tag note: " . $nte->getMessage());
+                                        }
                                     }
                                     break;
                                 }

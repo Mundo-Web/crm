@@ -9,6 +9,7 @@ use App\Models\Status;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use SoDe\Extend\JSON;
 use SoDe\Extend\Response;
@@ -1688,8 +1689,42 @@ class KPICampaignsController extends BasicController
             if ($integration) {
                 $accessToken = $integration->meta_app_token ?: $integration->meta_access_token;
                 $adAccountId = ltrim($integration->meta_ad_account_id, 'act_');
-                $graphUrl    = env('FACEBOOK_GRAPH_URL', 'https://graph.facebook.com/v22.0');
+                $graphUrl    = config('services.meta.facebook_graph_url', 'https://graph.facebook.com/v22.0');
 
+                // Clave de caché por negocio + cuenta + rango de fechas
+                $cacheKey = "meta_kpi_insights_{$businessId}_{$adAccountId}_{$startDateStr}_{$endDateStr}";
+                // Rangos pasados: caché de 24h. Rango que incluye hoy: 1h
+                $isCurrentPeriod = $endDateStr >= date('Y-m-d');
+                $cacheTtl = $isCurrentPeriod ? 3600 : 86400;
+
+                $cachedInsights = Cache::get($cacheKey);
+                if ($cachedInsights !== null) {
+                    \Illuminate\Support\Facades\Log::info("meta_kpi_insights [CACHE HIT]", ['key' => $cacheKey]);
+                    // Aplicar los datos de caché directamente
+                    foreach ($cachedInsights as $item) {
+                        $day         = $item['date_start'] ?? null;
+                        $metaCampId  = $item['campaign_id'] ?? null;
+                        $metaCampName = strtolower(trim($item['campaign_name'] ?? ''));
+                        $rawSpend    = (float)($item['spend'] ?? 0);
+                        $dayLeads = (int)($item['_leads'] ?? 0);
+
+                        if ($day && !isset($metaSpendByDay[$day])) {
+                            $metaSpendByDay[$day] = 0;
+                        }
+                        $spendConverted = strtoupper($item['_currency'] ?? 'PEN') === 'USD'
+                            ? $rawSpend * $exchangeRateCalc
+                            : $rawSpend;
+                        if ($day) $metaSpendByDay[$day] = ($metaSpendByDay[$day] ?? 0) + $spendConverted;
+
+                        if ($metaCampId && $dayLeads > 0) {
+                            if (!isset($metaLeadsByCampDay[$metaCampId])) $metaLeadsByCampDay[$metaCampId] = [];
+                            if (!isset($metaLeadsByCampDay[$metaCampId][$day])) $metaLeadsByCampDay[$metaCampId][$day] = 0;
+                            $metaLeadsByCampDay[$metaCampId][$day] += $dayLeads;
+
+                            if (!isset($metaCampNames[$metaCampId])) $metaCampNames[$metaCampId] = $metaCampName;
+                        }
+                    }
+                } else {
                 // Obtener moneda
                 $accountUrl = "{$graphUrl}/act_{$adAccountId}?fields=currency&access_token={$accessToken}";
                 $accRes     = new \SoDe\Extend\Fetch($accountUrl);
@@ -1705,25 +1740,26 @@ class KPICampaignsController extends BasicController
 
                 $nextUrl = $url;
                 $pages   = 0;
+                $rawItems = [];
                 while ($nextUrl && $pages < 10) {
                     $res  = new \SoDe\Extend\Fetch($nextUrl);
                     $body = $res->json();
                     if (isset($body['error'])) break;
 
                     if (!empty($body['data'])) {
-                        foreach ($body['data'] as $item) {
-                            $day         = $item['date_start'] ?? null;
-                            $metaCampId  = $item['campaign_id'] ?? null;
-                            $metaCampName = strtolower(trim($item['campaign_name'] ?? ''));
-                            $rawSpend    = (float)($item['spend'] ?? 0);
+                            foreach ($body['data'] as $item) {
+                                $day         = $item['date_start'] ?? null;
+                                $metaCampId  = $item['campaign_id'] ?? null;
+                                $metaCampName = strtolower(trim($item['campaign_name'] ?? ''));
+                                $rawSpend    = (float)($item['spend'] ?? 0);
 
-                            // Extraer leads de Meta (Formularios, Mensajes y Píxel)
-                            $dayLeads = 0;
-                            if (!empty($item['actions']) && is_array($item['actions'])) {
-                                foreach ($item['actions'] as $act) {
-                                    $actType = strtolower($act['action_type'] ?? '');
-                                    $val     = (int)($act['value'] ?? 0);
-                                    if (
+                                // Extraer leads
+                                $dayLeads = 0;
+                                if (!empty($item['actions']) && is_array($item['actions'])) {
+                                    foreach ($item['actions'] as $act) {
+                                        $actType = strtolower($act['action_type'] ?? '');
+                                        $val     = (int)($act['value'] ?? 0);
+                                        if (
                                         in_array($actType, [
                                             'lead',
                                             'onsite_conversion.lead_grouped',
@@ -1740,8 +1776,8 @@ class KPICampaignsController extends BasicController
 
                             if ($day) {
                                 if ($currency === 'USD') {
-                                    $spendUsd = $rawSpend;
                                     $spendPen = $rawSpend * $exchangeRateCalc;
+                                    $spendUsd = $rawSpend;
                                 } else {
                                     $spendPen = $rawSpend;
                                     $spendUsd = $exchangeRateCalc > 0 ? $rawSpend / $exchangeRateCalc : 0;
@@ -1758,11 +1794,27 @@ class KPICampaignsController extends BasicController
                                     $campaignDailyMetaLeads[$metaCampName][$day] = ($campaignDailyMetaLeads[$metaCampName][$day] ?? 0) + $dayLeads;
                                 }
                             }
+
+                            // Acumular para caché
+                            $rawItems[] = [
+                                'date_start'    => $day,
+                                'campaign_id'   => $metaCampId,
+                                'campaign_name' => $item['campaign_name'] ?? '',
+                                'spend'         => $rawSpend,
+                                '_leads'        => $dayLeads,
+                                '_currency'     => $currency,
+                            ];
                         }
                     }
-                    $nextUrl = $body['paging']['next'] ?? null;
+                        $nextUrl = $body['paging']['next'] ?? null;
                     $pages++;
                 }
+
+                // Guardar en caché para futuros requests
+                if (!empty($rawItems)) {
+                    Cache::put($cacheKey, $rawItems, $cacheTtl);
+                }
+                } // end else (cache miss)
             }
         } catch (\Throwable $e) {
             \Illuminate\Support\Facades\Log::warning("Error fetching daily Meta spend: " . $e->getMessage());
@@ -1884,8 +1936,17 @@ class KPICampaignsController extends BasicController
             if ($integration) {
                 $accessToken = $integration->meta_app_token ?: $integration->meta_access_token;
                 $adAccountId = ltrim($integration->meta_ad_account_id, 'act_');
-                $graphUrl    = env('FACEBOOK_GRAPH_URL', 'https://graph.facebook.com/v22.0');
+                $graphUrl    = config('services.meta.facebook_graph_url', 'https://graph.facebook.com/v22.0');
 
+                // Caché para spend por anuncio
+                $cacheKey2 = "meta_period_adspends_{$businessId}_{$adAccountId}_{$startDateStr}_{$endDateStr}";
+                $isCurrentPeriod2 = $endDateStr >= date('Y-m-d');
+                $cacheTtl2 = $isCurrentPeriod2 ? 1800 : 86400;
+
+                if (Cache::has($cacheKey2)) {
+                    \Illuminate\Support\Facades\Log::info("meta_period_adspends [CACHE HIT]", ['key' => $cacheKey2]);
+                    $adSpends = Cache::get($cacheKey2);
+                } else {
                 // Obtener moneda de la cuenta publicitaria
                 $accountUrl = "{$graphUrl}/act_{$adAccountId}?fields=currency&access_token={$accessToken}";
                 $accRes     = new \SoDe\Extend\Fetch($accountUrl);
@@ -1924,6 +1985,11 @@ class KPICampaignsController extends BasicController
                     $nextUrl = $body['paging']['next'] ?? null;
                     $pages++;
                 }
+                // Guardar en caché
+                if (!empty($adSpends)) {
+                    Cache::put($cacheKey2, $adSpends, $cacheTtl2);
+                }
+                } // end else (cache miss)
             }
         } catch (\Throwable $e) {
             \Illuminate\Support\Facades\Log::warning("Error fetching period ad spends: " . $e->getMessage());

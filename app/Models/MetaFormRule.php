@@ -18,17 +18,21 @@ class MetaFormRule extends Model
         'business_id',
         'form_id',
         'form_name',
+        'rule_name',
         'conditions',
+        'tree',
         'chat_status_id',
         'manage_status_id',
         'status_id',
         'assigned_to',
+        'tag',
         'status'
     ];
 
     protected $casts = [
         'conditions' => 'array',
-        'status' => 'boolean'
+        'tree'       => 'array',
+        'status'     => 'boolean'
     ];
 
     public function chatStatus()
