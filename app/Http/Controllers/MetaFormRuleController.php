@@ -95,82 +95,94 @@ class MetaFormRuleController extends BasicController
         Log::info("fetchMetaFormsForBusiness started", ['businessId' => $businessId, 'forms_integrations_count' => $integrations->count(), 'graphUrl' => $graphUrl]);
 
         foreach ($integrations as $integration) {
-            $token = $integration->meta_access_token;
-            if (empty($token)) continue;
+            $tokens = array_unique(array_filter([
+                $integration->meta_app_token,
+                $integration->meta_access_token,
+            ]));
+            if (empty($tokens)) continue;
 
-            // A. Consultar ID de negocio/página directo si existe
-            if (!empty($integration->meta_business_id)) {
-                try {
-                    $formsUrl = "{$graphUrl}/{$integration->meta_business_id}/leadgen_forms?fields=id,name,questions,status,created_time&limit=100&access_token={$token}";
-                    $formsRes = new Fetch($formsUrl);
-                    if ($formsRes->ok) {
-                        $fData = $formsRes->json();
-                        Log::info("Meta Forms from Page ID {$integration->meta_business_id}", ['forms_found' => count($fData['data'] ?? [])]);
-                        foreach ($fData['data'] ?? [] as $f) {
-                            if (isset($f['id']) && !isset($formIdsMap[$f['id']])) {
-                                $formIdsMap[$f['id']] = true;
-                                $forms[] = $f;
+            foreach ($tokens as $token) {
+                $foundCountBefore = count($forms);
+
+                // A. Consultar ID de negocio/página directo si existe
+                if (!empty($integration->meta_business_id)) {
+                    try {
+                        $formsUrl = "{$graphUrl}/{$integration->meta_business_id}/leadgen_forms?fields=id,name,questions,status,created_time&limit=100&access_token={$token}";
+                        $formsRes = new Fetch($formsUrl);
+                        if ($formsRes->ok) {
+                            $fData = $formsRes->json();
+                            Log::info("Meta Forms from Page ID {$integration->meta_business_id}", ['forms_found' => count($fData['data'] ?? [])]);
+                            foreach ($fData['data'] ?? [] as $f) {
+                                if (isset($f['id']) && !isset($formIdsMap[$f['id']])) {
+                                    $formIdsMap[$f['id']] = true;
+                                    $forms[] = $f;
+                                }
                             }
+                        } else {
+                            Log::warning("Page leadgen_forms non-200", ['res' => $formsRes->json()]);
                         }
-                    } else {
-                        Log::warning("Page leadgen_forms non-200", ['res' => $formsRes->json()]);
+                    } catch (\Throwable $th) {
+                        Log::error("Error querying page leadgen_forms: " . $th->getMessage());
                     }
-                } catch (\Throwable $th) {
-                    Log::error("Error querying page leadgen_forms: " . $th->getMessage());
                 }
-            }
 
-            // B. Consultar páginas del usuario vía /me/accounts si aún no hay formularios
-            if (empty($forms)) {
-                try {
-                    $url = "{$graphUrl}/me/accounts?fields=id,name,access_token&limit=100&access_token={$token}";
-                    $pagesRes = new Fetch($url);
-                    if ($pagesRes->ok) {
-                        $pagesData = $pagesRes->json();
-                        foreach ($pagesData['data'] ?? [] as $page) {
-                            $pageId = $page['id'] ?? null;
-                            $pageToken = $page['access_token'] ?? $token;
-                            if ($pageId) {
-                                try {
-                                    $formsUrl = "{$graphUrl}/{$pageId}/leadgen_forms?fields=id,name,questions,status,created_time&limit=100&access_token={$pageToken}";
-                                    $formsRes = new Fetch($formsUrl);
-                                    if ($formsRes->ok) {
-                                        $fData = $formsRes->json();
-                                        foreach ($fData['data'] ?? [] as $f) {
-                                            if (isset($f['id']) && !isset($formIdsMap[$f['id']])) {
-                                                $formIdsMap[$f['id']] = true;
-                                                $forms[] = $f;
+                // B. Consultar páginas del usuario vía /me/accounts si aún no hay formularios
+                if (empty($forms)) {
+                    try {
+                        $url = "{$graphUrl}/me/accounts?fields=id,name,access_token&limit=100&access_token={$token}";
+                        $pagesRes = new Fetch($url);
+                        if ($pagesRes->ok) {
+                            $pagesData = $pagesRes->json();
+                            foreach ($pagesData['data'] ?? [] as $page) {
+                                $pageId = $page['id'] ?? null;
+                                $pageToken = $page['access_token'] ?? $token;
+                                if ($pageId) {
+                                    try {
+                                        $formsUrl = "{$graphUrl}/{$pageId}/leadgen_forms?fields=id,name,questions,status,created_time&limit=100&access_token={$pageToken}";
+                                        $formsRes = new Fetch($formsUrl);
+                                        if ($formsRes->ok) {
+                                            $fData = $formsRes->json();
+                                            foreach ($fData['data'] ?? [] as $f) {
+                                                if (isset($f['id']) && !isset($formIdsMap[$f['id']])) {
+                                                    $formIdsMap[$f['id']] = true;
+                                                    $forms[] = $f;
+                                                }
                                             }
                                         }
+                                    } catch (\Throwable $th) {
                                     }
-                                } catch (\Throwable $th) {
                                 }
                             }
                         }
+                    } catch (\Throwable $th) {
                     }
-                } catch (\Throwable $th) {
                 }
-            }
 
-            // C. Consultar Cuenta Publicitaria si existe
-            if (!empty($integration->meta_ad_account_id)) {
-                $adAccountId = $integration->meta_ad_account_id;
-                if (!str_starts_with($adAccountId, 'act_')) {
-                    $adAccountId = 'act_' . $adAccountId;
-                }
-                try {
-                    $formsUrl = "{$graphUrl}/{$adAccountId}/leadgen_forms?fields=id,name,questions,status,created_time&limit=100&access_token={$token}";
-                    $formsRes = new Fetch($formsUrl);
-                    if ($formsRes->ok) {
-                        $fData = $formsRes->json();
-                        foreach ($fData['data'] ?? [] as $f) {
-                            if (isset($f['id']) && !isset($formIdsMap[$f['id']])) {
-                                $formIdsMap[$f['id']] = true;
-                                $forms[] = $f;
+                // C. Consultar Cuenta Publicitaria si existe
+                if (!empty($integration->meta_ad_account_id)) {
+                    $adAccountId = $integration->meta_ad_account_id;
+                    if (!str_starts_with($adAccountId, 'act_')) {
+                        $adAccountId = 'act_' . $adAccountId;
+                    }
+                    try {
+                        $formsUrl = "{$graphUrl}/{$adAccountId}/leadgen_forms?fields=id,name,questions,status,created_time&limit=100&access_token={$token}";
+                        $formsRes = new Fetch($formsUrl);
+                        if ($formsRes->ok) {
+                            $fData = $formsRes->json();
+                            foreach ($fData['data'] ?? [] as $f) {
+                                if (isset($f['id']) && !isset($formIdsMap[$f['id']])) {
+                                    $formIdsMap[$f['id']] = true;
+                                    $forms[] = $f;
+                                }
                             }
                         }
+                    } catch (\Throwable $th) {
                     }
-                } catch (\Throwable $th) {
+                }
+
+                // Si este token obtuvo formularios exitosamente, salir del bucle de tokens para esta integración
+                if (count($forms) > $foundCountBefore) {
+                    break;
                 }
             }
         }
@@ -332,19 +344,26 @@ class MetaFormRuleController extends BasicController
             $data = null;
 
             foreach ($integrations as $integration) {
-                $token = $integration->meta_access_token;
-                if (empty($token)) continue;
-                try {
-                    $res = new Fetch("{$graphUrl}/{$formId}?fields=id,name,questions,status&access_token={$token}");
-                    if ($res->ok) {
-                        $json = $res->json();
-                        if (isset($json['id']) && !empty($json['questions'])) {
-                            $data = $json;
-                            break;
+                $tokens = array_unique(array_filter([
+                    $integration->meta_app_token,
+                    $integration->meta_access_token,
+                ]));
+
+                foreach ($tokens as $token) {
+                    try {
+                        $res = new Fetch("{$graphUrl}/{$formId}?fields=id,name,questions,status&access_token={$token}");
+                        if ($res->ok) {
+                            $json = $res->json();
+                            if (isset($json['id']) && !empty($json['questions'])) {
+                                $data = $json;
+                                break 2;
+                            }
+                        } else {
+                            Log::warning("getFormQuestions non-200 for form {$formId}", ['res' => $res->json()]);
                         }
+                    } catch (\Throwable $th) {
+                        Log::error("getFormQuestions exception for form {$formId}: " . $th->getMessage());
                     }
-                } catch (\Throwable $th) {
-                    Log::error("getFormQuestions exception for form {$formId}: " . $th->getMessage());
                 }
             }
 
