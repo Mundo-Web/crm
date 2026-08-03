@@ -327,7 +327,7 @@ const MetaForms = ({
                                 onClick={() => setActiveTab("rules")}
                             >
                                 <i className="mdi mdi-routes me-1"></i>
-                                Flujos y Árboles ({rules.length})
+                                Reglas ({rules.length})
                             </button>
                         </li>
                     </ul>
@@ -380,7 +380,7 @@ const MetaForms = ({
                             const treeRule = formRules.find((r) => r.tree);
 
                             return (
-                                <div key={form.id} className="col-xl-3 col-lg-4 col-md-6 mb-3">
+                                <div key={form.id} className="col-xl-3 col-lg-4 col-md-4 mb-3">
                                     <div className="card h-100 border-0 shadow-sm transition-all hover-shadow" style={{ borderRadius: '14px', overflow: 'hidden', backgroundColor: '#ffffff' }}>
                                         <div className="card-body p-4 position-relative d-flex flex-column">
 
@@ -490,16 +490,16 @@ const MetaForms = ({
                         <div className="card border">
                             <div className="card-header bg-light p-3">
                                 <h5 className="card-title my-0 font-15 fw-bold">
-                                    Todas las Reglas y Árboles de Automatización
+                                    Todas las Reglas de Automatización
                                 </h5>
                             </div>
                             <div className="card-body p-0">
                                 {rules.length === 0 ? (
                                     <div className="text-center py-5">
                                         <i className="mdi mdi-routes display-4 text-muted"></i>
-                                        <h5 className="mt-3 font-16 fw-bold">No hay reglas o árboles configurados</h5>
+                                        <h5 className="mt-3 font-16 fw-bold">No hay reglas configuradas</h5>
                                         <p className="text-muted font-13">
-                                            Selecciona un formulario de la pestaña "Formularios" para crear tu primer Árbol de Decisión.
+                                            Selecciona un formulario de la pestaña "Formularios" para configurar una regla.
                                         </p>
                                     </div>
                                 ) : (
@@ -508,7 +508,6 @@ const MetaForms = ({
                                             <thead className="table-light">
                                                 <tr>
                                                     <th>Formulario Meta</th>
-                                                    <th>Tipo de Flujo</th>
                                                     <th>Detalle / Condición</th>
                                                     <th>Temperatura (Chat)</th>
                                                     <th>Etiqueta</th>
@@ -528,25 +527,22 @@ const MetaForms = ({
                                                                 <small className="text-muted">ID: {rule.form_id}</small>
                                                             </td>
                                                             <td>
-                                                                {rule.tree ? (
-                                                                    <span className="badge bg-success font-11 rounded-pill">🌳 Árbol de Decisión</span>
+                                                                {rule.conditions && rule.conditions.length > 0 ? (
+                                                                    <div className="d-flex flex-column gap-1">
+                                                                        {rule.conditions.map((c, i) => (
+                                                                            <div key={i} className="font-12 text-secondary">
+                                                                                <i className="mdi mdi-subdirectory-arrow-right text-primary me-1"></i>
+                                                                                <span className="fw-semibold text-dark">{c.field_name}</span> 
+                                                                                <span className="mx-1 text-muted font-11">{c.operator === 'contains' ? 'contiene' : '='}</span> 
+                                                                                <span className="text-primary fw-bold">"{c.value}"</span>
+                                                                            </div>
+                                                                        ))}
+                                                                    </div>
                                                                 ) : (
-                                                                    <span className="badge bg-secondary font-11 rounded-pill">⚡ Regla Sencilla</span>
-                                                                )}
-                                                            </td>
-                                                            <td>
-                                                                {rule.tree ? (
-                                                                    <span className="fw-semibold text-dark font-12">
-                                                                        {rule.rule_name || "Árbol de preguntas"}
+                                                                    <span className="font-12 text-muted fw-medium">
+                                                                        <i className="mdi mdi-all-inclusive text-primary me-1 font-14"></i>
+                                                                        Cualquier respuesta
                                                                     </span>
-                                                                ) : rule.conditions && rule.conditions.length > 0 ? (
-                                                                    rule.conditions.map((c, i) => (
-                                                                        <div key={i} className="badge bg-soft-secondary text-dark me-1 font-11">
-                                                                            <code>{c.field_name}</code> = <b>"{c.value}"</b>
-                                                                        </div>
-                                                                    ))
-                                                                ) : (
-                                                                    <span className="badge bg-soft-info text-info font-11">Todas las respuestas</span>
                                                                 )}
                                                             </td>
                                                             <td>
@@ -578,24 +574,35 @@ const MetaForms = ({
                                                             </td>
                                                             <td>
                                                                 {rule.assigned ? (
-                                                                    <span className="fw-semibold font-13">{rule.assigned.name}</span>
+                                                                    <div className="d-flex align-items-center">
+                                                                        <div className="bg-soft-warning text-warning rounded-circle d-flex align-items-center justify-content-center me-2" style={{width: '24px', height: '24px'}}>
+                                                                            <i className="mdi mdi-account font-12"></i>
+                                                                        </div>
+                                                                        <span className="fw-semibold font-13 text-dark">{rule.assigned.name}</span>
+                                                                    </div>
                                                                 ) : (
-                                                                    <span className="text-muted">Sin asignar</span>
+                                                                    <span className="text-muted font-12">Sin asignar</span>
                                                                 )}
                                                             </td>
                                                             <td className="text-end">
-                                                                <button
-                                                                    className="btn btn-xs btn-soft-primary me-1"
-                                                                    onClick={() => rule.tree ? onOpenTreeModal(matchedForm || { id: rule.form_id, name: rule.form_name }, rule) : onOpenFormModal(matchedForm || { id: rule.form_id, name: rule.form_name }, rule)}
-                                                                >
-                                                                    <i className="fa fa-pen"></i>
-                                                                </button>
-                                                                <button
-                                                                    className="btn btn-xs btn-soft-danger"
-                                                                    onClick={() => onDeleteRule(rule.id)}
-                                                                >
-                                                                    <i className="fa fa-trash"></i>
-                                                                </button>
+                                                                <div className="d-flex align-items-center justify-content-end gap-2">
+                                                                    <button
+                                                                        className="btn btn-sm btn-light text-primary rounded-circle shadow-sm"
+                                                                        style={{ width: '32px', height: '32px', padding: '0', flexShrink: 0 }}
+                                                                        title="Editar Regla"
+                                                                        onClick={() => onOpenFormModal(matchedForm || { id: rule.form_id, name: rule.form_name }, rule)}
+                                                                    >
+                                                                        <i className="mdi mdi-pencil font-15"></i>
+                                                                    </button>
+                                                                    <button
+                                                                        className="btn btn-sm btn-light text-danger rounded-circle shadow-sm"
+                                                                        style={{ width: '32px', height: '32px', padding: '0', flexShrink: 0 }}
+                                                                        title="Eliminar Regla"
+                                                                        onClick={() => onDeleteRule(rule.id)}
+                                                                    >
+                                                                        <i className="mdi mdi-trash-can-outline font-15"></i>
+                                                                    </button>
+                                                                </div>
                                                             </td>
                                                         </tr>
                                                     );
