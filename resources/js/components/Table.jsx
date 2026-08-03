@@ -9,7 +9,7 @@ import 'react-date-range/dist/theme/default.css'
 import Tippy from '@tippyjs/react'
 import ArrayJoin from '../Utils/ArrayJoin'
 
-const Table = ({ title, filter = [], gridRef, rest, columns, toolBar, masterDetail, filterValue = [], defaultRows, selection, cardClass = '', className = '', allowedPageSizes, pageSize, exportable = false, customizeCell, reloadWith, height, cardStyle, keyExpr, onSelectionChanged, massiveActions, showDatePicker = true, dateFilterOptions = [
+const Table = ({ title, filter = [], gridRef, rest, columns, toolBar, masterDetail, filterValue = [], defaultRows, selection, cardClass = '', className = '', allowedPageSizes, pageSize, exportable = false, customizeCell, reloadWith, height, cardStyle, keyExpr, onSelectionChanged, massiveActions, showDatePicker = true, onRowPrepared, dateFilterOptions = [
   { value: 'created_at', label: 'Fecha creación' },
   { value: 'updated_at', label: 'Fecha actualización' }
 ] }) => {
@@ -341,6 +341,7 @@ const Table = ({ title, filter = [], gridRef, rest, columns, toolBar, masterDeta
               exportable={exportable}
               exportableName={text.toLowerCase()}
               customizeCell={customizeCell}
+              onRowPrepared={onRowPrepared}
               reloadWith={[...(reloadWith ?? []), activeRestIndex]}
               height={height}
               keyExpr={keyExpr}

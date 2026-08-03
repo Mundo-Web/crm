@@ -80,7 +80,7 @@ const LeadTable = ({
     filterAssignation,
     completeRegistration,
 }) => {
-    const { selectedUsersId, setSelectedUsersId, defaultView } =
+    const { selectedUsersId, setSelectedUsersId, defaultView, chatStatusFilter, selectedMonth } =
         useContext(LeadsContext);
 
     const syncInputRef = useRef(null);
@@ -385,18 +385,22 @@ const LeadTable = ({
                 }
                 rest={rest}
                 reloadWith={[statuses, manageStatuses]}
-                filter={
-                    filterAssignation
-                        ? ArrayJoin(
-                            selectedUsersId.map((id) => [
-                                "assigned_to",
-                                "=",
-                                id,
-                            ]),
-                            "or",
-                        )
-                        : []
-                }
+                filter={(() => {
+                    return ArrayJoin([
+                        filterAssignation && selectedUsersId.length > 0
+                            ? ArrayJoin(selectedUsersId.map((id) => ["assigned_to", "=", id]), "or")
+                            : null,
+                        chatStatusFilter ? ["clients.chat_status_id", "=", chatStatusFilter] : null
+                    ].filter(Boolean), "and") || [];
+                })()}
+                onRowPrepared={(e) => {
+                    if (e.rowType === "data" && e.data.chat_status?.color) {
+                        e.rowElement[0].style.setProperty("background-color", `${e.data.chat_status.color}15`, "important");
+                        e.rowElement.children("td").each(function() {
+                            this.style.setProperty("background-color", "transparent", "important");
+                        });
+                    }
+                }}
                 toolBar={(container) => {
                     /*  container.unshift({
                         widget: "dxButton",
@@ -524,10 +528,20 @@ const LeadTable = ({
                         caption: "Lead",
                         width: 250,
                         cellTemplate: (container, { data }) => {
-                            container.attr(
-                                "style",
-                                `height: 48px; border-left: 4px solid ${data.status.color}; cursor: pointer;`,
-                            );
+                            if (data.chat_status?.color) {
+                                container.css({
+                                    "height": "48px",
+                                    "border-left": `4px solid ${data.status.color}`,
+                                    "cursor": "pointer",
+                                    "position": "relative"
+                                });
+                            } else {
+                                container.css({
+                                    "height": "48px",
+                                    "border-left": `4px solid ${data.status.color}`,
+                                    "cursor": "pointer"
+                                });
+                            }
                             container.on("click", () => onLeadClicked(data));
 
                             let integrationIcon = null;
@@ -562,7 +576,7 @@ const LeadTable = ({
 
                             ReactAppend(
                                 container,
-                                <div className="d-flex align-items-center justify-content-between gap-2">
+                                <div className="d-flex align-items-center justify-content-between gap-2 w-100 h-100">
                                     <div className="d-flex align-items-center gap-2 overflow-hidden">
                                         {integrationIcon && (
                                             <TippyButton
@@ -588,7 +602,7 @@ const LeadTable = ({
                                                 </span>
                                             )}
                                             {data.products_count > 0 && (
-                                                <small className="text-muted">
+                                                <small className="text-muted d-block mt-1">
                                                     {data.products_count}{" "}
                                                     {data.products_count > 1
                                                         ? "productos"
@@ -597,6 +611,12 @@ const LeadTable = ({
                                             )}
                                         </div>
                                     </div>
+                                    {data.chat_status && data.chat_status.icon && (
+                                        <i 
+                                          className={`mdi ${data.chat_status.icon.startsWith('mdi-') ? data.chat_status.icon : 'mdi-' + data.chat_status.icon}`}
+                                          style={{ position: 'absolute', top: '4px', right: '4px', color: data.chat_status.color ?? '#6c757d', fontSize: '16px' }}
+                                        />
+                                    )}
                                     <div className="d-none gap-1 " style={{ display: "none !important" }}>
                                         {completeRegistration && (
                                             <Tippy
@@ -658,7 +678,7 @@ const LeadTable = ({
                         caption: "Usuario",
                         width: 58,
                         cellTemplate: (container, { data }) => {
-                            container.attr("style", "height: 48px");
+                            container.css("height", "48px");
                             ReactAppend(
                                 container,
                                 <div className="d-flex align-items-center gap-1">
@@ -722,7 +742,7 @@ const LeadTable = ({
                         width: 180,
                         cellTemplate: (container, { data }) => {
                             // container.addClass('p-0')
-                            container.attr("style", "overflow: visible");
+                            container.css("overflow", "visible");
                             // ReactAppend(container, <StatusDropdown
                             //   items={statuses}
                             //   defaultValue={data.status}
@@ -764,7 +784,7 @@ const LeadTable = ({
                         width: 180,
                         cellTemplate: (container, { data }) => {
                             // container.addClass('p-0')
-                            container.attr("style", "overflow: visible");
+                            container.css("overflow", "visible");
                             // ReactAppend(container, <StatusDropdown
                             //   items={manageStatuses}
                             //   defaultValue={data.manage_status}
@@ -807,7 +827,7 @@ const LeadTable = ({
                          allowSorting: false,
                          allowFiltering: false,
                          cellTemplate: (container, { data }) => {
-                             container.attr("style", "height: 48px; overflow: visible");
+                             container.css({ "height": "48px", "overflow": "visible" });
                              const entries = Array.isArray(data.entries) ? data.entries.filter(Boolean) : [];
                              if (entries.length === 0) {
                                  container.html(`<small class="text-muted">desde <b>${data.origin || 'Desconocido'}</b></small>`);

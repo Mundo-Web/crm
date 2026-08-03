@@ -15,7 +15,15 @@ export const LeadsProvider = ({ statuses, months, currentMonth, currentYear, chi
     const [defaultView, setDefaultView] = useState(Local.get('default-view') ?? 'kanban')
     const [lastLoadedDate, setLastLoadedDate] = useState(new Date())
     const [leads, setLeads] = useState([]);
-    const [selectedMonth, setSelectedMonth] = useState(`${currentYear}-${currentMonth}`)
+    const [selectedMonth, setSelectedMonth] = useState(() => {
+        const currentId = `${currentYear}-${currentMonth}`;
+        if (months && months.length > 0) {
+            const hasCurrentMonth = months.some(m => m.id === currentId);
+            return hasCurrentMonth ? currentId : months[0].id;
+        }
+        return currentId;
+    });
+    const [chatStatusFilter, setChatStatusFilter] = useState('');
 
     const getLeads = () => {
         statuses.filter(({ pipeline }) => pipeline).map(({ id }) => id).forEach(async (statusId) => {
@@ -29,6 +37,9 @@ export const LeadsProvider = ({ statuses, months, currentMonth, currentYear, chi
             const filter = [['clients.status_id', '=', statusId]];
             if (selectedUsersId.length > 0) {
                 filter.push(ArrayJoin(selectedUsersId.map(id => ['assigned_to', '=', id]), 'or'))
+            }
+            if (chatStatusFilter) {
+                filter.push(['clients.chat_status_id', '=', chatStatusFilter]);
             }
             // Add selectedMonth filter (yyyy-mm)
             filter.push(['created_at', '>=', `${selectedMonth}-01`]);
@@ -68,6 +79,9 @@ export const LeadsProvider = ({ statuses, months, currentMonth, currentYear, chi
         const filter = [['updated_at', '>=', dateWithOffset.toISOString()]];
         if (selectedUsersId.length > 0) {
             filter.push(ArrayJoin(selectedUsersId.map(id => ['assigned_to', '=', id]), 'or'))
+        }
+        if (chatStatusFilter) {
+            filter.push(['clients.chat_status_id', '=', chatStatusFilter]);
         }
         // Add selectedMonth filter (yyyy-mm)
         filter.push(['created_at', '>=', `${selectedMonth}-01`]);
@@ -128,6 +142,9 @@ export const LeadsProvider = ({ statuses, months, currentMonth, currentYear, chi
         if (selectedUsersId.length > 0) {
             filter.push(ArrayJoin(selectedUsersId.map(id => ['assigned_to', '=', id]), 'or'))
         }
+        if (chatStatusFilter) {
+            filter.push(['clients.chat_status_id', '=', chatStatusFilter]);
+        }
         // Add selectedMonth filter (yyyy-mm)
         filter.push(['created_at', '>=', `${selectedMonth}-01`]);
         const nextMonth = new Date(selectedMonth + '-01');
@@ -163,7 +180,7 @@ export const LeadsProvider = ({ statuses, months, currentMonth, currentYear, chi
         if (defaultView != 'kanban') return
         const interval = setInterval(() => { refreshLeads(); }, 10000);
         return () => clearInterval(interval);
-    }, [lastLoadedDate, defaultView, selectedUsersId, selectedMonth])
+    }, [lastLoadedDate, defaultView, selectedUsersId, selectedMonth, chatStatusFilter])
 
     return (
         <LeadsContext.Provider
@@ -182,6 +199,8 @@ export const LeadsProvider = ({ statuses, months, currentMonth, currentYear, chi
                 months,
                 selectedMonth,
                 setSelectedMonth,
+                chatStatusFilter,
+                setChatStatusFilter,
             }}
         >
             {children}

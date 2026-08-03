@@ -8,7 +8,7 @@ const LeadDetails = () => {
         <div className="col-lg-3 col-md-4 col-sm-6 col-xs-12">
           <div className="d-flex mb-3">
             <img className="flex-shrink-0 me-3 rounded-circle avatar-md" alt={leadLoaded?.contact_name}
-              src={`/api/whatsapp/profile/${leadLoaded.integration_user_id || leadLoaded.contact_phone}`}
+              src={leadLoaded ? `/api/whatsapp/profile/${leadLoaded.integration_user_id || leadLoaded.contact_phone}` : `//${Global.APP_DOMAIN}/assets/img/user-404.svg`}
               onError={(e) => { e.target.src = `//${Global.APP_DOMAIN}/assets/img/user-404.svg`; }} />
             <div className="flex-grow-1">
               <h4 className="media-heading mt-0">

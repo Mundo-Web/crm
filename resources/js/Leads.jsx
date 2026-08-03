@@ -182,6 +182,7 @@ const Leads = (properties) => {
         signs,
         users,
         hasForms,
+        chatStatuses,
     } = properties;
 
     const {
@@ -191,6 +192,8 @@ const Leads = (properties) => {
         refreshLeads,
         defaultView,
         setDefaultView,
+        chatStatusFilter,
+        setChatStatusFilter,
     } = useContext(LeadsContext);
 
     const modalRef = useRef();
@@ -1611,6 +1614,17 @@ const Leads = (properties) => {
             floatEnd={
                 <>
                     <div className="d-flex gap-1 justify-content-between align-items-center">
+                        <select
+                            className="form-select form-select-sm rounded-pill"
+                            style={{ width: 'auto', minWidth: '130px', display: 'inline-block', marginRight: '5px' }}
+                            value={chatStatusFilter}
+                            onChange={(e) => setChatStatusFilter(e.target.value)}
+                        >
+                            <option value="">Temperatura (Todas)</option>
+                            {chatStatuses?.map(status => (
+                                <option key={status.id} value={status.id}>{status.name}</option>
+                            ))}
+                        </select>
                         {defaultView == "kanban" && (
                             <Tippy content="Refrescar">
                                 <button
@@ -1784,7 +1798,7 @@ const Leads = (properties) => {
                             <img
                                 className="flex-shrink-0 me-3 rounded-circle avatar-md"
                                 alt={leadLoaded?.contact_name}
-                                src={`/api/whatsapp/profile/${leadLoaded?.integration_user_id || leadLoaded?.contact_phone}`}
+                                src={leadLoaded ? `/api/whatsapp/profile/${leadLoaded.integration_user_id || leadLoaded.contact_phone}` : `//${Global.APP_DOMAIN}/assets/img/user-404.svg`}
                                 onError={(e) => {
                                     e.target.src = `//${Global.APP_DOMAIN}/assets/img/user-404.svg`;
                                 }}

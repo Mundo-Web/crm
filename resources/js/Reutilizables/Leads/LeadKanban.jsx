@@ -14,7 +14,7 @@ const LeadKanban = ({ statuses, manageStatuses = [], leads, onLeadClicked, onOpe
 
   const [columnFilters, setColumnFilters] = useState({});
 
-  const { setLeads, getLeads, defaultView, refreshLeads, getMoreLeads, leadsCount, statusesLoading, selectedUsersId, setSelectedUsersId, months, selectedMonth, setSelectedMonth } = useContext(LeadsContext)
+  const { setLeads, getLeads, defaultView, refreshLeads, getMoreLeads, leadsCount, statusesLoading, selectedUsersId, setSelectedUsersId, months, selectedMonth, setSelectedMonth, chatStatusFilter } = useContext(LeadsContext)
   const loadingRefs = useRef({});
 
   // useEffect(() => {
@@ -64,7 +64,7 @@ const LeadKanban = ({ statuses, manageStatuses = [], leads, onLeadClicked, onOpe
     if (defaultView != 'kanban') return
     setLeads([])
     getLeads()
-  }, [selectedUsersId, defaultView, selectedMonth])
+  }, [selectedUsersId, defaultView, selectedMonth, chatStatusFilter])
 
   return <>
     <div className="d-flex align-items-center justify-content-between my-2">
@@ -290,8 +290,14 @@ const LeadKanban = ({ statuses, manageStatuses = [], leads, onLeadClicked, onOpe
                             // style={{ cursor: 'move' }}
                             className={`p-2 ${lead.assigned_to == LaravelSession.service_user.id ? 'border border-primary' : ''}`}
                           >
-                            <div className="kanban-box">
-                              <div className="kanban-detail ms-0">
+                            <div className="kanban-box position-relative" style={lead.chat_status?.color ? { backgroundColor: `${lead.chat_status.color}1a`, borderLeft: `4px solid ${lead.chat_status.color}` } : { position: 'relative' }}>
+                              {lead.chat_status && lead.chat_status.icon && (
+                                <i 
+                                  className={`mdi ${lead.chat_status.icon.startsWith('mdi-') ? lead.chat_status.icon : 'mdi-' + lead.chat_status.icon}`}
+                                  style={{ position: 'absolute', top: '4px', right: '4px', color: lead.chat_status.color ?? '#6c757d', fontSize: '16px' }}
+                                />
+                              )}
+                              <div className="kanban-detail ms-0 mt-2">
                                 <div className="dropdown float-end">
                                   <a href="#" className="dropdown-toggle arrow-none card-drop" data-bs-toggle="dropdown" aria-expanded="false">
                                     <i className="mdi mdi-dots-vertical"></i>
@@ -319,7 +325,7 @@ const LeadKanban = ({ statuses, manageStatuses = [], leads, onLeadClicked, onOpe
                                     </a>
                                   </div>
                                 </div>
-                                <h5 className="mt-0 text-truncate">
+                                <h5 className="mt-0 text-truncate" style={{ maxWidth: '85%' }}>
                                   <Tippy content='Ver detalles'>
                                     <a href="#" onClick={() => onLeadClicked(lead)}
                                       className="text-dark">
@@ -327,7 +333,7 @@ const LeadKanban = ({ statuses, manageStatuses = [], leads, onLeadClicked, onOpe
                                     </a>
                                   </Tippy>
                                 </h5>
-                                <ul className="list-inline d-flex align-items-center gap-1 mb-0">
+                                <ul className="list-inline d-flex align-items-center gap-1 mb-0 mt-2">
                                   <li className="list-inline-item">
                                     {
                                       !lead.assigned_to &&
