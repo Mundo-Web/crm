@@ -380,108 +380,100 @@ const MetaForms = ({
                             const treeRule = formRules.find((r) => r.tree);
 
                             return (
-                                <div key={form.id} className="col-xl-3 col-lg-4 col-md-6">
-                                    <div className="card h-100 border shadow-sm">
-                                        {/* TOP HEADER WITH ACTION BUTTON */}
-                                        <div className="card-header bg-light p-3 border-bottom">
-                                            <div className="d-flex align-items-center justify-content-between mb-2">
-                                                <span className="badge bg-white text-secondary border font-10">
-                                                    ID: {form.id}
-                                                </span>
-                                                <span className={`badge ${form.status === "ACTIVE" ? "bg-success" : "bg-secondary"} rounded-pill font-10`}>
-                                                    {form.status || "ACTIVO"}
-                                                </span>
-                                            </div>
+                                <div key={form.id} className="col-xl-3 col-lg-4 col-md-6 mb-3">
+                                    <div className="card h-100 border-0 shadow-sm transition-all hover-shadow" style={{ borderRadius: '14px', overflow: 'hidden', backgroundColor: '#ffffff' }}>
+                                        <div className="card-body p-4 position-relative d-flex flex-column">
 
-                                            <h6 className="card-title my-0 text-dark fw-bold font-14 text-truncate mb-3" title={form.name || form.id}>
-                                                {form.name || `Formulario ${form.id}`}
-                                            </h6>
-
-                                            {/* PRIMARY ACTION BUTTONS */}
-                                            <div className="d-flex flex-column gap-2">
+                                            {/* Top Right: Add Rule Button */}
+                                            <div className="position-absolute" style={{ top: '16px', right: '16px' }}>
                                                 <button
-                                                    className="btn btn-sm btn-success w-100 font-12 fw-bold shadow-sm"
-                                                    style={{ borderRadius: "2.5rem", padding: "8px 14px" }}
-                                                    onClick={() => onOpenTreeModal(form, treeRule)}
-                                                >
-                                                    <i className="mdi mdi-routes me-1"></i> {treeRule ? "Editar Árbol de Decisión" : "Crear Árbol de Decisión"}
-                                                </button>
-                                                <button
-                                                    className="btn btn-xs btn-outline-secondary w-100 font-11 rounded-pill"
+                                                    className="btn btn-sm btn-soft-primary rounded-circle shadow-none"
+                                                    style={{ width: '34px', height: '34px', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}
                                                     onClick={() => onOpenFormModal(form)}
+                                                    title="Configurar Regla"
                                                 >
-                                                    <i className="mdi mdi-lightning-bolt me-1"></i> Regla Sencilla
+                                                    <i className="mdi mdi-sitemap font-16"></i>
                                                 </button>
                                             </div>
-                                        </div>
 
-                                        {/* CARD BODY: CUSTOM QUESTIONS LIST */}
-                                        <div className="card-body p-3 d-flex flex-column justify-content-between">
+                                            {/* Form Title */}
+                                            <div className="mb-3 pe-4">
+                                                <h5 className="card-title text-dark fw-bold mb-0 lh-base" style={{ fontSize: '16px' }} title={form.name || form.id}>
+                                                    {form.name || `Formulario ${form.id}`}
+                                                </h5>
+                                            </div>
+
+                                            {/* Custom Questions List */}
                                             <div className="mb-2">
-                                                <small className="text-uppercase fw-bold text-muted font-10 d-block mb-2">
-                                                    Preguntas del Formulario ({customQuestions.length})
-                                                </small>
-
+                                                <p className="text-uppercase fw-bold text-muted mb-2" style={{ fontSize: '10px', letterSpacing: '0.5px' }}>
+                                                    Preguntas ({customQuestions.length})
+                                                </p>
                                                 {customQuestions.length === 0 ? (
-                                                    <div className="text-muted font-11 font-italic py-1">
-                                                        Sin preguntas personalizadas.
-                                                    </div>
+                                                    <p className="text-muted font-11 font-italic mb-0 bg-light p-2 rounded text-center shadow-sm border">
+                                                        Ninguna pregunta
+                                                    </p>
                                                 ) : (
-                                                    <div className="d-flex flex-column gap-2" style={{ maxHeight: "200px", overflowY: "auto" }}>
-                                                        {customQuestions.map((q, qIdx) => {
-                                                            const qText = q.label || q.key || q.name || `Pregunta ${qIdx + 1}`;
-                                                            return (
-                                                                <div
-                                                                    key={qIdx}
-                                                                    className="p-2 bg-light rounded-3 font-12 text-dark fw-semibold border-0"
-                                                                    style={{ whiteSpace: "normal", wordBreak: "break-word", lineHeight: "1.4" }}
-                                                                    title={qText}
-                                                                >
-                                                                    • {qText}
-                                                                </div>
-                                                            );
-                                                        })}
+                                                    <div className="p-2 bg-white rounded shadow-sm border" style={{ maxHeight: "140px", overflowY: "auto" }}>
+                                                        <div className="d-flex flex-column gap-2 pe-1">
+                                                            {customQuestions.map((q, qIdx) => {
+                                                                const qText = q.label || q.key || q.name || `Pregunta ${qIdx + 1}`;
+                                                                return (
+                                                                    <div
+                                                                        key={qIdx}
+                                                                        className="d-flex align-items-start font-12 text-secondary"
+                                                                    >
+                                                                        <i className="mdi mdi-circle-small text-primary mt-1 me-1"></i>
+                                                                        <span style={{ lineHeight: "1.4" }}>{qText}</span>
+                                                                    </div>
+                                                                );
+                                                            })}
+                                                        </div>
                                                     </div>
                                                 )}
                                             </div>
 
-                                            {/* CONFIGURED RULES SUMMARY */}
-                                            {formRules.length > 0 && (
-                                                <div className="border-top pt-2 mt-2">
-                                                    <small className="text-uppercase fw-bold text-muted font-10 d-block mb-1">
-                                                        Flujos Configurados ({formRules.length})
-                                                    </small>
-                                                    <div className="d-flex flex-column gap-1" style={{ maxHeight: "100px", overflowY: "auto" }}>
+                                            {/* Configured Rules */}
+                                            <div className="mt-2 pt-3 border-top border-light">
+                                                <p className="text-uppercase fw-bold text-muted mb-2" style={{ fontSize: '10px', letterSpacing: '0.5px' }}>
+                                                    Reglas Configuradas
+                                                </p>
+                                                {formRules.length > 0 ? (
+                                                    <div className="d-flex flex-column gap-2">
                                                         {formRules.map((rule) => (
                                                             <div
                                                                 key={rule.id}
-                                                                className="d-flex align-items-center justify-content-between font-11 bg-white p-1 rounded border"
+                                                                className="d-flex align-items-center justify-content-between p-2 rounded"
+                                                                style={{ backgroundColor: '#f8f9fa', borderLeft: `3px solid ${rule.chat_status?.color || '#007bff'}` }}
                                                             >
-                                                                <span className="text-truncate me-1 fw-semibold" style={{ maxWidth: "140px" }}>
-                                                                    {rule.tree ? `🌳 ${rule.rule_name || 'Árbol'}` : (rule.conditions?.[0]?.value ? `"${rule.conditions[0].value}"` : "Regla Plana")}
-                                                                </span>
-
-                                                                <div className="d-flex align-items-center gap-1">
-                                                                    {rule.tree ? (
-                                                                        <span className="badge bg-success rounded-pill font-10">Árbol</span>
-                                                                    ) : rule.chat_status ? (
-                                                                        <span className="badge rounded-pill" style={{ backgroundColor: rule.chat_status.color || "#6c757d" }}>
+                                                                <div className="d-flex flex-column">
+                                                                    <span className="fw-semibold text-dark font-12 text-truncate" style={{ maxWidth: "120px" }}>
+                                                                        {rule.conditions?.[0]?.value ? `"${rule.conditions[0].value}"` : "General"}
+                                                                    </span>
+                                                                    {rule.chat_status && (
+                                                                        <span className="font-10 text-muted mt-1">
+                                                                            <i className="mdi mdi-circle font-8 me-1" style={{ color: rule.chat_status.color }}></i>
                                                                             {rule.chat_status.name}
                                                                         </span>
-                                                                    ) : null}
-                                                                    <button
-                                                                        className="btn btn-xs btn-link text-primary p-0"
-                                                                        title="Editar"
-                                                                        onClick={() => rule.tree ? onOpenTreeModal(form, rule) : onOpenFormModal(form, rule)}
-                                                                    >
-                                                                        <i className="fa fa-pen"></i>
-                                                                    </button>
+                                                                    )}
                                                                 </div>
+
+                                                                <button
+                                                                    className="btn btn-link text-muted p-1 border-0 bg-transparent"
+                                                                    title="Editar Regla"
+                                                                    onClick={() => onOpenFormModal(form, rule)}
+                                                                >
+                                                                    <i className="mdi mdi-pencil font-14 hover-primary"></i>
+                                                                </button>
                                                             </div>
                                                         ))}
                                                     </div>
-                                                </div>
-                                            )}
+                                                ) : (
+                                                    <div className="text-center py-3 bg-light rounded-3">
+                                                        <i className="mdi mdi-inbox-outline text-muted font-20 mb-1 d-block"></i>
+                                                        <span className="text-muted font-11">Aún no hay reglas asignadas</span>
+                                                    </div>
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -677,229 +669,275 @@ const MetaForms = ({
                 modalRef={modalRef}
                 title={
                     selectedForm
-                        ? `${isEditingRule ? "Editar" : "Nueva"} Regla Sencilla: ${selectedForm.name || selectedForm.id}`
-                        : "Configurador de Regla Sencilla"
+                        ? `${isEditingRule ? "Editar" : "Nueva"} Regla: ${selectedForm.name || selectedForm.id}`
+                        : "Configurador de Regla"
                 }
                 onSubmit={onSaveRule}
                 size="lg"
             >
                 {selectedForm && (
-                    <div className="row g-3">
-                        <div className="col-12 bg-light p-2 rounded border">
-                            <div className="d-flex align-items-center justify-content-between">
-                                <div>
-                                    <h6 className="my-0 text-dark fw-bold font-14">
-                                        {selectedForm.name || `Formulario ${selectedForm.id}`}
-                                    </h6>
-                                    <small className="text-muted">Meta Form ID: {selectedForm.id}</small>
+                    <div className="row g-4 px-2 py-2">
+                        {/* HEADER BANNER */}
+                        <div className="col-12">
+                            <div className="d-flex align-items-center bg-soft-primary p-3 rounded-4 border border-primary border-opacity-10 shadow-sm">
+                                <div className="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center me-3" style={{ width: '52px', height: '52px' }}>
+                                    <i className="mdi mdi-text-box-check-outline font-24"></i>
                                 </div>
-                                <span className="badge bg-primary text-white font-11 rounded-pill">
-                                    {(selectedForm.questions || []).length} preguntas
-                                </span>
+                                <div className="flex-grow-1">
+                                    <h5 className="my-0 text-dark fw-bold mb-2">
+                                        {selectedForm.name || `Formulario ${selectedForm.id}`}
+                                    </h5>
+                                    <span className="badge bg-white text-primary border border-primary border-opacity-25 font-11 rounded-pill shadow-sm py-1 px-2">
+                                        <i className="mdi mdi-help-circle-outline me-1"></i>
+                                        {(selectedForm.questions || []).length} preguntas disponibles
+                                    </span>
+                                </div>
                             </div>
                         </div>
 
-                        {/* CONDICIONES */}
+                        {/* SECTION 1: CONDITIONS */}
                         <div className="col-12">
-                            <div className="d-flex justify-content-between align-items-center mb-2">
-                                <h6 className="my-0 font-14 fw-bold text-dark">
-                                    Condición (Si el cliente responde en Meta...)
+                            <div className="d-flex justify-content-between align-items-center mb-3 mt-2">
+                                <h6 className="my-0 font-15 fw-bold text-dark d-flex align-items-center">
+                                    <span className="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center me-2 shadow-sm" style={{ width: '26px', height: '26px', fontSize: '13px' }}>1</span>
+                                    Condiciones de Activación
                                 </h6>
                                 <button
                                     type="button"
-                                    className="btn btn-xs btn-soft-primary"
+                                    className="btn btn-sm btn-outline-primary rounded-pill shadow-sm px-3 fw-medium"
                                     onClick={addCondition}
                                 >
-                                    <i className="mdi mdi-plus me-1"></i> Agregar Condición
+                                    <i className="mdi mdi-plus me-1"></i> Añadir Condición
                                 </button>
                             </div>
 
                             {conditions.length === 0 ? (
-                                <div className="p-2 bg-light border rounded text-muted font-12">
-                                    Sin condiciones: La regla aplicará a todas las respuestas recibidas.
+                                <div className="p-4 bg-light border border-dashed rounded-4 text-center transition-all">
+                                    <i className="mdi mdi-filter-variant text-muted font-24 mb-2 d-block opacity-50"></i>
+                                    <p className="text-dark font-14 mb-1 fw-semibold">
+                                        Sin condiciones específicas
+                                    </p>
+                                    <small className="text-muted">Esta regla se aplicará a todas las respuestas recibidas de este formulario.</small>
                                 </div>
                             ) : (
-                                conditions.map((cond, idx) => {
-                                    const formQs = selectedForm.questions || [];
-                                    const matchedQ = formQs.find(
-                                        (q) => (q.label || q.key || q.name) === cond.field_name
-                                    );
-                                    const availableOptions = matchedQ ? matchedQ.options || [] : [];
+                                <div className="d-flex flex-column gap-3">
+                                    {conditions.map((cond, idx) => {
+                                        const formQs = selectedForm.questions || [];
+                                        const matchedQ = formQs.find(
+                                            (q) => (q.label || q.key || q.name) === cond.field_name
+                                        );
+                                        const availableOptions = matchedQ ? matchedQ.options || [] : [];
 
-                                    return (
-                                        <div key={idx} className="p-2 bg-light border rounded mb-2">
-                                            <div className="row g-2 align-items-center">
-                                                <div className="col-md-5">
-                                                    <div className="d-flex justify-content-between align-items-center mb-1">
-                                                        <label className="font-11 text-muted fw-bold my-0">Pregunta del Formulario</label>
-                                                        {formQs.length > 0 && (
-                                                            <button
-                                                                type="button"
-                                                                className="btn btn-link btn-xs p-0 text-decoration-none font-10"
-                                                                onClick={() => updateCondition(idx, "isCustomQuestion", !cond.isCustomQuestion)}
+                                        return (
+                                            <div key={idx} className="p-3 bg-white border border-light rounded-4 shadow-sm position-relative">
+                                                <button
+                                                    type="button"
+                                                    className="btn btn-xs btn-light text-danger position-absolute rounded-circle shadow-sm"
+                                                    style={{ top: '-10px', right: '-10px', width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid #dee2e6' }}
+                                                    onClick={() => removeCondition(idx)}
+                                                    title="Eliminar Condición"
+                                                >
+                                                    <i className="mdi mdi-close font-14"></i>
+                                                </button>
+
+                                                <div className="row g-3 align-items-end">
+                                                    <div className="col-md-5">
+                                                        <div className="d-flex justify-content-between align-items-center mb-2">
+                                                            <label className="font-12 text-dark fw-bold my-0">
+                                                                <i className="mdi mdi-help-circle-outline text-muted me-1"></i>
+                                                                Pregunta del Formulario
+                                                            </label>
+                                                            {formQs.length > 0 && (
+                                                                <button
+                                                                    type="button"
+                                                                    className="btn btn-link btn-xs p-0 text-decoration-none font-11 fw-medium"
+                                                                    onClick={() => updateCondition(idx, "isCustomQuestion", !cond.isCustomQuestion)}
+                                                                >
+                                                                    {cond.isCustomQuestion ? "Elegir de lista" : "Ingresar manual"}
+                                                                </button>
+                                                            )}
+                                                        </div>
+                                                        {formQs.length > 0 && !cond.isCustomQuestion ? (
+                                                            <select
+                                                                className="form-select form-select-sm shadow-none border-light-subtle bg-light"
+                                                                value={cond.field_name}
+                                                                onChange={(e) => updateCondition(idx, "field_name", e.target.value)}
+                                                                style={{ borderRadius: '8px', padding: '8px 12px' }}
                                                             >
-                                                                {cond.isCustomQuestion ? "Elegir de lista" : "Escribir manual"}
-                                                            </button>
+                                                                <option value="">-- Seleccionar Pregunta --</option>
+                                                                {formQs.map((q, qi) => {
+                                                                    const qLabel = q.label || q.key || q.name || `Pregunta ${qi + 1}`;
+                                                                    return (
+                                                                        <option key={qi} value={qLabel}>
+                                                                            {qLabel}
+                                                                        </option>
+                                                                    );
+                                                                })}
+                                                            </select>
+                                                        ) : (
+                                                            <input
+                                                                type="text"
+                                                                className="form-control form-control-sm shadow-none border-light-subtle bg-light"
+                                                                placeholder="Nombre o clave de la pregunta"
+                                                                value={cond.field_name}
+                                                                onChange={(e) => updateCondition(idx, "field_name", e.target.value)}
+                                                                style={{ borderRadius: '8px', padding: '8px 12px' }}
+                                                            />
                                                         )}
                                                     </div>
-                                                    {formQs.length > 0 && !cond.isCustomQuestion ? (
+
+                                                    <div className="col-md-3">
+                                                        <label className="font-12 text-dark fw-bold mb-2">
+                                                            <i className="mdi mdi-code-tags text-muted me-1"></i>
+                                                            Coincidencia
+                                                        </label>
                                                         <select
-                                                            className="form-select form-select-sm"
-                                                            value={cond.field_name}
-                                                            onChange={(e) => updateCondition(idx, "field_name", e.target.value)}
+                                                            className="form-select form-select-sm shadow-none border-light-subtle bg-light"
+                                                            value={cond.operator}
+                                                            onChange={(e) => updateCondition(idx, "operator", e.target.value)}
+                                                            style={{ borderRadius: '8px', padding: '8px 12px' }}
                                                         >
-                                                            <option value="">-- Seleccionar Pregunta --</option>
-                                                            {formQs.map((q, qi) => {
-                                                                const qLabel = q.label || q.key || q.name || `Pregunta ${qi + 1}`;
-                                                                return (
-                                                                    <option key={qi} value={qLabel}>
-                                                                        {qLabel}
+                                                            <option value="equals">Es exactamente igual a (=)</option>
+                                                            <option value="contains">Contiene la palabra</option>
+                                                        </select>
+                                                    </div>
+
+                                                    <div className="col-md-4">
+                                                        <label className="font-12 text-dark fw-bold mb-2">
+                                                            <i className="mdi mdi-check-circle-outline text-muted me-1"></i>
+                                                            Respuesta Esperada
+                                                        </label>
+                                                        {availableOptions.length > 0 ? (
+                                                            <select
+                                                                className="form-select form-select-sm shadow-none border-light-subtle bg-light text-primary fw-bold"
+                                                                value={cond.value}
+                                                                onChange={(e) => updateCondition(idx, "value", e.target.value)}
+                                                                style={{ borderRadius: '8px', padding: '8px 12px' }}
+                                                            >
+                                                                <option value="" className="text-dark fw-normal">-- Seleccionar Opción --</option>
+                                                                {availableOptions.map((opt, oi) => (
+                                                                    <option key={oi} value={opt.value || opt.key}>
+                                                                        {opt.value || opt.key}
                                                                     </option>
-                                                                );
-                                                            })}
-                                                        </select>
-                                                    ) : (
-                                                        <input
-                                                            type="text"
-                                                            className="form-control form-control-sm"
-                                                            placeholder="Nombre o clave de la pregunta"
-                                                            value={cond.field_name}
-                                                            onChange={(e) => updateCondition(idx, "field_name", e.target.value)}
-                                                        />
-                                                    )}
-                                                </div>
-
-                                                <div className="col-md-2">
-                                                    <label className="font-11 text-muted fw-bold mb-1">Operador</label>
-                                                    <select
-                                                        className="form-select form-select-sm"
-                                                        value={cond.operator}
-                                                        onChange={(e) => updateCondition(idx, "operator", e.target.value)}
-                                                    >
-                                                        <option value="equals">Es igual a (=)</option>
-                                                        <option value="contains">Contiene</option>
-                                                    </select>
-                                                </div>
-
-                                                <div className="col-md-4">
-                                                    <label className="font-11 text-muted fw-bold mb-1">Respuesta Esperada</label>
-                                                    {availableOptions.length > 0 ? (
-                                                        <select
-                                                            className="form-select form-select-sm fw-bold text-primary"
-                                                            value={cond.value}
-                                                            onChange={(e) => updateCondition(idx, "value", e.target.value)}
-                                                        >
-                                                            <option value="">-- Seleccionar Opción --</option>
-                                                            {availableOptions.map((opt, oi) => (
-                                                                <option key={oi} value={opt.value || opt.key}>
-                                                                    {opt.value || opt.key}
-                                                                </option>
-                                                            ))}
-                                                        </select>
-                                                    ) : (
-                                                        <input
-                                                            type="text"
-                                                            className="form-control form-control-sm"
-                                                            placeholder="Respuesta esperada (ej. si)"
-                                                            value={cond.value}
-                                                            onChange={(e) => updateCondition(idx, "value", e.target.value)}
-                                                        />
-                                                    )}
-                                                </div>
-
-                                                <div className="col-md-1 text-end mt-3">
-                                                    <button
-                                                        type="button"
-                                                        className="btn btn-xs btn-soft-danger"
-                                                        onClick={() => removeCondition(idx)}
-                                                    >
-                                                        <i className="mdi mdi-close"></i>
-                                                    </button>
+                                                                ))}
+                                                            </select>
+                                                        ) : (
+                                                            <input
+                                                                type="text"
+                                                                className="form-control form-control-sm shadow-none border-light-subtle bg-light"
+                                                                placeholder="Escriba la respuesta aquí..."
+                                                                value={cond.value}
+                                                                onChange={(e) => updateCondition(idx, "value", e.target.value)}
+                                                                style={{ borderRadius: '8px', padding: '8px 12px' }}
+                                                            />
+                                                        )}
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                    );
-                                })
+                                        );
+                                    })}
+                                </div>
                             )}
                         </div>
 
-                        {/* ACCIONES */}
-                        <div className="col-12 border-top pt-3">
-                            <h6 className="my-0 font-14 fw-bold text-dark mb-3">
-                                Entonces Atalaya CRM asignará automáticamente:
-                            </h6>
-                        </div>
+                        {/* SECTION 2: ACTIONS */}
+                        <div className="col-12 mt-4">
+                            <div className="border-top pt-4">
+                                <h6 className="my-0 font-15 fw-bold text-dark d-flex align-items-center mb-4">
+                                    <span className="bg-success text-white rounded-circle d-inline-flex align-items-center justify-content-center me-2 shadow-sm" style={{ width: '26px', height: '26px', fontSize: '13px' }}>2</span>
+                                    Acciones a Realizar
+                                </h6>
 
-                        <div className="col-md-6">
-                            <label className="form-label font-13 fw-bold">
-                                Temperatura (Estado de Chat)
-                            </label>
-                            <select
-                                className="form-select form-select-sm fw-semibold"
-                                value={chatStatusId}
-                                onChange={(e) => setChatStatusId(e.target.value)}
-                            >
-                                <option value="">-- Sin cambio de Temperatura --</option>
-                                {chatStatuses.map((s) => (
-                                    <option key={s.id} value={s.id}>
-                                        {s.name}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
+                                <div className="row g-4">
+                                    <div className="col-md-6">
+                                        <div className="p-3 bg-light rounded-4 border border-light shadow-sm h-100">
+                                            <label className="form-label font-13 fw-bold text-dark mb-3 d-flex align-items-center">
+                                                <i className="mdi mdi-thermometer text-danger font-18 me-1"></i>
+                                                Temperatura del Lead
+                                            </label>
+                                            <select
+                                                className="form-select form-select-sm shadow-none border-0 fw-semibold"
+                                                value={chatStatusId}
+                                                onChange={(e) => setChatStatusId(e.target.value)}
+                                                style={{ borderRadius: '8px', padding: '10px 12px' }}
+                                            >
+                                                <option value="">-- Mantener temperatura actual --</option>
+                                                {chatStatuses.map((s) => (
+                                                    <option key={s.id} value={s.id}>
+                                                        {s.name}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                    </div>
 
-                        <div className="col-md-6">
-                            <label className="form-label font-13 fw-bold">
-                                Etiqueta de Gestión (Sub-Estado)
-                            </label>
-                            <select
-                                className="form-select form-select-sm"
-                                value={manageStatusId}
-                                onChange={(e) => setManageStatusId(e.target.value)}
-                            >
-                                <option value="">-- Sin cambio de Etiqueta --</option>
-                                {manageStatuses.map((s) => (
-                                    <option key={s.id} value={s.id}>
-                                        {s.name}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
+                                    <div className="col-md-6">
+                                        <div className="p-3 bg-light rounded-4 border border-light shadow-sm h-100">
+                                            <label className="form-label font-13 fw-bold text-dark mb-3 d-flex align-items-center">
+                                                <i className="mdi mdi-tag-outline text-info font-18 me-1"></i>
+                                                Etiqueta de Gestión
+                                            </label>
+                                            <select
+                                                className="form-select form-select-sm shadow-none border-0"
+                                                value={manageStatusId}
+                                                onChange={(e) => setManageStatusId(e.target.value)}
+                                                style={{ borderRadius: '8px', padding: '10px 12px' }}
+                                            >
+                                                <option value="">-- Sin etiqueta especial --</option>
+                                                {manageStatuses.map((s) => (
+                                                    <option key={s.id} value={s.id}>
+                                                        {s.name}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                    </div>
 
-                        <div className="col-md-6 mt-3">
-                            <label className="form-label font-13 fw-bold">
-                                Estado en Pipeline de Leads
-                            </label>
-                            <select
-                                className="form-select form-select-sm"
-                                value={statusId}
-                                onChange={(e) => setStatusId(e.target.value)}
-                            >
-                                <option value="">-- Estado Estándar (Nuevo Lead) --</option>
-                                {leadStatuses.map((s) => (
-                                    <option key={s.id} value={s.id}>
-                                        {s.name}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
+                                    <div className="col-md-6 mt-3">
+                                        <div className="p-3 bg-light rounded-4 border border-light shadow-sm h-100">
+                                            <label className="form-label font-13 fw-bold text-dark mb-3 d-flex align-items-center">
+                                                <i className="mdi mdi-view-week text-primary font-18 me-1"></i>
+                                                Mover en Pipeline
+                                            </label>
+                                            <select
+                                                className="form-select form-select-sm shadow-none border-0"
+                                                value={statusId}
+                                                onChange={(e) => setStatusId(e.target.value)}
+                                                style={{ borderRadius: '8px', padding: '10px 12px' }}
+                                            >
+                                                <option value="">-- Estado por Defecto (Nuevo Lead) --</option>
+                                                {leadStatuses.map((s) => (
+                                                    <option key={s.id} value={s.id}>
+                                                        {s.name}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                    </div>
 
-                        <div className="col-md-6 mt-3">
-                            <label className="form-label font-13 fw-bold">
-                                Auto-Asignar Asesor
-                            </label>
-                            <select
-                                className="form-select form-select-sm"
-                                value={assignedTo}
-                                onChange={(e) => setAssignedTo(e.target.value)}
-                            >
-                                <option value="">-- No auto-asignar --</option>
-                                {users.map((u) => (
-                                    <option key={u.id} value={u.id}>
-                                        {u.name} {u.lastname || ""} ({u.email})
-                                    </option>
-                                ))}
-                            </select>
+                                    <div className="col-md-6 mt-3">
+                                        <div className="p-3 bg-light rounded-4 border border-light shadow-sm h-100">
+                                            <label className="form-label font-13 fw-bold text-dark mb-3 d-flex align-items-center">
+                                                <i className="mdi mdi-account-switch-outline text-warning font-18 me-1"></i>
+                                                Auto-Asignar a Asesor
+                                            </label>
+                                            <select
+                                                className="form-select form-select-sm shadow-none border-0"
+                                                value={assignedTo}
+                                                onChange={(e) => setAssignedTo(e.target.value)}
+                                                style={{ borderRadius: '8px', padding: '10px 12px' }}
+                                            >
+                                                <option value="">-- Sin asignación automática --</option>
+                                                {users.map((u) => (
+                                                    <option key={u.id} value={u.id}>
+                                                        {u.name} {u.lastname || ""} ({u.email})
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 )}
@@ -932,7 +970,7 @@ const TreeNodeEditor = ({
                     onClick={() => {
                         const firstQ = questions[0];
                         const qLabel = firstQ ? (firstQ.label || firstQ.key || firstQ.name) : "";
-                        const qKey   = firstQ ? (firstQ.key || firstQ.name || qLabel) : "";
+                        const qKey = firstQ ? (firstQ.key || firstQ.name || qLabel) : "";
                         onChange({
                             question_key: qKey,
                             question_label: qLabel,
