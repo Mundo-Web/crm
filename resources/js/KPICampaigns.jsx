@@ -1218,8 +1218,8 @@ const KPICampaigns = ({ months = [], currentMonth, currentYear, advisors = [], w
                                 z-index: 1;
                                 border: 1px solid rgba(255,255,255,0.2);
                             }
-                            .bento-card.clickable:hover { transform: translateY(-8px) scale(1.02); cursor: pointer; }
-                            .bento-card:hover:not(.clickable) { transform: translateY(-8px) scale(1.02); }
+                            .bento-card.clickable:hover { cursor: pointer; }
+                            .bento-card:hover:not(.clickable) { }
                             .bento-title {
                                 color: #ffffff !important;
                                 font-size: 16px;
@@ -1364,23 +1364,11 @@ const KPICampaigns = ({ months = [], currentMonth, currentYear, advisors = [], w
             {/* ═══════════════════════════════════════════════════════════
                 TABLA DE EVOLUCIÓN SEMANAL
             ═══════════════════════════════════════════════════════════ */}
-            {weeklyEvolution.length > 1 && (() => {
-                const weekDayNames = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
-                const startDayName = weekDayNames[localWeekStartDay] ?? 'Lunes';
-                const endDayName = weekDayNames[localWeekStartDay === 0 ? 6 : localWeekStartDay - 1] ?? 'Domingo';
-
-                // Detectar el mes y año del rango para el título
-                const [fy, fm] = dateFrom.split('-');
-                const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
-                const monthLabel = `${monthNames[parseInt(fm, 10) - 1] ?? ''} ${fy}`;
-
-                const chartData = weeklyEvolution.map(wk => ({
-                    name: wk.label,
-                    pctContact: wk.pctContact ?? 0,
-                    pctCierre: wk.pctCierre ?? 0,
-                    roas: wk.roas ?? 0
-                }));
-
+            
+            {/* ═══════════════════════════════════════════════════════════
+                TABLA DE EVOLUCIÓN SEMANAL POR CAMPAÑA
+            ═══════════════════════════════════════════════════════════ */}
+            {campaignWeeklyEvolutions.length > 0 && campaignWeeklyEvolutions.map((cEv, cIdx) => {
                 const fmtNum = (n) => (n ?? 0).toLocaleString('es-PE');
                 const fmtMon = (n) => `${(n ?? 0).toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
                 const fmtPct = (n) => `${(n ?? 0).toFixed(1)}%`;
@@ -1400,8 +1388,8 @@ const KPICampaigns = ({ months = [], currentMonth, currentYear, advisors = [], w
                     );
                 };
 
-                return (<>
-                    <div className="card border-0 mb-5" style={{ marginTop: '28px', borderRadius: '24px', boxShadow: '0 15px 30px -10px rgba(29, 78, 216, 0.25)', border: '1px solid rgba(59, 130, 246, 0.15)', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+                return (
+                    <div key={cEv.campaign_id || cIdx} className="card border-0 mb-5" style={{ marginTop: '28px', borderRadius: '24px', boxShadow: '0 15px 30px -10px rgba(29, 78, 216, 0.25)', border: '1px solid rgba(59, 130, 246, 0.15)', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
                         {/* Header Premium - Estilo Bento KPI Card */}
                         <div style={{
                             background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
@@ -1413,8 +1401,7 @@ const KPICampaigns = ({ months = [], currentMonth, currentYear, advisors = [], w
                             borderTopLeftRadius: '24px',
                             borderTopRightRadius: '24px'
                         }}>
-                            {/* Watermark icon like KPI cards */}
-                            <i className="mdi mdi-calendar-month-outline" style={{
+                            <i className="mdi mdi-bullseye-arrow" style={{
                                 position: 'absolute',
                                 right: '-10px',
                                 bottom: '-20px',
@@ -1433,54 +1420,16 @@ const KPICampaigns = ({ months = [], currentMonth, currentYear, advisors = [], w
                                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                                     boxShadow: '0 4px 12px rgba(0,0,0,0.08)'
                                 }}>
-                                    <i className="mdi mdi-calendar-week" style={{ color: '#fff', fontSize: '22px' }}></i>
+                                    <i className="mdi mdi-bullseye-arrow" style={{ color: '#fff', fontSize: '22px' }}></i>
                                 </div>
                                 <div>
                                     <div style={{ color: '#ffffff', fontWeight: 800, fontSize: '17px', letterSpacing: '-0.3px', textShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
-                                        Rendimiento Acumulado
+                                        {cEv.campaign_name}
                                     </div>
                                     <div style={{ color: 'rgba(255, 255, 255, 0.85)', fontSize: '11px', marginTop: '2px', fontWeight: 600 }}>
-                                        {monthLabel} &bull; {startDayName} a {endDayName}
+                                        Rendimiento Acumulado de la Campaña &bull; S/ {fmtMon(cEv.total_spend)} Inv. Total
                                     </div>
                                 </div>
-                            </div>
-
-                            {/* Selector integrado de Inicio de Semana en la cabecera - Estilo Dropdown de Mes */}
-                            <div className="dropdown" style={{ zIndex: 1 }}>
-                                <button
-                                    className="btn btn-sm btn-light bg-white dropdown-toggle fw-bold rounded-pill text-dark d-flex align-items-center gap-1 border-0"
-                                    type="button"
-                                    id="weekStartDropdown"
-                                    data-bs-toggle="dropdown"
-                                    aria-expanded="false"
-                                    style={{
-                                        fontSize: '12px',
-                                        padding: '6px 16px',
-                                        boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
-                                    }}
-                                >
-                                    <i className="mdi mdi-calendar-clock text-primary me-1"></i>
-                                    Inicio: {weekDayNames[localWeekStartDay] ?? 'Lunes'}
-                                </button>
-                                <ul className="dropdown-menu dropdown-menu-end shadow-lg py-1 border-0" aria-labelledby="weekStartDropdown" style={{ borderRadius: '14px', minWidth: '160px', overflow: 'hidden', boxShadow: '0 10px 25px -5px rgba(0,0,0,0.15)', zIndex: 1050 }}>
-                                    {weekDayNames.map((name, val) => (
-                                        <li key={val}>
-                                            <a
-                                                className={`dropdown-item py-2 px-3 d-flex align-items-center justify-content-between fw-semibold ${localWeekStartDay === val ? 'bg-light text-primary' : 'text-dark'}`}
-                                                href="#"
-                                                onClick={(e) => {
-                                                    e.preventDefault();
-                                                    setLocalWeekStartDay(val);
-                                                    fetchGraph(dateFrom, dateTo, platform, advisorId, false, true, val);
-                                                }}
-                                                style={{ fontSize: '12px', transition: 'all 0.15s' }}
-                                            >
-                                                <span>{name}</span>
-                                                {localWeekStartDay === val && <i className="mdi mdi-check text-primary"></i>}
-                                            </a>
-                                        </li>
-                                    ))}
-                                </ul>
                             </div>
                         </div>
 
@@ -1528,371 +1477,38 @@ const KPICampaigns = ({ months = [], currentMonth, currentYear, advisors = [], w
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {loading ? (
-                                        Array.from({ length: 4 }).map((_, idx) => (
-                                            <tr key={idx} style={{ background: idx % 2 === 0 ? '#ffffff' : '#f8fafc', borderBottom: '1px solid #f1f5f9' }}>
-                                                <td colSpan={17} style={{ padding: '16px 20px' }}>
-                                                    <div className="skeleton-item" style={{ height: '18px', width: '100%' }}></div>
-                                                </td>
-                                            </tr>
-                                        ))
-                                    ) : (
-                                        weeklyEvolution.map((wk, idx) => {
-                                            const isEven = idx % 2 === 0;
-                                            const rowBg = isEven ? '#ffffff' : '#f8fafc';
-                                            return (
-                                                <tr key={wk.label} style={{ background: rowBg, borderBottom: '1px solid #f1f5f9', transition: 'all 0.2s' }}
-                                                    onMouseEnter={e => {
-                                                        e.currentTarget.style.background = '#f1f5f9';
-                                                        e.currentTarget.style.boxShadow = 'inset 0 0 0 1px rgba(99, 102, 241, 0.1)';
-                                                    }}
-                                                    onMouseLeave={e => {
-                                                        e.currentTarget.style.background = rowBg;
-                                                        e.currentTarget.style.boxShadow = 'none';
-                                                    }}
-                                                >
-                                                    {/* Semana */}
-                                                    <td style={{ padding: '12px', textAlign: 'center', fontWeight: 800, color: '#0f172a', fontSize: '13px' }}>{wk.label}</td>
-                                                    <td style={{ padding: '12px', textAlign: 'center', color: '#64748b', fontWeight: 600 }}>{wk.start_formatted}</td>
-                                                    <td style={{ padding: '12px', textAlign: 'center', color: '#64748b', fontWeight: 600, borderRight: '1px solid #e2e8f0' }}>{wk.end_formatted}</td>
-
-                                                    {/* Registros — tooltip con comparativa Meta API vs CRM Local */}
-                                                    <Tippy
-                                                        content={
-                                                            <div style={{ minWidth: 250, padding: '6px 4px' }}>
-                                                                <div style={{ fontWeight: 700, fontSize: '11px', marginBottom: 8, color: '#4f46e5', letterSpacing: '0.5px', textTransform: 'uppercase', borderBottom: '1px solid #eef2ff', paddingBottom: 4 }}>
-                                                                    Auditoría de Leads · {wk.label} ({wk.start_formatted} - {wk.end_formatted})
-                                                                </div>
-                                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 5 }}>
-                                                                    <span style={{ fontSize: '12px', color: '#475569' }}>Leads en CRM:</span>
-                                                                    <span style={{ fontSize: '13px', fontWeight: 800, color: '#4f46e5' }}>{fmtNum(wk.registros)}</span>
-                                                                </div>
-                                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                                                                    <span style={{ fontSize: '12px', color: '#475569' }}>Plataforma Meta:</span>
-                                                                    <span style={{ fontSize: '13px', fontWeight: 800, color: '#0284c7' }}>{fmtNum(wk.meta_leads ?? wk.registros)}</span>
-                                                                </div>
-                                                                <div style={{ marginTop: 6, fontSize: '11px', color: '#64748b', borderTop: '1px solid #f1f5f9', paddingTop: 6, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                                    <span>Diferencia Auditada:</span>
-                                                                    <span className={`badge ${((wk.registros - (wk.meta_leads ?? wk.registros)) === 0) ? 'bg-success' : ((wk.registros - (wk.meta_leads ?? wk.registros)) > 0 ? 'bg-primary' : 'bg-warning text-dark')}`}>
-                                                                        {(wk.registros - (wk.meta_leads ?? wk.registros) > 0 ? '+' : '') + (wk.registros - (wk.meta_leads ?? wk.registros))}
-                                                                    </span>
-                                                                </div>
-                                                                <div style={{ marginTop: 8, padding: '6px 8px', borderRadius: '6px', backgroundColor: (wk.registros - (wk.meta_leads ?? wk.registros)) === 0 ? '#f0fdf4' : '#eff6ff', fontSize: '10.5px', color: (wk.registros - (wk.meta_leads ?? wk.registros)) === 0 ? '#166534' : '#1e40af', lineHeight: '1.4' }}>
-                                                                    {(wk.registros - (wk.meta_leads ?? wk.registros)) === 0
-                                                                        ? 'Datos sincronizados: El CRM local y Meta Ads concuerdan al 100%.'
-                                                                        : (wk.registros - (wk.meta_leads ?? wk.registros)) > 0
-                                                                            ? `El CRM tiene ${wk.registros - (wk.meta_leads ?? wk.registros)} lead(s) adicional(es) registrado(s) por mensajes o entradas del cliente.`
-                                                                            : `Meta reporta ${Math.abs(wk.registros - (wk.meta_leads ?? wk.registros))} lead(s) adicional(es) atribuidos en Meta Ads.`
-                                                                    }
-                                                                </div>
-                                                                <div style={{ fontSize: '10px', color: '#94a3b8', marginTop: 6, textAlign: 'center' }}>
-                                                                    <i className="mdi mdi-cursor-pointer me-1"></i>Clic para ver los leads en CRM
-                                                                </div>
-                                                            </div>
-                                                        }
-                                                        theme="kpi-light"
-                                                        placement="top"
-                                                        arrow={true}
-                                                    >
-                                                        <td
-                                                            onClick={() => fetchLeads(null, null, null, wk)}
-                                                            style={{
-                                                                padding: '12px',
-                                                                textAlign: 'right',
-                                                                fontWeight: 800,
-                                                                color: '#4f46e5',
-                                                                background: 'rgba(79, 70, 229, 0.05)',
-                                                                cursor: 'pointer',
-                                                                textDecoration: 'underline',
-                                                                textDecorationColor: 'rgba(79, 70, 229, 0.4)',
-                                                                textUnderlineOffset: '3px'
-                                                            }}
-                                                        >
-                                                            {fmtNum(wk.registros)}
-                                                        </td>
-                                                    </Tippy>
-
-                                                    {/* Inversión — tooltip customizado PEN + USD */}
-                                                    <Tippy
-                                                        content={
-                                                            <div style={{ minWidth: 190, padding: '2px 0' }}>
-                                                                <div style={{ fontWeight: 700, fontSize: '11px', marginBottom: 6, color: '#6366f1', letterSpacing: '0.5px', textTransform: 'uppercase' }}>
-                                                                    Inversión · {wk.label}
-                                                                </div>
-                                                                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                                                                    <span style={{ fontSize: '17px', fontWeight: 800, color: '#0f172a' }}>S/ {fmtMon(wk.spend)}</span>
-                                                                    <span style={{ fontSize: '10px', fontWeight: 700, color: '#4f46e5', background: '#eef2ff', borderRadius: 4, padding: '2px 6px' }}>PEN</span>
-                                                                </div>
-                                                                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                                                    <span style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>$ {fmtMon(wk.spend_usd ?? (wk.spend / (usdExchangeRate || 3.80)))}</span>
-                                                                    <span style={{ fontSize: '10px', fontWeight: 700, color: '#0284c7', background: '#f0f9ff', borderRadius: 4, padding: '2px 6px' }}>USD</span>
-                                                                </div>
-                                                                <div style={{ marginTop: 6, fontSize: '10px', color: '#94a3b8', borderTop: '1px solid #f1f5f9', paddingTop: 5 }}>
-                                                                    T.C. S/ {usdExchangeRate || 3.80}
-                                                                </div>
-                                                            </div>
-                                                        }
-                                                        theme="kpi-light"
-                                                        placement="top"
-                                                        arrow={true}
-                                                    >
-                                                        <td style={{ padding: '12px', textAlign: 'right', fontWeight: 600, color: '#4f46e5', background: 'rgba(79, 70, 229, 0.02)', cursor: 'help' }}>
-                                                            {spendsLoading ? <div className="skeleton-item" style={{ height: '18px', width: '75px', marginLeft: 'auto' }}></div> : fmtMon(wk.spend)}
-                                                        </td>
-                                                    </Tippy>
-
-                                                    {/* CPL — tooltip customizado PEN + USD */}
-                                                    <Tippy
-                                                        content={
-                                                            wk.spend > 0 && wk.registros > 0
-                                                                ? <div style={{ minWidth: 190, padding: '2px 0' }}>
-                                                                    <div style={{ fontWeight: 700, fontSize: '11px', marginBottom: 6, color: '#6366f1', letterSpacing: '0.5px', textTransform: 'uppercase' }}>
-                                                                        Costo por Lead · {wk.label}
-                                                                    </div>
-                                                                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                                                                        <span style={{ fontSize: '17px', fontWeight: 800, color: '#0f172a' }}>S/ {fmtMon(wk.cpr)}</span>
-                                                                        <span style={{ fontSize: '10px', fontWeight: 700, color: '#4f46e5', background: '#eef2ff', borderRadius: 4, padding: '2px 6px' }}>PEN / Lead</span>
-                                                                    </div>
-                                                                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                                                        <span style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>$ {fmtMon(wk.cpr_usd ?? (wk.cpr / (usdExchangeRate || 3.80)))}</span>
-                                                                        <span style={{ fontSize: '10px', fontWeight: 700, color: '#0284c7', background: '#f0f9ff', borderRadius: 4, padding: '2px 6px' }}>USD / Lead</span>
-                                                                    </div>
-                                                                    <div style={{ marginTop: 6, fontSize: '10px', color: '#94a3b8', borderTop: '1px solid #f1f5f9', paddingTop: 5 }}>
-                                                                        {fmtNum(wk.registros)} registros · Inv. S/ {fmtMon(wk.spend)}
-                                                                    </div>
-                                                                </div>
-                                                                : <span style={{ fontSize: '12px', color: '#64748b' }}>Sin gasto registrado</span>
-                                                        }
-                                                        theme="kpi-light"
-                                                        placement="top"
-                                                        arrow={true}
-                                                    >
-                                                        <td style={{ padding: '12px', textAlign: 'right', fontWeight: 600, color: '#4f46e5', borderRight: '1px solid #e2e8f0', background: 'rgba(79, 70, 229, 0.02)', cursor: 'help' }}>
-                                                            {spendsLoading ? (
-                                                                <div className="skeleton-item" style={{ height: '18px', width: '60px', marginLeft: 'auto' }}></div>
-                                                            ) : (
-                                                                wk.spend > 0 && wk.registros > 0 ? fmtMon(wk.cpr) : <span style={{ color: '#cbd5e1' }}>—</span>
-                                                            )}
-                                                        </td>
-                                                    </Tippy>
-
-                                                    {/* Resultados — sin click, tooltip simple */}
-                                                    <Tippy content={<span style={{ fontSize: '12px', color: '#0f172a' }}>Contactados {wk.label}: <strong>{fmtNum(wk.contactados)}</strong> leads</span>} theme="kpi-light" placement="top" arrow>
-                                                        <td style={{ padding: '12px', textAlign: 'right', fontWeight: 600, color: '#0f172a', background: 'rgba(5, 150, 105, 0.02)', cursor: 'default' }}>
-                                                            {fmtNum(wk.contactados)}
-                                                        </td>
-                                                    </Tippy>
-                                                    <Tippy content={<span style={{ fontSize: '12px', color: '#0f172a' }}>No Respondieron {wk.label}: <strong>{fmtNum(wk.noContesta)}</strong> leads</span>} theme="kpi-light" placement="top" arrow>
-                                                        <td style={{ padding: '12px', textAlign: 'right', fontWeight: 600, color: '#ef4444', background: 'rgba(5, 150, 105, 0.02)', cursor: 'default' }}>
-                                                            {fmtNum(wk.noContesta)}
-                                                        </td>
-                                                    </Tippy>
-                                                    <Tippy content={<span style={{ fontSize: '12px', color: '#0f172a' }}>Respondieron {wk.label}: <strong>{fmtNum(wk.respondio)}</strong> leads</span>} theme="kpi-light" placement="top" arrow>
-                                                        <td style={{ padding: '12px', textAlign: 'right', fontWeight: 600, color: '#10b981', background: 'rgba(5, 150, 105, 0.02)', cursor: 'default' }}>
-                                                            {fmtNum(wk.respondio)}
-                                                        </td>
-                                                    </Tippy>
-                                                    <Tippy content={<span style={{ fontSize: '12px', color: '#0f172a' }}>Ventas {wk.label}: <strong>{fmtNum(wk.ventas)}</strong> clientes</span>} theme="kpi-light" placement="top" arrow>
-                                                        <td style={{ padding: '12px', textAlign: 'right', fontWeight: 800, color: '#10b981', borderRight: '1px solid #e2e8f0', background: 'rgba(5, 150, 105, 0.02)', cursor: 'default' }}>
-                                                            {fmtNum(wk.ventas)}
-                                                        </td>
-                                                    </Tippy>
-
-                                                    {/* Variaciones */}
-                                                    <td style={{ padding: '12px', textAlign: 'center', background: 'rgba(217, 119, 6, 0.02)' }}>{deltaBadge(wk.diffContactados)}</td>
-                                                    <td style={{ padding: '12px', textAlign: 'center', background: 'rgba(217, 119, 6, 0.02)' }}>{deltaBadge(wk.diffNoContesta)}</td>
-                                                    <td style={{ padding: '12px', textAlign: 'center', background: 'rgba(217, 119, 6, 0.02)' }}>{deltaBadge(wk.diffRespondio)}</td>
-                                                    <td style={{ padding: '12px', textAlign: 'center', borderRight: '1px solid #e2e8f0', background: 'rgba(217, 119, 6, 0.02)' }}>{deltaBadge(wk.diffVentas)}</td>
-
-                                                    {/* Ratios */}
-                                                    <td style={{ padding: '12px', textAlign: 'right', color: '#7c3aed', fontWeight: 700, background: 'rgba(124, 58, 237, 0.02)' }}>{fmtPct(wk.pctContact)}</td>
-                                                    <td style={{ padding: '12px', textAlign: 'right', color: '#7c3aed', fontWeight: 700, background: 'rgba(124, 58, 237, 0.02)' }}>{fmtPct(wk.pctCierre)}</td>
-                                                    <td style={{ padding: '12px', textAlign: 'right', fontWeight: 800, color: wk.roas >= 1.0 ? '#10b981' : '#64748b', background: 'rgba(124, 58, 237, 0.02)', fontSize: '13px' }}>
-                                                        {spendsLoading ? (
-                                                            <div className="skeleton-item" style={{ height: '18px', width: '50px', marginLeft: 'auto' }}></div>
-                                                        ) : (
-                                                            wk.spend > 0 ? fmtRoas(wk.roas) : <span style={{ color: '#cbd5e1' }}>—</span>
-                                                        )}
-                                                    </td>
-                                                </tr>
-                                            );
-                                        })
-                                    )}
-                                </tbody>
-                                <tfoot>
-                                    <tr style={{ background: '#f8fafc', borderTop: '2px solid #cbd5e1', borderBottom: '1px solid #cbd5e1' }}>
-                                        <td colSpan={3} style={{ padding: '14px 12px', fontWeight: 800, color: '#0f172a', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.8px', borderRight: '1px solid #e2e8f0' }}>Total Periodo</td>
-                                        <td style={{ padding: '14px 12px', textAlign: 'right', fontWeight: 800, color: '#0f172a', background: 'rgba(79, 70, 229, 0.05)', fontSize: '13px' }}>
-                                            {fmtNum(weeklyEvolution.reduce((s, w) => s + (w.registros ?? 0), 0))}
-                                        </td>
-                                        <td style={{ padding: '14px 12px', textAlign: 'right', fontWeight: 800, color: '#4f46e5', background: 'rgba(79, 70, 229, 0.05)', fontSize: '13px' }}>
-                                            {spendsLoading ? (
-                                                <div className="skeleton-item" style={{ height: '18px', width: '75px', marginLeft: 'auto' }}></div>
-                                            ) : (
-                                                fmtMon(weeklyEvolution.reduce((s, w) => s + (w.spend ?? 0), 0))
-                                            )}
-                                        </td>
-                                        <td style={{ padding: '14px 12px', textAlign: 'right', fontWeight: 700, color: '#4f46e5', borderRight: '1px solid #e2e8f0', background: 'rgba(79, 70, 229, 0.05)', fontSize: '12px' }}>
-                                            {spendsLoading ? (
-                                                <div className="skeleton-item" style={{ height: '18px', width: '60px', marginLeft: 'auto' }}></div>
-                                            ) : (
-                                                (() => {
-                                                    const totalReg = weeklyEvolution.reduce((s, w) => s + (w.registros ?? 0), 0);
-                                                    const totalSpendW = weeklyEvolution.reduce((s, w) => s + (w.spend ?? 0), 0);
-                                                    return totalReg > 0 ? fmtMon(totalSpendW / totalReg) : '—';
-                                                })()
-                                            )}
-                                        </td>
-                                        <td style={{ padding: '14px 12px', textAlign: 'right', fontWeight: 700, color: '#0f172a', background: 'rgba(5, 150, 105, 0.05)', fontSize: '12px' }}>
-                                            {fmtNum(weeklyEvolution.reduce((s, w) => s + (w.contactados ?? 0), 0))}
-                                        </td>
-                                        <td style={{ padding: '14px 12px', textAlign: 'right', fontWeight: 700, color: '#ef4444', background: 'rgba(5, 150, 105, 0.05)', fontSize: '12px' }}>
-                                            {fmtNum(weeklyEvolution.reduce((s, w) => s + (w.noContesta ?? 0), 0))}
-                                        </td>
-                                        <td style={{ padding: '14px 12px', textAlign: 'right', fontWeight: 700, color: '#10b981', background: 'rgba(5, 150, 105, 0.05)', fontSize: '12px' }}>
-                                            {fmtNum(weeklyEvolution.reduce((s, w) => s + (w.respondio ?? 0), 0))}
-                                        </td>
-                                        <td style={{ padding: '14px 12px', textAlign: 'right', fontWeight: 800, color: '#10b981', borderRight: '1px solid #e2e8f0', background: 'rgba(5, 150, 105, 0.05)', fontSize: '13px' }}>
-                                            {fmtNum(weeklyEvolution.reduce((s, w) => s + (w.ventas ?? 0), 0))}
-                                        </td>
-                                        <td colSpan={4} style={{ padding: '14px 12px', borderRight: '1px solid #e2e8f0', background: 'rgba(217, 119, 6, 0.03)' }}></td>
-                                        <td style={{ padding: '14px 12px', textAlign: 'right', fontWeight: 800, color: '#7c3aed', background: 'rgba(124, 58, 237, 0.05)', fontSize: '12px' }}>
-                                            {(() => {
-                                                const totalReg = weeklyEvolution.reduce((s, w) => s + (w.registros ?? 0), 0);
-                                                const totalCont = weeklyEvolution.reduce((s, w) => s + (w.contactados ?? 0), 0);
-                                                return totalReg > 0 ? fmtPct((totalCont / totalReg) * 100) : '0.0%';
-                                            })()}
-                                        </td>
-                                        <td style={{ padding: '14px 12px', textAlign: 'right', fontWeight: 800, color: '#7c3aed', background: 'rgba(124, 58, 237, 0.05)', fontSize: '12px' }}>
-                                            {(() => {
-                                                const totalReg = weeklyEvolution.reduce((s, w) => s + (w.registros ?? 0), 0);
-                                                const totalVent = weeklyEvolution.reduce((s, w) => s + (w.ventas ?? 0), 0);
-                                                return totalReg > 0 ? fmtPct((totalVent / totalReg) * 100) : '0.0%';
-                                            })()}
-                                        </td>
-                                        <td style={{ padding: '14px 12px', textAlign: 'right', fontWeight: 800, color: '#10b981', background: 'rgba(124, 58, 237, 0.05)', fontSize: '13px' }}>
-                                            {spendsLoading ? (
-                                                <div className="skeleton-item" style={{ height: '18px', width: '50px', marginLeft: 'auto' }}></div>
-                                            ) : (
-                                                (() => {
-                                                    const totalSpendW = weeklyEvolution.reduce((s, w) => s + (w.spend ?? 0), 0);
-                                                    const totalSaleAmt = weeklyEvolution.reduce((s, w) => s + (w.salesAmount ?? 0), 0);
-                                                    return totalSpendW > 0 ? fmtRoas(totalSaleAmt / totalSpendW) : '—';
-                                                })()
-                                            )}
-                                        </td>
-                                    </tr>
-                                </tfoot>
-                            </table>
-                        </div>
-
-                        {/* Mobile View: Tarjetas por Semana (solo en pantallas móviles < 768px) */}
-                        <div className="d-block d-md-none p-3" style={{ background: '#f8fafc', borderBottomLeftRadius: '24px', borderBottomRightRadius: '24px' }}>
-                            {loading ? (
-                                <div className="text-center py-4 text-muted">Cargando semanas...</div>
-                            ) : (
-                                (weeklyEvolution.filter(w => (w.registros ?? 0) > 0 || (w.spend ?? 0) > 0).length > 0
-                                    ? weeklyEvolution.filter(w => (w.registros ?? 0) > 0 || (w.spend ?? 0) > 0)
-                                    : weeklyEvolution
-                                ).map((wk) => (
-                                    <div key={wk.label} className="card border-0 shadow-sm mb-3" style={{ borderRadius: '16px', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
-                                        <div className="p-3 d-flex align-items-center justify-content-between" style={{ background: 'linear-gradient(135deg, #4f46e5 0%, #6366f1 100%)', color: '#fff' }}>
-                                            <div>
-                                                <span className="badge bg-white text-primary fw-bold me-2" style={{ fontSize: '11px' }}>{wk.label}</span>
-                                                <span className="fw-semibold" style={{ fontSize: '13px' }}>{wk.start_formatted} al {wk.end_formatted}</span>
-                                            </div>
-                                            <button
-                                                onClick={() => fetchLeads(null, null, null, wk)}
-                                                className="btn btn-sm btn-light rounded-pill fw-bold text-primary px-3 shadow-sm"
-                                                style={{ fontSize: '11px' }}
+                                    {cEv.weeks.map((wk, idx) => {
+                                        const isEven = idx % 2 === 0;
+                                        const rowBg = isEven ? '#ffffff' : '#f8fafc';
+                                        return (
+                                            <tr key={wk.label} style={{ background: rowBg, borderBottom: '1px solid #f1f5f9', transition: 'all 0.2s' }}
+                                                onMouseEnter={e => {
+                                                    e.currentTarget.style.background = '#f1f5f9';
+                                                    e.currentTarget.style.boxShadow = 'inset 0 0 0 1px rgba(99, 102, 241, 0.1)';
+                                                }}
+                                                onMouseLeave={e => {
+                                                    e.currentTarget.style.background = rowBg;
+                                                    e.currentTarget.style.boxShadow = 'none';
+                                                }}
                                             >
-                                                <i className="mdi mdi-account-group me-1"></i>
-                                                {fmtNum(wk.registros)} Leads
-                                            </button>
-                                        </div>
-                                        <div className="p-3" style={{ background: '#ffffff' }}>
-                                            <div className="row g-2 mb-2">
-                                                <div className="col-6">
-                                                    <div className="p-2 rounded-3" style={{ background: '#eef2ff', border: '1px solid #c7d2fe' }}>
-                                                        <small className="text-muted d-block" style={{ fontSize: '10px', fontWeight: 600 }}>Inversión PEN</small>
-                                                        <span className="fw-bold text-dark" style={{ fontSize: '14px' }}>S/ {fmtMon(wk.spend)}</span>
-                                                        <small className="text-primary d-block fw-semibold" style={{ fontSize: '10px' }}>$ {fmtMon(wk.spend_usd ?? (wk.spend / (usdExchangeRate || 3.80)))} USD</small>
-                                                    </div>
-                                                </div>
-                                                <div className="col-6">
-                                                    <div className="p-2 rounded-3" style={{ background: '#f0fdf4', border: '1px solid #bbf7d0' }}>
-                                                        <small className="text-muted d-block" style={{ fontSize: '10px', fontWeight: 600 }}>Costo/Lead (CPR)</small>
-                                                        <span className="fw-bold text-dark" style={{ fontSize: '14px' }}>S/ {fmtMon(wk.cpr)}</span>
-                                                        <small className="text-success d-block fw-semibold" style={{ fontSize: '10px' }}>$ {fmtMon(wk.cpr_usd ?? (wk.cpr / (usdExchangeRate || 3.80)))} USD</small>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div className="d-flex align-items-center justify-content-between pt-2 border-top text-muted" style={{ fontSize: '11px' }}>
-                                                <span>Contactados: <strong className="text-dark">{fmtNum(wk.contactados)}</strong></span>
-                                                <span>Respondió: <strong className="text-success">{fmtNum(wk.respondio)}</strong></span>
-                                                <span>Ventas: <strong className="text-primary">{fmtNum(wk.ventas)}</strong></span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))
-                            )}
-                        </div>
-                    </div>
+                                                {/* Semana */}
+                                                <td style={{ padding: '12px', textAlign: 'center', fontWeight: 800, color: '#0f172a', fontSize: '13px' }}>{wk.label}</td>
+                                                <td style={{ padding: '12px', textAlign: 'center', color: '#64748b', fontWeight: 600 }}>{wk.start_formatted}</td>
+                                                <td style={{ padding: '12px', textAlign: 'center', color: '#64748b', fontWeight: 600, borderRight: '1px solid #e2e8f0' }}>{wk.end_formatted}</td>
 
-                    {/* Evolución Semanal por Campaña Individual (un bloque completo por cada campaña) */}
-                    {campaignWeeklyEvolutions.length > 0 && campaignWeeklyEvolutions.map((cEv, cIdx) => (
-                        <div key={cEv.campaign_id || cIdx} className="card border-0 shadow-sm mb-5" style={{ borderRadius: '24px', border: '1px solid rgba(226, 232, 240, 0.8)', overflow: 'hidden' }}>
-                            <div className="p-4 bg-white border-bottom border-light d-flex flex-wrap align-items-center justify-content-between gap-3">
-                                <div>
-                                    <h5 className="fw-bold text-dark mb-1 d-flex align-items-center" style={{ fontSize: '15px' }}>
-                                        <i className="mdi mdi-bullseye-arrow text-danger me-2 fs-4"></i>
-                                        Evolución Semanal &mdash; <span className="text-primary ms-1">{cEv.campaign_name}</span>
-                                    </h5>
-                                    <small className="text-muted">Desglose de rendimiento semana a semana (S1..S5) para esta campaña</small>
-                                </div>
-                                <span className="badge bg-soft-primary text-primary px-3 py-2 rounded-pill fw-bold" style={{ fontSize: '12px' }}>
-                                    <i className="mdi mdi-account-group me-1"></i>
-                                    {fmtNum(cEv.total_leads)} Leads en el periodo
-                                </span>
-                            </div>
-
-                            <div className="table-responsive">
-                                <table className="table table-hover align-middle mb-0" style={{ fontSize: '12px' }}>
-                                    <thead className="table-light">
-                                        <tr>
-                                            <th style={{ textAlign: 'center' }}>Semana</th>
-                                            <th style={{ textAlign: 'center' }}>Inicio</th>
-                                            <th style={{ textAlign: 'center', borderRight: '1px solid #e2e8f0' }}>Fin</th>
-                                            <th style={{ textAlign: 'right' }}>Registros</th>
-                                            <th style={{ textAlign: 'right' }}>Contactados</th>
-                                            <th style={{ textAlign: 'right' }}>No Contesta</th>
-                                            <th style={{ textAlign: 'right' }}>Respondieron</th>
-                                            <th style={{ textAlign: 'right', borderRight: '1px solid #e2e8f0' }}>Ventas</th>
-                                            <th style={{ textAlign: 'right' }}>% Contacto</th>
-                                            <th style={{ textAlign: 'right' }}>% Cierre</th>
-                                            <th style={{ textAlign: 'right' }}>Monto Vendido (S/)</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {cEv.weeks.map((wk) => (
-                                            <tr key={wk.label}>
-                                                <td style={{ textAlign: 'center', fontWeight: 800, color: '#0f172a' }}>{wk.label}</td>
-                                                <td style={{ textAlign: 'center', color: '#64748b' }}>{wk.start_formatted}</td>
-                                                <td style={{ textAlign: 'center', color: '#64748b', borderRight: '1px solid #e2e8f0' }}>{wk.end_formatted}</td>
-
-                                                {/* Registros con Tooltip Comparativo Meta vs CRM */}
+                                                {/* Registros */}
                                                 <Tippy
                                                     content={
                                                         <div style={{ minWidth: 250, padding: '6px 4px' }}>
                                                             <div style={{ fontWeight: 700, fontSize: '11px', marginBottom: 8, color: '#4f46e5', letterSpacing: '0.5px', textTransform: 'uppercase', borderBottom: '1px solid #eef2ff', paddingBottom: 4 }}>
-                                                                🔍 Auditoría de Leads · {wk.label} ({cEv.campaign_name})
+                                                                Auditoría de Leads · {wk.label}
                                                             </div>
                                                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 5 }}>
-                                                                <span style={{ fontSize: '12px', color: '#475569' }}>🏠 Leads en CRM Local:</span>
+                                                                <span style={{ fontSize: '12px', color: '#475569' }}>Leads en CRM:</span>
                                                                 <span style={{ fontSize: '13px', fontWeight: 800, color: '#4f46e5' }}>{fmtNum(wk.registros)}</span>
                                                             </div>
                                                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                                                                <span style={{ fontSize: '12px', color: '#475569' }}>🌐 Leads en Meta API:</span>
+                                                                <span style={{ fontSize: '12px', color: '#475569' }}>Plataforma Meta:</span>
                                                                 <span style={{ fontSize: '13px', fontWeight: 800, color: '#0284c7' }}>{fmtNum(wk.meta_leads ?? wk.registros)}</span>
                                                             </div>
                                                             <div style={{ marginTop: 6, fontSize: '11px', color: '#64748b', borderTop: '1px solid #f1f5f9', paddingTop: 6, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -1900,14 +1516,6 @@ const KPICampaigns = ({ months = [], currentMonth, currentYear, advisors = [], w
                                                                 <span className={`badge ${((wk.registros - (wk.meta_leads ?? wk.registros)) === 0) ? 'bg-success' : ((wk.registros - (wk.meta_leads ?? wk.registros)) > 0 ? 'bg-primary' : 'bg-warning text-dark')}`}>
                                                                     {(wk.registros - (wk.meta_leads ?? wk.registros) > 0 ? '+' : '') + (wk.registros - (wk.meta_leads ?? wk.registros))}
                                                                 </span>
-                                                            </div>
-                                                            <div style={{ marginTop: 8, padding: '6px 8px', borderRadius: '6px', backgroundColor: (wk.registros - (wk.meta_leads ?? wk.registros)) === 0 ? '#f0fdf4' : '#eff6ff', fontSize: '10.5px', color: (wk.registros - (wk.meta_leads ?? wk.registros)) === 0 ? '#166534' : '#1e40af', lineHeight: '1.4' }}>
-                                                                {(wk.registros - (wk.meta_leads ?? wk.registros)) === 0
-                                                                    ? '✅ Datos sincronizados: El CRM local y Meta Ads concuerdan al 100%.'
-                                                                    : (wk.registros - (wk.meta_leads ?? wk.registros)) > 0
-                                                                        ? `💡 El CRM tiene ${wk.registros - (wk.meta_leads ?? wk.registros)} lead(s) adicional(es) registrado(s) por mensajes o entradas del cliente.`
-                                                                        : `⚠️ Meta reporta ${Math.abs(wk.registros - (wk.meta_leads ?? wk.registros))} lead(s) adicional(es) atribuidos en Meta Ads.`
-                                                                }
                                                             </div>
                                                             <div style={{ fontSize: '10px', color: '#94a3b8', marginTop: 6, textAlign: 'center' }}>
                                                                 <i className="mdi mdi-cursor-pointer me-1"></i>Clic para ver los leads en CRM
@@ -1920,115 +1528,175 @@ const KPICampaigns = ({ months = [], currentMonth, currentYear, advisors = [], w
                                                 >
                                                     <td
                                                         onClick={() => fetchLeads(cEv.campaign_id, cEv.campaign_name, null, wk)}
-                                                        style={{ textAlign: 'right', fontWeight: 800, color: '#4f46e5', cursor: 'pointer', textDecoration: 'underline' }}
+                                                        style={{
+                                                            padding: '12px',
+                                                            textAlign: 'right',
+                                                            fontWeight: 800,
+                                                            color: '#4f46e5',
+                                                            background: 'rgba(79, 70, 229, 0.05)',
+                                                            cursor: 'pointer',
+                                                            textDecoration: 'underline',
+                                                            textDecorationColor: 'rgba(79, 70, 229, 0.4)',
+                                                            textUnderlineOffset: '3px'
+                                                        }}
                                                     >
                                                         {fmtNum(wk.registros)}
                                                     </td>
                                                 </Tippy>
 
-                                                <td style={{ textAlign: 'right', fontWeight: 600 }}>{fmtNum(wk.contactados)}</td>
-                                                <td style={{ textAlign: 'right', fontWeight: 600, color: '#ef4444' }}>{fmtNum(wk.noContesta)}</td>
-                                                <td style={{ textAlign: 'right', fontWeight: 600, color: '#10b981' }}>{fmtNum(wk.respondio)}</td>
-                                                <td style={{ textAlign: 'right', fontWeight: 800, color: '#10b981', borderRight: '1px solid #e2e8f0' }}>{fmtNum(wk.ventas)}</td>
-                                                <td style={{ textAlign: 'right', color: '#7c3aed', fontWeight: 700 }}>{fmtPct(wk.pctContact)}</td>
-                                                <td style={{ textAlign: 'right', color: '#7c3aed', fontWeight: 700 }}>{fmtPct(wk.pctCierre)}</td>
-                                                <td style={{ textAlign: 'right', fontWeight: 800, color: '#059669' }}>S/ {fmtMon(wk.salesAmount)}</td>
+                                                {/* Inversión */}
+                                                <Tippy
+                                                    content={
+                                                        <div style={{ minWidth: 190, padding: '2px 0' }}>
+                                                            <div style={{ fontWeight: 700, fontSize: '11px', marginBottom: 6, color: '#6366f1', letterSpacing: '0.5px', textTransform: 'uppercase' }}>
+                                                                Inversión · {wk.label}
+                                                            </div>
+                                                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                                                                <span style={{ fontSize: '17px', fontWeight: 800, color: '#0f172a' }}>S/ {fmtMon(wk.spend)}</span>
+                                                                <span style={{ fontSize: '10px', fontWeight: 700, color: '#4f46e5', background: '#eef2ff', borderRadius: 4, padding: '2px 6px' }}>PEN</span>
+                                                            </div>
+                                                        </div>
+                                                    }
+                                                    theme="kpi-light"
+                                                    placement="top"
+                                                    arrow={true}
+                                                >
+                                                    <td style={{ padding: '12px', textAlign: 'right', fontWeight: 600, color: '#4f46e5', background: 'rgba(79, 70, 229, 0.02)', cursor: 'help' }}>
+                                                        {spendsLoading ? <div className="skeleton-item" style={{ height: '18px', width: '75px', marginLeft: 'auto' }}></div> : fmtMon(wk.spend)}
+                                                    </td>
+                                                </Tippy>
+
+                                                {/* CPL */}
+                                                <Tippy
+                                                    content={
+                                                        wk.spend > 0 && wk.registros > 0
+                                                            ? <div style={{ minWidth: 190, padding: '2px 0' }}>
+                                                                <div style={{ fontWeight: 700, fontSize: '11px', marginBottom: 6, color: '#6366f1', letterSpacing: '0.5px', textTransform: 'uppercase' }}>
+                                                                    Costo por Lead · {wk.label}
+                                                                </div>
+                                                                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                                                                    <span style={{ fontSize: '17px', fontWeight: 800, color: '#0f172a' }}>S/ {fmtMon(wk.cpr)}</span>
+                                                                    <span style={{ fontSize: '10px', fontWeight: 700, color: '#4f46e5', background: '#eef2ff', borderRadius: 4, padding: '2px 6px' }}>PEN / Lead</span>
+                                                                </div>
+                                                            </div>
+                                                            : <span style={{ fontSize: '12px', color: '#64748b' }}>Sin gasto registrado</span>
+                                                    }
+                                                    theme="kpi-light"
+                                                    placement="top"
+                                                    arrow={true}
+                                                >
+                                                    <td style={{ padding: '12px', textAlign: 'right', fontWeight: 600, color: '#4f46e5', borderRight: '1px solid #e2e8f0', background: 'rgba(79, 70, 229, 0.02)', cursor: 'help' }}>
+                                                        {spendsLoading ? (
+                                                            <div className="skeleton-item" style={{ height: '18px', width: '60px', marginLeft: 'auto' }}></div>
+                                                        ) : (
+                                                            wk.spend > 0 && wk.registros > 0 ? fmtMon(wk.cpr) : <span style={{ color: '#cbd5e1' }}>—</span>
+                                                        )}
+                                                    </td>
+                                                </Tippy>
+
+                                                {/* Resultados */}
+                                                <Tippy content={<span style={{ fontSize: '12px', color: '#0f172a' }}>Contactados {wk.label}: <strong>{fmtNum(wk.contactados)}</strong> leads</span>} theme="kpi-light" placement="top" arrow>
+                                                    <td style={{ padding: '12px', textAlign: 'right', fontWeight: 600, color: '#0f172a', background: 'rgba(5, 150, 105, 0.02)', cursor: 'default' }}>
+                                                        {fmtNum(wk.contactados)}
+                                                    </td>
+                                                </Tippy>
+                                                <Tippy content={<span style={{ fontSize: '12px', color: '#0f172a' }}>No Respondieron {wk.label}: <strong>{fmtNum(wk.noContesta)}</strong> leads</span>} theme="kpi-light" placement="top" arrow>
+                                                    <td style={{ padding: '12px', textAlign: 'right', fontWeight: 600, color: '#ef4444', background: 'rgba(5, 150, 105, 0.02)', cursor: 'default' }}>
+                                                        {fmtNum(wk.noContesta)}
+                                                    </td>
+                                                </Tippy>
+                                                <Tippy content={<span style={{ fontSize: '12px', color: '#0f172a' }}>Respondieron {wk.label}: <strong>{fmtNum(wk.respondio)}</strong> leads</span>} theme="kpi-light" placement="top" arrow>
+                                                    <td style={{ padding: '12px', textAlign: 'right', fontWeight: 600, color: '#10b981', background: 'rgba(5, 150, 105, 0.02)', cursor: 'default' }}>
+                                                        {fmtNum(wk.respondio)}
+                                                    </td>
+                                                </Tippy>
+                                                <Tippy content={<span style={{ fontSize: '12px', color: '#0f172a' }}>Ventas {wk.label}: <strong>{fmtNum(wk.ventas)}</strong> clientes</span>} theme="kpi-light" placement="top" arrow>
+                                                    <td style={{ padding: '12px', textAlign: 'right', fontWeight: 800, color: '#10b981', borderRight: '1px solid #e2e8f0', background: 'rgba(5, 150, 105, 0.02)', cursor: 'default' }}>
+                                                        {fmtNum(wk.ventas)}
+                                                    </td>
+                                                </Tippy>
+
+                                                {/* Variaciones */}
+                                                <td style={{ padding: '12px', textAlign: 'center', background: 'rgba(217, 119, 6, 0.02)' }}>{deltaBadge(wk.diffContactados)}</td>
+                                                <td style={{ padding: '12px', textAlign: 'center', background: 'rgba(217, 119, 6, 0.02)' }}>{deltaBadge(wk.diffNoContesta)}</td>
+                                                <td style={{ padding: '12px', textAlign: 'center', background: 'rgba(217, 119, 6, 0.02)' }}>{deltaBadge(wk.diffRespondio)}</td>
+                                                <td style={{ padding: '12px', textAlign: 'center', borderRight: '1px solid #e2e8f0', background: 'rgba(217, 119, 6, 0.02)' }}>{deltaBadge(wk.diffVentas)}</td>
+
+                                                {/* Ratios */}
+                                                <td style={{ padding: '12px', textAlign: 'right', color: '#7c3aed', fontWeight: 700, background: 'rgba(124, 58, 237, 0.02)' }}>{fmtPct(wk.pctContact)}</td>
+                                                <td style={{ padding: '12px', textAlign: 'right', color: '#7c3aed', fontWeight: 700, background: 'rgba(124, 58, 237, 0.02)' }}>{fmtPct(wk.pctCierre)}</td>
+                                                <td style={{ padding: '12px', textAlign: 'right', fontWeight: 800, color: wk.roas >= 1.0 ? '#10b981' : '#64748b', background: 'rgba(124, 58, 237, 0.02)', fontSize: '13px' }}>
+                                                    {spendsLoading ? (
+                                                        <div className="skeleton-item" style={{ height: '18px', width: '50px', marginLeft: 'auto' }}></div>
+                                                    ) : (
+                                                        wk.spend > 0 ? fmtRoas(wk.roas) : <span style={{ color: '#cbd5e1' }}>—</span>
+                                                    )}
+                                                </td>
                                             </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    ))}
-
-                    {/* Gráficos de Evolución Semanal */}
-                    <div className="row g-4 mb-5">
-                        {/* Gráfico 1: Ratios */}
-                        <div className="col-lg-6">
-                            <div className="card border-0 shadow-sm p-4" style={{ borderRadius: '24px', background: '#fff', border: '1px solid rgba(226, 232, 240, 0.8)', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-                                <div className="d-flex align-items-center justify-content-between mb-4">
-                                    <div>
-                                        <h5 className="fw-bold text-dark mb-1" style={{ fontSize: '15px', letterSpacing: '-0.3px' }}>
-                                            Evolución Semanal de Ratios &mdash; {monthLabel}
-                                        </h5>
-                                        <p className="text-muted small mb-0">Tasa de contacto y cierre por semana</p>
-                                    </div>
-                                    <div style={{
-                                        width: 36, height: 36, borderRadius: '10px',
-                                        background: 'rgba(99, 102, 241, 0.08)',
-                                        display: 'flex', alignItems: 'center', justifyContent: 'center'
-                                    }}>
-                                        <i className="mdi mdi-chart-line text-primary" style={{ fontSize: '18px' }}></i>
-                                    </div>
-                                </div>
-
-                                {loading ? (
-                                    <div className="skeleton-item" style={{ height: '300px', width: '100%' }}></div>
-                                ) : (
-                                    <div style={{ width: '100%', height: 300 }}>
-                                        <ResponsiveContainer width="100%" height="100%">
-                                            <LineChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                                                <XAxis dataKey="name" stroke="#94a3b8" fontSize={11} tickLine={false} axisLine={false} />
-                                                <YAxis stroke="#94a3b8" fontSize={11} tickLine={false} axisLine={false} domain={[0, 100]} tickFormatter={(v) => `${v}%`} />
-                                                <RechartsTooltip formatter={(value) => [`${value.toFixed(1)}%`, 'Tasa']} contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }} />
-                                                <Legend verticalAlign="top" height={36} iconType="circle" wrapperStyle={{ fontSize: '11px', fontWeight: 600 }} />
-                                                <Line type="monotone" name="% Contacto" dataKey="pctContact" stroke="#10b981" strokeWidth={3} dot={{ r: 5, strokeWidth: 2, fill: '#fff' }} activeDot={{ r: 7 }} />
-                                                <Line type="monotone" name="% Cierre" dataKey="pctCierre" stroke="#ef4444" strokeWidth={3} dot={{ r: 5, strokeWidth: 2, fill: '#fff' }} activeDot={{ r: 7 }} />
-                                            </LineChart>
-                                        </ResponsiveContainer>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-
-                        {/* Gráfico 2: ROAS */}
-                        <div className="col-lg-6">
-                            <div className="card border-0 shadow-sm p-4" style={{ borderRadius: '24px', background: '#fff', border: '1px solid rgba(226, 232, 240, 0.8)', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-                                <div className="d-flex align-items-center justify-content-between mb-4">
-                                    <div>
-                                        <h5 className="fw-bold text-dark mb-1" style={{ fontSize: '15px', letterSpacing: '-0.3px' }}>
-                                            ROAS por Semana
-                                        </h5>
-                                        <p className="text-muted small mb-0">Retorno sobre la inversión publicitaria semanal</p>
-                                    </div>
-                                    <div style={{
-                                        width: 36, height: 36, borderRadius: '10px',
-                                        background: 'rgba(239, 68, 68, 0.08)',
-                                        display: 'flex', alignItems: 'center', justifyContent: 'center'
-                                    }}>
-                                        <i className="mdi mdi-trending-up text-danger" style={{ fontSize: '18px' }}></i>
-                                    </div>
-                                </div>
-
-                                {(loading || spendsLoading) ? (
-                                    <div className="skeleton-item" style={{ height: '300px', width: '100%' }}></div>
-                                ) : (
-                                    <div style={{ width: '100%', height: 300 }}>
-                                        <ResponsiveContainer width="100%" height="100%">
-                                            <BarChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                                                <defs>
-                                                    <linearGradient id="roasGrad" x1="0" y1="0" x2="0" y2="1">
-                                                        <stop offset="0%" stopColor="#ef4444" stopOpacity={0.9} />
-                                                        <stop offset="100%" stopColor="#f87171" stopOpacity={0.9} />
-                                                    </linearGradient>
-                                                </defs>
-                                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                                                <XAxis dataKey="name" stroke="#94a3b8" fontSize={11} tickLine={false} axisLine={false} />
-                                                <YAxis stroke="#94a3b8" fontSize={11} tickLine={false} axisLine={false} tickFormatter={(v) => `${v.toFixed(2)}x`} />
-                                                <RechartsTooltip formatter={(value) => [`${value.toFixed(2)}x`, 'ROAS']} contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }} />
-                                                <Legend verticalAlign="top" height={36} iconType="rect" wrapperStyle={{ fontSize: '11px', fontWeight: 600 }} />
-                                                <Bar name="ROAS" dataKey="roas" fill="url(#roasGrad)" radius={[8, 8, 0, 0]} maxBarSize={45} />
-                                            </BarChart>
-                                        </ResponsiveContainer>
-                                    </div>
-                                )}
-                            </div>
+                                        );
+                                    })}
+                                </tbody>
+                                <tfoot>
+                                    <tr style={{ background: '#f8fafc', borderTop: '2px solid #cbd5e1', borderBottom: '1px solid #cbd5e1' }}>
+                                        <td colSpan={3} style={{ padding: '14px 12px', fontWeight: 800, color: '#0f172a', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.8px', borderRight: '1px solid #e2e8f0' }}>Total Periodo</td>
+                                        <td style={{ padding: '14px 12px', textAlign: 'right', fontWeight: 800, color: '#0f172a', background: 'rgba(79, 70, 229, 0.05)', fontSize: '13px' }}>
+                                            {fmtNum(cEv.total_leads)}
+                                        </td>
+                                        <td style={{ padding: '14px 12px', textAlign: 'right', fontWeight: 800, color: '#4f46e5', background: 'rgba(79, 70, 229, 0.05)', fontSize: '13px' }}>
+                                            {spendsLoading ? (
+                                                <div className="skeleton-item" style={{ height: '18px', width: '75px', marginLeft: 'auto' }}></div>
+                                            ) : (
+                                                fmtMon(cEv.total_spend)
+                                            )}
+                                        </td>
+                                        <td style={{ padding: '14px 12px', textAlign: 'right', fontWeight: 700, color: '#4f46e5', borderRight: '1px solid #e2e8f0', background: 'rgba(79, 70, 229, 0.05)', fontSize: '12px' }}>
+                                            {spendsLoading ? (
+                                                <div className="skeleton-item" style={{ height: '18px', width: '60px', marginLeft: 'auto' }}></div>
+                                            ) : (
+                                                cEv.total_leads > 0 ? fmtMon(cEv.cpl) : '—'
+                                            )}
+                                        </td>
+                                        <td style={{ padding: '14px 12px', textAlign: 'right', fontWeight: 700, color: '#0f172a', background: 'rgba(5, 150, 105, 0.05)', fontSize: '12px' }}>
+                                            {fmtNum(cEv.total_contactados)}
+                                        </td>
+                                        <td colSpan={2} style={{ background: 'rgba(5, 150, 105, 0.05)' }}></td>
+                                        <td style={{ padding: '14px 12px', textAlign: 'right', fontWeight: 800, color: '#10b981', borderRight: '1px solid #e2e8f0', background: 'rgba(5, 150, 105, 0.05)', fontSize: '13px' }}>
+                                            {fmtNum(cEv.total_ventas)}
+                                        </td>
+                                        {/* Total Variaciones */}
+                                        <td style={{ padding: '14px 12px', textAlign: 'center', background: 'rgba(217, 119, 6, 0.03)' }}>
+                                            {deltaBadge(cEv.variations?.contactados)}
+                                        </td>
+                                        <td style={{ padding: '14px 12px', textAlign: 'center', background: 'rgba(217, 119, 6, 0.03)' }}>
+                                            {deltaBadge(cEv.variations?.noContesta)}
+                                        </td>
+                                        <td style={{ padding: '14px 12px', textAlign: 'center', background: 'rgba(217, 119, 6, 0.03)' }}>
+                                        </td>
+                                        <td style={{ padding: '14px 12px', textAlign: 'center', borderRight: '1px solid #e2e8f0', background: 'rgba(217, 119, 6, 0.03)' }}>
+                                            {deltaBadge(cEv.variations?.ventas)}
+                                        </td>
+                                        
+                                        <td style={{ padding: '14px 12px', textAlign: 'right', fontWeight: 800, color: '#7c3aed', background: 'rgba(124, 58, 237, 0.05)', fontSize: '12px' }}>
+                                            {cEv.total_leads > 0 ? fmtPct((cEv.total_contactados / cEv.total_leads) * 100) : '0.0%'}
+                                        </td>
+                                        <td style={{ padding: '14px 12px', textAlign: 'right', fontWeight: 800, color: '#7c3aed', background: 'rgba(124, 58, 237, 0.05)', fontSize: '12px' }}>
+                                            {cEv.total_leads > 0 ? fmtPct((cEv.total_ventas / cEv.total_leads) * 100) : '0.0%'}
+                                        </td>
+                                        <td style={{ padding: '14px 12px', textAlign: 'right', fontWeight: 800, color: '#10b981', background: 'rgba(124, 58, 237, 0.05)', fontSize: '13px' }}>
+                                            {spendsLoading ? (
+                                                <div className="skeleton-item" style={{ height: '18px', width: '50px', marginLeft: 'auto' }}></div>
+                                            ) : (
+                                                cEv.total_spend > 0 ? fmtRoas(cEv.roas) : '—'
+                                            )}
+                                        </td>
+                                    </tr>
+                                </tfoot>
+                            </table>
                         </div>
                     </div>
-                </>
                 );
-            })()}
+            })}
+
             {clientsList.length > 0 && (
                 <div className="row g-4 mb-5">
                     {/* Columna Principal (70%) */}

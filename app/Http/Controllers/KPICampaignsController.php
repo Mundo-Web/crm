@@ -25,21 +25,70 @@ class KPICampaignsController extends BasicController
         $currentMonth = date('m');
         $currentYear = date('Y');
 
-        $months = Client::select([
-            DB::raw("DATE_FORMAT(clients.created_at, '%Y-%m') as id"),
-            DB::raw('YEAR(clients.created_at) AS year'),
-            DB::raw('MONTH(clients.created_at) AS month'),
-            DB::raw('count(clients.id) AS quantity')
-        ])
+        $countUniqueColl = function ($collection) {
+            $groups = [];
+            $whatsappCount = 0;
+            foreach ($collection as $l) {
+                $source = strtolower($l->source ?? 'facebook');
+                if ($source === 'whatsapp') {
+                    $whatsappCount++;
+                    continue;
+                }
+
+                $phone = preg_replace('/[^0-9]/', '', $l->contact_phone ?? '');
+                if (strlen($phone) > 9) $phone = substr($phone, -9);
+                $email = strtolower(trim($l->contact_email ?? ''));
+
+                $foundGroup = null;
+                foreach ($groups as $idx => $g) {
+                    if (($phone && in_array($phone, $g['phones'])) || ($email && in_array($email, $g['emails']))) {
+                        $foundGroup = $idx;
+                        break;
+                    }
+                }
+
+                if ($foundGroup !== null) {
+                    if ($phone && !in_array($phone, $groups[$foundGroup]['phones'])) $groups[$foundGroup]['phones'][] = $phone;
+                    if ($email && !in_array($email, $groups[$foundGroup]['emails'])) $groups[$foundGroup]['emails'][] = $email;
+                } else {
+                    $groups[] = [
+                        'phones' => $phone ? [$phone] : [],
+                        'emails' => $email ? [$email] : []
+                    ];
+                }
+            }
+            return count($groups) + $whatsappCount;
+        };
+
+        $rawMonths = Client::leftJoin('client_entries as ce', 'ce.client_id', '=', 'clients.id')
+            ->select([
+                DB::raw("DATE_FORMAT(COALESCE(ce.entry_date, clients.created_at), '%Y-%m') as ym"),
+                DB::raw("YEAR(COALESCE(ce.entry_date, clients.created_at)) AS year"),
+                DB::raw("MONTH(COALESCE(ce.entry_date, clients.created_at)) AS month"),
+                'clients.contact_phone',
+                'clients.contact_email',
+                'clients.source'
+            ])
             ->where('clients.business_id', Auth::user()->business_id)
-            ->groupBy(
-                DB::raw('YEAR(clients.created_at)'),
-                DB::raw('MONTH(clients.created_at)'),
-                DB::raw("DATE_FORMAT(clients.created_at, '%Y-%m')")
-            )
-            ->orderBy(DB::raw('YEAR(clients.created_at)'), 'desc')
-            ->orderBy(DB::raw('MONTH(clients.created_at)'), 'desc')
-            ->get()->toArray();
+            ->whereRaw('LENGTH(clients.campaign_id) > 10')
+            ->get();
+
+        $grouped = $rawMonths->groupBy('ym');
+        $months = [];
+        foreach ($grouped as $ym => $items) {
+            if (!$ym) continue;
+            $first = $items->first();
+            $months[] = [
+                'id' => $ym,
+                'year' => (string)$first->year,
+                'month' => (string)$first->month,
+                'quantity' => $countUniqueColl($items)
+            ];
+        }
+
+        usort($months, function ($a, $b) {
+            return strcmp($b['id'], $a['id']);
+        });
 
         $found = false;
         foreach ($months as $month) {
@@ -139,20 +188,22 @@ class KPICampaignsController extends BasicController
             // Acepta: date_from + date_to  O  el parámetro legacy "month"
             // ──────────────────────────────────────────────────────────
             if ($request->date_from && $request->date_to) {
-                $dateFromStr = substr($request->date_from, 0, 10) . ' 00:00:00';
-                $dateToStr   = substr($request->date_to, 0, 10) . ' 23:59:59';
-
-                $dateFrom = \Carbon\Carbon::parse($dateFromStr, 'UTC')->setTimezone('America/Lima')->toDateTimeString();
-                $dateTo   = \Carbon\Carbon::parse($dateToStr, 'UTC')->setTimezone('America/Lima')->toDateTimeString();
+                $dateFrom = substr($request->date_from, 0, 10) . ' 00:00:00';
+                $dateTo   = substr($request->date_to, 0, 10) . ' 23:59:59';
             } elseif ($month || $request->month) {
                 $m = $month ?? $request->month;
-                [$year, $mo] = \explode('-', $m);
-                $dateFrom = \Carbon\Carbon::parse("{$year}-{$mo}-01 00:00:00", 'UTC')->setTimezone('America/Lima')->toDateTimeString();
+                if (str_contains($m, '-')) {
+                    [$year, $mo] = \explode('-', $m);
+                } else {
+                    $year = $request->year ?? date('Y');
+                    $mo   = str_pad((string)$m, 2, '0', STR_PAD_LEFT);
+                }
                 $lastDay  = date('t', mktime(0, 0, 0, (int)$mo, 1, (int)$year));
-                $dateTo   = \Carbon\Carbon::parse("{$year}-{$mo}-{$lastDay} 23:59:59", 'UTC')->setTimezone('America/Lima')->toDateTimeString();
+                $dateFrom = "{$year}-{$mo}-01 00:00:00";
+                $dateTo   = "{$year}-{$mo}-{$lastDay} 23:59:59";
             } else {
-                $dateFrom = \Carbon\Carbon::now('UTC')->startOfMonth()->setTimezone('America/Lima')->toDateTimeString();
-                $dateTo   = \Carbon\Carbon::now('UTC')->endOfMonth()->setTimezone('America/Lima')->toDateTimeString();
+                $dateFrom = \Carbon\Carbon::now('America/Lima')->startOfMonth()->toDateTimeString();
+                $dateTo   = \Carbon\Carbon::now('America/Lima')->endOfMonth()->toDateTimeString();
             }
 
             $platform  = $request->platform  ?? null;
@@ -1110,10 +1161,8 @@ class KPICampaignsController extends BasicController
                     ? (int)$request->get('weekStartDay')
                     : (int)(Setting::get('campaign-week-start-day') ?? 1); // 1 = Lunes
 
-                $rawFrom = $request->date_from ?: $dateFrom;
-                $rawTo   = $request->date_to   ?: $dateTo;
-                $startLimit = \Carbon\Carbon::parse(substr($rawFrom, 0, 10) . ' 00:00:00');
-                $endLimit   = \Carbon\Carbon::parse(substr($rawTo, 0, 10) . ' 23:59:59');
+                $startLimit = \Carbon\Carbon::parse($request->date_from ?: $dateFrom);
+                $endLimit   = \Carbon\Carbon::parse($request->date_to   ?: $dateTo);
 
                 // Usar desglose de inversión diaria en PEN y USD ya calculado
                 if (!isset($dailyPen) || !isset($dailyUsd)) {
@@ -1286,8 +1335,71 @@ class KPICampaignsController extends BasicController
                 // ── Evolución semanal desglosada por campaña individual (SOLO CAMPAÑAS ACTIVAS) ──
                 $campaignWeeklyEvolutions = [];
                 try {
-                    $cRangeStart = $startLimit->toDateTimeString();
-                    $cRangeEnd   = $endLimit->toDateTimeString();
+                    $cRangeStart = $dateFrom;
+                    $cRangeEnd   = $dateTo;
+
+                    $globalStartStr = isset($prevDateFrom) ? min($cRangeStart, $prevDateFrom) : $cRangeStart;
+                    $globalEndStr   = isset($prevDateTo) ? max($cRangeEnd, $prevDateTo) : $cRangeEnd;
+
+                    // Master Query para TODOS los leads
+                    $qBaseAll = Client::where('clients.business_id', Auth::user()->business_id)
+                        ->select('clients.id', 'clients.campaign_id', 'clients.contact_phone', 'clients.contact_email', DB::raw('COALESCE(ce.entry_date, clients.created_at) as effective_date'), 'clients.status_id', 'clients.manage_status_id', 'clients.status')
+                        ->distinct()
+                        ->leftJoin('client_entries as ce', 'ce.client_id', '=', 'clients.id')
+                        ->whereRaw('LENGTH(clients.campaign_id) > 10')
+                        ->whereBetween(DB::raw('COALESCE(ce.entry_date, clients.created_at)'), [$globalStartStr, $globalEndStr]);
+                    
+                    $qBaseAll = $this->applyOptionalFilters($qBaseAll, $platform, $advisorId);
+                    $allLeads = $qBaseAll->get()->groupBy('campaign_id');
+
+                    $countUniqueColl = function ($collection) {
+                        $groups = [];
+                        $whatsappCount = 0;
+                        foreach ($collection as $l) {
+                            $source = strtolower($l->source ?? 'facebook');
+                            if ($source === 'whatsapp') {
+                                $whatsappCount++;
+                                continue;
+                            }
+
+                            $phone = preg_replace('/[^0-9]/', '', $l->contact_phone ?? '');
+                            if (strlen($phone) > 9) $phone = substr($phone, -9);
+                            $email = strtolower(trim($l->contact_email ?? ''));
+
+                            $foundGroup = null;
+                            foreach ($groups as $idx => $g) {
+                                if (($phone && in_array($phone, $g['phones'])) || ($email && in_array($email, $g['emails']))) {
+                                    $foundGroup = $idx;
+                                    break;
+                                }
+                            }
+
+                            if ($foundGroup !== null) {
+                                if ($phone && !in_array($phone, $groups[$foundGroup]['phones'])) $groups[$foundGroup]['phones'][] = $phone;
+                                if ($email && !in_array($email, $groups[$foundGroup]['emails'])) $groups[$foundGroup]['emails'][] = $email;
+                            } else {
+                                $groups[] = [
+                                    'phones' => $phone ? [$phone] : [],
+                                    'emails' => $email ? [$email] : []
+                                ];
+                            }
+                        }
+                        return count($groups) + $whatsappCount;
+                    };
+
+                    // Master Query para TODAS las Ventas
+                    $qSalesAll = Client::where('clients.business_id', Auth::user()->business_id)
+                        ->select('clients.id', 'clients.campaign_id', DB::raw('client_status_traces.created_at as sale_date'), 'chp.price')
+                        ->whereRaw('LENGTH(clients.campaign_id) > 10')
+                        ->whereIn('clients.status_id', $clientStatusesIds)
+                        ->join('client_status_traces', 'client_status_traces.client_id', '=', 'clients.id')
+                        ->join('statuses', 'statuses.id', '=', 'client_status_traces.status_id')
+                        ->leftJoin('client_has_products AS chp', 'chp.client_id', 'clients.id')
+                        ->where('statuses.table_id', 'a8367789-666e-4929-aacb-7cbc2fbf74de')
+                        ->whereBetween('client_status_traces.created_at', [$globalStartStr, $globalEndStr]);
+                    
+                    $qSalesAll = $this->applyOptionalFilters($qSalesAll, $platform, $advisorId);
+                    $allSales = $qSalesAll->get()->groupBy('campaign_id');
 
                     $allBusinessCampaigns = \App\Models\Campaign::where('business_id', Auth::user()->business_id)
                         ->where(function ($query) use ($cRangeStart, $cRangeEnd) {
@@ -1324,46 +1436,53 @@ class KPICampaignsController extends BasicController
                             $cStartStr = $cCurrentStart->toDateTimeString();
                             $cEndStr   = $cCurrentEnd->toDateTimeString();
 
-                            $qCWeek = $weekQueryBase($cStartStr, $cEndStr, $bCamp->id);
-                            $cRegistros = $countUnique($qCWeek);
+                            $weekLeads = isset($allLeads[$bCamp->id]) 
+                                ? $allLeads[$bCamp->id]->where('effective_date', '>=', $cStartStr)->where('effective_date', '<=', $cEndStr)
+                                : collect();
+                                
+                            $cRegistros = $countUniqueColl($weekLeads);
                             $totalCampaignLeads += $cRegistros;
 
-                            // Contactados por campaña en la semana
-                            $cContactados = $countUnique((clone $qCWeek)->where(function ($sub) use ($kpiContactedStatuses) {
-                                $sub->whereIn('clients.manage_status_id', $kpiContactedStatuses)
-                                    ->orWhereIn('clients.status_id', $kpiContactedStatuses);
-                            }));
+                            $contactedLeads = $weekLeads->filter(function ($lead) use ($kpiContactedStatuses) {
+                                return in_array($lead->manage_status_id, $kpiContactedStatuses) || in_array($lead->status_id, $kpiContactedStatuses);
+                            });
+                            $cContactados = $countUniqueColl($contactedLeads);
 
-                            // Respondio por campaña en la semana
-                            $cRespondio = $countUnique((clone $qCWeek)->where(function ($sub) use ($kpiRespondedStatuses) {
-                                $sub->whereIn('clients.manage_status_id', $kpiRespondedStatuses)
-                                    ->orWhereIn('clients.status_id', $kpiRespondedStatuses);
-                            }));
-
-                            $cNoContesta = max(0, $cContactados - $cRespondio);
-
-                            // Ventas por campaña en la semana
-                            $cSalesBase = Client::where('clients.business_id', Auth::user()->business_id)
-                                ->where('clients.campaign_id', $bCamp->id)
-                                ->whereIn('clients.status_id', $clientStatusesIds)
-                                ->whereExists(function ($sub) use ($cStartStr, $cEndStr) {
-                                    $sub->select(DB::raw(1))
-                                        ->from('client_status_traces')
-                                        ->join('statuses', 'statuses.id', '=', 'client_status_traces.status_id')
-                                        ->where('statuses.table_id', 'a8367789-666e-4929-aacb-7cbc2fbf74de')
-                                        ->whereColumn('client_status_traces.client_id', 'clients.id')
-                                        ->whereBetween('client_status_traces.created_at', [$cStartStr, $cEndStr]);
+                            if (!empty($kpiRespondedStatuses)) {
+                                $respondedLeads = $weekLeads->filter(function ($lead) use ($kpiRespondedStatuses) {
+                                    return in_array($lead->manage_status_id, $kpiRespondedStatuses) || in_array($lead->status_id, $kpiRespondedStatuses);
                                 });
-                            $cSalesBase = $this->applyOptionalFilters($cSalesBase, $platform, $advisorId);
-                            $cSalesCount = (clone $cSalesBase)->count();
-                            $cSalesAmount = (clone $cSalesBase)->join('client_has_products AS chp', 'chp.client_id', 'clients.id')->sum('chp.price');
+                            } else {
+                                $respondedLeads = $weekLeads->filter(function ($lead) use ($leadStatusesIds, $defaultLeadStatus) {
+                                    return in_array($lead->status_id, $leadStatusesIds) && $lead->status_id !== $defaultLeadStatus && $lead->status;
+                                });
+                            }
+                            $cRespondio = $countUniqueColl($respondedLeads);
+
+                            if (!empty($kpiUnrespondedStatuses)) {
+                                $unrespondedLeads = $weekLeads->filter(function ($lead) use ($kpiUnrespondedStatuses) {
+                                    return in_array($lead->manage_status_id, $kpiUnrespondedStatuses) || in_array($lead->status_id, $kpiUnrespondedStatuses);
+                                });
+                                $cNoContesta = $countUniqueColl($unrespondedLeads);
+                            } else {
+                                $cNoContesta = max(0, $cContactados - $cRespondio);
+                            }
+
+                            $weekSales = isset($allSales[$bCamp->id])
+                                ? $allSales[$bCamp->id]->where('sale_date', '>=', $cStartStr)->where('sale_date', '<=', $cEndStr)
+                                : collect();
+                                
+                            $cSalesCount = $weekSales->unique('id')->count();
+                            $cSalesAmount = $weekSales->sum('price');
 
                             // Extraer los leads reales devueltos por la API de Meta Ads Graph para esta campaña
                             $metaCampIdKey   = $bCamp->meta_id;
                             $metaCampNameKey = strtolower(trim($bCamp->title ?? ''));
                             $cMetaLeadsApi   = 0;
+                            $cSpendPen       = 0;
                             $cTempDate       = $cCurrentStart->copy();
                             $campaignDailyMetaLeads = $dailySpends['campaign_meta_leads'] ?? [];
+                            $campaignDailySpends = $dailySpends['campaign_spends_pen'] ?? [];
 
                             while ($cTempDate->lte($cCurrentEnd)) {
                                 $cDStr = $cTempDate->format('Y-m-d');
@@ -1372,10 +1491,18 @@ class KPICampaignsController extends BasicController
                                 } elseif ($metaCampNameKey !== '' && isset($campaignDailyMetaLeads[$metaCampNameKey][$cDStr])) {
                                     $cMetaLeadsApi += $campaignDailyMetaLeads[$metaCampNameKey][$cDStr];
                                 }
+
+                                if ($metaCampIdKey && isset($campaignDailySpends[$metaCampIdKey][$cDStr])) {
+                                    $cSpendPen += $campaignDailySpends[$metaCampIdKey][$cDStr];
+                                } elseif ($metaCampNameKey !== '' && isset($campaignDailySpends[$metaCampNameKey][$cDStr])) {
+                                    $cSpendPen += $campaignDailySpends[$metaCampNameKey][$cDStr];
+                                }
                                 $cTempDate->addDay();
                             }
 
                             $finalCMetaLeads = $cMetaLeadsApi > 0 ? $cMetaLeadsApi : $cRegistros;
+                            $cCpl = ($cRegistros > 0 && $cSpendPen > 0) ? round($cSpendPen / $cRegistros, 2) : 0;
+                            $cRoas = ($cSpendPen > 0 && $cSalesAmount > 0) ? round($cSalesAmount / $cSpendPen, 2) : 0;
 
                             $cWeeks[] = [
                                 'label'           => 'S' . $cWeekNumber,
@@ -1385,6 +1512,8 @@ class KPICampaignsController extends BasicController
                                 'end_date'        => $cEndStr,
                                 'registros'       => $cRegistros,
                                 'meta_leads'      => $finalCMetaLeads,
+                                'spend'           => round($cSpendPen, 2),
+                                'cpr'             => $cCpl,
                                 'contactados'     => $cContactados,
                                 'noContesta'      => $cNoContesta,
                                 'respondio'       => $cRespondio,
@@ -1392,19 +1521,101 @@ class KPICampaignsController extends BasicController
                                 'salesAmount'     => round((float)$cSalesAmount, 2),
                                 'pctContact'      => $cRegistros > 0 ? round(($cContactados / $cRegistros) * 100, 1) : 0,
                                 'pctCierre'       => $cRegistros > 0 ? round(($cSalesCount / $cRegistros) * 100, 1) : 0,
+                                'roas'            => $cRoas,
+                                'diffContactados' => null,
+                                'diffNoContesta'  => null,
+                                'diffRespondio'   => null,
+                                'diffVentas'      => null,
+                                'diffRegistros'   => null,
+                                'diffSpend'       => null,
                             ];
 
                             $cCurrentStart = $cCurrentEnd->copy()->addSecond();
                             $cWeekNumber++;
                         }
 
+                        // Calcular variaciones vs semana anterior para la campana
+                        for ($idx = 1; $idx < count($cWeeks); $idx++) {
+                            $prev = $cWeeks[$idx - 1];
+                            $cWeeks[$idx]['diffContactados'] = $cWeeks[$idx]['contactados'] - $prev['contactados'];
+                            $cWeeks[$idx]['diffNoContesta']  = $cWeeks[$idx]['noContesta']  - $prev['noContesta'];
+                            $cWeeks[$idx]['diffRespondio']   = $cWeeks[$idx]['respondio']   - $prev['respondio'];
+                            $cWeeks[$idx]['diffVentas']      = $cWeeks[$idx]['ventas']      - $prev['ventas'];
+                            $cWeeks[$idx]['diffRegistros']   = $cWeeks[$idx]['registros']   - $prev['registros'];
+                            $cWeeks[$idx]['diffSpend']       = $cWeeks[$idx]['spend']       - $prev['spend'];
+                        }
+
+                        // Calcular Totales de la campana en el periodo y variacion respecto al periodo anterior
+                        $cTotalSpend = array_sum(array_column($cWeeks, 'spend'));
+                        $cTotalSalesAmt = array_sum(array_column($cWeeks, 'salesAmount'));
+                        $cTotalRegistros = array_sum(array_column($cWeeks, 'registros'));
+                        $cTotalContactados = array_sum(array_column($cWeeks, 'contactados'));
+                        $cTotalVentas = array_sum(array_column($cWeeks, 'ventas'));
+                        $cTotalNoContesta = array_sum(array_column($cWeeks, 'noContesta'));
+                        
+                        $cPrevRegistros = 0;
+                        $cPrevContactados = 0;
+                        $cPrevVentas = 0;
+                        $cPrevNoContesta = 0;
+
+                        if (isset($prevDateFrom) && isset($prevDateTo)) {
+                            $prevLeads = isset($allLeads[$bCamp->id])
+                                ? $allLeads[$bCamp->id]->where('effective_date', '>=', $prevDateFrom)->where('effective_date', '<=', $prevDateTo)
+                                : collect();
+                            
+                            $cPrevRegistros = $prevLeads->unique('id')->count();
+
+                            $cPrevContactados = $prevLeads->filter(function ($lead) use ($kpiContactedStatuses) {
+                                return in_array($lead->manage_status_id, $kpiContactedStatuses) || in_array($lead->status_id, $kpiContactedStatuses);
+                            })->unique('id')->count();
+
+                            if (!empty($kpiRespondedStatuses)) {
+                                $cPrevRespondio = $prevLeads->filter(function ($lead) use ($kpiRespondedStatuses) {
+                                    return in_array($lead->manage_status_id, $kpiRespondedStatuses) || in_array($lead->status_id, $kpiRespondedStatuses);
+                                })->unique('id')->count();
+                            } else {
+                                $cPrevRespondio = $prevLeads->filter(function ($lead) use ($leadStatusesIds, $defaultLeadStatus) {
+                                    return in_array($lead->status_id, $leadStatusesIds) && $lead->status_id !== $defaultLeadStatus && $lead->status;
+                                })->unique('id')->count();
+                            }
+
+                            if (!empty($kpiUnrespondedStatuses)) {
+                                $cPrevNoContesta = $prevLeads->filter(function ($lead) use ($kpiUnrespondedStatuses) {
+                                    return in_array($lead->manage_status_id, $kpiUnrespondedStatuses) || in_array($lead->status_id, $kpiUnrespondedStatuses);
+                                })->unique('id')->count();
+                            } else {
+                                $cPrevNoContesta = max(0, $cPrevContactados - $cPrevRespondio);
+                            }
+                            
+                            $prevSales = isset($allSales[$bCamp->id])
+                                ? $allSales[$bCamp->id]->where('sale_date', '>=', $prevDateFrom)->where('sale_date', '<=', $prevDateTo)
+                                : collect();
+                            $cPrevVentas = $prevSales->unique('id')->count();
+                        }
+
+                        // Total de la campaña en el periodo desduplicado exactamente como el card superior
+                        $cPeriodUniqueLeads = isset($allLeads[$bCamp->id])
+                            ? $countUniqueColl($allLeads[$bCamp->id]->where('effective_date', '>=', $dateFrom)->where('effective_date', '<=', $dateTo))
+                            : $totalCampaignLeads;
+
                         // Filtrar estrictamente solo campañas que tengan leads en el periodo
-                        if ($totalCampaignLeads > 0) {
+                        if ($cPeriodUniqueLeads > 0 || $totalCampaignLeads > 0) {
                             $campaignWeeklyEvolutions[] = [
                                 'campaign_id'   => $bCamp->id,
                                 'campaign_name' => $bCamp->title ?? 'Campaña Sin Nombre',
                                 'source'        => $bCamp->source ?? 'Facebook',
-                                'total_leads'   => $totalCampaignLeads,
+                                'total_leads'   => $cPeriodUniqueLeads > 0 ? $cPeriodUniqueLeads : $totalCampaignLeads,
+                                'total_spend'   => round($cTotalSpend, 2),
+                                'cpl'           => ($cTotalRegistros > 0) ? round($cTotalSpend / $cTotalRegistros, 2) : 0,
+                                'total_ventas'  => $cTotalVentas,
+                                'total_contactados' => $cTotalContactados,
+                                'roas'          => ($cTotalSpend > 0) ? round($cTotalSalesAmt / $cTotalSpend, 2) : 0,
+                                'variations'    => [
+                                    'registros'   => $cTotalRegistros - $cPrevRegistros,
+                                    'contactados' => $cTotalContactados - $cPrevContactados,
+                                    'ventas'      => $cTotalVentas - $cPrevVentas,
+                                    'noContesta'  => $cTotalNoContesta - $cPrevNoContesta
+                                ],
                                 'weeks'         => $cWeeks,
                             ];
                         }
@@ -1708,20 +1919,27 @@ class KPICampaignsController extends BasicController
                         $rawSpend    = (float)($item['spend'] ?? 0);
                         $dayLeads = (int)($item['_leads'] ?? 0);
 
-                        if ($day && !isset($metaSpendByDay[$day])) {
-                            $metaSpendByDay[$day] = 0;
-                        }
-                        $spendConverted = strtoupper($item['_currency'] ?? 'PEN') === 'USD'
-                            ? $rawSpend * $exchangeRateCalc
-                            : $rawSpend;
-                        if ($day) $metaSpendByDay[$day] = ($metaSpendByDay[$day] ?? 0) + $spendConverted;
+                        if ($day) {
+                            $currency = strtoupper($item['_currency'] ?? 'PEN');
+                            if ($currency === 'USD') {
+                                $spendPen = $rawSpend * $exchangeRateCalc;
+                                $spendUsd = $rawSpend;
+                            } else {
+                                $spendPen = $rawSpend;
+                                $spendUsd = $exchangeRateCalc > 0 ? $rawSpend / $exchangeRateCalc : 0;
+                            }
+                            $dailySpendsPen[$day] = ($dailySpendsPen[$day] ?? 0) + $spendPen;
+                            $dailySpendsUsd[$day] = ($dailySpendsUsd[$day] ?? 0) + $spendUsd;
+                            $dailyMetaLeads[$day] = ($dailyMetaLeads[$day] ?? 0) + $dayLeads;
 
-                        if ($metaCampId && $dayLeads > 0) {
-                            if (!isset($metaLeadsByCampDay[$metaCampId])) $metaLeadsByCampDay[$metaCampId] = [];
-                            if (!isset($metaLeadsByCampDay[$metaCampId][$day])) $metaLeadsByCampDay[$metaCampId][$day] = 0;
-                            $metaLeadsByCampDay[$metaCampId][$day] += $dayLeads;
-
-                            if (!isset($metaCampNames[$metaCampId])) $metaCampNames[$metaCampId] = $metaCampName;
+                            if ($metaCampId) {
+                                $campaignDailyMetaLeads[$metaCampId][$day] = ($campaignDailyMetaLeads[$metaCampId][$day] ?? 0) + $dayLeads;
+                                $campaignDailySpendsPen[$metaCampId][$day] = ($campaignDailySpendsPen[$metaCampId][$day] ?? 0) + $spendPen;
+                            }
+                            if ($metaCampName !== '') {
+                                $campaignDailyMetaLeads[$metaCampName][$day] = ($campaignDailyMetaLeads[$metaCampName][$day] ?? 0) + $dayLeads;
+                                $campaignDailySpendsPen[$metaCampName][$day] = ($campaignDailySpendsPen[$metaCampName][$day] ?? 0) + $spendPen;
+                            }
                         }
                     }
                 } else {
@@ -1792,6 +2010,7 @@ class KPICampaignsController extends BasicController
                                 }
                                 if ($metaCampName !== '') {
                                     $campaignDailyMetaLeads[$metaCampName][$day] = ($campaignDailyMetaLeads[$metaCampName][$day] ?? 0) + $dayLeads;
+                                    $campaignDailySpendsPen[$metaCampName][$day] = ($campaignDailySpendsPen[$metaCampName][$day] ?? 0) + $spendPen;
                                 }
                             }
 
@@ -1998,3 +2217,4 @@ class KPICampaignsController extends BasicController
         return $adSpends;
     }
 }
+
