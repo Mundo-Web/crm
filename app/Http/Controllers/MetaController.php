@@ -1318,7 +1318,10 @@ class MetaController extends Controller
                 }
 
 
-                if ($hasApikey && !$clientJpa->complete_registration) {
+                $aiStatus = Setting::get('gemini-status', $businessJpa->id, '1');
+                $isAiActive = $hasApikey && !in_array((string)$aiStatus, ['0', 'false', 'off'], true);
+
+                if ($isAiActive && !$clientJpa->complete_registration) {
                     MetaAssistantJob::dispatchAfterResponse($clientJpa, $messageJpa, $origin);
                 }
 
@@ -2062,6 +2065,11 @@ class MetaController extends Controller
 
     public static function assistant(Client $clientJpa, Message $messageJpa, ?string $origin = null)
     {
+        $aiStatus = Setting::get('gemini-status', $clientJpa->business_id, '1');
+        if (in_array((string)$aiStatus, ['0', 'false', 'off'], true)) {
+            return;
+        }
+
         try {
             while (true) {
                 /*

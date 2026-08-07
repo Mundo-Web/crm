@@ -11,6 +11,7 @@ use App\Http\Controllers\ClientHasProductsController;
 use App\Http\Controllers\ClientNoteController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DefaultMessageController;
+use App\Http\Controllers\FlowController;
 use App\Http\Controllers\GmailController;
 use App\Http\Controllers\IntegrationController;
 use App\Http\Controllers\KPICampaignsController;
@@ -45,6 +46,7 @@ use App\Http\Controllers\BusinessSectorController;
 use App\Http\Controllers\WhatsAppController;
 use App\Http\Controllers\AdSetController;
 use App\Http\Controllers\AdController;
+use App\Http\Controllers\ServerController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -118,6 +120,12 @@ Route::middleware('auth')->group(function () {
     // Users routes
     Route::get('/roles/user/{id}', [RoleController::class, 'byUser']);
     Route::post('/roles', [RoleController::class, 'save']);
+
+    // Flows routes
+    Route::post('/flows', [FlowController::class, 'save']);
+    Route::post('/flows/paginate', [FlowController::class, 'paginate']);
+    Route::patch('/flows/status', [FlowController::class, 'status']);
+    Route::delete('/flows/{id}', [FlowController::class, 'delete']);
     Route::post('/roles/paginate', [RoleController::class, 'paginate']);
     Route::patch('/roles/status', [RoleController::class, 'status']);
     Route::delete('/roles/{id}', [RoleController::class, 'delete']);
@@ -318,6 +326,9 @@ Route::middleware('auth')->group(function () {
     Route::post('/integrations', [IntegrationController::class, 'save']);
     Route::delete('/integrations/{id}', [IntegrationController::class, 'delete']);
     Route::post('/integrations/profile', [IntegrationController::class, 'getProfile']);
+
+    Route::get('/flows/active', [FlowController::class, 'activeFlows']);
+    Route::post('/flows/execute', [FlowController::class, 'executeFlow']);
 
     Route::prefix('/atalaya')->group(function () {
         Route::post('/users/paginate', [AtalayaUserController::class, 'paginate']);

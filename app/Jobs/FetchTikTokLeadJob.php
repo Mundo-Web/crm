@@ -302,7 +302,8 @@ class FetchTikTokLeadJob implements ShouldQueue
 
             // Disparar Gemini
             $hasApikey = Setting::get('gemini-api-key', $client->business_id);
-            if ($hasApikey) {
+            $aiStatus = Setting::get('gemini-status', $client->business_id, '1');
+            if ($hasApikey && !in_array((string)$aiStatus, ['0', 'false', 'off'], true)) {
                 // Crear un mensaje mock en messages para el bot
                 $message = Message::create([
                     'wa_id' => $this->leadId,

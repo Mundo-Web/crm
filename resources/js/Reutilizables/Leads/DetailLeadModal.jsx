@@ -18,7 +18,8 @@ const DetailLeadModal = ({
     defaultMessages = [],
     signs = [],
     projectTypes = [],
-    products = []
+    products = [],
+    onOpenFlowModal = () => {}
 }) => {
     return (
         <Modal
@@ -49,6 +50,7 @@ const DetailLeadModal = ({
                     signs={signs}
                     projectTypes={projectTypes}
                     products={products}
+                    onOpenFlowModal={onOpenFlowModal}
                 />
             )}
         </Modal>

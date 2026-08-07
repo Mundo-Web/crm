@@ -272,6 +272,8 @@ class MetaFormRuleController extends BasicController
             ->where('business_id', $businessId)
             ->get();
 
+        $flows = \App\Models\Flow::where('business_id', $businessId)->get();
+
         $force = $request->boolean('force', false);
         $forms = self::fetchMetaFormsForBusiness($businessId, $force);
         $lastSync = Setting::get('meta_forms_last_sync', $businessId);
@@ -282,6 +284,7 @@ class MetaFormRuleController extends BasicController
             'chatStatuses'   => $chatStatuses,
             'users'          => $users,
             'rules'          => $rules,
+            'flows'          => $flows,
             'metaForms'      => $forms,
             'lastSync'       => $lastSync,
         ];

@@ -8,7 +8,7 @@ import Tippy from "@tippyjs/react";
 
 const clientNotesRest = new ClientNotesRest()
 
-const ContactDetails = ({ users = [], onAssign = () => { }, onOpenDetails = () => { }, chatStatuses = [], onLeadUpdate = () => {}, ...contact }) => {
+const ContactDetails = ({ users = [], onAssign = () => { }, onOpenDetails = () => { }, onOpenFlowModal = () => { }, chatStatuses = [], onLeadUpdate = () => { }, ...contact }) => {
     const [notes, setNotes] = useState([])
     const [loading, setLoading] = useState(false)
 
@@ -41,6 +41,9 @@ const ContactDetails = ({ users = [], onAssign = () => { }, onOpenDetails = () =
             <button className="btn btn-primary btn-sm rounded-pill shadow-sm" onClick={() => onOpenDetails(contact)}>
                 <i className="mdi mdi-eye me-1"></i> Ver detalles del lead
             </button>
+            <button className="btn btn-sm rounded-pill shadow-sm text-white fw-bold" style={{ backgroundColor: '#8b5cf6', borderColor: '#8b5cf6' }} onClick={() => onOpenFlowModal(contact)}>
+                <i className="mdi mdi-source-branch me-1"></i> Asignar / Ejecutar Flujo
+            </button>
         </div>
 
         <div className="d-flex flex-wrap gap-2 justify-content-around mb-2">
@@ -61,12 +64,12 @@ const ContactDetails = ({ users = [], onAssign = () => { }, onOpenDetails = () =
         <div className="mb-2">
             <b className="d-block small text-muted mb-1 text-center">Calificación de Chat</b>
             <div className="dropdown w-100">
-                <button 
+                <button
                     className="btn btn-sm w-100 dropdown-toggle d-flex align-items-center justify-content-center gap-1 shadow-sm border text-truncate"
                     type="button"
                     data-bs-toggle="dropdown"
-                    style={{ 
-                        backgroundColor: contact.chat_status?.color || '#f8f9fa', 
+                    style={{
+                        backgroundColor: contact.chat_status?.color || '#f8f9fa',
                         color: contact.chat_status ? '#fff' : '#495057'
                     }}
                 >
@@ -76,7 +79,7 @@ const ContactDetails = ({ users = [], onAssign = () => { }, onOpenDetails = () =
                     <span>{contact.chat_status?.name || 'Calificar chat...'}</span>
                 </button>
                 <div className="dropdown-menu w-100 text-center scroll-hidden" style={{ maxHeight: '200px', overflowY: 'auto' }}>
-                    <button 
+                    <button
                         className="dropdown-item d-flex align-items-center justify-content-center gap-1"
                         onClick={() => onLeadUpdate(contact.id, null, 'chat_status')}
                     >
@@ -84,7 +87,7 @@ const ContactDetails = ({ users = [], onAssign = () => { }, onOpenDetails = () =
                         <span>Sin calificar</span>
                     </button>
                     {chatStatuses.map(status => (
-                        <button 
+                        <button
                             key={status.id}
                             className="dropdown-item d-flex align-items-center justify-content-center gap-1"
                             onClick={() => onLeadUpdate(contact.id, status.id, 'chat_status')}

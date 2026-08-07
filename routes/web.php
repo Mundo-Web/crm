@@ -9,6 +9,7 @@ use App\Http\Controllers\ChatController;
 use App\Http\Controllers\ChatruchoController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\DefaultMessageController;
+use App\Http\Controllers\FlowController;
 use App\Http\Controllers\KPICampaignsController;
 use App\Http\Controllers\KPILeadsController;
 use App\Http\Controllers\KPIProjectsController;
@@ -89,6 +90,7 @@ Route::middleware(['auth', 'firstTime', 'hasPlan'])->group(function () {
     Route::get('/processes', [ProcessController::class, 'reactView'])->name('Processes.jsx');
     Route::get('/campaigns', [CampaignController::class, 'reactView'])->name('Campaigns.jsx');
     Route::get('/meta-forms', [MetaFormRuleController::class, 'reactView'])->name('MetaForms.jsx');
+    Route::get('/flows', [FlowController::class, 'reactView'])->name('Flows.jsx');
     Route::get('/views', [ViewController::class, 'reactView'])->name('Views.jsx');
     Route::get('/projects', [ProjectController::class, 'reactView'])->name('Projects.jsx');
     Route::get('/projects/done', [ProjectDoneController::class, 'reactView'])->name('ProjectsDone.jsx');

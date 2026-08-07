@@ -190,15 +190,18 @@ class WebhookController extends BasicController
             }
 
             $hasApikey = Setting::get('gemini-api-key', $businessJpa->id);
+            $aiStatus = Setting::get('gemini-status', $businessJpa->id, '1');
+            $isAiActive = $hasApikey && !in_array((string)$aiStatus, ['0', 'false', 'off'], true);
+
             $firstMessage = Setting::get('gemini-first-message', $businessJpa->id);
 
-            if ($hasApikey && !$alreadyExists && $firstMessage) {
+            if ($isAiActive && !$alreadyExists && $firstMessage) {
                 MetaController::sendWithOrigin($businessJpa, $clientJpa, $firstMessage, '', 'evoapi');
             }
 
-            if ($hasApikey && !$clientJpa->complete_registration) {
+            if ($isAiActive && !$clientJpa->complete_registration) {
                 MetaAssistantJob::dispatchAfterResponse($clientJpa, $messageJpa, 'evoapi');
-            } else if ($hasApikey && $clientJpa->complete_registration && $clientJpa->complete_form == false) {
+            } else if ($isAiActive && $clientJpa->complete_registration && $clientJpa->complete_form == false) {
                 MetaAssistantJob::dispatchAfterResponse($clientJpa, $messageJpa, 'evoapi');
             }
 

@@ -35,6 +35,7 @@ import googleSVG from "./components/svg/google.svg";
 import GmailRest from "./actions/GmailRest.js";
 import HtmlContent from "./Utils/HtmlContent.jsx";
 import MailingModal from "./components/modals/MailingModal.jsx";
+import AssignFlowModal from "./Reutilizables/Flows/AssignFlowModal.jsx";
 import FormatBytes from "./Utils/FormatBytes.js";
 import LeadTable from "./Reutilizables/Leads/LeadTable.jsx";
 import NewLeadsRest from "./actions/NewLeadsRest.js";
@@ -203,6 +204,13 @@ const Leads = (properties) => {
     const composeModal = useRef();
     const mailModal = useRef();
     const messagesOffCanvasRef = useRef();
+    const flowModalRef = useRef();
+    const [detailLead, setDetailLead] = useState(null);
+
+    const onOpenFlowModal = (lead) => {
+        setDetailLead(lead);
+        $(flowModalRef.current).modal('show');
+    };
 
     const { socket } = useWebSocket();
 
@@ -3138,6 +3146,11 @@ const Leads = (properties) => {
                 fields={excelFields}
                 mapping={leadMapping}
                 setMapping={setLeadMapping}
+            />
+
+            <AssignFlowModal
+                modalRef={flowModalRef}
+                lead={detailLead}
             />
         </Adminto>
     );

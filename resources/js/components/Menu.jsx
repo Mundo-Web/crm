@@ -409,6 +409,14 @@ const Menu = ({
                                 Procesos
                             </MenuItem>
                         )}
+                        <MenuItem
+                            pinned={pinned}
+                            setPinned={setPinned}
+                            href="/flows"
+                            icon="mdi mdi-source-branch"
+                        >
+                            Flujos
+                        </MenuItem>
                         {can("campaigns", "root", "all", "list") && (
                             <MenuItemContainer
                                 title="Meta"

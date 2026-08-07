@@ -15,6 +15,7 @@ const MetaForms = ({
     chatStatuses = [],
     users = [],
     rules: initialRules = [],
+    flows = [],
     metaForms: initialMetaForms = [],
     lastSync: initialLastSync = null,
 }) => {
@@ -290,6 +291,12 @@ const MetaForms = ({
                     </p>
                 </div>
                 <div className="col-auto d-flex align-items-center gap-2">
+                    <a
+                        href="/flows"
+                        className="btn btn-sm btn-soft-primary rounded-pill font-13 px-3 fw-semibold"
+                    >
+                        <i className="mdi mdi-source-branch me-1"></i> Diseñador de Flujos
+                    </a>
                     {lastSync && !isSyncAllowed() && (
                         <span className="badge bg-soft-info text-info font-11 p-2 rounded-pill">
                             <i className="mdi mdi-clock-check me-1"></i>

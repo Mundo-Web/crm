@@ -17,6 +17,144 @@ import StatusesRest from "./actions/StatusesRest.js";
 const settingsRest = new SettingsRest();
 const statusesRest = new StatusesRest();
 
+const ALL_DAYS = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
+
+const BusinessDaysPicker = ({ savedValue, onSave }) => {
+    const parsedDays = (() => {
+        try {
+            const arr = JSON.parse(savedValue);
+            if (Array.isArray(arr)) return arr;
+        } catch (_) {}
+        return ["Lun", "Mar", "Mié", "Jue", "Vie"];
+    })();
+    const [selected, setSelected] = React.useState(parsedDays);
+
+    const toggle = (day) => {
+        const next = selected.includes(day)
+            ? selected.filter((d) => d !== day)
+            : [...selected, day];
+        setSelected(next);
+        onSave(JSON.stringify(next));
+    };
+
+    return (
+        <div className="d-flex flex-wrap gap-2">
+            {ALL_DAYS.map((day) => {
+                const active = selected.includes(day);
+                return (
+                    <button
+                        key={day}
+                        type="button"
+                        className={`btn btn-sm ${
+                            active ? "btn-primary" : "btn-outline-secondary"
+                        }`}
+                        style={{ minWidth: 48, fontWeight: active ? 600 : 400 }}
+                        onClick={() => toggle(day)}
+                    >
+                        {day}
+                    </button>
+                );
+            })}
+        </div>
+    );
+};
+
+const SERVER_COMMANDS = [
+    { key: "supervisor_status", label: "supervisorctl status",    icon: "mdi-monitor-dashboard",    color: "text-success" },
+    { key: "queue_workers",     label: "Procesos queue:work",     icon: "mdi-cog-play-outline",     color: "text-info"    },
+    { key: "laravel_env",       label: "Entorno Laravel (.env)",  icon: "mdi-file-cog-outline",     color: "text-warning" },
+    { key: "php_version",       label: "Versión de PHP",          icon: "mdi-language-php",         color: "text-primary" },
+    { key: "disk_usage",        label: "Uso de disco",            icon: "mdi-harddisk",             color: "text-danger"  },
+    { key: "memory_usage",      label: "Memoria del servidor",    icon: "mdi-memory",               color: "text-purple"  },
+    { key: "uptime",            label: "Uptime del servidor",     icon: "mdi-clock-outline",        color: "text-muted"   },
+];
+
+const ServerPanel = () => {
+    const [output, setOutput]     = React.useState("# Selecciona un diagnóstico para ejecutarlo en el servidor.\n\n> Los resultados aparecerán aquí.");
+    const [loading, setLoading]   = React.useState(false);
+    const [activeCmd, setActiveCmd] = React.useState(null);
+
+    const run = async (cmd) => {
+        setActiveCmd(cmd);
+        setLoading(true);
+        setOutput("Ejecutando...");
+        try {
+            const res  = await fetch(`/api/server/status?cmd=${cmd}`, {
+                headers: { "Accept": "application/json", "X-Requested-With": "XMLHttpRequest" },
+                credentials: "same-origin",
+            });
+            const data = await res.json();
+            setOutput(data.output || "(sin salida)");
+        } catch (err) {
+            setOutput("Error al conectar con el servidor: " + err.message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <div>
+            <h4><i className="mdi mdi-server me-2 text-primary"></i>Estado del Servidor</h4>
+            <p className="text-muted mb-3">
+                Panel de diagnóstico de solo lectura. Ejecuta comandos seguros para verificar el estado de los procesos,
+                colas (<strong>supervisord</strong> / <strong>queue:work</strong>) y el entorno del servidor.
+            </p>
+            <div className="row g-2 mb-3">
+                {SERVER_COMMANDS.map((c) => (
+                    <div className="col-auto" key={c.key}>
+                        <button
+                            type="button"
+                            className={`btn btn-sm ${activeCmd === c.key ? "btn-primary" : "btn-outline-secondary"}`}
+                            disabled={loading}
+                            onClick={() => run(c.key)}
+                            style={{ whiteSpace: "nowrap" }}
+                        >
+                            <i className={`mdi ${c.icon} me-1 ${activeCmd === c.key ? "" : c.color}`}></i>
+                            {c.label}
+                        </button>
+                    </div>
+                ))}
+            </div>
+
+            {/* Terminal output */}
+            <div
+                style={{
+                    background: "#0d1117",
+                    borderRadius: 8,
+                    padding: "16px 20px",
+                    minHeight: 220,
+                    fontFamily: "'Courier New', Courier, monospace",
+                    fontSize: 13,
+                    color: "#c9d1d9",
+                    whiteSpace: "pre-wrap",
+                    wordBreak: "break-all",
+                    position: "relative",
+                    border: "1px solid #30363d",
+                }}
+            >
+                {/* Traffic-light header */}
+                <div style={{ display: "flex", gap: 6, marginBottom: 12 }}>
+                    <span style={{ width: 12, height: 12, borderRadius: "50%", background: "#ff5f57", display: "inline-block" }}></span>
+                    <span style={{ width: 12, height: 12, borderRadius: "50%", background: "#febc2e", display: "inline-block" }}></span>
+                    <span style={{ width: 12, height: 12, borderRadius: "50%", background: "#28c840", display: "inline-block" }}></span>
+                    <span style={{ marginLeft: 8, color: "#6e7681", fontSize: 11 }}>
+                        {activeCmd ? `server ~ $ ${SERVER_COMMANDS.find(c => c.key === activeCmd)?.label}` : "server ~ $"}
+                    </span>
+                </div>
+                {loading
+                    ? <><i className="mdi mdi-loading mdi-spin me-2" style={{ color: "#58a6ff" }}></i><span style={{ color: "#58a6ff" }}>Ejecutando...</span></>
+                    : output
+                }
+            </div>
+            <p className="text-muted mt-2 small">
+                <i className="mdi mdi-shield-lock-outline me-1"></i>
+                Solo se permiten comandos de diagnóstico de solo lectura. No es posible ejecutar comandos arbitrarios.
+            </p>
+        </div>
+    );
+};
+
+
 const Settings = ({
     can,
     constants,
@@ -479,20 +617,20 @@ const Settings = ({
                                         >
                                             Proyectos
                                         </button>
+                                        {/* Correo - oculto por ahora, config SMTP va en .env del servidor
                                         <button
-                                            className={`nav-link mb-1 text-start ${activeTab === "email" ? "active show" : ""}`}
-                                            id="v-email-tab"
+                                            className={`nav-link mb-1 text-start ${activeTab === "server" ? "active show" : ""}`}
+                                            id="v-server-tab"
                                             data-bs-toggle="pill"
-                                            href="#v-email"
+                                            href="#v-server"
                                             role="tab"
-                                            aria-controls="v-email"
+                                            aria-controls="v-server"
                                             aria-selected="false"
-                                            onClick={() =>
-                                                setActiveTab("email")
-                                            }
+                                            onClick={() => setActiveTab("server")}
                                         >
-                                            Correo
+                                            <i className="mdi mdi-server me-1"></i> Servidor
                                         </button>
+                                        */}
                                         <button
                                             className={`nav-link mb-1 text-start ${activeTab === "whatsapp" ? "active show" : ""}`}
                                             id="v-whatsapp-tab"
@@ -638,72 +776,67 @@ const Settings = ({
                                             </form>
                                         </div>
                                         <div
-                                            className={`tab-pane fade ${activeTab === "general" ? "show active" : ""} coming-soon`}
+                                            className={`tab-pane fade ${activeTab === "general" ? "show active" : ""}`}
                                             id="v-general"
                                             role="tabpanel"
                                             aria-labelledby="v-general-tab"
                                         >
-                                            <h4>Configuracion general</h4>
-                                            <div className="row">
-                                                <div className="col-md-4 col-sm-6 col-xs-12">
-                                                    <div className="card card-body border p-2">
-                                                        <h5 className="card-title mb-1">
-                                                            Que julio no vea
-                                                            esto
-                                                        </h5>
-                                                        <p className="card-text mb-1">
-                                                            Si lo ves, aun esta
-                                                            en implementacion,
-                                                            pero quiero que vaya
-                                                            quedando el diseño
-                                                        </p>
-                                                        <p className="card-text">
-                                                            <small className="text-muted">
-                                                                Atte. Manuel (el
-                                                                9)
-                                                            </small>
-                                                        </p>
+                                            <h4><i className="mdi mdi-clock-outline me-2 text-primary"></i>Configuración General — Horario Laboral</h4>
+                                            <p className="text-muted mb-4">
+                                                Define el horario de atención comercial. Esta configuración es leída por la regla <strong>Horario Laboral</strong> en el Diseñador de Flujos para saber si hay asesores disponibles.
+                                            </p>
+
+                                            {/* ---- Horario Laboral: tarjetas con pickers inline ---- */}
+                                            <div className="card border mb-4" style={{ maxWidth: 680 }}>
+                                                <div className="card-body p-4">
+                                                    <div className="d-flex align-items-center mb-3 gap-2">
+                                                        <i className="mdi mdi-briefcase-clock-outline fs-4 text-primary"></i>
+                                                        <h5 className="mb-0">Horario de Atención Comercial</h5>
                                                     </div>
-                                                </div>
-                                                <div className="col-md-4 col-sm-6 col-xs-12">
-                                                    <div className="card card-body border p-2">
-                                                        <h5 className="card-title mb-1">
-                                                            Que julio no vea
-                                                            esto
-                                                        </h5>
-                                                        <p className="card-text mb-1">
-                                                            Si lo ves, aun esta
-                                                            en implementacion,
-                                                            pero quiero que vaya
-                                                            quedando el diseño
-                                                        </p>
-                                                        <p className="card-text">
-                                                            <small className="text-muted">
-                                                                Atte. Manuel (el
-                                                                9)
-                                                            </small>
-                                                        </p>
+
+                                                    {/* Hora inicio / Hora fin */}
+                                                    <div className="row g-3 mb-3">
+                                                        <div className="col-sm-6">
+                                                            <label className="form-label small fw-semibold">
+                                                                <i className="mdi mdi-clock-start text-success me-1"></i>
+                                                                Hora de inicio
+                                                            </label>
+                                                            <input
+                                                                type="time"
+                                                                className="form-control"
+                                                                defaultValue={getConstant("business_start_time").value || "08:00"}
+                                                                onBlur={async (e) => {
+                                                                    await settingsRest.save({ type: "text", name: "business_start_time", value: e.target.value });
+                                                                }}
+                                                            />
+                                                        </div>
+                                                        <div className="col-sm-6">
+                                                            <label className="form-label small fw-semibold">
+                                                                <i className="mdi mdi-clock-end text-danger me-1"></i>
+                                                                Hora de cierre
+                                                            </label>
+                                                            <input
+                                                                type="time"
+                                                                className="form-control"
+                                                                defaultValue={getConstant("business_end_time").value || "19:00"}
+                                                                onBlur={async (e) => {
+                                                                    await settingsRest.save({ type: "text", name: "business_end_time", value: e.target.value });
+                                                                }}
+                                                            />
+                                                        </div>
                                                     </div>
-                                                </div>
-                                                <div className="col-md-4 col-sm-6 col-xs-12">
-                                                    <div className="card card-body border p-2">
-                                                        <h5 className="card-title mb-1">
-                                                            Que julio no vea
-                                                            esto
-                                                        </h5>
-                                                        <p className="card-text mb-1">
-                                                            Si lo ves, aun esta
-                                                            en implementacion,
-                                                            pero quiero que vaya
-                                                            quedando el diseño
-                                                        </p>
-                                                        <p className="card-text">
-                                                            <small className="text-muted">
-                                                                Atte. Manuel (el
-                                                                9)
-                                                            </small>
-                                                        </p>
-                                                    </div>
+
+                                                    {/* Días laborales: checkboxes */}
+                                                    <label className="form-label small fw-semibold mb-2">
+                                                        <i className="mdi mdi-calendar-week text-primary me-1"></i>
+                                                        Días de atención
+                                                    </label>
+                                                    <BusinessDaysPicker
+                                                        savedValue={getConstant("business_work_days").value}
+                                                        onSave={async (val) => {
+                                                            await settingsRest.save({ type: "text", name: "business_work_days", value: val });
+                                                        }}
+                                                    />
                                                 </div>
                                             </div>
                                         </div>
@@ -1362,76 +1495,16 @@ const Settings = ({
                                                 </div>
                                             </div>
                                         </div>
+                                        {/* Panel Servidor - oculto, no es para usuarios finales
                                         <div
-                                            className={`tab-pane fade ${activeTab === "email" ? "show active" : ""} coming-soon`}
-                                            id="v-email"
+                                            className={`tab-pane fade ${activeTab === "server" ? "show active" : ""}`}
+                                            id="v-server"
                                             role="tabpanel"
-                                            aria-labelledby="v-email-tab"
+                                            aria-labelledby="v-server-tab"
                                         >
-                                            <h4>Configuracion de correo</h4>
-                                            <div className="row">
-                                                <div className="col-md-4 col-sm-6 col-xs-12">
-                                                    <div className="card card-body border p-2">
-                                                        <h5 className="card-title mb-1">
-                                                            Credenciales
-                                                        </h5>
-                                                        <p className="card-text mb-1">
-                                                            De donde saldran los
-                                                            mensajes de correo
-                                                            hacia los leads?
-                                                        </p>
-                                                        <p className="card-text">
-                                                            <small className="text-muted">
-                                                                Correo actual:
-                                                                mundoweb.pe
-                                                            </small>
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                                <div className="col-md-4 col-sm-6 col-xs-12">
-                                                    <div
-                                                        className="card card-body border p-2"
-                                                        onClick={() => {}}
-                                                    >
-                                                        <h5 className="card-title mb-1">
-                                                            Diseño de correo
-                                                            para el lead
-                                                        </h5>
-                                                        <p className="card-text mb-1">
-                                                            Que correo veran los
-                                                            nuevos leads cuando
-                                                            caigan al crm?
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                                <div className="col-md-4 col-sm-6 col-xs-12">
-                                                    <div className="card card-body border p-2">
-                                                        <h5 className="card-title mb-1">
-                                                            Correo administrador
-                                                        </h5>
-                                                        <p className="card-text mb-1">
-                                                            A que correo deseas
-                                                            que te enviemos un
-                                                            mensaje cuando se
-                                                            registe un nuevo
-                                                            lead?
-                                                        </p>
-                                                        <p className="card-text">
-                                                            <small
-                                                                className="text-muted "
-                                                                style={{
-                                                                    wordWrap:
-                                                                        "wrap",
-                                                                }}
-                                                            >
-                                                                Correo actual:
-                                                                gamboapalominocarlosmanuel@gmail.com
-                                                            </small>
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                            </div>
+                                            <ServerPanel />
                                         </div>
+                                        */}
                                         <div
                                             className={`tab-pane fade ${activeTab === "whatsapp" ? "show active" : ""}`}
                                             id="v-whatsapp"
@@ -1572,14 +1645,56 @@ const Settings = ({
                                             role="tabpanel"
                                             aria-labelledby="v-generativeai-tab"
                                         >
-                                            <h4>
-                                                IA{" "}
-                                                <i className="mdi mdi-star-four-points"></i>
-                                            </h4>
-                                            <div className="row">
+                                            <div className="d-flex align-items-center justify-content-between mb-3">
+                                                <h4>
+                                                    IA{" "}
+                                                    <i className="mdi mdi-star-four-points text-warning ms-1"></i>
+                                                </h4>
+                                            </div>
+
+                                            <div className="row g-3">
+                                                {/* Card 1: Switch Estado de la IA */}
+                                                <div className="col-md-4 col-sm-6 col-xs-12">
+                                                    <div className="card card-body border p-3 h-100">
+                                                        <div className="d-flex align-items-center justify-content-between mb-2">
+                                                            <h5 className="card-title mb-0 text-primary">
+                                                                <i className="mdi mdi-robot-outline me-1"></i> Respuestas IA
+                                                            </h5>
+                                                            <div className="form-check form-switch fs-4 mb-0">
+                                                                <input
+                                                                    className="form-check-input style-pointer"
+                                                                    type="checkbox"
+                                                                    role="switch"
+                                                                    id="aiStatusSwitch"
+                                                                    checked={getConstant("gemini-status").value !== "0"}
+                                                                    onChange={async (e) => {
+                                                                        const val = e.target.checked ? "1" : "0";
+                                                                        await settingsRest.save({
+                                                                            type: "text",
+                                                                            name: "gemini-status",
+                                                                            value: val,
+                                                                        });
+                                                                        location.reload();
+                                                                    }}
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                        <p className="card-text mb-2 small text-muted">
+                                                            Activa o desactiva la IA para probar tus flujos sin interferencia.
+                                                        </p>
+                                                        <div className="mt-auto">
+                                                            <span className={`badge ${getConstant("gemini-status").value !== "0" ? "bg-success" : "bg-danger"}`}>
+                                                                {getConstant("gemini-status").value !== "0" ? "✓ IA Activada" : "✕ IA Pausada"}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                {/* Card 2: API Key Gemini */}
                                                 <div className="col-md-4 col-sm-6 col-xs-12">
                                                     <div
-                                                        className="card card-body border p-2"
+                                                        className="card card-body border p-3 h-100 style-pointer"
+                                                        style={{ cursor: "pointer" }}
                                                         onClick={(e) =>
                                                             onModalOpen(
                                                                 e,
@@ -1589,27 +1704,23 @@ const Settings = ({
                                                             )
                                                         }
                                                     >
-                                                        <h5 className="card-title mb-1">
-                                                            API Key - Gemini
+                                                        <h5 className="card-title mb-1 text-primary">
+                                                            <i className="mdi mdi-key-outline me-1"></i> API Key - Gemini
                                                         </h5>
-                                                        <p className="card-text mb-1">
-                                                            Configura un API key
-                                                            para que{" "}
-                                                            <b>Gemini</b>{" "}
-                                                            interactue con
-                                                            nuevos clientes.
+                                                        <p className="card-text mb-2 small text-muted">
+                                                            Configura tu API key para que Gemini interactúe con nuevos clientes.
                                                         </p>
-                                                        <p className="card-text">
-                                                            <small className="text-muted">
-                                                                Click para
-                                                                modificar
-                                                            </small>
+                                                        <p className="card-text mt-auto mb-0">
+                                                            <small className="text-muted">Click para modificar</small>
                                                         </p>
                                                     </div>
                                                 </div>
+
+                                                {/* Card 3: Qué hace tu empresa */}
                                                 <div className="col-md-4 col-sm-6 col-xs-12">
                                                     <div
-                                                        className="card card-body border p-2"
+                                                        className="card card-body border p-3 h-100 style-pointer"
+                                                        style={{ cursor: "pointer" }}
                                                         onClick={(e) =>
                                                             onModalOpen(
                                                                 e,
@@ -1619,47 +1730,14 @@ const Settings = ({
                                                             )
                                                         }
                                                     >
-                                                        <h5 className="card-title mb-1">
-                                                            Que hace tu empresa
+                                                        <h5 className="card-title mb-1 text-primary">
+                                                            <i className="mdi mdi-office-building-outline me-1"></i> Qué hace tu empresa
                                                         </h5>
-                                                        <p className="card-text mb-1">
-                                                            Ayuda a Gemini a
-                                                            saber que productos
-                                                            y/o servicios buscan
-                                                            los clientes en tu
-                                                            empresa
+                                                        <p className="card-text mb-2 small text-muted">
+                                                            Ayuda a Gemini a conocer tus productos y servicios (separados por comas).
                                                         </p>
-                                                        <p className="card-text">
-                                                            <small className="text-muted">
-                                                                Click para
-                                                                modificar
-                                                            </small>
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                                <div className="col-md-4 col-sm-6 col-xs-12">
-                                                    <div
-                                                        className="card card-body border p-2"
-                                                        onClick={() =>
-                                                            setCanvasOpen(true)
-                                                        }
-                                                    >
-                                                        <h5 className="card-title mb-1">
-                                                            Flujo de asistente
-                                                            (Beta)
-                                                        </h5>
-                                                        <p className="card-text mb-1">
-                                                            Configura el flujo
-                                                            de Gemini con leads
-                                                            para automatizar
-                                                            preguntas y
-                                                            respuestas.
-                                                        </p>
-                                                        <p className="card-text">
-                                                            <small className="text-muted">
-                                                                Click para
-                                                                modificar
-                                                            </small>
+                                                        <p className="card-text mt-auto mb-0">
+                                                            <small className="text-muted">Click para modificar</small>
                                                         </p>
                                                     </div>
                                                 </div>
@@ -1670,14 +1748,6 @@ const Settings = ({
                             </div>
                         </div>
                     </div>
-                    <FlowContainer
-                        questions={JSON.parse(questionsObj.value ?? "[]")}
-                        isOpen={canvasOpen}
-                        defaultMessages={defaultMessages}
-                        files={files}
-                        setIsOpen={setCanvasOpen}
-                        onModalOpen={onModalOpen}
-                    />
                 </div>
             </div>
             <Modal

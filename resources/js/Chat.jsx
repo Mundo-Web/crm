@@ -15,6 +15,7 @@ import useCrossTabSelectedUsers from './Reutilizables/CustomHooks/useCrossTabSel
 import ContactDetails from './Reutilizables/Chat/ContactDetails.jsx';
 import getTextFromReactNode from './Utils/getTextFromReactNode.js';
 import DetailLeadModal from './Reutilizables/Leads/DetailLeadModal.jsx';
+import AssignFlowModal from './Reutilizables/Flows/AssignFlowModal.jsx';
 import TasksRest from './actions/TasksRest.js';
 import { Local } from 'sode-extend-react';
 import Modal from './components/Modal.jsx';
@@ -97,6 +98,12 @@ const Chat = ({ users = [], defaultMessages = [], activeLeadId: activeLeadIdDB, 
   const usersContainerRef = useRef()
   const detailModalRef = useRef()
   const newLeadModalRef = useRef()
+  const flowModalRef = useRef()
+
+  const onOpenFlowModal = (lead) => {
+    setDetailLead(lead || contactDetails);
+    $(flowModalRef.current).modal('show');
+  };
 
   const idRef = useRef()
   const contactNameRef = useRef()
@@ -718,7 +725,7 @@ const Chat = ({ users = [], defaultMessages = [], activeLeadId: activeLeadIdDB, 
         <div className="col-xl-3 col-lg-12">
           <div className="card contact-details-card mb-xl-0">
             <div className="card-body scroll-hidden" style={{ height: 'calc(100vh - 186px)', overflowY: 'auto' }}>
-              <ContactDetails {...contactDetails} users={users} onAssign={onAssignLead} onOpenDetails={onOpenDetails} chatStatuses={chatStatuses} onLeadUpdate={onLeadUpdate} />
+              <ContactDetails {...contactDetails} users={users} onAssign={onAssignLead} onOpenDetails={onOpenDetails} onOpenFlowModal={onOpenFlowModal} chatStatuses={chatStatuses} onLeadUpdate={onLeadUpdate} />
             </div>
           </div>
         </div>
@@ -741,6 +748,11 @@ const Chat = ({ users = [], defaultMessages = [], activeLeadId: activeLeadIdDB, 
       convertedLeadStatus={convertedLeadStatus}
       defaultClientStatus={defaultClientStatus}
       products={products}
+    />
+
+    <AssignFlowModal
+      modalRef={flowModalRef}
+      lead={detailLead}
     />
 
     <Modal

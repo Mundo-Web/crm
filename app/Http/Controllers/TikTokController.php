@@ -320,9 +320,10 @@ class TikTokController extends Controller
                 'microtime' => (int) (microtime(true) * 1_000_000)
             ]);
 
-            // Disparar asistente Gemini si está configurada la API key
+            // Disparar asistente Gemini si está configurada la API key y la IA está activa
             $hasApikey = Setting::get('gemini-api-key', $business->id);
-            if ($hasApikey) {
+            $aiStatus = Setting::get('gemini-status', $business->id, '1');
+            if ($hasApikey && !in_array((string)$aiStatus, ['0', 'false', 'off'], true)) {
                 MetaAssistantJob::dispatch($client, $message, 'tiktok');
             }
 

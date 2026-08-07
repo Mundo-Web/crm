@@ -41,12 +41,13 @@ const LeadDetailContent = ({
     products = [],
     processes = [],
     session = {},
-    onLeadUpdate = () => {},
-    onOpenEditModal = () => {}, // Callback to open the edit modal
+    onLeadUpdate = () => { },
+    onOpenEditModal = () => { }, // Callback to open the edit modal
     convertedLeadStatus,
     defaultClientStatus,
     defaultMessages = [],
     signs = [],
+    onOpenFlowModal = () => { },
 }) => {
     const [leadLoaded, setLeadLoaded] = useState(leadLoadedInitial);
     const [notes, setNotes] = useState([]);
@@ -462,16 +463,16 @@ const LeadDetailContent = ({
             client_data: clientData,
             tasks: isTask
                 ? [
-                      {
-                          name: taskTitleRef.current.value,
-                          type: taskTypeRef.current.value,
-                          priority: taskPriorityRef.current.value,
-                          description: text ? content : undefined,
-                          ends_at: `${taskEndsAtDateRef.current.value} ${taskEndsAtTimeRef.current.value}`,
-                          assigned_to: taskAssignedToRef.current.value,
-                          mentions,
-                      },
-                  ]
+                    {
+                        name: taskTitleRef.current.value,
+                        type: taskTypeRef.current.value,
+                        priority: taskPriorityRef.current.value,
+                        description: text ? content : undefined,
+                        ends_at: `${taskEndsAtDateRef.current.value} ${taskEndsAtTimeRef.current.value}`,
+                        assigned_to: taskAssignedToRef.current.value,
+                        mentions,
+                    },
+                ]
                 : [],
             mentions: !isTask ? mentions : [],
         });
@@ -677,6 +678,15 @@ const LeadDetailContent = ({
                         <span className="badge bg-primary me-1">
                             {leadLoaded?.contact_position || "Trabajador"}
                         </span>{" "}
+                        <Tippy content="Asignar y ejecutar flujo autónomo de decisiones">
+                            <span
+                                className="badge text-white ms-1 font-11 py-1 px-2"
+                                style={{ backgroundColor: "#8b5cf6", cursor: "pointer" }}
+                                onClick={() => onOpenFlowModal(leadLoaded)}
+                            >
+                                <i className="mdi mdi-source-branch me-1"></i>Flujo
+                            </span>
+                        </Tippy>{" "}
                         <small className="text-muted">
                             desde <b>{leadLoaded?.origin}</b>
                         </small>
@@ -774,12 +784,11 @@ const LeadDetailContent = ({
                                 {users.map((user) => (
                                     <button
                                         key={user.id}
-                                        className={`dropdown-item d-flex align-items-center gap-2 ${
-                                            leadLoaded.assigned_to ===
-                                            user.service_user.id
+                                        className={`dropdown-item d-flex align-items-center gap-2 ${leadLoaded.assigned_to ===
+                                                user.service_user.id
                                                 ? "active"
                                                 : ""
-                                        }`}
+                                            }`}
                                         onClick={() =>
                                             onAssignLead(
                                                 leadLoaded.id,
@@ -1056,116 +1065,116 @@ const LeadDetailContent = ({
                                             )}
                                             {type.id ==
                                                 "e20c7891-1ef8-4388-8150-4c1028cc4525" && (
-                                                <>
-                                                    <InputFormGroup
-                                                        eRef={taskTitleRef}
-                                                        label="Titulo de la tarea"
-                                                        col="col-12"
-                                                        required
-                                                    />
-                                                    <SelectFormGroup
-                                                        eRef={taskTypeRef}
-                                                        label="Tipo de tarea"
-                                                        col="col-lg-4 col-md-12"
-                                                        required
-                                                        dropdownParent={`#note-type-${type.id}`}
-                                                        defaultValue="Por hacer"
-                                                    >
-                                                        <option value="Llamada">
-                                                            Llamada
-                                                        </option>
-                                                        <option value="Correo">
-                                                            Correo
-                                                        </option>
-                                                        <option value="Por hacer">
-                                                            Por hacer
-                                                        </option>
-                                                    </SelectFormGroup>
-                                                    <SelectFormGroup
-                                                        eRef={taskPriorityRef}
-                                                        label="Prioridad"
-                                                        col="col-lg-3 col-md-12"
-                                                        required
-                                                        dropdownParent={`#note-type-${type.id}`}
-                                                        defaultValue="Media"
-                                                    >
-                                                        <option value="Baja">
-                                                            Baja
-                                                        </option>
-                                                        <option value="Media">
-                                                            Media
-                                                        </option>
-                                                        <option value="Alta">
-                                                            Alta
-                                                        </option>
-                                                        <option value="Urgente">
-                                                            Urgente
-                                                        </option>
-                                                    </SelectFormGroup>
-                                                    <SelectAPIFormGroup
-                                                        eRef={taskAssignedToRef}
-                                                        label="Asignado a"
-                                                        col="col-lg-5 col-md-12"
-                                                        dropdownParent={`#note-type-${type.id}`}
-                                                        searchAPI="/api/users/paginate"
-                                                        searchBy="fullname"
-                                                    />
-                                                    <InputFormGroup
-                                                        eRef={taskEndsAtDateRef}
-                                                        label="Fecha finalización"
-                                                        type="date"
-                                                        col="col-lg-6 col-md-12"
-                                                        required
-                                                    />
-                                                    <InputFormGroup
-                                                        eRef={taskEndsAtTimeRef}
-                                                        label="Hora finalización"
-                                                        type="time"
-                                                        col="col-lg-6 col-md-12"
-                                                        required
-                                                    />
-                                                </>
-                                            )}
+                                                    <>
+                                                        <InputFormGroup
+                                                            eRef={taskTitleRef}
+                                                            label="Titulo de la tarea"
+                                                            col="col-12"
+                                                            required
+                                                        />
+                                                        <SelectFormGroup
+                                                            eRef={taskTypeRef}
+                                                            label="Tipo de tarea"
+                                                            col="col-lg-4 col-md-12"
+                                                            required
+                                                            dropdownParent={`#note-type-${type.id}`}
+                                                            defaultValue="Por hacer"
+                                                        >
+                                                            <option value="Llamada">
+                                                                Llamada
+                                                            </option>
+                                                            <option value="Correo">
+                                                                Correo
+                                                            </option>
+                                                            <option value="Por hacer">
+                                                                Por hacer
+                                                            </option>
+                                                        </SelectFormGroup>
+                                                        <SelectFormGroup
+                                                            eRef={taskPriorityRef}
+                                                            label="Prioridad"
+                                                            col="col-lg-3 col-md-12"
+                                                            required
+                                                            dropdownParent={`#note-type-${type.id}`}
+                                                            defaultValue="Media"
+                                                        >
+                                                            <option value="Baja">
+                                                                Baja
+                                                            </option>
+                                                            <option value="Media">
+                                                                Media
+                                                            </option>
+                                                            <option value="Alta">
+                                                                Alta
+                                                            </option>
+                                                            <option value="Urgente">
+                                                                Urgente
+                                                            </option>
+                                                        </SelectFormGroup>
+                                                        <SelectAPIFormGroup
+                                                            eRef={taskAssignedToRef}
+                                                            label="Asignado a"
+                                                            col="col-lg-5 col-md-12"
+                                                            dropdownParent={`#note-type-${type.id}`}
+                                                            searchAPI="/api/users/paginate"
+                                                            searchBy="fullname"
+                                                        />
+                                                        <InputFormGroup
+                                                            eRef={taskEndsAtDateRef}
+                                                            label="Fecha finalización"
+                                                            type="date"
+                                                            col="col-lg-6 col-md-12"
+                                                            required
+                                                        />
+                                                        <InputFormGroup
+                                                            eRef={taskEndsAtTimeRef}
+                                                            label="Hora finalización"
+                                                            type="time"
+                                                            col="col-lg-6 col-md-12"
+                                                            required
+                                                        />
+                                                    </>
+                                                )}
                                             {type.id ==
                                                 "8e895346-3d87-4a87-897a-4192b917c211" && (
-                                                <InputFormGroup
-                                                    eRef={processRef}
-                                                    label="Proceso"
-                                                    col="col-12"
-                                                    parentClassName="dropdown"
-                                                    className="dropdown-toggle"
-                                                    data-bs-toggle="dropdown"
-                                                >
-                                                    <ul className="dropdown-menu w-100">
-                                                        {processes.map(
-                                                            (p, idx) => (
-                                                                <li
-                                                                    key={idx}
-                                                                    className="dropdown-item"
-                                                                    onClick={() =>
+                                                    <InputFormGroup
+                                                        eRef={processRef}
+                                                        label="Proceso"
+                                                        col="col-12"
+                                                        parentClassName="dropdown"
+                                                        className="dropdown-toggle"
+                                                        data-bs-toggle="dropdown"
+                                                    >
+                                                        <ul className="dropdown-menu w-100">
+                                                            {processes.map(
+                                                                (p, idx) => (
+                                                                    <li
+                                                                        key={idx}
+                                                                        className="dropdown-item"
+                                                                        onClick={() =>
                                                                         (processRef.current.value =
                                                                             p.name)
-                                                                    }
-                                                                    style={{
-                                                                        cursor: "pointer",
-                                                                    }}
-                                                                >
-                                                                    <b className="d-block">
-                                                                        {p.name}
-                                                                    </b>
-                                                                    {p.description && (
-                                                                        <small className="d-block text-truncate">
-                                                                            {
-                                                                                p.description
-                                                                            }
-                                                                        </small>
-                                                                    )}
-                                                                </li>
-                                                            ),
-                                                        )}
-                                                    </ul>
-                                                </InputFormGroup>
-                                            )}
+                                                                        }
+                                                                        style={{
+                                                                            cursor: "pointer",
+                                                                        }}
+                                                                    >
+                                                                        <b className="d-block">
+                                                                            {p.name}
+                                                                        </b>
+                                                                        {p.description && (
+                                                                            <small className="d-block text-truncate">
+                                                                                {
+                                                                                    p.description
+                                                                                }
+                                                                            </small>
+                                                                        )}
+                                                                    </li>
+                                                                ),
+                                                            )}
+                                                        </ul>
+                                                    </InputFormGroup>
+                                                )}
                                             {!isGmail && (
                                                 <div className="col-12 mb-2">
                                                     <label className="mb-1">
@@ -1182,165 +1191,165 @@ const LeadDetailContent = ({
                                             )}
                                             {type.id ==
                                                 "8e895346-3d87-4a87-897a-4192b917c211" && (
-                                                <>
-                                                    <div className="col-lg-6 mb-2">
-                                                        <label className="form-label">
-                                                            Estado de gestión
-                                                        </label>
-                                                        <div className="dropdown">
-                                                            <button
-                                                                className="btn btn-white btn-sm dropdown-toggle w-100 text-start"
-                                                                type="button"
-                                                                data-bs-toggle="dropdown"
-                                                                ref={statusRef}
-                                                            >
-                                                                {statuses.find(
-                                                                    (s) =>
-                                                                        s.id ===
-                                                                        processStatus,
-                                                                )?.name ||
-                                                                    "Seleccionar estado"}
-                                                                <i className="mdi mdi-chevron-down float-end" />
-                                                            </button>
-                                                            <ul className="dropdown-menu w-100">
-                                                                {statuses
-                                                                    .sort(
-                                                                        (
-                                                                            a,
-                                                                            b,
-                                                                        ) =>
-                                                                            a.order -
-                                                                            b.order,
-                                                                    )
-                                                                    .map(
-                                                                        (s) => (
-                                                                            <li
-                                                                                key={
-                                                                                    s.id
-                                                                                }
-                                                                            >
-                                                                                <button
-                                                                                    className="dropdown-item"
-                                                                                    onClick={() =>
-                                                                                        setProcessStatus(
-                                                                                            s.id,
-                                                                                        )
+                                                    <>
+                                                        <div className="col-lg-6 mb-2">
+                                                            <label className="form-label">
+                                                                Estado de gestión
+                                                            </label>
+                                                            <div className="dropdown">
+                                                                <button
+                                                                    className="btn btn-white btn-sm dropdown-toggle w-100 text-start"
+                                                                    type="button"
+                                                                    data-bs-toggle="dropdown"
+                                                                    ref={statusRef}
+                                                                >
+                                                                    {statuses.find(
+                                                                        (s) =>
+                                                                            s.id ===
+                                                                            processStatus,
+                                                                    )?.name ||
+                                                                        "Seleccionar estado"}
+                                                                    <i className="mdi mdi-chevron-down float-end" />
+                                                                </button>
+                                                                <ul className="dropdown-menu w-100">
+                                                                    {statuses
+                                                                        .sort(
+                                                                            (
+                                                                                a,
+                                                                                b,
+                                                                            ) =>
+                                                                                a.order -
+                                                                                b.order,
+                                                                        )
+                                                                        .map(
+                                                                            (s) => (
+                                                                                <li
+                                                                                    key={
+                                                                                        s.id
                                                                                     }
                                                                                 >
-                                                                                    <i
-                                                                                        className="mdi mdi-circle me-1"
-                                                                                        style={{
-                                                                                            color: s.color,
-                                                                                        }}
-                                                                                    />
-                                                                                    {
-                                                                                        s.name
-                                                                                    }
-                                                                                </button>
-                                                                            </li>
-                                                                        ),
-                                                                    )}
-                                                            </ul>
-                                                        </div>
-                                                    </div>
-                                                    <div className="col-lg-6 mb-2">
-                                                        <label className="form-label">
-                                                            Etiqueta
-                                                        </label>
-                                                        <div className="dropdown">
-                                                            <button
-                                                                className="btn btn-white btn-sm dropdown-toggle w-100 text-start"
-                                                                type="button"
-                                                                data-bs-toggle="dropdown"
-                                                                ref={
-                                                                    manageStatusRef
-                                                                }
-                                                            >
-                                                                {manageStatuses.find(
-                                                                    (s) =>
-                                                                        s.id ===
-                                                                        processManageStatus,
-                                                                )?.name ||
-                                                                    "Seleccionar estado"}
-                                                                <i className="mdi mdi-chevron-down float-end" />
-                                                            </button>
-                                                            <ul className="dropdown-menu w-100">
-                                                                {manageStatuses
-                                                                    .filter(
-                                                                        (s) => {
-                                                                            const parent =
-                                                                                statuses.find(
-                                                                                    (
-                                                                                        ps,
-                                                                                    ) =>
-                                                                                        ps.id ===
-                                                                                        processStatus,
-                                                                                );
-                                                                            if (
-                                                                                !parent
-                                                                                    ?.children
-                                                                                    ?.length
-                                                                            )
-                                                                                return true;
-                                                                            return parent.children.includes(
-                                                                                s.id,
-                                                                            );
-                                                                        },
-                                                                    )
-                                                                    .sort(
-                                                                        (
-                                                                            a,
-                                                                            b,
-                                                                        ) =>
-                                                                            a.order -
-                                                                            b.order,
-                                                                    )
-                                                                    .map(
-                                                                        (s) => (
-                                                                            <li
-                                                                                key={
-                                                                                    s.id
-                                                                                }
-                                                                            >
-                                                                                <button
-                                                                                    className="dropdown-item"
-                                                                                    onClick={() => {
-                                                                                        setProcessManageStatus(
-                                                                                            s.id,
-                                                                                        );
-                                                                                        if (
-                                                                                            s.parent &&
-                                                                                            statuses.some(
-                                                                                                (
-                                                                                                    ps,
-                                                                                                ) =>
-                                                                                                    ps.id ===
-                                                                                                    s.parent,
-                                                                                            )
-                                                                                        )
+                                                                                    <button
+                                                                                        className="dropdown-item"
+                                                                                        onClick={() =>
                                                                                             setProcessStatus(
-                                                                                                s.parent,
-                                                                                            );
-                                                                                    }}
-                                                                                >
-                                                                                    <i
-                                                                                        className="mdi mdi-circle me-1"
-                                                                                        style={{
-                                                                                            color: s.color,
-                                                                                        }}
-                                                                                    />
-                                                                                    {
-                                                                                        s.name
-                                                                                    }
-                                                                                </button>
-                                                                            </li>
-                                                                        ),
-                                                                    )}
-                                                            </ul>
+                                                                                                s.id,
+                                                                                            )
+                                                                                        }
+                                                                                    >
+                                                                                        <i
+                                                                                            className="mdi mdi-circle me-1"
+                                                                                            style={{
+                                                                                                color: s.color,
+                                                                                            }}
+                                                                                        />
+                                                                                        {
+                                                                                            s.name
+                                                                                        }
+                                                                                    </button>
+                                                                                </li>
+                                                                            ),
+                                                                        )}
+                                                                </ul>
+                                                            </div>
                                                         </div>
-                                                    </div>
-                                                </>
-                                            )}
+                                                        <div className="col-lg-6 mb-2">
+                                                            <label className="form-label">
+                                                                Etiqueta
+                                                            </label>
+                                                            <div className="dropdown">
+                                                                <button
+                                                                    className="btn btn-white btn-sm dropdown-toggle w-100 text-start"
+                                                                    type="button"
+                                                                    data-bs-toggle="dropdown"
+                                                                    ref={
+                                                                        manageStatusRef
+                                                                    }
+                                                                >
+                                                                    {manageStatuses.find(
+                                                                        (s) =>
+                                                                            s.id ===
+                                                                            processManageStatus,
+                                                                    )?.name ||
+                                                                        "Seleccionar estado"}
+                                                                    <i className="mdi mdi-chevron-down float-end" />
+                                                                </button>
+                                                                <ul className="dropdown-menu w-100">
+                                                                    {manageStatuses
+                                                                        .filter(
+                                                                            (s) => {
+                                                                                const parent =
+                                                                                    statuses.find(
+                                                                                        (
+                                                                                            ps,
+                                                                                        ) =>
+                                                                                            ps.id ===
+                                                                                            processStatus,
+                                                                                    );
+                                                                                if (
+                                                                                    !parent
+                                                                                        ?.children
+                                                                                        ?.length
+                                                                                )
+                                                                                    return true;
+                                                                                return parent.children.includes(
+                                                                                    s.id,
+                                                                                );
+                                                                            },
+                                                                        )
+                                                                        .sort(
+                                                                            (
+                                                                                a,
+                                                                                b,
+                                                                            ) =>
+                                                                                a.order -
+                                                                                b.order,
+                                                                        )
+                                                                        .map(
+                                                                            (s) => (
+                                                                                <li
+                                                                                    key={
+                                                                                        s.id
+                                                                                    }
+                                                                                >
+                                                                                    <button
+                                                                                        className="dropdown-item"
+                                                                                        onClick={() => {
+                                                                                            setProcessManageStatus(
+                                                                                                s.id,
+                                                                                            );
+                                                                                            if (
+                                                                                                s.parent &&
+                                                                                                statuses.some(
+                                                                                                    (
+                                                                                                        ps,
+                                                                                                    ) =>
+                                                                                                        ps.id ===
+                                                                                                        s.parent,
+                                                                                                )
+                                                                                            )
+                                                                                                setProcessStatus(
+                                                                                                    s.parent,
+                                                                                                );
+                                                                                        }}
+                                                                                    >
+                                                                                        <i
+                                                                                            className="mdi mdi-circle me-1"
+                                                                                            style={{
+                                                                                                color: s.color,
+                                                                                            }}
+                                                                                        />
+                                                                                        {
+                                                                                            s.name
+                                                                                        }
+                                                                                    </button>
+                                                                                </li>
+                                                                            ),
+                                                                        )}
+                                                                </ul>
+                                                            </div>
+                                                        </div>
+                                                    </>
+                                                )}
                                             {!isGmail && (
                                                 <div className="col-12">
                                                     <button
@@ -1357,82 +1366,82 @@ const LeadDetailContent = ({
                                         {!isGmail && <hr />}
                                         {isGmail
                                             ? mails.map((mail, idx) => (
-                                                  <div
-                                                      key={idx}
-                                                      className="card mb-2 border shadow-none"
-                                                      style={{
-                                                          cursor: "pointer",
-                                                      }}
-                                                      onClick={async () => {
-                                                          const details =
-                                                              await gmailRest.getDetails(
-                                                                  mail.id,
-                                                              );
-                                                          if (details) {
-                                                              setMailLoaded(
-                                                                  details,
-                                                              );
-                                                              $(
-                                                                  mailModal.current,
-                                                              ).modal("show");
-                                                          }
-                                                      }}
-                                                  >
-                                                      <div className="card-header p-2 bg-light">
-                                                          <b className="d-block">
-                                                              {mail.type ==
-                                                              "sent" ? (
-                                                                  <i className="mdi mdi-send me-1"></i>
-                                                              ) : (
-                                                                  <i className="mdi mdi-inbox me-1"></i>
-                                                              )}
-                                                              <HtmlContent
-                                                                  className="d-inline"
-                                                                  html={SodeString(
-                                                                      mail.sender,
-                                                                  ).replace(
-                                                                      /\<(.*?)\>/g,
-                                                                      '<span class="mx-1">·</span><small>&lt;$1&gt;</small>',
-                                                                  )}
-                                                              />
-                                                          </b>
-                                                          <small className="text-muted">
-                                                              {moment(
-                                                                  mail.date,
-                                                              ).format("LLL")}
-                                                          </small>
-                                                      </div>
-                                                      <div className="card-body p-2 font-13">
-                                                          <b>{mail.subject}</b>{" "}
-                                                          - {mail.snippet}
-                                                      </div>
-                                                  </div>
-                                              ))
+                                                <div
+                                                    key={idx}
+                                                    className="card mb-2 border shadow-none"
+                                                    style={{
+                                                        cursor: "pointer",
+                                                    }}
+                                                    onClick={async () => {
+                                                        const details =
+                                                            await gmailRest.getDetails(
+                                                                mail.id,
+                                                            );
+                                                        if (details) {
+                                                            setMailLoaded(
+                                                                details,
+                                                            );
+                                                            $(
+                                                                mailModal.current,
+                                                            ).modal("show");
+                                                        }
+                                                    }}
+                                                >
+                                                    <div className="card-header p-2 bg-light">
+                                                        <b className="d-block">
+                                                            {mail.type ==
+                                                                "sent" ? (
+                                                                <i className="mdi mdi-send me-1"></i>
+                                                            ) : (
+                                                                <i className="mdi mdi-inbox me-1"></i>
+                                                            )}
+                                                            <HtmlContent
+                                                                className="d-inline"
+                                                                html={SodeString(
+                                                                    mail.sender,
+                                                                ).replace(
+                                                                    /\<(.*?)\>/g,
+                                                                    '<span class="mx-1">·</span><small>&lt;$1&gt;</small>',
+                                                                )}
+                                                            />
+                                                        </b>
+                                                        <small className="text-muted">
+                                                            {moment(
+                                                                mail.date,
+                                                            ).format("LLL")}
+                                                        </small>
+                                                    </div>
+                                                    <div className="card-body p-2 font-13">
+                                                        <b>{mail.subject}</b>{" "}
+                                                        - {mail.snippet}
+                                                    </div>
+                                                </div>
+                                            ))
                                             : notes
-                                                  .filter(
-                                                      (n) =>
-                                                          n.note_type_id ==
-                                                          type.id,
-                                                  )
-                                                  .sort((a, b) =>
-                                                      b.created_at >
-                                                      a.created_at
-                                                          ? 1
-                                                          : -1,
-                                                  )
-                                                  .map((note, idx) => (
-                                                      <ClientNotesCard
-                                                          key={idx}
-                                                          {...note}
-                                                          session={session}
-                                                          onDeleteNote={
-                                                              onDeleteNote
-                                                          }
-                                                          onUpdateNote={
-                                                              onUpdateNoteClicked
-                                                          }
-                                                      />
-                                                  ))}
+                                                .filter(
+                                                    (n) =>
+                                                        n.note_type_id ==
+                                                        type.id,
+                                                )
+                                                .sort((a, b) =>
+                                                    b.created_at >
+                                                        a.created_at
+                                                        ? 1
+                                                        : -1,
+                                                )
+                                                .map((note, idx) => (
+                                                    <ClientNotesCard
+                                                        key={idx}
+                                                        {...note}
+                                                        session={session}
+                                                        onDeleteNote={
+                                                            onDeleteNote
+                                                        }
+                                                        onUpdateNote={
+                                                            onUpdateNoteClicked
+                                                        }
+                                                    />
+                                                ))}
                                     </div>
                                 );
                             })}
