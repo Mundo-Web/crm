@@ -101,6 +101,11 @@ class ClientStatusObserver
             ]);
         }
 
+        // Disparar flujos automatizados si cambió el estado de gestión o la etiqueta del lead
+        if ($client->isDirty('status_id') || $client->isDirty('manage_status_id')) {
+            \App\Http\Controllers\FlowController::triggerFlowsForStatusChange($client);
+        }
+
         // Notify client.updated in real-time when critical fields change
         $criticalFields = ['assigned_to', 'status_id', 'manage_status_id', 'chat_status_id', 'contact_name', 'contact_phone', 'contact_email', 'last_message', 'last_message_microtime'];
         $isCriticalDirty = false;

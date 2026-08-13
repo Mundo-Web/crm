@@ -88,9 +88,8 @@ const SearchableSelect = ({ options = [], value, onChange, placeholder = "Buscar
                                 <button
                                     key={opt.value}
                                     type="button"
-                                    className={`list-group-item list-group-item-action py-1 px-2 text-truncate border-0 font-11 rounded mb-1 ${
-                                        String(opt.value) === String(value) ? "bg-primary text-white fw-bold" : "text-dark"
-                                    }`}
+                                    className={`list-group-item list-group-item-action py-1 px-2 text-truncate border-0 font-11 rounded mb-1 ${String(opt.value) === String(value) ? "bg-primary text-white fw-bold" : "text-dark"
+                                        }`}
                                     onClick={() => {
                                         onChange(opt.value);
                                         setIsOpen(false);
@@ -143,9 +142,9 @@ const getFieldHumanLabel = (key) => {
     }
 };
 
-// 1. TRIGGER NODE (Start)
+// 1. TRIGGER / START NODE
 const TriggerNode = ({ data }) => {
-    const label = getTriggerLabel(data.triggerType || data.triggerLabel);
+    const label = getTriggerLabel(data.triggerType || "all");
     return (
         <div className="card shadow-sm m-0 rounded-3 border" style={{ minWidth: 220, borderTop: "3px solid #3b82f6" }}>
             <div className="card-body p-2 font-12 bg-white">
@@ -159,9 +158,14 @@ const TriggerNode = ({ data }) => {
                 <div className="text-muted font-11 mt-1 text-truncate">
                     Origen: <span className="fw-semibold text-dark">{label}</span>
                 </div>
+                {data.status_name && (
+                    <div className="font-10 text-primary fw-bold text-truncate mt-1">
+                        <i className="mdi mdi-tag me-1"></i> Etiqueta: {data.status_name}
+                    </div>
+                )}
                 {data.manage_status_name && (
                     <div className="font-10 text-success fw-bold text-truncate mt-1">
-                        <i className="mdi mdi-tag-sync me-1"></i> Al Cambiar Estado: {data.manage_status_name}
+                        <i className="mdi mdi-tag-sync me-1"></i> Gestión: {data.manage_status_name}
                     </div>
                 )}
                 {data.campaign_name && (
@@ -188,6 +192,10 @@ const getDecisionSummary = (data) => {
             return `¿Atención en Horario Laboral?`;
         case "temperature":
             return `¿Temperatura es "${data.expected_value || "caliente"}"?`;
+        case "lead_status":
+            return `¿Estado es "${data.status_name || "..."}"?`;
+        case "manage_status":
+            return `¿Gestión es "${data.manage_status_name || "..."}"?`;
         default:
             return data.title || "¿Cumple Condición?";
     }
@@ -274,11 +282,23 @@ const StatusNode = ({ data }) => {
             <Handle type="target" position={Position.Top} className="bg-warning" style={{ width: 8, height: 8 }} />
             <div className="card-body p-2 font-12 bg-white text-center">
                 <div className="fw-bold text-warning font-11 mb-1">
-                    <i className="mdi mdi-tag-outline me-1"></i> ESTADO DE GESTIÓN
+                    <i className="mdi mdi-tag-outline me-1"></i> CAMBIAR ESTADO
                 </div>
-                <div className="fw-bold text-dark font-12 text-truncate">
-                    {data.manageStatusName || "Seleccionar Estado..."}
-                </div>
+                {data.manageStatusName && (
+                    <div className="fw-bold text-dark font-12 text-truncate">
+                        Gestión: {data.manageStatusName}
+                    </div>
+                )}
+                {data.statusName && (
+                    <div className="fw-semibold text-primary font-11 text-truncate">
+                        Etiqueta: {data.statusName}
+                    </div>
+                )}
+                {!data.manageStatusName && !data.statusName && (
+                    <div className="fw-bold text-muted font-12 text-truncate">
+                        Seleccionar Estado...
+                    </div>
+                )}
                 {data.temperature && (
                     <span className="badge bg-soft-warning text-dark font-10 mt-1">
                         Temp: {data.temperature}
@@ -903,7 +923,7 @@ const Flows = ({
         // Filter valid outgoing edges whose target node actually exists in nodes!
         const outgoingEdges = currentEdges.filter(
             (e) => String(e.source) === String(currentNodeId) &&
-            currentNodes.some((n) => String(n.id) === String(e.target))
+                currentNodes.some((n) => String(n.id) === String(e.target))
         );
 
         if (currentNode.type === "TRIGGER") {
@@ -1124,7 +1144,7 @@ const Flows = ({
             const currentNode = nodesRef.current.find((n) => String(n.id) === String(activeSimNodeId));
             const outgoingEdges = edgesRef.current.filter(
                 (e) => String(e.source) === String(activeSimNodeId) &&
-                nodesRef.current.some((n) => String(n.id) === String(e.target))
+                    nodesRef.current.some((n) => String(n.id) === String(e.target))
             );
 
             if (currentNode && (currentNode.type === "DECISION" || currentNode.type === "TEMPORIZADOR" || currentNode.type === "ESPERAR_RESPUESTA" || currentNode.type === "PETICION_DATOS")) {
@@ -1163,22 +1183,19 @@ const Flows = ({
             if (status) {
                 const savedFlow = result?.data || result;
 
-                Swal.fire({
-                    title: "Flujo Guardado",
-                    text: "El diagrama de toma de decisiones ha sido almacenado correctamente.",
-                    icon: "success",
-                    timer: 1500,
-                }).then(() => {
-                    location.reload();
-                });
-
                 if (savedFlow && savedFlow.id) {
                     if (isEditing) {
                         setFlows((prev) => prev.map((f) => (f.id === savedFlow.id ? savedFlow : f)));
                     } else {
                         setFlows((prev) => [savedFlow, ...prev]);
                     }
+                    setSelectedFlow(savedFlow);
                 }
+
+                Toast.fire({
+                    icon: "success",
+                    title: "Flujo guardado correctamente",
+                });
 
                 $(designerModalRef.current).modal("hide");
             } else {
@@ -1270,21 +1287,6 @@ const Flows = ({
             filterTrigger === "all" || f.trigger_type === filterTrigger;
         return matchesSearch && matchesTrigger;
     });
-
-    const getTriggerLabel = (type) => {
-        switch (type) {
-            case "click_to_whatsapp":
-                return "Click to WhatsApp";
-            case "meta_form":
-                return "Formulario Meta";
-            case "lead_status":
-                return "Estado del Lead";
-            case "chat_temperature":
-                return "Temperatura del Chat";
-            default:
-                return "Todos los orígenes";
-        }
-    };
 
     return (
         <div className="container-fluid py-3">
@@ -1706,18 +1708,45 @@ const Flows = ({
                                                 </select>
                                             </div>
 
-                                            {/* 2. Estado de Gestión Inicial / Estatus (ALWAYS VISIBLE) */}
+                                            {/* 2. Etiqueta / Estado del Prospecto (ALWAYS VISIBLE) */}
                                             <div className="mb-2">
                                                 <label className="form-label font-11 fw-bold mb-1">
-                                                    <i className="mdi mdi-tag-sync me-1 text-success"></i> Estado de Gestión (Estatus Inicial)
+                                                    <i className="mdi mdi-tag me-1 text-primary"></i> Estado de Pipeline
                                                 </label>
                                                 <SearchableSelect
                                                     options={[
-                                                        { value: "", label: "-- Cualquier Estado de Gestión --" },
+                                                        { value: "", label: "-- Cualquier Estado de Pipeline --" },
+                                                        ...leadStatuses.map((s) => ({ value: s.id, label: s.name })),
+                                                    ]}
+                                                    value={triggerConditions.status_id || ""}
+                                                    placeholder="Buscar Estado de Pipeline (ej. Lead, Cliente...)..."
+                                                    onChange={(val) => {
+                                                        const st = leadStatuses.find((s) => s.id == val);
+                                                        setTriggerConditions({
+                                                            ...triggerConditions,
+                                                            status_id: val,
+                                                            status_name: st ? st.name : "",
+                                                        });
+                                                        updateSelectedNodeData({
+                                                            status_id: val,
+                                                            status_name: st ? st.name : "",
+                                                        });
+                                                    }}
+                                                />
+                                            </div>
+
+                                            {/* 3. Estado de Gestión Inicial / Pipeline (ALWAYS VISIBLE) */}
+                                            <div className="mb-2">
+                                                <label className="form-label font-11 fw-bold mb-1">
+                                                    <i className="mdi mdi-tag-sync me-1 text-success"></i> Etiqueta de Gestión
+                                                </label>
+                                                <SearchableSelect
+                                                    options={[
+                                                        { value: "", label: "-- Cualquier Etiqueta de Gestión --" },
                                                         ...manageStatuses.map((s) => ({ value: s.id, label: s.name })),
                                                     ]}
                                                     value={triggerConditions.manage_status_id || ""}
-                                                    placeholder="Buscar estado (ej. Recién Llegado, En Cotización)..."
+                                                    placeholder="Buscar Etiqueta de Gestión (ej. Recién Llegado, En Cotización)..."
                                                     onChange={(val) => {
                                                         const st = manageStatuses.find((s) => s.id == val);
                                                         setTriggerConditions({
@@ -1732,7 +1761,7 @@ const Flows = ({
                                                     }}
                                                 />
                                                 <small className="text-muted font-10 d-block mt-1">
-                                                    Filtra o dispara la ejecución si el Lead ingresa o cambia a este estado en el CRM.
+                                                    Filtra o dispara la ejecución si el Lead ingresa o cambia a esta etiqueta o estado de gestión en el CRM.
                                                 </small>
                                             </div>
 
@@ -1877,6 +1906,8 @@ const Flows = ({
                                                 >
                                                     <option value="keyword">Palabra Clave en Respuesta del Cliente</option>
                                                     <option value="ai_evaluation">Evaluación Inteligente con IA (Intención / Sentimiento)</option>
+                                                    <option value="lead_status">Etiqueta / Estado del Prospecto (ej. Lead, Cliente)</option>
+                                                    <option value="manage_status">Estado de Gestión (Pipeline ej. En Cotización)</option>
                                                     <option value="lead_missing">Verificar si Falta Dato en Lead</option>
                                                     <option value="lead_channel">Origen / Red Social del Prospecto</option>
                                                     <option value="business_hours">Evaluar Horario Laboral de Atención</option>
@@ -1921,6 +1952,50 @@ const Flows = ({
                                                         <br />
                                                         • Si no coincide o es negativo ➔ Toma la salida <strong className="text-danger">NO</strong>.
                                                     </small>
+                                                </div>
+                                            )}
+
+                                            {/* Rule 1.6: Lead Status / Etiqueta */}
+                                            {selectedNode.data.rule_type === "lead_status" && (
+                                                <div className="mb-2">
+                                                    <label className="form-label font-11 fw-bold mb-1">Etiqueta / Estado Esperado</label>
+                                                    <SearchableSelect
+                                                        options={[
+                                                            { value: "", label: "-- Seleccionar Etiqueta --" },
+                                                            ...leadStatuses.map((s) => ({ value: s.id, label: s.name })),
+                                                        ]}
+                                                        value={selectedNode.data.expected_value || ""}
+                                                        placeholder="Buscar etiqueta..."
+                                                        onChange={(val) => {
+                                                            const st = leadStatuses.find((s) => s.id == val);
+                                                            updateSelectedNodeData({
+                                                                expected_value: val,
+                                                                status_name: st ? st.name : "",
+                                                            });
+                                                        }}
+                                                    />
+                                                </div>
+                                            )}
+
+                                            {/* Rule 1.7: Manage Status / Estado de Gestión */}
+                                            {selectedNode.data.rule_type === "manage_status" && (
+                                                <div className="mb-2">
+                                                    <label className="form-label font-11 fw-bold mb-1">Estado de Gestión Esperado</label>
+                                                    <SearchableSelect
+                                                        options={[
+                                                            { value: "", label: "-- Seleccionar Estado de Gestión --" },
+                                                            ...manageStatuses.map((s) => ({ value: s.id, label: s.name })),
+                                                        ]}
+                                                        value={selectedNode.data.expected_value || ""}
+                                                        placeholder="Buscar estado de gestión..."
+                                                        onChange={(val) => {
+                                                            const st = manageStatuses.find((s) => s.id == val);
+                                                            updateSelectedNodeData({
+                                                                expected_value: val,
+                                                                manage_status_name: st ? st.name : "",
+                                                            });
+                                                        }}
+                                                    />
                                                 </div>
                                             )}
 
@@ -2111,11 +2186,11 @@ const Flows = ({
                                         <>
                                             <div className="mb-2">
                                                 <label className="form-label font-12 fw-bold mb-1">
-                                                    Estado de Gestión <span className="text-danger">*</span>
+                                                    Estado de Gestión (Pipeline)
                                                 </label>
                                                 <SearchableSelect
                                                     options={[
-                                                        { value: "", label: "-- Seleccionar Estado de Gestión --" },
+                                                        { value: "", label: "-- Sin cambio de Estado de Gestión --" },
                                                         ...manageStatuses.map((s) => ({ value: s.id, label: s.name })),
                                                     ]}
                                                     value={selectedNode.data.manage_status_id || ""}
@@ -2124,7 +2199,27 @@ const Flows = ({
                                                         const s = manageStatuses.find((st) => st.id == val);
                                                         updateSelectedNodeData({
                                                             manage_status_id: val,
-                                                            manageStatusName: s ? s.name : "Seleccionar Estado...",
+                                                            manageStatusName: s ? s.name : "",
+                                                        });
+                                                    }}
+                                                />
+                                            </div>
+                                            <div className="mb-2">
+                                                <label className="form-label font-12 fw-bold mb-1">
+                                                    Etiqueta / Estado del Prospecto
+                                                </label>
+                                                <SearchableSelect
+                                                    options={[
+                                                        { value: "", label: "-- Sin cambio de Etiqueta / Estado --" },
+                                                        ...leadStatuses.map((s) => ({ value: s.id, label: s.name })),
+                                                    ]}
+                                                    value={selectedNode.data.status_id || ""}
+                                                    placeholder="Buscar etiqueta / estado..."
+                                                    onChange={(val) => {
+                                                        const s = leadStatuses.find((st) => st.id == val);
+                                                        updateSelectedNodeData({
+                                                            status_id: val,
+                                                            statusName: s ? s.name : "",
                                                         });
                                                     }}
                                                 />
@@ -2411,13 +2506,12 @@ const Flows = ({
                                         ) : (
                                             simMessages.map((msg, idx) => (
                                                 <div key={idx} className={`d-flex mb-2 ${msg.sender === "user" ? "justify-content-end" : msg.sender === "system" ? "justify-content-center w-100" : "justify-content-start"}`}>
-                                                    <div className={`p-2 px-3 rounded-3 font-12 shadow-sm ${
-                                                        msg.sender === "user" 
-                                                            ? "bg-primary text-white" 
-                                                            : msg.sender === "system" 
-                                                            ? "bg-soft-primary border border-primary-subtle text-primary font-11 text-center" 
+                                                    <div className={`p-2 px-3 rounded-3 font-12 shadow-sm ${msg.sender === "user"
+                                                        ? "bg-primary text-white"
+                                                        : msg.sender === "system"
+                                                            ? "bg-soft-primary border border-primary-subtle text-primary font-11 text-center"
                                                             : "bg-white text-dark border"
-                                                    }`} style={{ maxWidth: msg.sender === "system" ? "100%" : "85%" }}>
+                                                        }`} style={{ maxWidth: msg.sender === "system" ? "100%" : "85%" }}>
                                                         {msg.sender === "bot" && (
                                                             <div className="d-flex align-items-center gap-1 font-10 text-primary fw-bold mb-1 border-bottom pb-1">
                                                                 Bot Atalaya

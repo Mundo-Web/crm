@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Business;
+use App\Models\Client;
 use App\Models\DefaultMessage;
 use App\Models\Flow;
 use App\Models\Integration;
@@ -11,6 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use SoDe\Extend\Text;
 
 class FlowController extends BasicController
 {
@@ -272,5 +275,77 @@ class FlowController extends BasicController
                 'executed'  => $executed,
             ],
         ]);
+    }
+
+    public static function triggerFlowsForStatusChange(Client $client)
+    {
+        try {
+            $flows = Flow::where('business_id', $client->business_id)
+                ->where('status', true)
+                ->whereIn('trigger_type', ['all', 'status_change'])
+                ->get();
+
+            foreach ($flows as $flow) {
+                $conditions = $flow->trigger_conditions ?? [];
+
+                if (!is_array($conditions)) {
+                    $conditions = json_decode($conditions, true) ?? [];
+                }
+
+                // Si tiene condición de manage_status_id, debe coincidir
+                if (!empty($conditions['manage_status_id']) && $conditions['manage_status_id'] != $client->manage_status_id) {
+                    continue;
+                }
+
+                // Si tiene condición de status_id, debe coincidir
+                if (!empty($conditions['status_id']) && $conditions['status_id'] != $client->status_id) {
+                    continue;
+                }
+
+                Log::info("Disparando flujo '{$flow->name}' por cambio de estado para el lead ID {$client->id}");
+                self::executeFlowForClient($flow, $client);
+            }
+        } catch (\Throwable $th) {
+            Log::error("Error al disparar flujos por cambio de estado: " . $th->getMessage());
+        }
+    }
+
+    public static function executeFlowForClient(Flow $flow, Client $client)
+    {
+        try {
+            $nodes = $flow->tree['nodes'] ?? [];
+            $businessJpa = Business::find($client->business_id);
+            if (!$businessJpa) return;
+
+            foreach ($nodes as $node) {
+                $nodeType = $node['type'] ?? '';
+                $nodeData = $node['data'] ?? [];
+
+                if ($nodeType === 'MENSAJE' && !empty($nodeData['content'])) {
+                    $rawText = self::cleanHtmlText($nodeData['content']);
+                    $clientData = $client->toArray();
+                    unset($clientData['form_answers']);
+                    $textToSend = Text::replaceData($rawText, $clientData);
+                    MetaController::sendWithOrigin($businessJpa, $client, $textToSend, '', 'evoapi');
+                } else if ($nodeType === 'ESTADO') {
+                    $updates = [];
+                    if (!empty($nodeData['manage_status_id'])) {
+                        $updates['manage_status_id'] = $nodeData['manage_status_id'];
+                    }
+                    if (!empty($nodeData['status_id'])) {
+                        $updates['status_id'] = $nodeData['status_id'];
+                    }
+                    if (!empty($updates)) {
+                        $client->update($updates);
+                    }
+                } else if ($nodeType === 'TRANSFERIR' && !empty($nodeData['assigned_to'])) {
+                    if ($nodeData['assigned_to'] !== 'round_robin') {
+                        $client->update(['assigned_to' => $nodeData['assigned_to']]);
+                    }
+                }
+            }
+        } catch (\Throwable $th) {
+            Log::error("Error al ejecutar bloques del flujo '{$flow->name}': " . $th->getMessage());
+        }
     }
 }
