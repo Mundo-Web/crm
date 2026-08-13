@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Business;
+use App\Models\Atalaya\Business;
 use App\Models\Client;
 use App\Models\DefaultMessage;
 use App\Models\Flow;
