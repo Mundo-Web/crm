@@ -637,9 +637,6 @@ class FlowController extends BasicController
 
     public static function dispatchBackgroundTimer(Flow $flow, Client $client, string $nodeId, ?string $timeoutTarget, ?string $origin, int $durationSec)
     {
-        \App\Jobs\FlowTimerJob::dispatch($flow->id, $client->id, $nodeId, $timeoutTarget, $origin)
-            ->delay(now()->addSeconds($durationSec));
-
         if (config('queue.default') === 'sync' || env('QUEUE_CONNECTION') === 'sync') {
             $artisan = base_path('artisan');
             $flowId = escapeshellarg($flow->id);
@@ -656,6 +653,9 @@ class FlowController extends BasicController
                 shell_exec($cmd);
             }
             Log::info("Disparador en segundo plano OS programado para el flujo en {$durationSec} segundos.");
+        } else {
+            \App\Jobs\FlowTimerJob::dispatch($flow->id, $client->id, $nodeId, $timeoutTarget, $origin)
+                ->delay(now()->addSeconds($durationSec));
         }
     }
 }
