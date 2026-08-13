@@ -382,14 +382,33 @@ class FlowController extends BasicController
     public static function triggerFlowsForStatusChange(Client $client)
     {
         try {
+            // Determinar el origen del lead para compararlo con el trigger_type del flujo
+            $clientOrigin = strtolower($client->origin ?? '');
+
             $flows = Flow::where('business_id', $client->business_id)
                 ->where('status', true)
-                ->whereIn('trigger_type', ['all', 'status_change'])
                 ->get();
 
             foreach ($flows as $flow) {
-                $conditions = $flow->trigger_conditions ?? [];
+                $type = $flow->trigger_type ?? 'all';
 
+                // Verificar si el origen del lead coincide con el trigger del flujo
+                $originMatch = false;
+                if ($type === 'all' || $type === 'status_change') {
+                    $originMatch = true;
+                } elseif ($type === 'messenger' && in_array($clientOrigin, ['messenger', 'fb_messenger'])) {
+                    $originMatch = true;
+                } elseif ($type === 'instagram_dm' && in_array($clientOrigin, ['instagram', 'ig_dm'])) {
+                    $originMatch = true;
+                } elseif (in_array($type, ['whatsapp', 'click_to_whatsapp']) && in_array($clientOrigin, ['whatsapp', 'evoapi', 'ctwa', 'whatsapp api', 'directo'])) {
+                    $originMatch = true;
+                } elseif (in_array($type, ['meta_lead_ads', 'fb_form', 'ig_form']) && in_array($clientOrigin, ['forms', 'meta_form'])) {
+                    $originMatch = true;
+                }
+
+                if (!$originMatch) continue;
+
+                $conditions = $flow->trigger_conditions ?? [];
                 if (!is_array($conditions)) {
                     $conditions = json_decode($conditions, true) ?? [];
                 }
@@ -402,13 +421,14 @@ class FlowController extends BasicController
                     continue;
                 }
 
-                Log::info("Disparando flujo '{$flow->name}' por cambio de estado para el lead ID {$client->id}");
-                self::executeGraphForClient($flow, $client, null, null, null);
+                Log::info("Disparando flujo '{$flow->name}' por cambio de estado para lead ID {$client->id} (origen: {$clientOrigin}, trigger: {$type})");
+                self::executeGraphForClient($flow, $client, null, $clientOrigin ?: null, null);
             }
         } catch (\Throwable $th) {
             Log::error("Error al disparar flujos por cambio de estado: " . $th->getMessage());
         }
     }
+
 
     public static function executeFlowForClient(Flow $flow, Client $client, ?string $origin = null)
     {
