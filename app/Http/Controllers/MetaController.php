@@ -1318,10 +1318,14 @@ class MetaController extends Controller
                 }
 
 
+                // Disparar flujo automático coincidente para el origen (Messenger, Instagram, WhatsApp, Formulario)
+                $flowExecuted = FlowController::triggerFlowsForIncomingLead($clientJpa, $origin, $messageJpa);
+
                 $aiStatus = Setting::get('gemini-status', $businessJpa->id, '1');
                 $isAiActive = $hasApikey && !in_array((string)$aiStatus, ['0', 'false', 'off'], true);
 
-                if ($isAiActive && !$clientJpa->complete_registration) {
+                // Si NO se ejecutó ningún flujo automatizado, la IA puede tomar la conversación
+                if (!$flowExecuted && $isAiActive && !$clientJpa->complete_registration) {
                     MetaAssistantJob::dispatchAfterResponse($clientJpa, $messageJpa, $origin);
                 }
 

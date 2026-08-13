@@ -144,7 +144,7 @@ const getFieldHumanLabel = (key) => {
 
 // 1. TRIGGER / START NODE
 const TriggerNode = ({ data }) => {
-    const label = getTriggerLabel(data.triggerType || "all");
+    const label = getTriggerLabel(data.triggerType || data.trigger_type || data.triggerLabel || "all");
     return (
         <div className="card shadow-sm m-0 rounded-3 border" style={{ minWidth: 220, borderTop: "3px solid #3b82f6" }}>
             <div className="card-body p-2 font-12 bg-white">
@@ -156,11 +156,11 @@ const TriggerNode = ({ data }) => {
                 </div>
                 <div className="fw-bold text-dark font-12 text-truncate">{data.title || "Inicio del Flujo"}</div>
                 <div className="text-muted font-11 mt-1 text-truncate">
-                    Origen: <span className="fw-semibold text-dark">{label}</span>
+                    Origen: <span className="fw-semibold text-primary">{label}</span>
                 </div>
                 {data.status_name && (
                     <div className="font-10 text-primary fw-bold text-truncate mt-1">
-                        <i className="mdi mdi-tag me-1"></i> Etiqueta: {data.status_name}
+                        <i className="mdi mdi-tag me-1"></i> Pipeline: {data.status_name}
                     </div>
                 )}
                 {data.manage_status_name && (
@@ -629,9 +629,15 @@ const Flows = ({
                         ...n,
                         data: {
                             ...n.data,
+                            triggerType: triggerType,
+                            trigger_type: triggerType,
                             triggerLabel: label,
                             temperature: triggerConditions.temperature,
                             metaFormId: triggerConditions.meta_form_id,
+                            status_id: triggerConditions.status_id,
+                            status_name: triggerConditions.status_name,
+                            manage_status_id: triggerConditions.manage_status_id,
+                            manage_status_name: triggerConditions.manage_status_name,
                         },
                     };
                 }
@@ -1695,7 +1701,15 @@ const Flows = ({
                                                 <select
                                                     className="form-select form-select-sm"
                                                     value={triggerType}
-                                                    onChange={(e) => setTriggerType(e.target.value)}
+                                                    onChange={(e) => {
+                                                        const val = e.target.value;
+                                                        setTriggerType(val);
+                                                        updateSelectedNodeData({
+                                                            triggerType: val,
+                                                            trigger_type: val,
+                                                            triggerLabel: getTriggerLabel(val),
+                                                        });
+                                                    }}
                                                 >
                                                     <option value="all">Todos los Canales (General)</option>
                                                     <option value="status_change">Al Cambiar Estado de Gestión (Estatus CRM)</option>

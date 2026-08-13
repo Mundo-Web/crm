@@ -7,6 +7,7 @@ use App\Models\Client;
 use App\Models\DefaultMessage;
 use App\Models\Flow;
 use App\Models\Integration;
+use App\Models\Message;
 use App\Models\Status;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -277,6 +278,78 @@ class FlowController extends BasicController
         ]);
     }
 
+    public static function triggerFlowsForIncomingLead(Client $client, ?string $origin = null, ?Message $messageJpa = null)
+    {
+        try {
+            $flows = Flow::where('business_id', $client->business_id)
+                ->where('status', true)
+                ->get();
+
+            if ($flows->isEmpty()) return false;
+
+            $matchedFlow = null;
+
+            foreach ($flows as $flow) {
+                $type = $flow->trigger_type ?? 'all';
+                $conditions = $flow->trigger_conditions ?? [];
+                if (!is_array($conditions)) {
+                    $conditions = json_decode($conditions, true) ?? [];
+                }
+
+                // 1. Validar Origen
+                $originMatch = false;
+                if ($type === 'all') {
+                    $originMatch = true;
+                } else if ($type === 'messenger' && in_array($origin, ['messenger', 'fb_messenger'])) {
+                    $originMatch = true;
+                } else if ($type === 'instagram_dm' && in_array($origin, ['instagram', 'ig_dm'])) {
+                    $originMatch = true;
+                } else if (in_array($type, ['whatsapp', 'click_to_whatsapp']) && in_array($origin, ['whatsapp', 'evoapi', 'ctwa'])) {
+                    $originMatch = true;
+                } else if (in_array($type, ['meta_lead_ads', 'fb_form', 'ig_form']) && in_array($origin, ['forms', 'meta_form'])) {
+                    $originMatch = true;
+                } else if ($type === 'status_change') {
+                    $originMatch = true;
+                }
+
+                if (!$originMatch) continue;
+
+                // 2. Validar Estado de Gestión (manage_status_id) si está configurado
+                if (!empty($conditions['manage_status_id']) && $conditions['manage_status_id'] != $client->manage_status_id) {
+                    continue;
+                }
+
+                // 3. Validar Etiqueta / Estado del Lead (status_id) si está configurado
+                if (!empty($conditions['status_id']) && $conditions['status_id'] != $client->status_id) {
+                    continue;
+                }
+
+                // 4. Validar Campaña si está configurada
+                if (!empty($conditions['campaign_id']) && $conditions['campaign_id'] != $client->campaign_id) {
+                    continue;
+                }
+
+                // 5. Validar Formulario Meta si está configurado
+                if (!empty($conditions['meta_form_id']) && !empty($client->form_id) && $conditions['meta_form_id'] != $client->form_id) {
+                    continue;
+                }
+
+                $matchedFlow = $flow;
+                break;
+            }
+
+            if ($matchedFlow) {
+                Log::info("Flujo coincidente evaluado exitosamente '{$matchedFlow->name}' (ID: {$matchedFlow->id}) para el lead ID {$client->id} en origen '{$origin}'");
+                self::executeFlowForClient($matchedFlow, $client, $origin);
+                return true;
+            }
+        } catch (\Throwable $th) {
+            Log::error("Error al evaluar flujos entrantes para el lead ID {$client->id}: " . $th->getMessage());
+        }
+
+        return false;
+    }
+
     public static function triggerFlowsForStatusChange(Client $client)
     {
         try {
@@ -292,12 +365,10 @@ class FlowController extends BasicController
                     $conditions = json_decode($conditions, true) ?? [];
                 }
 
-                // Si tiene condición de manage_status_id, debe coincidir
                 if (!empty($conditions['manage_status_id']) && $conditions['manage_status_id'] != $client->manage_status_id) {
                     continue;
                 }
 
-                // Si tiene condición de status_id, debe coincidir
                 if (!empty($conditions['status_id']) && $conditions['status_id'] != $client->status_id) {
                     continue;
                 }
@@ -310,12 +381,14 @@ class FlowController extends BasicController
         }
     }
 
-    public static function executeFlowForClient(Flow $flow, Client $client)
+    public static function executeFlowForClient(Flow $flow, Client $client, ?string $origin = null)
     {
         try {
             $nodes = $flow->tree['nodes'] ?? [];
             $businessJpa = Business::find($client->business_id);
             if (!$businessJpa) return;
+
+            $effectiveOrigin = $origin ?? ($client->origin === 'WhatsApp' ? 'evoapi' : strtolower($client->origin ?? 'messenger'));
 
             foreach ($nodes as $node) {
                 $nodeType = $node['type'] ?? '';
@@ -326,7 +399,7 @@ class FlowController extends BasicController
                     $clientData = $client->toArray();
                     unset($clientData['form_answers']);
                     $textToSend = Text::replaceData($rawText, $clientData);
-                    MetaController::sendWithOrigin($businessJpa, $client, $textToSend, '', 'evoapi');
+                    MetaController::sendWithOrigin($businessJpa, $client, $textToSend, '', $effectiveOrigin);
                 } else if ($nodeType === 'ESTADO') {
                     $updates = [];
                     if (!empty($nodeData['manage_status_id'])) {
