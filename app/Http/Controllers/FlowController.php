@@ -585,13 +585,13 @@ class FlowController extends BasicController
                     break;
                 }
 
-                if ($nodeType === 'TEMPORIZADOR') {
+                if ($nodeType === 'TEMPORIZADOR' || $nodeType === 'TIMER') {
                     $val = floatval($nodeData['timeout_value'] ?? 1);
-                    $unit = $nodeData['timeout_unit'] ?? 'minutos';
+                    $unit = strtolower($nodeData['timeout_unit'] ?? 'minutos');
 
                     $durationSec = intval($val * 60);
-                    if ($unit === 'segundos') $durationSec = intval($val);
-                    else if ($unit === 'horas') $durationSec = intval($val * 3600);
+                    if ($unit === 'segundos' || $unit === 'segundo') $durationSec = intval($val);
+                    else if ($unit === 'horas' || $unit === 'hora') $durationSec = intval($val * 3600);
                     else if (in_array($unit, ['dias', 'día', 'días', 'day', 'days'])) $durationSec = intval($val * 86400);
 
                     $repliedEdge = null;
@@ -600,14 +600,14 @@ class FlowController extends BasicController
                     foreach ($outgoingEdges as $e) {
                         $handle = strtolower($e['sourceHandle'] ?? '');
                         $label = strtolower($e['label'] ?? '');
-                        if ($handle === 'replied' || str_contains($label, 'respondi')) {
+                        if (str_contains($handle, 'replied') || str_contains($handle, 'respon') || str_contains($label, 'respon')) {
                             $repliedEdge = $e;
-                        } else if ($handle === 'timeout' || str_contains($label, 'expir')) {
+                        } else if (str_contains($handle, 'timeout') || str_contains($handle, 'expir') || str_contains($label, 'expir')) {
                             $timeoutEdge = $e;
                         }
                     }
                     if (!$repliedEdge) $repliedEdge = $outgoingEdges[0] ?? null;
-                    if (!$timeoutEdge) $timeoutEdge = $outgoingEdges[1] ?? $outgoingEdges[0] ?? null;
+                    if (!$timeoutEdge) $timeoutEdge = count($outgoingEdges) > 1 ? $outgoingEdges[1] : ($outgoingEdges[0] ?? null);
 
                     $repliedTarget = $repliedEdge ? $repliedEdge['target'] : null;
                     $timeoutTarget = $timeoutEdge ? $timeoutEdge['target'] : null;
