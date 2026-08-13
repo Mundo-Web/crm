@@ -2368,12 +2368,57 @@ const Flows = ({
                                                         </div>
                                                     </div>
 
+                                                    {/* LEAD / PIPELINE STATUSES MULTISELECT / CHECKBOXES */}
+                                                    <div className="mb-3">
+                                                        <label className="form-label font-11 fw-bold mb-1">
+                                                            Estados de Lead / Pipeline para considerar carga:
+                                                        </label>
+                                                        <div className="bg-white p-2 rounded border" style={{ maxHeight: 130, overflowY: "auto" }}>
+                                                            {leadStatuses.length === 0 ? (
+                                                                <div className="text-muted font-11 italic">Sin estados de lead definidos</div>
+                                                            ) : (
+                                                                leadStatuses.map((st) => {
+                                                                    const currentLeadSts = selectedNode.data.status_ids || [];
+                                                                    const isChecked = currentLeadSts.includes(st.id);
+                                                                    return (
+                                                                        <div key={st.id} className="form-check font-11 mb-1">
+                                                                            <input
+                                                                                className="form-check-input"
+                                                                                type="checkbox"
+                                                                                id={`lead_st_${st.id}`}
+                                                                                checked={isChecked}
+                                                                                onChange={(e) => {
+                                                                                    let newSts = [...currentLeadSts];
+                                                                                    if (e.target.checked) {
+                                                                                        newSts.push(st.id);
+                                                                                    } else {
+                                                                                        newSts = newSts.filter((id) => id !== st.id);
+                                                                                    }
+                                                                                    const names = leadStatuses.filter((s) => newSts.includes(s.id)).map((s) => s.name || s.status).join(", ");
+                                                                                    updateSelectedNodeData({
+                                                                                        status_ids: newSts,
+                                                                                        pipelineStatusNames: names || "Todos los Estados Lead",
+                                                                                    });
+                                                                                }}
+                                                                            />
+                                                                            <label className="form-check-label text-dark" htmlFor={`lead_st_${st.id}`}>
+                                                                                <span className="badge me-1" style={{ backgroundColor: st.color || "#0284c7", color: "#fff" }}>
+                                                                                    {st.name || st.status}
+                                                                                </span>
+                                                                            </label>
+                                                                        </div>
+                                                                    );
+                                                                })
+                                                            )}
+                                                        </div>
+                                                    </div>
+
                                                     {/* MANAGE STATUSES MULTISELECT / CHECKBOXES */}
                                                     <div className="mb-2">
                                                         <label className="form-label font-11 fw-bold mb-1">
-                                                            Estados para considerar carga:
+                                                            Estados de Gestión para considerar carga:
                                                         </label>
-                                                        <div className="bg-white p-2 rounded border" style={{ maxHeight: 150, overflowY: "auto" }}>
+                                                        <div className="bg-white p-2 rounded border" style={{ maxHeight: 130, overflowY: "auto" }}>
                                                             {manageStatuses.length === 0 ? (
                                                                 <div className="text-muted font-11 italic">Sin estados de gestión definidos</div>
                                                             ) : (
@@ -2394,7 +2439,7 @@ const Flows = ({
                                                                                     } else {
                                                                                         newSts = newSts.filter((id) => id !== st.id);
                                                                                     }
-                                                                                    const names = manageStatuses.filter((s) => newSts.includes(s.id)).map((s) => s.status).join(", ");
+                                                                                    const names = manageStatuses.filter((s) => newSts.includes(s.id)).map((s) => s.name || s.status).join(", ");
                                                                                     updateSelectedNodeData({
                                                                                         manage_status_ids: newSts,
                                                                                         manageStatusNames: names || "Todos los Estados",
@@ -2403,7 +2448,7 @@ const Flows = ({
                                                                             />
                                                                             <label className="form-check-label text-dark" htmlFor={`m_status_${st.id}`}>
                                                                                 <span className="badge me-1" style={{ backgroundColor: st.color || "#6c757d", color: "#fff" }}>
-                                                                                    {st.status}
+                                                                                    {st.name || st.status}
                                                                                 </span>
                                                                             </label>
                                                                         </div>
