@@ -140,6 +140,10 @@ class FlowController extends BasicController
         $processes = \App\Models\Process::where('business_id', $businessId)->get();
         $noteTypes = \App\Models\NoteType::orderBy('order', 'asc')->get();
 
+        $flows = Flow::where('business_id', $businessId)
+            ->orderBy('updated_at', 'desc')
+            ->get();
+
         $roles = \Spatie\Permission\Models\Role::all();
 
         return [
