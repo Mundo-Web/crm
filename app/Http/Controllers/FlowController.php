@@ -517,17 +517,36 @@ class FlowController extends BasicController
                             $manageStatusIds = !empty($manageStatusIds) ? [$manageStatusIds] : [];
                         }
 
+                        // Obtener IDs de roles si se pasaron nombres
+                        $actualRoleIds = \Spatie\Permission\Models\Role::whereIn('id', $roleIds)
+                            ->orWhereIn('name', $roleIds)
+                            ->pluck('id')
+                            ->toArray();
+
+                        // Buscar usuarios asociados a esos roles en model_has_roles para este negocio
+                        $userIdsWithRole = \App\Models\ModelHasRoles::where('business_id', $client->business_id)
+                            ->whereIn('role_id', !empty($actualRoleIds) ? $actualRoleIds : $roleIds)
+                            ->pluck('model_id')
+                            ->toArray();
+
                         $candidateQuery = User::where('business_id', $client->business_id);
                         if (!empty($roleIds)) {
-                            $candidateQuery->whereHas('roles', function ($q) use ($roleIds) {
-                                $q->whereIn('roles.id', $roleIds)->orWhereIn('roles.name', $roleIds);
+                            $candidateQuery->where(function ($q) use ($roleIds, $userIdsWithRole) {
+                                $q->whereIn('id', $userIdsWithRole)
+                                  ->orWhereHas('roles', function ($rq) use ($roleIds) {
+                                      $rq->whereIn('roles.id', $roleIds)->orWhereIn('roles.name', $roleIds);
+                                  });
                             });
                         }
 
                         $candidateUsers = $candidateQuery->get();
-                        // Si se especificaron roles, no incluir usuarios que no tengan ese rol
-                        if ($candidateUsers->isEmpty() && empty($roleIds)) {
-                            $candidateUsers = User::where('business_id', $client->business_id)->get();
+
+                        if ($candidateUsers->isEmpty()) {
+                            if (empty($roleIds)) {
+                                $candidateUsers = User::where('business_id', $client->business_id)->get();
+                            } else {
+                                Log::warning("Nodo TRANSFERIR: No se encontraron usuarios para el negocio ID {$client->business_id} con los roles marcados (" . implode(', ', $roleIds) . ").");
+                            }
                         }
 
                         if ($candidateUsers->isNotEmpty()) {
@@ -567,7 +586,7 @@ class FlowController extends BasicController
 
                             $chosenUser = $minUsers[array_rand($minUsers)]['user'];
                             $client->update(['assigned_to' => $chosenUser->id]);
-                            Log::info("Lead ID {$client->id} asignado a usuario '{$chosenUser->name}' (ID {$chosenUser->id}) por carga de trabajo. Carga actual en estados seleccionados: {$minCount}");
+                            Log::info("Lead ID {$client->id} asignado exitosamente al usuario '{$chosenUser->fullname}' (ID {$chosenUser->id}) por carga de trabajo. Carga actual en estados seleccionados: {$minCount}");
                         }
                     }
                     $nextEdge = $outgoingEdges[0] ?? null;
