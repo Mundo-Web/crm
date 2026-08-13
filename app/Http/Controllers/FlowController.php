@@ -144,7 +144,7 @@ class FlowController extends BasicController
             ->orderBy('updated_at', 'desc')
             ->get();
 
-        $roles = \Spatie\Permission\Models\Role::all();
+        $roles = \Spatie\Permission\Models\Role::where('business_id', $businessId)->get();
 
         return [
             'flows'               => $flows,
@@ -517,10 +517,13 @@ class FlowController extends BasicController
                             $manageStatusIds = !empty($manageStatusIds) ? [$manageStatusIds] : [];
                         }
 
-                        // Obtener IDs de roles si se pasaron nombres
-                        $actualRoleIds = \Spatie\Permission\Models\Role::whereIn('id', $roleIds)
-                            ->orWhereIn('name', $roleIds)
-                            ->pluck('id')
+                        // Obtener IDs de roles si se pasaron nombres o IDs
+                        $actualRoleIds = \Spatie\Permission\Models\Role::where(function ($q) use ($roleIds) {
+                            $q->whereIn('id', $roleIds)->orWhereIn('name', $roleIds);
+                        })->pluck('id')->toArray();
+
+                        $roleNamesBuscados = \Spatie\Permission\Models\Role::whereIn('id', !empty($actualRoleIds) ? $actualRoleIds : $roleIds)
+                            ->pluck('name')
                             ->toArray();
 
                         // Buscar usuarios asociados a esos roles en model_has_roles para este negocio
@@ -531,11 +534,13 @@ class FlowController extends BasicController
 
                         $candidateQuery = User::where('business_id', $client->business_id);
                         if (!empty($roleIds)) {
-                            $candidateQuery->where(function ($q) use ($roleIds, $userIdsWithRole) {
-                                $q->whereIn('id', $userIdsWithRole)
-                                  ->orWhereHas('roles', function ($rq) use ($roleIds) {
-                                      $rq->whereIn('roles.id', $roleIds)->orWhereIn('roles.name', $roleIds);
-                                  });
+                            $candidateQuery->where(function ($q) use ($roleIds, $roleNamesBuscados, $userIdsWithRole) {
+                                $q->whereIn('id', $userIdsWithRole);
+                                if (!empty($roleNamesBuscados)) {
+                                    $q->orWhereHas('roles', function ($rq) use ($roleNamesBuscados) {
+                                        $rq->whereIn('roles.name', $roleNamesBuscados);
+                                    });
+                                }
                             });
                         }
 
@@ -546,6 +551,17 @@ class FlowController extends BasicController
                                 $candidateUsers = User::where('business_id', $client->business_id)->get();
                             } else {
                                 Log::warning("Nodo TRANSFERIR: No se encontraron usuarios para el negocio ID {$client->business_id} con los roles marcados (" . implode(', ', $roleIds) . ").");
+                            }
+                        }
+
+                        // Si hay varios candidatos y existen asesores comerciales regulares, excluir al Owner (Julio)
+                        if ($candidateUsers->count() > 1) {
+                            $regularAdvisors = $candidateUsers->filter(function ($u) {
+                                $email = strtolower($u->email);
+                                return !str_contains($email, 'julio@mundoweb') && !str_contains($email, 'admin');
+                            });
+                            if ($regularAdvisors->isNotEmpty()) {
+                                $candidateUsers = $regularAdvisors;
                             }
                         }
 

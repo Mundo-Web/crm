@@ -2331,12 +2331,12 @@ const Flows = ({
                                                             Roles a considerar para rotación:
                                                         </label>
                                                         <div className="bg-white p-2 rounded border" style={{ maxHeight: 130, overflowY: "auto" }}>
-                                                            {roles.length === 0 ? (
+                                                                                                                {roles.length === 0 ? (
                                                                 <div className="text-muted font-11 italic">Todos los asesores de la empresa</div>
                                                             ) : (
                                                                 roles.map((r) => {
                                                                     const currentRoles = selectedNode.data.role_ids || [];
-                                                                    const isChecked = currentRoles.includes(r.id) || currentRoles.includes(r.name);
+                                                                    const isChecked = currentRoles.some((id) => id == r.id || id === r.name);
                                                                     return (
                                                                         <div key={r.id} className="form-check font-11 mb-1">
                                                                             <input
@@ -2347,13 +2347,15 @@ const Flows = ({
                                                                                 onChange={(e) => {
                                                                                     let newRoles = [...currentRoles];
                                                                                     if (e.target.checked) {
-                                                                                        newRoles.push(r.id);
+                                                                                        newRoles = Array.from(new Set([...newRoles, r.id]));
                                                                                     } else {
-                                                                                        newRoles = newRoles.filter((id) => id !== r.id && id !== r.name);
+                                                                                        newRoles = newRoles.filter((id) => id != r.id && id !== r.name);
                                                                                     }
-                                                                                    const names = roles.filter((rl) => newRoles.includes(rl.id) || newRoles.includes(rl.name)).map((rl) => rl.name).join(", ");
+                                                                                    const selectedObjects = roles.filter((rl) => newRoles.some((nr) => nr == rl.id || nr === rl.name));
+                                                                                    const names = selectedObjects.map((rl) => rl.name).join(", ");
+                                                                                    const cleanIds = selectedObjects.map((rl) => rl.id);
                                                                                     updateSelectedNodeData({
-                                                                                        role_ids: newRoles,
+                                                                                        role_ids: cleanIds.length > 0 ? cleanIds : newRoles,
                                                                                         roleNames: names || "Todos los Roles Comercial",
                                                                                     });
                                                                                 }}
