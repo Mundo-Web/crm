@@ -140,9 +140,7 @@ class FlowController extends BasicController
         $processes = \App\Models\Process::where('business_id', $businessId)->get();
         $noteTypes = \App\Models\NoteType::orderBy('order', 'asc')->get();
 
-        $flows = Flow::where('business_id', $businessId)
-            ->orderBy('updated_at', 'desc')
-            ->get();
+        $roles = \Spatie\Permission\Models\Role::all();
 
         return [
             'flows'               => $flows,
@@ -151,6 +149,7 @@ class FlowController extends BasicController
             'chatStatuses'        => $chatStatuses,
             'defaultMessages'     => $allMessages,
             'users'               => $users,
+            'roles'               => $roles,
             'metaForms'           => $metaForms,
             'hasFormsIntegration' => $hasFormsIntegration,
             'campaigns'           => $campaigns,
@@ -493,8 +492,78 @@ class FlowController extends BasicController
                 }
 
                 if ($nodeType === 'TRANSFERIR') {
-                    if (!empty($nodeData['assigned_to']) && $nodeData['assigned_to'] !== 'round_robin') {
+                    $assignmentMode = $nodeData['assignment_mode'] ?? (!empty($nodeData['assigned_to']) && $nodeData['assigned_to'] !== 'round_robin' ? 'specific' : 'automatic_load');
+
+                    if ($assignmentMode === 'specific' && !empty($nodeData['assigned_to']) && $nodeData['assigned_to'] !== 'round_robin') {
                         $client->update(['assigned_to' => $nodeData['assigned_to']]);
+                    } else {
+                        // Rotación Automática por Carga de Trabajo
+                        $roleIds = $nodeData['role_ids'] ?? [];
+                        if (!is_array($roleIds)) {
+                            $roleIds = !empty($roleIds) ? [$roleIds] : [];
+                        }
+
+                        $statusIds = $nodeData['status_ids'] ?? [];
+                        if (!is_array($statusIds)) {
+                            $statusIds = !empty($statusIds) ? [$statusIds] : [];
+                        }
+
+                        $manageStatusIds = $nodeData['manage_status_ids'] ?? [];
+                        if (!is_array($manageStatusIds)) {
+                            $manageStatusIds = !empty($manageStatusIds) ? [$manageStatusIds] : [];
+                        }
+
+                        $candidateQuery = User::where('business_id', $client->business_id);
+                        if (!empty($roleIds)) {
+                            $candidateQuery->whereHas('roles', function ($q) use ($roleIds) {
+                                $q->whereIn('roles.id', $roleIds)->orWhereIn('roles.name', $roleIds);
+                            });
+                        }
+
+                        $candidateUsers = $candidateQuery->get();
+                        if ($candidateUsers->isEmpty()) {
+                            $candidateUsers = User::where('business_id', $client->business_id)->get();
+                        }
+
+                        if ($candidateUsers->isNotEmpty()) {
+                            $userLoads = [];
+                            foreach ($candidateUsers as $u) {
+                                $cq = Client::where('assigned_to', $u->id);
+                                if (!empty($statusIds) || !empty($manageStatusIds)) {
+                                    $cq->where(function ($subQ) use ($statusIds, $manageStatusIds) {
+                                        if (!empty($statusIds)) {
+                                            $subQ->whereIn('status_id', $statusIds);
+                                        }
+                                        if (!empty($manageStatusIds)) {
+                                            if (!empty($statusIds)) {
+                                                $subQ->orWhereIn('manage_status_id', $manageStatusIds);
+                                            } else {
+                                                $subQ->whereIn('manage_status_id', $manageStatusIds);
+                                            }
+                                        }
+                                    });
+                                }
+                                $count = $cq->count();
+                                $userLoads[] = [
+                                    'user' => $u,
+                                    'count' => $count,
+                                ];
+                            }
+
+                            usort($userLoads, function ($a, $b) {
+                                return $a['count'] <=> $b['count'];
+                            });
+
+                            $minCount = $userLoads[0]['count'];
+                            $minUsers = array_filter($userLoads, function ($ul) use ($minCount) {
+                                return $ul['count'] === $minCount;
+                            });
+                            $minUsers = array_values($minUsers);
+
+                            $chosenUser = $minUsers[array_rand($minUsers)]['user'];
+                            $client->update(['assigned_to' => $chosenUser->id]);
+                            Log::info("Lead ID {$client->id} asignado a usuario ID {$chosenUser->id} por carga de trabajo (Carga actual en estados seleccionados: {$minCount})");
+                        }
                     }
                     $nextEdge = $outgoingEdges[0] ?? null;
                     $currentNodeId = $nextEdge ? $nextEdge['target'] : null;

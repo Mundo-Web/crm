@@ -310,18 +310,44 @@ const StatusNode = ({ data }) => {
     );
 };
 
-// 6. TRANSFER NODE
+// 6. TRANSFER NODE (Asignación Directa o Rotación por Carga de Trabajo)
 const TransferNode = ({ data }) => {
+    const isAutomatic = (data.assignment_mode || (data.assigned_to === "round_robin" || !data.assigned_to ? "automatic_load" : "specific")) === "automatic_load";
+
     return (
-        <div className="card shadow-sm m-0 rounded-3 border" style={{ minWidth: 200, borderTop: "3px solid #64748b" }}>
+        <div className="card shadow-sm m-0 rounded-3 border" style={{ minWidth: 220, borderTop: "3px solid #64748b" }}>
             <Handle type="target" position={Position.Top} className="bg-secondary" style={{ width: 8, height: 8 }} />
             <div className="card-body p-2 font-12 bg-white text-center">
                 <div className="fw-bold text-secondary font-11 mb-1">
-                    <i className="mdi mdi-account-arrow-right me-1"></i> ASIGNAR LEAD
+                    <i className="mdi mdi-account-arrow-right me-1"></i> ASIGNACIÓN DE LEAD
                 </div>
-                <div className="fw-bold text-dark font-12 text-truncate">
-                    {data.userName || "Rotación Automática"}
-                </div>
+                {isAutomatic ? (
+                    <div>
+                        <span className="badge bg-soft-primary text-primary font-11 mb-1">
+                            <i className="mdi mdi-scale-balance me-1"></i> Rotación por Carga
+                        </span>
+                        <div className="font-10 text-dark fw-bold text-truncate mt-1" title={data.roleNames || "Todos los Roles Comercial"}>
+                            Roles: {data.roleNames || "Todos"}
+                        </div>
+                        {data.manageStatusNames && (
+                            <div className="font-10 text-success fw-semibold text-truncate" title={data.manageStatusNames}>
+                                Gestión: {data.manageStatusNames}
+                            </div>
+                        )}
+                        {data.pipelineStatusNames && (
+                            <div className="font-10 text-info fw-semibold text-truncate" title={data.pipelineStatusNames}>
+                                Pipeline: {data.pipelineStatusNames}
+                            </div>
+                        )}
+                    </div>
+                ) : (
+                    <div>
+                        <span className="badge bg-soft-secondary text-dark font-11 mb-1">Asignación Directa</span>
+                        <div className="fw-bold text-dark font-12 text-truncate">
+                            {data.userName || "Asesor Comercial"}
+                        </div>
+                    </div>
+                )}
             </div>
             <Handle type="source" position={Position.Bottom} className="bg-secondary" style={{ width: 8, height: 8 }} />
         </div>
@@ -441,6 +467,7 @@ const Flows = ({
     chatStatuses = [],
     defaultMessages = [],
     users = [],
+    roles = [],
     metaForms = [],
     hasFormsIntegration = false,
     campaigns = [],
@@ -774,8 +801,13 @@ const Flows = ({
                 break;
             case "TRANSFERIR":
                 newNode.data = {
-                    title: "Asignar Lead",
-                    assigned_to: "",
+                    title: "Asignar Lead por Carga de Trabajo",
+                    assignment_mode: "automatic_load",
+                    assigned_to: "round_robin",
+                    role_ids: [],
+                    roleNames: "Todos los Roles Comercial",
+                    manage_status_ids: [],
+                    manageStatusNames: "Todos los Estados",
                 };
                 break;
             case "ESPERAR_RESPUESTA":
@@ -2249,23 +2281,139 @@ const Flows = ({
 
                                     {/* TRANSFER CONFIGURATION */}
                                     {selectedNode.type === "TRANSFERIR" && (
-                                        <div className="mb-2">
-                                            <label className="form-label font-12 fw-bold mb-1">Asignar a Asesor</label>
-                                            <SearchableSelect
-                                                options={[
-                                                    { value: "", label: "Rotación Automática (Round-Robin)" },
-                                                    ...users.map((u) => ({ value: u.id, label: `${u.name} ${u.lastname}` })),
-                                                ]}
-                                                value={selectedNode.data.assigned_to || ""}
-                                                placeholder="Buscar asesor comercial..."
-                                                onChange={(val) => {
-                                                    const u = users.find((usr) => usr.id == val);
-                                                    updateSelectedNodeData({
-                                                        assigned_to: val,
-                                                        userName: u ? `${u.name} ${u.lastname}` : "Rotación Automática",
-                                                    });
-                                                }}
-                                            />
+                                        <div className="bg-light p-2 rounded border mb-3">
+                                            <h6 className="font-12 fw-bold mb-2 text-secondary">
+                                                <i className="mdi mdi-account-arrow-right me-1"></i> Regla de Asignación de Lead
+                                            </h6>
+
+                                            <div className="mb-2">
+                                                <label className="form-label font-11 fw-bold mb-1">Tipo de Asignación</label>
+                                                <select
+                                                    className="form-select form-select-sm"
+                                                    value={selectedNode.data.assignment_mode || (selectedNode.data.assigned_to && selectedNode.data.assigned_to !== "round_robin" ? "specific" : "automatic_load")}
+                                                    onChange={(e) => {
+                                                        const mode = e.target.value;
+                                                        updateSelectedNodeData({
+                                                            assignment_mode: mode,
+                                                        });
+                                                    }}
+                                                >
+                                                    <option value="automatic_load">⚖️ Rotación Automática por Carga de Trabajo (Recomendado)</option>
+                                                    <option value="specific">👤 Asignación Directa a Asesor Específico</option>
+                                                </select>
+                                            </div>
+
+                                            {(selectedNode.data.assignment_mode || (selectedNode.data.assigned_to && selectedNode.data.assigned_to !== "round_robin" ? "specific" : "automatic_load")) === "specific" ? (
+                                                <div className="mb-2">
+                                                    <label className="form-label font-11 fw-bold mb-1">Asesor Específico</label>
+                                                    <SearchableSelect
+                                                        options={users.map((u) => ({ value: u.id, label: `${u.name} ${u.lastname}` }))}
+                                                        value={selectedNode.data.assigned_to || ""}
+                                                        placeholder="Buscar asesor comercial..."
+                                                        onChange={(val) => {
+                                                            const u = users.find((usr) => usr.id == val);
+                                                            updateSelectedNodeData({
+                                                                assigned_to: val,
+                                                                userName: u ? `${u.name} ${u.lastname}` : "Asesor Comercial",
+                                                            });
+                                                        }}
+                                                    />
+                                                </div>
+                                            ) : (
+                                                <div>
+                                                    <p className="text-muted font-11 mb-2">
+                                                        El bot calculará la cantidad de leads asignados que tiene cada asesor en los <strong>Estados de Gestión</strong> seleccionados y asignará el nuevo lead al asesor con <strong>menor carga</strong>.
+                                                    </p>
+
+                                                    {/* ROLES MULTISELECT / CHECKBOXES */}
+                                                    <div className="mb-3">
+                                                        <label className="form-label font-11 fw-bold mb-1">
+                                                            Roles a considerar para rotación:
+                                                        </label>
+                                                        <div className="bg-white p-2 rounded border" style={{ maxHeight: 130, overflowY: "auto" }}>
+                                                            {roles.length === 0 ? (
+                                                                <div className="text-muted font-11 italic">Todos los asesores de la empresa</div>
+                                                            ) : (
+                                                                roles.map((r) => {
+                                                                    const currentRoles = selectedNode.data.role_ids || [];
+                                                                    const isChecked = currentRoles.includes(r.id) || currentRoles.includes(r.name);
+                                                                    return (
+                                                                        <div key={r.id} className="form-check font-11 mb-1">
+                                                                            <input
+                                                                                className="form-check-input"
+                                                                                type="checkbox"
+                                                                                id={`role_${r.id}`}
+                                                                                checked={isChecked}
+                                                                                onChange={(e) => {
+                                                                                    let newRoles = [...currentRoles];
+                                                                                    if (e.target.checked) {
+                                                                                        newRoles.push(r.id);
+                                                                                    } else {
+                                                                                        newRoles = newRoles.filter((id) => id !== r.id && id !== r.name);
+                                                                                    }
+                                                                                    const names = roles.filter((rl) => newRoles.includes(rl.id) || newRoles.includes(rl.name)).map((rl) => rl.name).join(", ");
+                                                                                    updateSelectedNodeData({
+                                                                                        role_ids: newRoles,
+                                                                                        roleNames: names || "Todos los Roles Comercial",
+                                                                                    });
+                                                                                }}
+                                                                            />
+                                                                            <label className="form-check-label text-dark fw-semibold" htmlFor={`role_${r.id}`}>
+                                                                                {r.name}
+                                                                            </label>
+                                                                        </div>
+                                                                    );
+                                                                })
+                                                            )}
+                                                        </div>
+                                                    </div>
+
+                                                    {/* MANAGE STATUSES MULTISELECT / CHECKBOXES */}
+                                                    <div className="mb-2">
+                                                        <label className="form-label font-11 fw-bold mb-1">
+                                                            Estados para considerar carga:
+                                                        </label>
+                                                        <div className="bg-white p-2 rounded border" style={{ maxHeight: 150, overflowY: "auto" }}>
+                                                            {manageStatuses.length === 0 ? (
+                                                                <div className="text-muted font-11 italic">Sin estados de gestión definidos</div>
+                                                            ) : (
+                                                                manageStatuses.map((st) => {
+                                                                    const currentSts = selectedNode.data.manage_status_ids || [];
+                                                                    const isChecked = currentSts.includes(st.id);
+                                                                    return (
+                                                                        <div key={st.id} className="form-check font-11 mb-1">
+                                                                            <input
+                                                                                className="form-check-input"
+                                                                                type="checkbox"
+                                                                                id={`m_status_${st.id}`}
+                                                                                checked={isChecked}
+                                                                                onChange={(e) => {
+                                                                                    let newSts = [...currentSts];
+                                                                                    if (e.target.checked) {
+                                                                                        newSts.push(st.id);
+                                                                                    } else {
+                                                                                        newSts = newSts.filter((id) => id !== st.id);
+                                                                                    }
+                                                                                    const names = manageStatuses.filter((s) => newSts.includes(s.id)).map((s) => s.status).join(", ");
+                                                                                    updateSelectedNodeData({
+                                                                                        manage_status_ids: newSts,
+                                                                                        manageStatusNames: names || "Todos los Estados",
+                                                                                    });
+                                                                                }}
+                                                                            />
+                                                                            <label className="form-check-label text-dark" htmlFor={`m_status_${st.id}`}>
+                                                                                <span className="badge me-1" style={{ backgroundColor: st.color || "#6c757d", color: "#fff" }}>
+                                                                                    {st.status}
+                                                                                </span>
+                                                                            </label>
+                                                                        </div>
+                                                                    );
+                                                                })
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
                                     )}
 
