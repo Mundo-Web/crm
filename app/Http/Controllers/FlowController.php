@@ -621,8 +621,7 @@ class FlowController extends BasicController
                         'origin' => $effectiveOrigin,
                     ], now()->addSeconds($durationSec + 300));
 
-                    \App\Jobs\FlowTimerJob::dispatch($flow->id, $client->id, $currentNode['id'], $timeoutTarget, $effectiveOrigin)
-                        ->delay(now()->addSeconds($durationSec));
+                    self::dispatchBackgroundTimer($flow, $client, $currentNode['id'], $timeoutTarget, $effectiveOrigin, $durationSec);
 
                     Log::info("Flujo en PAUSA TEMPORIZADOR ({$val} {$unit} / {$durationSec}s) para el lead ID {$client->id}");
                     break;
@@ -633,6 +632,30 @@ class FlowController extends BasicController
             }
         } catch (\Throwable $th) {
             Log::error("Error en executeGraphForClient en flujo '{$flow->name}': " . $th->getMessage());
+        }
+    }
+
+    public static function dispatchBackgroundTimer(Flow $flow, Client $client, string $nodeId, ?string $timeoutTarget, ?string $origin, int $durationSec)
+    {
+        \App\Jobs\FlowTimerJob::dispatch($flow->id, $client->id, $nodeId, $timeoutTarget, $origin)
+            ->delay(now()->addSeconds($durationSec));
+
+        if (config('queue.default') === 'sync' || env('QUEUE_CONNECTION') === 'sync') {
+            $artisan = base_path('artisan');
+            $flowId = escapeshellarg($flow->id);
+            $clientId = escapeshellarg($client->id);
+            $escapedNodeId = escapeshellarg($nodeId);
+            $targetId = escapeshellarg($timeoutTarget ?? '');
+            $originArg = escapeshellarg($origin ?? '');
+
+            if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+                $cmd = "start /B cmd /c \"timeout /t {$durationSec} > nul && php {$artisan} flow:timeout {$flowId} {$clientId} {$escapedNodeId} {$targetId} {$originArg}\"";
+                pclose(popen($cmd, "r"));
+            } else {
+                $cmd = "nohup sh -c \"sleep {$durationSec} && php {$artisan} flow:timeout {$flowId} {$clientId} {$escapedNodeId} {$targetId} {$originArg}\" > /dev/null 2>&1 &";
+                shell_exec($cmd);
+            }
+            Log::info("Disparador en segundo plano OS programado para el flujo en {$durationSec} segundos.");
         }
     }
 }
