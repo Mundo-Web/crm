@@ -501,10 +501,15 @@ class FlowController extends BasicController
                     if ($assignmentMode === 'specific' && !empty($nodeData['assigned_to']) && $nodeData['assigned_to'] !== 'round_robin') {
                         $client->update(['assigned_to' => $nodeData['assigned_to']]);
                     } else {
-                        // Rotación Automática por Carga de Trabajo (Estados de Gestión)
+                        // Rotación Automática por Carga de Trabajo
                         $roleIds = $nodeData['role_ids'] ?? [];
                         if (!is_array($roleIds)) {
                             $roleIds = !empty($roleIds) ? [$roleIds] : [];
+                        }
+
+                        $statusIds = $nodeData['status_ids'] ?? [];
+                        if (!is_array($statusIds)) {
+                            $statusIds = !empty($statusIds) ? [$statusIds] : [];
                         }
 
                         $manageStatusIds = $nodeData['manage_status_ids'] ?? [];
@@ -520,7 +525,8 @@ class FlowController extends BasicController
                         }
 
                         $candidateUsers = $candidateQuery->get();
-                        if ($candidateUsers->isEmpty()) {
+                        // Si se especificaron roles, no incluir usuarios que no tengan ese rol
+                        if ($candidateUsers->isEmpty() && empty($roleIds)) {
                             $candidateUsers = User::where('business_id', $client->business_id)->get();
                         }
 
@@ -528,8 +534,19 @@ class FlowController extends BasicController
                             $userLoads = [];
                             foreach ($candidateUsers as $u) {
                                 $cq = Client::where('assigned_to', $u->id);
-                                if (!empty($manageStatusIds)) {
-                                    $cq->whereIn('manage_status_id', $manageStatusIds);
+                                if (!empty($statusIds) || !empty($manageStatusIds)) {
+                                    $cq->where(function ($subQ) use ($statusIds, $manageStatusIds) {
+                                        if (!empty($statusIds)) {
+                                            $subQ->whereIn('status_id', $statusIds);
+                                        }
+                                        if (!empty($manageStatusIds)) {
+                                            if (!empty($statusIds)) {
+                                                $subQ->orWhereIn('manage_status_id', $manageStatusIds);
+                                            } else {
+                                                $subQ->whereIn('manage_status_id', $manageStatusIds);
+                                            }
+                                        }
+                                    });
                                 }
                                 $count = $cq->count();
                                 $userLoads[] = [
@@ -550,7 +567,7 @@ class FlowController extends BasicController
 
                             $chosenUser = $minUsers[array_rand($minUsers)]['user'];
                             $client->update(['assigned_to' => $chosenUser->id]);
-                            Log::info("Lead ID {$client->id} asignado a usuario ID {$chosenUser->id} por carga de trabajo (Carga en Estados de Gestión: {$minCount})");
+                            Log::info("Lead ID {$client->id} asignado a usuario '{$chosenUser->name}' (ID {$chosenUser->id}) por carga de trabajo. Carga actual en estados seleccionados: {$minCount}");
                         }
                     }
                     $nextEdge = $outgoingEdges[0] ?? null;
