@@ -4,14 +4,17 @@ namespace App\Http\Controllers;
 
 use App\Models\Atalaya\Business;
 use App\Models\Client;
+use App\Models\ClientNote;
 use App\Models\DefaultMessage;
 use App\Models\Flow;
 use App\Models\Integration;
 use App\Models\Message;
 use App\Models\Status;
+use App\Models\Task;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use SoDe\Extend\Text;
@@ -281,6 +284,24 @@ class FlowController extends BasicController
     public static function triggerFlowsForIncomingLead(Client $client, ?string $origin = null, ?Message $messageJpa = null)
     {
         try {
+            $userMsgText = $messageJpa ? $messageJpa->message : null;
+            $cacheKey = "flow_state_{$client->id}";
+            $activeState = Cache::get($cacheKey);
+
+            if ($activeState && !empty($activeState['flow_id'])) {
+                $flow = Flow::where('business_id', $client->business_id)->find($activeState['flow_id']);
+                if ($flow) {
+                    $nextTargetId = $activeState['replied_edge_target'] ?? null;
+                    Cache::forget($cacheKey);
+
+                    if ($nextTargetId) {
+                        Log::info("Reanudando flujo '{$flow->name}' para el lead ID {$client->id} tras recibir respuesta.");
+                        self::executeGraphForClient($flow, $client, $nextTargetId, $origin, $userMsgText);
+                        return true;
+                    }
+                }
+            }
+
             $flows = Flow::where('business_id', $client->business_id)
                 ->where('status', true)
                 ->get();
@@ -296,7 +317,6 @@ class FlowController extends BasicController
                     $conditions = json_decode($conditions, true) ?? [];
                 }
 
-                // 1. Validar Origen
                 $originMatch = false;
                 if ($type === 'all') {
                     $originMatch = true;
@@ -314,22 +334,18 @@ class FlowController extends BasicController
 
                 if (!$originMatch) continue;
 
-                // 2. Validar Estado de Gestión (manage_status_id) si está configurado
                 if (!empty($conditions['manage_status_id']) && $conditions['manage_status_id'] != $client->manage_status_id) {
                     continue;
                 }
 
-                // 3. Validar Etiqueta / Estado del Lead (status_id) si está configurado
                 if (!empty($conditions['status_id']) && $conditions['status_id'] != $client->status_id) {
                     continue;
                 }
 
-                // 4. Validar Campaña si está configurada
                 if (!empty($conditions['campaign_id']) && $conditions['campaign_id'] != $client->campaign_id) {
                     continue;
                 }
 
-                // 5. Validar Formulario Meta si está configurado
                 if (!empty($conditions['meta_form_id']) && !empty($client->form_id) && $conditions['meta_form_id'] != $client->form_id) {
                     continue;
                 }
@@ -339,8 +355,8 @@ class FlowController extends BasicController
             }
 
             if ($matchedFlow) {
-                Log::info("Flujo coincidente evaluado exitosamente '{$matchedFlow->name}' (ID: {$matchedFlow->id}) para el lead ID {$client->id} en origen '{$origin}'");
-                self::executeFlowForClient($matchedFlow, $client, $origin);
+                Log::info("Iniciando flujo '{$matchedFlow->name}' (ID: {$matchedFlow->id}) para el lead ID {$client->id} en origen '{$origin}'");
+                self::executeGraphForClient($matchedFlow, $client, null, $origin, $userMsgText);
                 return true;
             }
         } catch (\Throwable $th) {
@@ -374,7 +390,7 @@ class FlowController extends BasicController
                 }
 
                 Log::info("Disparando flujo '{$flow->name}' por cambio de estado para el lead ID {$client->id}");
-                self::executeFlowForClient($flow, $client);
+                self::executeGraphForClient($flow, $client, null, null, null);
             }
         } catch (\Throwable $th) {
             Log::error("Error al disparar flujos por cambio de estado: " . $th->getMessage());
@@ -383,24 +399,84 @@ class FlowController extends BasicController
 
     public static function executeFlowForClient(Flow $flow, Client $client, ?string $origin = null)
     {
+        self::executeGraphForClient($flow, $client, null, $origin, null);
+    }
+
+    public static function executeGraphForClient(Flow $flow, Client $client, ?string $startNodeId = null, ?string $origin = null, ?string $userResponseText = null)
+    {
         try {
-            $nodes = $flow->tree['nodes'] ?? [];
+            $tree = $flow->tree ?? [];
+            $nodes = $tree['nodes'] ?? [];
+            $edges = $tree['edges'] ?? [];
+
+            if (empty($nodes)) return;
+
             $businessJpa = Business::find($client->business_id);
             if (!$businessJpa) return;
 
             $effectiveOrigin = $origin ?? ($client->origin === 'WhatsApp' ? 'evoapi' : strtolower($client->origin ?? 'messenger'));
 
-            foreach ($nodes as $node) {
-                $nodeType = $node['type'] ?? '';
-                $nodeData = $node['data'] ?? [];
+            if (!$startNodeId) {
+                $triggerNode = null;
+                foreach ($nodes as $n) {
+                    if (($n['type'] ?? '') === 'TRIGGER') {
+                        $triggerNode = $n;
+                        break;
+                    }
+                }
+                $currentNodeId = $triggerNode ? $triggerNode['id'] : ($nodes[0]['id'] ?? null);
+            } else {
+                $currentNodeId = $startNodeId;
+            }
 
-                if ($nodeType === 'MENSAJE' && !empty($nodeData['content'])) {
-                    $rawText = self::cleanHtmlText($nodeData['content']);
-                    $clientData = $client->toArray();
-                    unset($clientData['form_answers']);
-                    $textToSend = Text::replaceData($rawText, $clientData);
-                    MetaController::sendWithOrigin($businessJpa, $client, $textToSend, '', $effectiveOrigin);
-                } else if ($nodeType === 'ESTADO') {
+            $visitedCount = 0;
+            $maxSteps = 30;
+
+            while ($currentNodeId && $visitedCount < $maxSteps) {
+                $visitedCount++;
+
+                $currentNode = null;
+                foreach ($nodes as $n) {
+                    if (strval($n['id']) === strval($currentNodeId)) {
+                        $currentNode = $n;
+                        break;
+                    }
+                }
+
+                if (!$currentNode) break;
+
+                $nodeType = $currentNode['type'] ?? '';
+                $nodeData = $currentNode['data'] ?? [];
+
+                $outgoingEdges = array_values(array_filter($edges, function ($e) use ($currentNodeId, $nodes) {
+                    if (strval($e['source'] ?? '') !== strval($currentNodeId)) return false;
+                    $targetId = $e['target'] ?? '';
+                    foreach ($nodes as $n) {
+                        if (strval($n['id']) === strval($targetId)) return true;
+                    }
+                    return false;
+                }));
+
+                if ($nodeType === 'TRIGGER') {
+                    $nextEdge = $outgoingEdges[0] ?? null;
+                    $currentNodeId = $nextEdge ? $nextEdge['target'] : null;
+                    continue;
+                }
+
+                if ($nodeType === 'MENSAJE') {
+                    if (!empty($nodeData['content'])) {
+                        $rawText = self::cleanHtmlText($nodeData['content']);
+                        $clientData = $client->toArray();
+                        unset($clientData['form_answers']);
+                        $textToSend = Text::replaceData($rawText, $clientData);
+                        MetaController::sendWithOrigin($businessJpa, $client, $textToSend, '', $effectiveOrigin);
+                    }
+                    $nextEdge = $outgoingEdges[0] ?? null;
+                    $currentNodeId = $nextEdge ? $nextEdge['target'] : null;
+                    continue;
+                }
+
+                if ($nodeType === 'ESTADO') {
                     $updates = [];
                     if (!empty($nodeData['manage_status_id'])) {
                         $updates['manage_status_id'] = $nodeData['manage_status_id'];
@@ -411,14 +487,152 @@ class FlowController extends BasicController
                     if (!empty($updates)) {
                         $client->update($updates);
                     }
-                } else if ($nodeType === 'TRANSFERIR' && !empty($nodeData['assigned_to'])) {
-                    if ($nodeData['assigned_to'] !== 'round_robin') {
+                    $nextEdge = $outgoingEdges[0] ?? null;
+                    $currentNodeId = $nextEdge ? $nextEdge['target'] : null;
+                    continue;
+                }
+
+                if ($nodeType === 'TRANSFERIR') {
+                    if (!empty($nodeData['assigned_to']) && $nodeData['assigned_to'] !== 'round_robin') {
                         $client->update(['assigned_to' => $nodeData['assigned_to']]);
                     }
+                    $nextEdge = $outgoingEdges[0] ?? null;
+                    $currentNodeId = $nextEdge ? $nextEdge['target'] : null;
+                    continue;
                 }
+
+                if ($nodeType === 'CREAR_TAREA') {
+                    if (!empty($nodeData['process_id'])) {
+                        Task::create([
+                            'model_id' => ClientNote::class,
+                            'name' => $nodeData['title'] ?? 'Tarea de Flujo',
+                            'description' => $nodeData['description'] ?? 'Generado automáticamente por el flujo',
+                            'process_id' => $nodeData['process_id'],
+                            'user_id' => $client->assigned_to,
+                            'business_id' => $client->business_id,
+                        ]);
+                    }
+                    $nextEdge = $outgoingEdges[0] ?? null;
+                    $currentNodeId = $nextEdge ? $nextEdge['target'] : null;
+                    continue;
+                }
+
+                if ($nodeType === 'DECISION') {
+                    $ruleType = $nodeData['rule_type'] ?? 'keyword';
+                    $expectedVal = strtolower($nodeData['expected_value'] ?? '');
+                    $decisionResult = false;
+
+                    if ($ruleType === 'keyword') {
+                        $evalText = strtolower($userResponseText ?? $client->last_message ?? '');
+                        $decisionResult = !empty($expectedVal) && str_contains($evalText, $expectedVal);
+                    } else if ($ruleType === 'lead_status') {
+                        $decisionResult = ($client->status_id == $nodeData['expected_value']);
+                    } else if ($ruleType === 'manage_status') {
+                        $decisionResult = ($client->manage_status_id == $nodeData['expected_value']);
+                    } else if ($ruleType === 'business_hours') {
+                        $decisionResult = true;
+                    } else {
+                        $decisionResult = true;
+                    }
+
+                    $yesEdge = null;
+                    $noEdge = null;
+                    foreach ($outgoingEdges as $e) {
+                        $handle = strtolower($e['sourceHandle'] ?? '');
+                        $label = strtolower($e['label'] ?? '');
+                        if ($handle === 'yes' || str_contains($label, 'sí') || str_contains($label, 'si')) {
+                            $yesEdge = $e;
+                        } else if ($handle === 'no' || str_contains($label, 'no')) {
+                            $noEdge = $e;
+                        }
+                    }
+                    if (!$yesEdge) $yesEdge = $outgoingEdges[0] ?? null;
+                    if (!$noEdge) $noEdge = $outgoingEdges[1] ?? $outgoingEdges[0] ?? null;
+
+                    $targetEdge = $decisionResult ? $yesEdge : $noEdge;
+                    $currentNodeId = $targetEdge ? $targetEdge['target'] : null;
+                    continue;
+                }
+
+                if ($nodeType === 'ESPERAR_RESPUESTA') {
+                    $nextEdge = $outgoingEdges[0] ?? null;
+                    $targetNodeId = $nextEdge ? $nextEdge['target'] : null;
+
+                    $targetNode = null;
+                    if ($targetNodeId) {
+                        foreach ($nodes as $n) {
+                            if (strval($n['id']) === strval($targetNodeId)) {
+                                $targetNode = $n;
+                                break;
+                            }
+                        }
+                    }
+
+                    if ($targetNode && ($targetNode['type'] ?? '') === 'TEMPORIZADOR') {
+                        $currentNodeId = $targetNode['id'];
+                        continue;
+                    }
+
+                    Cache::put("flow_state_{$client->id}", [
+                        'flow_id' => $flow->id,
+                        'node_id' => $currentNode['id'],
+                        'waiting_for' => 'response',
+                        'replied_edge_target' => $targetNodeId,
+                        'origin' => $effectiveOrigin,
+                    ], now()->addDays(1));
+
+                    Log::info("Flujo en PAUSA (ESPERAR RESPUESTA) para el lead ID {$client->id}");
+                    break;
+                }
+
+                if ($nodeType === 'TEMPORIZADOR') {
+                    $val = floatval($nodeData['timeout_value'] ?? 1);
+                    $unit = $nodeData['timeout_unit'] ?? 'minutos';
+
+                    $durationSec = intval($val * 60);
+                    if ($unit === 'segundos') $durationSec = intval($val);
+                    else if ($unit === 'horas') $durationSec = intval($val * 3600);
+                    else if (in_array($unit, ['dias', 'día', 'días', 'day', 'days'])) $durationSec = intval($val * 86400);
+
+                    $repliedEdge = null;
+                    $timeoutEdge = null;
+
+                    foreach ($outgoingEdges as $e) {
+                        $handle = strtolower($e['sourceHandle'] ?? '');
+                        $label = strtolower($e['label'] ?? '');
+                        if ($handle === 'replied' || str_contains($label, 'respondi')) {
+                            $repliedEdge = $e;
+                        } else if ($handle === 'timeout' || str_contains($label, 'expir')) {
+                            $timeoutEdge = $e;
+                        }
+                    }
+                    if (!$repliedEdge) $repliedEdge = $outgoingEdges[0] ?? null;
+                    if (!$timeoutEdge) $timeoutEdge = $outgoingEdges[1] ?? $outgoingEdges[0] ?? null;
+
+                    $repliedTarget = $repliedEdge ? $repliedEdge['target'] : null;
+                    $timeoutTarget = $timeoutEdge ? $timeoutEdge['target'] : null;
+
+                    Cache::put("flow_state_{$client->id}", [
+                        'flow_id' => $flow->id,
+                        'node_id' => $currentNode['id'],
+                        'waiting_for' => 'timer_or_response',
+                        'replied_edge_target' => $repliedTarget,
+                        'timeout_edge_target' => $timeoutTarget,
+                        'origin' => $effectiveOrigin,
+                    ], now()->addSeconds($durationSec + 300));
+
+                    \App\Jobs\FlowTimerJob::dispatch($flow->id, $client->id, $currentNode['id'], $timeoutTarget, $effectiveOrigin)
+                        ->delay(now()->addSeconds($durationSec));
+
+                    Log::info("Flujo en PAUSA TEMPORIZADOR ({$val} {$unit} / {$durationSec}s) para el lead ID {$client->id}");
+                    break;
+                }
+
+                $nextEdge = $outgoingEdges[0] ?? null;
+                $currentNodeId = $nextEdge ? $nextEdge['target'] : null;
             }
         } catch (\Throwable $th) {
-            Log::error("Error al ejecutar bloques del flujo '{$flow->name}': " . $th->getMessage());
+            Log::error("Error en executeGraphForClient en flujo '{$flow->name}': " . $th->getMessage());
         }
     }
 }

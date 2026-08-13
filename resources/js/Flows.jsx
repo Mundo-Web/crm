@@ -346,14 +346,14 @@ const WaitResponseNode = ({ data }) => {
     );
 };
 
-// 8. TIMER / TIMEOUT NODE (Temporizador de respuesta con bifurcación)
+// 8. TIMER / TIMEOUT NODE (Temporizador y Esperar Respuesta unificado)
 const TimerNode = ({ data }) => {
     return (
         <div className="card shadow-sm m-0 rounded-3 border" style={{ minWidth: 220, borderTop: "3px solid #d97706" }}>
             <Handle type="target" position={Position.Top} style={{ width: 8, height: 8, backgroundColor: "#d97706" }} />
             <div className="card-body p-2 font-12 bg-white text-center">
                 <div className="fw-bold font-11 mb-1" style={{ color: "#d97706" }}>
-                    <i className="mdi mdi-timer-sand me-1"></i> TEMPORIZADOR
+                    <i className="mdi mdi-timer-sand me-1"></i> TEMPORIZADOR / ESPERAR RESPUESTA
                 </div>
                 <div className="fw-bold text-dark font-12">
                     Esperar {data.timeout_value || 30} {data.timeout_unit || "minutos"}
@@ -1589,22 +1589,13 @@ const Flows = ({
                                         <i className="mdi mdi-account-arrow-right me-1 font-14"></i> Asignar / Transferir
                                     </button>
                                     <button
-                                        className="btn btn-sm text-start font-12 fw-bold py-2"
-                                        style={{ color: "#8b5cf6", borderColor: "#8b5cf6", cursor: "grab" }}
-                                        draggable
-                                        onDragStart={(e) => onDragStart(e, "ESPERAR_RESPUESTA")}
-                                        onClick={() => addVisualNode("ESPERAR_RESPUESTA")}
-                                    >
-                                        <i className="mdi mdi-clock-outline me-1 font-14"></i> Esperar Respuesta
-                                    </button>
-                                    <button
                                         className="btn btn-sm text-start font-12 fw-bold text-dark py-2"
                                         style={{ borderColor: "#d97706", backgroundColor: "#fffbe6", cursor: "grab" }}
                                         draggable
                                         onDragStart={(e) => onDragStart(e, "TEMPORIZADOR")}
                                         onClick={() => addVisualNode("TEMPORIZADOR")}
                                     >
-                                        <i className="mdi mdi-timer-sand text-warning me-1 font-14"></i> Temporizador / Límite
+                                        <i className="mdi mdi-timer-sand text-warning me-1 font-14"></i> Temporizador / Esperar Respuesta
                                     </button>
                                     <button
                                         className="btn btn-sm text-start font-12 fw-bold py-2"
@@ -2297,10 +2288,10 @@ const Flows = ({
                                     {selectedNode.type === "TEMPORIZADOR" && (
                                         <div className="bg-light p-2 rounded border mb-3">
                                             <h6 className="font-12 fw-bold mb-2" style={{ color: "#d97706" }}>
-                                                <i className="mdi mdi-timer-sand me-1"></i> Temporizador & Límite de Tiempo
+                                                <i className="mdi mdi-timer-sand me-1"></i> Temporizador y Esperar Respuesta
                                             </h6>
                                             <p className="text-muted font-11 mb-2">
-                                                Evalúa si el cliente responde antes de expirar el tiempo. Si responde a tiempo, avanzará por la salida <strong className="text-success">SÍ RESPONDIÓ (Verde)</strong>. Si expira el tiempo sin respuesta, avanzará automáticamente por la salida <strong className="text-danger">EXPIRÓ (Roja)</strong> para enviar seguimiento o catálogo.
+                                                Pausa el flujo a la espera de la respuesta del cliente. Si responde a tiempo, avanzará por la salida <strong className="text-success">RESPONDIÓ (Verde)</strong>. Si expira el tiempo límite sin respuesta, avanzará automáticamente por la salida <strong className="text-danger">EXPIRÓ (Roja)</strong> para enviar seguimiento o catálogo.
                                             </p>
                                             <div className="row g-2 mb-2">
                                                 <div className="col-6">
