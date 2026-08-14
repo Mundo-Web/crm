@@ -263,14 +263,18 @@ const Menu = ({
                                             );
                                         })}
                                 </div>
-                                <div className="dropdown-divider"></div>
-                                <a
-                                    href={`//${APP_DOMAIN}/businesses`}
-                                    className="dropdown-item notify-item"
-                                >
-                                    <i className="fe-arrow-up-right"></i>
-                                    <span>Otras empresas</span>
-                                </a>
+                                {Boolean(session.is_owner) && (
+                                    <>
+                                        <div className="dropdown-divider"></div>
+                                        <a
+                                            href={`//${APP_DOMAIN}/businesses`}
+                                            className="dropdown-item notify-item"
+                                        >
+                                            <i className="fe-arrow-up-right"></i>
+                                            <span>Otras empresas</span>
+                                        </a>
+                                    </>
+                                )}
                             </div>
                         </>
                     )}
