@@ -62,7 +62,7 @@ const icons = {
         <img
             src="/assets/img/calendar.svg"
             alt="Google Calendar"
-            style={{ height: "200px", width: "auto", opacity: 0.5 }}
+            style={{ height: "200px", width: "auto" }}
         />
     ),
     formularios: (
@@ -90,7 +90,7 @@ const ServiceCard = ({
     onUnlink,
     onSyncTikTok,
 }) => {
-    const isComingSoon = service === "google-calendar";
+    const isComingSoon = false;
 
     return (
         <div className="col-xxl-3 col-xl-4 col-lg-6 col-md-6 ">
@@ -365,26 +365,19 @@ const IntegrationWizardModal = ({
             product_name: "Gmail API",
             account_type: "cuenta de Gmail",
             permissions: "gmail.readonly, gmail.send",
-            hasImages: true, // Indicador especial para Gmail
+            hasImages: false,
             steps: [
-                {
-                    text: "Acceder a Google Cloud Console y crear proyecto",
-                    image: "/assets/img/gmail/paso1.png",
-                },
-                {
-                    text: "Habilitar Gmail API en el proyecto",
-                    image: "/assets/img/gmail/paso2.png",
-                },
+                '<strong>Habilitar API:</strong> En Google Cloud Console, asegúrate de tener activada la <strong>Gmail API</strong>.',
+                '<strong>Permisos OAuth:</strong> Los permisos <code>gmail.send</code> y <code>gmail.readonly</code> permiten enviar y leer correos con tus clientes.',
+                '<strong>Conexión interactiva:</strong> Haz clic en "Autenticación" y presiona el botón "Conectar con Google" para vincular tu cuenta.'
             ],
             authSteps: [
-                {
-                    text: "Configurar credenciales OAuth 2.0",
-                    image: "/assets/img/gmail/paso3.png",
-                },
+                '<strong>Vincular cuenta:</strong> Haz clic en el botón "Conectar con Google" para abrir la ventana de autorización.',
+                '<strong>Seleccionar cuenta:</strong> Elige tu correo corporativo o personal para permitir el envío y sincronización de emails con leads.'
             ],
             completedStep: {
-                text: "Gmail configurado exitosamente y listo para usar",
-                image: "/assets/img/gmail/paso4.jpg",
+                text: "Gmail configurado exitosamente. Ahora puedes enviar correos y ver el historial de mensajes directamente desde el detalle de cada lead.",
+                image: null,
             },
         },
         "google-calendar": {
@@ -392,23 +385,23 @@ const IntegrationWizardModal = ({
             color: "#4285F4",
             icon: "mdi-calendar",
             developer_url: "https://console.developers.google.com",
-            product_name: "Calendar API",
-            account_type: "cuenta de Google",
-            permissions: "calendar.readonly, calendar.events",
+            product_name: "Google Calendar API",
+            account_type: "cuenta de Google Calendar",
+            permissions: "calendar.events, calendar.readonly",
+            hasImages: false,
             steps: [
-                "Abrir Google Cloud Console",
-                "Habilitar Calendar API en tu proyecto",
-                "Configurar credenciales de servicio",
-                "Establecer permisos de calendario",
-                "Configurar notificaciones push (opcional)",
+                '<strong>Habilitar API:</strong> En Google Cloud Console, asegúrate de tener activada la <strong>Google Calendar API</strong>.',
+                '<strong>Permisos OAuth:</strong> El permiso <code>calendar.events</code> permite agendar citas y reuniones directamente desde el CRM.',
+                '<strong>Conexión interactiva:</strong> Haz clic en "Autenticación" y presiona el botón "Conectar con Google" para autorizar la sincronización de agenda.'
             ],
             authSteps: [
-                'Accede a <a href="https://console.developers.google.com" target="_blank" style="color: #4285F4; text-decoration: underline;">Google Cloud Console</a>',
-                'Ve a <code>"APIs & Services"</code> → <strong>"Calendar API"</strong>',
-                "Configura <em>credenciales OAuth 2.0</em> para tu aplicación",
-                'Autoriza el acceso a <span style="color: #4285F4; font-weight: 600;">tu calendario de Google</span>',
-                "Obtén el <code>Calendar ID</code> y <strong>Access Token</strong> válidos",
+                '<strong>Vincular cuenta:</strong> Haz clic en el botón "Conectar con Google" para abrir la ventana de autorización.',
+                '<strong>Seleccionar cuenta:</strong> Elige tu cuenta de Google donde se registrarán las citas, tareas y reuniones con leads.'
             ],
+            completedStep: {
+                text: "Google Calendar configurado exitosamente. Al crear tareas de tipo Cita o Reunión en el detalle del lead, se agendarán automáticamente en tu calendario.",
+                image: null,
+            },
         },
         formularios: {
             name: "Formularios Web",
@@ -487,21 +480,21 @@ const IntegrationWizardModal = ({
 
             clearPolling();
             localStorage.removeItem('meta_auth_result');
-            
+
             const width = 600;
             const height = 650;
             const left = window.screen.width / 2 - width / 2;
             const top = window.screen.height / 2 - height / 2;
-            
+
             const redirectUri = encodeURIComponent(window.location.origin + '/tiktok/callback');
             const authUrl = `https://business-api.tiktok.com/portal/auth?app_id=${metaAppId}&state=${apikey}&redirect_uri=${redirectUri}`;
-            
+
             window.open(
                 authUrl,
                 'TikTokAuthPopup',
                 `width=${width},height=${height},top=${top},left=${left},scrollbars=yes,status=yes`
             );
-            
+
             setPollingActive(true);
             pollingIntervalRef.current = setInterval(() => {
                 const rawPayload = localStorage.getItem('meta_auth_result');
@@ -532,18 +525,18 @@ const IntegrationWizardModal = ({
     const handleConnectGoogleAds = () => {
         clearPolling();
         localStorage.removeItem('meta_auth_result');
-        
+
         const width = 600;
         const height = 650;
         const left = window.screen.width / 2 - width / 2;
         const top = window.screen.height / 2 - height / 2;
-        
+
         window.open(
             `/google-ads/connect?state=${apikey}`,
             'GoogleAdsAuthPopup',
             `width=${width},height=${height},top=${top},left=${left},scrollbars=yes,status=yes`
         );
-        
+
         setPollingActive(true);
         pollingIntervalRef.current = setInterval(() => {
             const rawPayload = localStorage.getItem('meta_auth_result');
@@ -565,21 +558,64 @@ const IntegrationWizardModal = ({
         }, 500);
     };
 
-    const handleConnectMeta = () => {
+    const handleConnectGoogleService = (serviceType) => {
         clearPolling();
-        localStorage.removeItem('meta_auth_result');
-        
+        localStorage.removeItem('tokenUUID');
+
         const width = 600;
         const height = 650;
         const left = window.screen.width / 2 - width / 2;
         const top = window.screen.height / 2 - height / 2;
-        
+
+        const endpoint = serviceType === 'google-calendar' ? '/api/google-calendar/check' : '/api/gmail/check';
+
+        fetch(endpoint).then(res => res.json()).then(data => {
+            const authUrl = data?.data?.auth_url || (serviceType === 'google-calendar' ? '/google-calendar/connect' : '/gmail/connect');
+            window.open(
+                authUrl,
+                'GoogleAuthPopup',
+                `width=${width},height=${height},top=${top},left=${left},scrollbars=yes,status=yes`
+            );
+        }).catch(() => {
+            const fallbackUrl = serviceType === 'google-calendar' ? '/google-calendar/connect' : '/gmail/connect';
+            window.open(
+                fallbackUrl,
+                'GoogleAuthPopup',
+                `width=${width},height=${height},top=${top},left=${left},scrollbars=yes,status=yes`
+            );
+        });
+
+        setPollingActive(true);
+        const lastTokenUUID = localStorage.getItem('tokenUUID');
+        pollingIntervalRef.current = setInterval(() => {
+            const currentTokenUUID = localStorage.getItem('tokenUUID');
+            if (currentTokenUUID && currentTokenUUID !== lastTokenUUID) {
+                clearPolling();
+                setAccountVerified({
+                    id: 'google-auth-success',
+                    name: serviceType === 'google-calendar' ? 'Google Calendar Conectado' : 'Gmail Conectado',
+                    service: serviceType
+                });
+                toast.success(`Conexión con ${serviceType === 'google-calendar' ? 'Google Calendar' : 'Gmail'} establecida`);
+            }
+        }, 500);
+    };
+
+    const handleConnectMeta = () => {
+        clearPolling();
+        localStorage.removeItem('meta_auth_result');
+
+        const width = 600;
+        const height = 650;
+        const left = window.screen.width / 2 - width / 2;
+        const top = window.screen.height / 2 - height / 2;
+
         window.open(
             `/meta/connect?service=${service}`,
             'MetaAuthPopup',
             `width=${width},height=${height},top=${top},left=${left},scrollbars=yes,status=yes`
         );
-        
+
         setPollingActive(true);
         pollingIntervalRef.current = setInterval(() => {
             const rawPayload = localStorage.getItem('meta_auth_result');
@@ -997,7 +1033,7 @@ const IntegrationWizardModal = ({
                                     transition: "all 0.3s ease",
                                     cursor:
                                         service === "whatsappevo" ||
-                                        service === "gmail"
+                                            service === "gmail"
                                             ? "pointer"
                                             : "not-allowed",
                                 }}
@@ -1639,84 +1675,84 @@ const IntegrationWizardModal = ({
                                             )}
 
                                             {/* Caso 2: Conectado pero no verificado/seleccionado todavía */}
-                                             {authPayload && !accountVerified && (
-                                                 <div className="col-12">
-                                                     {authPayload?.accounts && authPayload.accounts.length > 0 && (
-                                                         <div className="mb-3">
-                                                             <label className="form-label fw-semibold text-dark">
-                                                                 <i className="mdi mdi-google text-warning me-2 fs-5"></i>
-                                                                 Selecciona tu Cuenta Publicitaria (Customer ID):
-                                                             </label>
-                                                             <select
-                                                                 className="form-select border-2 p-2"
-                                                                 value={selectedAssetId}
-                                                                 onChange={(e) => handleAssetSelect(e.target.value)}
-                                                                 style={{ borderRadius: "8px" }}
-                                                                 disabled={verifying}
-                                                             >
-                                                                 <option value="">-- Selecciona una cuenta --</option>
-                                                                 {authPayload.accounts.map((acc) => (
-                                                                     <option key={acc.id} value={acc.id}>
-                                                                         {acc.name} (ID: {acc.id})
-                                                                     </option>
-                                                                 ))}
-                                                             </select>
-                                                         </div>
-                                                     )}
+                                            {authPayload && !accountVerified && (
+                                                <div className="col-12">
+                                                    {authPayload?.accounts && authPayload.accounts.length > 0 && (
+                                                        <div className="mb-3">
+                                                            <label className="form-label fw-semibold text-dark">
+                                                                <i className="mdi mdi-google text-warning me-2 fs-5"></i>
+                                                                Selecciona tu Cuenta Publicitaria (Customer ID):
+                                                            </label>
+                                                            <select
+                                                                className="form-select border-2 p-2"
+                                                                value={selectedAssetId}
+                                                                onChange={(e) => handleAssetSelect(e.target.value)}
+                                                                style={{ borderRadius: "8px" }}
+                                                                disabled={verifying}
+                                                            >
+                                                                <option value="">-- Selecciona una cuenta --</option>
+                                                                {authPayload.accounts.map((acc) => (
+                                                                    <option key={acc.id} value={acc.id}>
+                                                                        {acc.name} (ID: {acc.id})
+                                                                    </option>
+                                                                ))}
+                                                            </select>
+                                                        </div>
+                                                    )}
 
-                                                     <div className="mb-3">
-                                                         <label className="form-label fw-semibold text-dark">
-                                                             <i className="mdi mdi-numeric me-2 text-warning fs-5"></i>
-                                                             Ingresa tu Customer ID de Google Ads (10 dígitos):
-                                                         </label>
-                                                         <div className="input-group">
-                                                             <input
-                                                                 type="text"
-                                                                 className="form-control border-2 p-2"
-                                                                 placeholder="Ej. 123-456-7890 o 1234567890"
-                                                                 value={selectedAssetId}
-                                                                 onChange={(e) => setSelectedAssetId(e.target.value)}
-                                                                 disabled={verifying}
-                                                             />
-                                                             <button
-                                                                 type="button"
-                                                                 className="btn btn-warning text-white fw-bold px-3"
-                                                                 onClick={() => handleAssetSelect(selectedAssetId)}
-                                                                 disabled={verifying || !selectedAssetId}
-                                                             >
-                                                                 {verifying ? (
-                                                                     <i className="mdi mdi-loading mdi-spin me-1"></i>
-                                                                 ) : (
-                                                                     <i className="mdi mdi-check me-1"></i>
-                                                                 )}
-                                                                 Verificar
-                                                             </button>
-                                                         </div>
-                                                         <small className="text-muted d-block mt-1">
-                                                             Encontrarás tu Customer ID de 10 dígitos en la esquina superior derecha de tu panel de Google Ads.
-                                                         </small>
-                                                     </div>
+                                                    <div className="mb-3">
+                                                        <label className="form-label fw-semibold text-dark">
+                                                            <i className="mdi mdi-numeric me-2 text-warning fs-5"></i>
+                                                            Ingresa tu Customer ID de Google Ads (10 dígitos):
+                                                        </label>
+                                                        <div className="input-group">
+                                                            <input
+                                                                type="text"
+                                                                className="form-control border-2 p-2"
+                                                                placeholder="Ej. 123-456-7890 o 1234567890"
+                                                                value={selectedAssetId}
+                                                                onChange={(e) => setSelectedAssetId(e.target.value)}
+                                                                disabled={verifying}
+                                                            />
+                                                            <button
+                                                                type="button"
+                                                                className="btn btn-warning text-white fw-bold px-3"
+                                                                onClick={() => handleAssetSelect(selectedAssetId)}
+                                                                disabled={verifying || !selectedAssetId}
+                                                            >
+                                                                {verifying ? (
+                                                                    <i className="mdi mdi-loading mdi-spin me-1"></i>
+                                                                ) : (
+                                                                    <i className="mdi mdi-check me-1"></i>
+                                                                )}
+                                                                Verificar
+                                                            </button>
+                                                        </div>
+                                                        <small className="text-muted d-block mt-1">
+                                                            Encontrarás tu Customer ID de 10 dígitos en la esquina superior derecha de tu panel de Google Ads.
+                                                        </small>
+                                                    </div>
 
-                                                     {verifying && (
-                                                         <div className="text-center py-3 mt-3">
-                                                             <i className="mdi mdi-loading mdi-spin me-2 fs-4 text-primary"></i>
-                                                             Verificando perfil seleccionado...
-                                                         </div>
-                                                     )}
+                                                    {verifying && (
+                                                        <div className="text-center py-3 mt-3">
+                                                            <i className="mdi mdi-loading mdi-spin me-2 fs-4 text-primary"></i>
+                                                            Verificando perfil seleccionado...
+                                                        </div>
+                                                    )}
 
-                                                     <div className="text-end mt-4">
-                                                         <button
-                                                             type="button"
-                                                             className="btn btn-outline-danger btn-sm"
-                                                             onClick={handleDisconnectMeta}
-                                                             disabled={verifying}
-                                                         >
-                                                             <i className="mdi mdi-logout me-1"></i>
-                                                             Cancelar / Desconectar
-                                                         </button>
-                                                     </div>
-                                                 </div>
-                                             )}
+                                                    <div className="text-end mt-4">
+                                                        <button
+                                                            type="button"
+                                                            className="btn btn-outline-danger btn-sm"
+                                                            onClick={handleDisconnectMeta}
+                                                            disabled={verifying}
+                                                        >
+                                                            <i className="mdi mdi-logout me-1"></i>
+                                                            Cancelar / Desconectar
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            )}
 
                                             {/* Caso 3: Cuenta verificada exitosamente */}
                                             {accountVerified && (
@@ -1755,6 +1791,62 @@ const IntegrationWizardModal = ({
                                                 </div>
                                             )}
                                         </div>
+                                    ) : (service === "gmail" || service === "google-calendar") ? (
+                                        <div className="row g-3">
+                                            {!accountVerified ? (
+                                                <div className="col-12 text-center py-4">
+                                                    <button
+                                                        type="button"
+                                                        className="btn btn-lg px-5 py-3 text-white fw-bold d-inline-flex align-items-center justify-content-center border-0 shadow"
+                                                        style={{
+                                                            backgroundColor: config.color,
+                                                            borderRadius: "10px",
+                                                            transition: "all 0.3s ease",
+                                                        }}
+                                                        onClick={() => handleConnectGoogleService(service)}
+                                                        onMouseOver={(e) => e.currentTarget.style.filter = "brightness(1.1)"}
+                                                        onMouseOut={(e) => e.currentTarget.style.filter = "none"}
+                                                    >
+                                                        <i className={`mdi ${config.icon} me-2 fs-5`}></i>
+                                                        Conectar con {config.name && config.name.includes("Calendar") ? "G. Calendar" : "Gmail"}
+                                                    </button>
+                                                    <p className="text-muted mt-3 mb-0 small">
+                                                        Se abrirá una ventana emergente segura de Google para autorizar {config.name}.
+                                                    </p>
+                                                </div>
+                                            ) : (
+                                                <div className="col-12">
+                                                    <div className="card shadow-sm border rounded-3 overflow-hidden mb-3">
+                                                        <div className="card-body bg-light p-3">
+                                                            <div className="d-flex align-items-center justify-content-between">
+                                                                <div className="d-flex align-items-center">
+                                                                    <div
+                                                                        className="avatar-md rounded-circle me-3 d-flex align-items-center justify-content-center"
+                                                                        style={{ backgroundColor: `${config.color}20`, width: "56px", height: "56px" }}
+                                                                    >
+                                                                        <i className={`mdi ${config.icon} fs-2`} style={{ color: config.color }}></i>
+                                                                    </div>
+                                                                    <div>
+                                                                        <h5 className="mb-1 text-dark fw-bold">{accountVerified.name}</h5>
+                                                                        <span className="badge bg-success-lighten text-success p-1 fs-7">
+                                                                            <i className="mdi mdi-check-circle me-1"></i>
+                                                                            Sesión y Permisos Activos
+                                                                        </span>
+                                                                    </div>
+                                                                </div>
+                                                                <button
+                                                                    type="button"
+                                                                    className="btn btn-outline-secondary btn-sm"
+                                                                    onClick={() => handleConnectGoogleService(service)}
+                                                                >
+                                                                    Reconectar cuenta
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
                                     ) : isMetaService ? (
                                         <div className="row g-3">
                                             {/* Caso 1: No conectado ni verificado */}
@@ -1773,7 +1865,7 @@ const IntegrationWizardModal = ({
                                                         onMouseOut={(e) => e.currentTarget.style.filter = "none"}
                                                     >
                                                         <svg className="me-2" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                            <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" fill="white"/>
+                                                            <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" fill="white" />
                                                         </svg>
                                                         Conectar con Meta
                                                     </button>
@@ -2344,7 +2436,7 @@ const IntegrationWizardModal = ({
                         {(service === "whatsappevo" ||
                             service === "gmail" ||
                             service === "formularios") &&
-                        config.completedStep ? (
+                            config.completedStep ? (
                             <div className="text-center">
                                 <div className="mb-4">
                                     <div
@@ -2528,10 +2620,11 @@ const IntegrationWizardModal = ({
                                         </button>
                                     )}
                                     {step == 2 &&
-                                        /* Para WhatsApp, Gmail y Formularios, permite ir directamente al paso 3 */
+                                        /* Para WhatsApp, Gmail, Google Calendar y Formularios, permite ir directamente al paso 3 */
                                         (service === "whatsappevo" ||
-                                        service === "gmail" ||
-                                        service === "formularios" ? (
+                                            service === "gmail" ||
+                                            service === "google-calendar" ||
+                                            service === "formularios" ? (
                                             <button
                                                 type="button"
                                                 className="btn px-4"
@@ -2547,49 +2640,50 @@ const IntegrationWizardModal = ({
                                                 <i className="mdi mdi-arrow-right ms-1"></i>
                                             </button>
                                         ) : /* Para otros servicios, mantener lógica original */
-                                        accountVerified ? (
-                                            <button
-                                                type="button"
-                                                className="btn px-4"
-                                                style={{
-                                                    backgroundColor:
-                                                        config.color,
-                                                    borderColor: config.color,
-                                                    color: "white",
-                                                }}
-                                                onClick={() =>
-                                                    onIntegrateClicked()
-                                                }
-                                                disabled={integrating}
-                                            >
-                                                {integrating ? (
-                                                    <>
-                                                        <i className="mdi mdi-spin mdi-loading me-1"></i>
-                                                        Integrando...
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        <i className="mdi mdi-plus me-1"></i>
-                                                        Finalizar
-                                                    </>
-                                                )}
-                                            </button>
-                                        ) : (
-                                            <Tippy content="Verifica la cuenta primero">
+                                            accountVerified ? (
                                                 <button
                                                     type="button"
-                                                    className="btn btn-outline-secondary px-4"
-                                                    disabled
+                                                    className="btn px-4"
+                                                    style={{
+                                                        backgroundColor:
+                                                            config.color,
+                                                        borderColor: config.color,
+                                                        color: "white",
+                                                    }}
+                                                    onClick={() =>
+                                                        onIntegrateClicked()
+                                                    }
+                                                    disabled={integrating}
                                                 >
-                                                    <i className="mdi mdi-plus me-1"></i>
-                                                    Finalizar
+                                                    {integrating ? (
+                                                        <>
+                                                            <i className="mdi mdi-spin mdi-loading me-1"></i>
+                                                            Integrando...
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <i className="mdi mdi-plus me-1"></i>
+                                                            Finalizar
+                                                        </>
+                                                    )}
                                                 </button>
-                                            </Tippy>
-                                        ))}
-                                    {/* Botón para cerrar en paso 3 para WhatsApp, Gmail y Formularios */}
+                                            ) : (
+                                                <Tippy content="Verifica la cuenta primero">
+                                                    <button
+                                                        type="button"
+                                                        className="btn btn-outline-secondary px-4"
+                                                        disabled
+                                                    >
+                                                        <i className="mdi mdi-plus me-1"></i>
+                                                        Finalizar
+                                                    </button>
+                                                </Tippy>
+                                            ))}
+                                    {/* Botón para cerrar en paso 3 para WhatsApp, Gmail, Google Calendar y Formularios */}
                                     {step == 3 &&
                                         (service === "whatsappevo" ||
                                             service === "gmail" ||
+                                            service === "google-calendar" ||
                                             service === "formularios") && (
                                             <button
                                                 type="button"
@@ -2685,7 +2779,7 @@ const Webhooks = ({ apikey, auth_token, integrations: integrationsDB }) => {
         const isGoogle = serviceName === 'google-ads';
         const label = isGoogle ? "Google Ads" : "TikTok";
         const endpoint = isGoogle ? '/api/google-ads/sync-campaigns' : '/api/tiktok/sync-campaigns';
-        
+
         const loadingToast = toast.loading(`Sincronizando campañas y reportes de ${label}...`);
         try {
             const res = await fetch(endpoint, {

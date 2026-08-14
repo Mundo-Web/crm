@@ -33,6 +33,7 @@ import ProductsByClients from "./actions/ProductsByClientsRest.js";
 import SimpleProductCard from "./Reutilizables/Products/SimpleProductCard.jsx";
 import googleSVG from "./components/svg/google.svg";
 import GmailRest from "./actions/GmailRest.js";
+import GoogleCalendarRest from "./actions/GoogleCalendarRest.js";
 import HtmlContent from "./Utils/HtmlContent.jsx";
 import MailingModal from "./components/modals/MailingModal.jsx";
 import AssignFlowModal from "./Reutilizables/Flows/AssignFlowModal.jsx";
@@ -58,6 +59,7 @@ const taskRest = new TasksRest();
 const usersRest = new UsersRest();
 const productsByClients = new ProductsByClients();
 const gmailRest = new GmailRest();
+const googleCalendarRest = new GoogleCalendarRest();
 
 import driver_fn from "../json/driver.js";
 import ImportModal from "./Reutilizables/Leads/ImportModal.jsx";
@@ -729,6 +731,26 @@ const Leads = (properties) => {
             mentions: !isTask ? mentions : [],
         });
         if (!result) return;
+
+        if (isTask && taskEndsAtDateRef.current.value) {
+            const taskTypeName = taskTypeRef.current?.value;
+            const isMeetingOrCall = ["Cita", "Reunión", "Llamada"].includes(taskTypeName);
+            if (isMeetingOrCall) {
+                const startDateStr = taskEndsAtTimeRef.current.value
+                    ? `${taskEndsAtDateRef.current.value} ${taskEndsAtTimeRef.current.value}`
+                    : `${taskEndsAtDateRef.current.value} 09:00:00`;
+                googleCalendarRest.createEvent({
+                    title: taskTitleRef.current.value || `${taskTypeName} con ${leadLoaded.name}`,
+                    description: text || `Agendado desde Atalaya CRM para el lead ${leadLoaded.name}`,
+                    start_date: startDateStr,
+                    lead_id: leadLoaded.id,
+                }).then((res) => {
+                    if (res?.status === 200) {
+                        toast.success("Cita sincronizada con Google Calendar");
+                    }
+                }).catch(() => {});
+            }
+        }
 
         editor.empty();
         idRefs[type].current.value = null;

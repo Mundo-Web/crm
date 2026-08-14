@@ -13,6 +13,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DefaultMessageController;
 use App\Http\Controllers\FlowController;
 use App\Http\Controllers\GmailController;
+use App\Http\Controllers\GoogleCalendarController;
 use App\Http\Controllers\IntegrationController;
 use App\Http\Controllers\KPICampaignsController;
 use App\Http\Controllers\KPILeadsController;
@@ -322,6 +323,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/gmail/details/{id}', [GmailController::class, 'getDetails']);
     Route::get('/gmail/attachment/{messageId}/{attachmentId}/{filename}', [GmailController::class, 'getAttachment']);
     Route::post('/gmail/send', [GmailController::class, 'send']);
+
+    Route::get('/google-calendar/check', [GoogleCalendarController::class, 'check']);
+    Route::get('/google-calendar/events', [GoogleCalendarController::class, 'listEvents']);
+    Route::post('/google-calendar/create-event', [GoogleCalendarController::class, 'createEvent']);
 
     Route::post('/integrations', [IntegrationController::class, 'save']);
     Route::delete('/integrations/{id}', [IntegrationController::class, 'delete']);
