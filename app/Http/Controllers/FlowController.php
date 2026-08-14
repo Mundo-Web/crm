@@ -305,6 +305,18 @@ class FlowController extends BasicController
                 $flow = Flow::where('business_id', $client->business_id)->find($activeState['flow_id']);
                 if ($flow) {
                     $nextTargetId = $activeState['replied_edge_target'] ?? null;
+
+                    // Si el estado era una petición de dato, guardar la respuesta en el campo del lead
+                    if (($activeState['waiting_for'] ?? '') === 'peticion_datos' && !empty($activeState['field_key']) && !empty($userMsgText)) {
+                        $fieldKey = $activeState['field_key'];
+                        $allowedFields = ['contact_name', 'contact_email', 'contact_phone', 'contact_dni', 'contact_address', 'contact_city', 'contact_country', 'notes'];
+                        if (in_array($fieldKey, $allowedFields)) {
+                            $client->update([$fieldKey => $userMsgText]);
+                            $client->refresh();
+                            Log::info("PETICION_DATOS: campo '{$fieldKey}' guardado con valor '{$userMsgText}' para lead {$client->id}");
+                        }
+                    }
+
                     Cache::forget($cacheKey);
 
                     if ($nextTargetId) {
@@ -314,6 +326,7 @@ class FlowController extends BasicController
                     }
                 }
             }
+
 
             $flows = Flow::where('business_id', $client->business_id)
                 ->where('status', true)
@@ -507,6 +520,46 @@ class FlowController extends BasicController
                     $nextEdge = $outgoingEdges[0] ?? null;
                     $currentNodeId = $nextEdge ? $nextEdge['target'] : null;
                     continue;
+                }
+
+                if ($nodeType === 'PETICION_DATOS') {
+                    $fieldKey     = $nodeData['field_key']     ?? 'contact_name';
+                    $promptMsg    = $nodeData['question_text'] ?? ($nodeData['prompt_message'] ?? ($nodeData['prompt'] ?? ($nodeData['content'] ?? null)));
+                    $skipIfFilled = $nodeData['skip_if_filled'] ?? true;
+
+                    // Si el campo ya está lleno y se configuró para omitir, saltar al siguiente nodo
+                    $currentValue = $client->{$fieldKey} ?? null;
+                    if ($skipIfFilled && !empty($currentValue)) {
+                        Log::info("PETICION_DATOS: campo '{$fieldKey}' ya tiene valor '{$currentValue}' para lead {$client->id}. Saltando.");
+                        $nextEdge = $outgoingEdges[0] ?? null;
+                        $currentNodeId = $nextEdge ? $nextEdge['target'] : null;
+                        continue;
+                    }
+
+                    // Enviar la pregunta al lead si hay un mensaje configurado
+                    if (!empty($promptMsg)) {
+                        $rawText = self::cleanHtmlText($promptMsg);
+                        $clientData = $client->toArray();
+                        unset($clientData['form_answers']);
+                        $textToSend = Text::replaceData($rawText, $clientData);
+                        MetaController::sendWithOrigin($businessJpa, $client, $textToSend, '', $effectiveOrigin);
+                    }
+
+                    // Pausar el flujo esperando la respuesta del cliente
+                    $nextEdge = $outgoingEdges[0] ?? null;
+                    $targetNodeId = $nextEdge ? $nextEdge['target'] : null;
+
+                    Cache::put("flow_state_{$client->id}", [
+                        'flow_id'            => $flow->id,
+                        'node_id'            => $currentNode['id'],
+                        'waiting_for'        => 'peticion_datos',
+                        'field_key'          => $fieldKey,
+                        'replied_edge_target'=> $targetNodeId,
+                        'origin'             => $effectiveOrigin,
+                    ], now()->addDays(1));
+
+                    Log::info("Flujo en PAUSA (PETICION_DATOS campo='{$fieldKey}') para el lead ID {$client->id}");
+                    break;
                 }
 
                 if ($nodeType === 'ESTADO') {
