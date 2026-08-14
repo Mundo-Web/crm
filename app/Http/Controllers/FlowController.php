@@ -603,19 +603,28 @@ class FlowController extends BasicController
                         }
                     }
 
+                    // IMPORTANTE: si hay un TEMPORIZADOR siguiente, el node_id en cache
+                    // debe ser el del TEMPORIZADOR (no el de PETICION_DATOS) para que
+                    // FlowTimeoutCommand pueda hacer match correctamente.
+                    $cacheNodeId = ($timerNodeId !== null) ? $timerNodeId : $currentNode['id'];
+                    $cacheTtl    = ($timerDurationSec !== null)
+                        ? now()->addSeconds($timerDurationSec + 300)
+                        : now()->addDays(1);
+
                     Cache::put("flow_state_{$client->id}", [
                         'flow_id'             => $flow->id,
-                        'node_id'             => $currentNode['id'],
-                        'waiting_for'         => 'peticion_datos',
+                        'node_id'             => $cacheNodeId,       // ID del TEMPORIZADOR para que el timer haga match
+                        'waiting_for'         => 'peticion_datos',   // tipo de espera para el handler de respuesta
                         'field_key'           => $fieldKey,
-                        'replied_edge_target' => $targetNodeId,   // apunta a rama "Respondió" del timer si lo hay
+                        'replied_edge_target' => $targetNodeId,      // rama "Respondió" del timer
+                        'timeout_edge_target' => $timerTimeoutTarget, // rama "Expiró" del timer
                         'origin'              => $effectiveOrigin,
-                    ], now()->addDays(1));
+                    ], $cacheTtl);
 
                     // Si el siguiente nodo era un TEMPORIZADOR, lanzar su timer para que "Expiró" se dispare
                     if ($timerDurationSec !== null && $timerNodeId !== null) {
                         self::dispatchBackgroundTimer($flow, $client, $timerNodeId, $timerTimeoutTarget, $effectiveOrigin, $timerDurationSec);
-                        Log::info("PETICION_DATOS: timer del TEMPORIZADOR lanzado ({$timerDurationSec}s) → 'Expiró' irá a {$timerTimeoutTarget} para lead {$client->id}");
+                        Log::info("PETICION_DATOS: timer lanzado ({$timerDurationSec}s), node_id cache={$timerNodeId}, 'Expiró'→{$timerTimeoutTarget} para lead {$client->id}");
                     }
 
                     Log::info("Flujo en PAUSA (PETICION_DATOS campo='{$fieldKey}') para el lead ID {$client->id}");
@@ -823,28 +832,67 @@ class FlowController extends BasicController
                     $nextEdge = $outgoingEdges[0] ?? null;
                     $targetNodeId = $nextEdge ? $nextEdge['target'] : null;
 
-                    $targetNode = null;
+                    // Mirar hacia adelante: si el nodo siguiente es TEMPORIZADOR,
+                    // aplicar la misma lógica: lanzar timer y guardar el ID correcto en cache.
+                    $erTimerNodeId      = null;
+                    $erTimerDurationSec = null;
+                    $erTimerTimeout     = null;
+                    $erRepliedTarget    = $targetNodeId;
+
                     if ($targetNodeId) {
+                        $nextNode = null;
                         foreach ($nodes as $n) {
-                            if (strval($n['id']) === strval($targetNodeId)) {
-                                $targetNode = $n;
-                                break;
+                            if (strval($n['id']) === strval($targetNodeId)) { $nextNode = $n; break; }
+                        }
+                        if ($nextNode && in_array($nextNode['type'] ?? '', ['TEMPORIZADOR', 'TIMER'])) {
+                            $erTimerNodeId = $nextNode['id'];
+                            $tData = $nextNode['data'] ?? [];
+                            $tVal  = floatval($tData['timeout_value'] ?? 1);
+                            $tUnit = strtolower($tData['timeout_unit'] ?? 'minutos');
+                            $erTimerDurationSec = intval($tVal * 60);
+                            if ($tUnit === 'segundos' || $tUnit === 'segundo') $erTimerDurationSec = intval($tVal);
+                            elseif ($tUnit === 'horas' || $tUnit === 'hora') $erTimerDurationSec = intval($tVal * 3600);
+                            elseif (in_array($tUnit, ['dias', 'día', 'días', 'day', 'days'])) $erTimerDurationSec = intval($tVal * 86400);
+
+                            $timerOutEdges = array_values(array_filter($edges, fn($e) => strval($e['source'] ?? '') === strval($erTimerNodeId)));
+                            foreach ($timerOutEdges as $te) {
+                                $tH = strtolower($te['sourceHandle'] ?? '');
+                                $tL = strtolower($te['label'] ?? '');
+                                if (str_contains($tH, 'timeout') || str_contains($tH, 'expir') || str_contains($tL, 'expir')) {
+                                    $erTimerTimeout = $te['target'];
+                                }
                             }
+                            if (!$erTimerTimeout && count($timerOutEdges) > 1) $erTimerTimeout = $timerOutEdges[1]['target'];
+
+                            // rama "Respondió" del timer
+                            $erRepliedTarget = null;
+                            foreach ($timerOutEdges as $te) {
+                                $tH = strtolower($te['sourceHandle'] ?? '');
+                                $tL = strtolower($te['label'] ?? '');
+                                if (str_contains($tH, 'replied') || str_contains($tH, 'respon') || str_contains($tL, 'respon')) {
+                                    $erRepliedTarget = $te['target'];
+                                }
+                            }
+                            if (!$erRepliedTarget) $erRepliedTarget = $timerOutEdges[0]['target'] ?? null;
                         }
                     }
 
-                    if ($targetNode && ($targetNode['type'] ?? '') === 'TEMPORIZADOR') {
-                        $currentNodeId = $targetNode['id'];
-                        continue;
-                    }
+                    $erCacheNodeId = $erTimerNodeId ?? $currentNode['id'];
+                    $erCacheTtl    = $erTimerDurationSec ? now()->addSeconds($erTimerDurationSec + 300) : now()->addDays(1);
 
                     Cache::put("flow_state_{$client->id}", [
-                        'flow_id' => $flow->id,
-                        'node_id' => $currentNode['id'],
-                        'waiting_for' => 'response',
-                        'replied_edge_target' => $targetNodeId,
-                        'origin' => $effectiveOrigin,
-                    ], now()->addDays(1));
+                        'flow_id'             => $flow->id,
+                        'node_id'             => $erCacheNodeId,
+                        'waiting_for'         => 'response',
+                        'replied_edge_target' => $erRepliedTarget,
+                        'timeout_edge_target' => $erTimerTimeout,
+                        'origin'              => $effectiveOrigin,
+                    ], $erCacheTtl);
+
+                    if ($erTimerNodeId && $erTimerDurationSec) {
+                        self::dispatchBackgroundTimer($flow, $client, $erTimerNodeId, $erTimerTimeout, $effectiveOrigin, $erTimerDurationSec);
+                        Log::info("ESPERAR_RESPUESTA: timer lanzado ({$erTimerDurationSec}s), node_id cache={$erTimerNodeId} para lead {$client->id}");
+                    }
 
                     Log::info("Flujo en PAUSA (ESPERAR RESPUESTA) para el lead ID {$client->id}");
                     break;
