@@ -133,6 +133,7 @@ const Apikeys = ({ apikey }) => {
 };
 
 CreateReactScript((el, properties) => {
+  if (!properties.can('integrations', 'forms', 'all')) return (location.href = '/');
   createRoot(el).render(
     <Adminto {...properties} title='API Keys'>
       <Apikeys {...properties} />

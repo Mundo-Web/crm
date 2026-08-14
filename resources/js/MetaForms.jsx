@@ -1290,6 +1290,7 @@ const TreeNodeEditor = ({
 };
 
 CreateReactScript((el, properties) => {
+    if (!properties.can("meta-forms", "root", "all", "list")) return (location.href = "/");
     createRoot(el).render(
         <Adminto {...properties} title="Formularios Meta">
             <MetaForms {...properties} />

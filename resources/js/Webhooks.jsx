@@ -2751,6 +2751,7 @@ const Webhooks = ({ apikey, auth_token, integrations: integrationsDB }) => {
 };
 
 CreateReactScript((el, properties) => {
+    if (!properties.can("integrations", "socials", "all")) return (location.href = "/");
     createRoot(el).render(
         <Adminto {...properties} title="Redes Sociales">
             <Webhooks {...properties} />

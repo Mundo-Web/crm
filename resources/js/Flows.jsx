@@ -2804,6 +2804,7 @@ const Flows = ({
 };
 
 CreateReactScript((el, properties) => {
+    if (!properties.can("flows", "root", "all", "list")) return (location.href = "/");
     createRoot(el).render(
         <Adminto {...properties} title="Flujos de Automatización">
             <Flows {...properties} />

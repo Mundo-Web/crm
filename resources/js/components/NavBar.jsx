@@ -447,15 +447,15 @@ const NavBar = ({ can, session = {}, services, theme, setTheme, title = '', wsAc
             }
 
             {
-              can('default-messages', 'list') &&
+              can('default-messages', 'root', 'all', 'list') &&
               <DDMenuItem icon='mdi mdi-message-bulleted' href='/default-messages' pinned={pinned} setPinned={setPinned}>Mensajes predeter...</DDMenuItem>
             }
             {
-              can('repository', 'list') &&
+              can('repository', 'root', 'all', 'list') &&
               <DDMenuItem icon='mdi mdi-database' href='/repository' pinned={pinned} setPinned={setPinned}>Repositorio</DDMenuItem>
             }
             {
-              can('apikeys', 'root', 'all', 'list') &&
+              (can('integrations', 'socials', 'forms', 'pixel', 'all') || can('apikeys', 'root', 'all', 'list')) &&
               <>
                 <a href="#integrations" className="dropdown-item notify-item" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="integrations">
                   <i className="mdi mdi-api me-1"></i>
@@ -463,9 +463,15 @@ const NavBar = ({ can, session = {}, services, theme, setTheme, title = '', wsAc
                   <i className="mdi mdi-chevron-down float-end"></i>
                 </a>
                 <div className="collapse ms-3" id="integrations">
-                  <DDMenuItem icon='mdi mdi-webhook' href='/webhooks' pinned={pinned} setPinned={setPinned}>Redes sociales</DDMenuItem>
-                  <DDMenuItem icon='mdi mdi-form-textbox' href='/apikeys' pinned={pinned} setPinned={setPinned}>Formulario Externo</DDMenuItem>
-                  <DDMenuItem icon='mdi mdi-image-filter-center-focus-strong' href='/pixels' pinned={pinned} setPinned={setPinned}>Atalaya Pixel</DDMenuItem>
+                  {can('integrations', 'socials', 'all') &&
+                    <DDMenuItem icon='mdi mdi-webhook' href='/webhooks' pinned={pinned} setPinned={setPinned}>Redes sociales</DDMenuItem>
+                  }
+                  {can('integrations', 'forms', 'all') &&
+                    <DDMenuItem icon='mdi mdi-form-textbox' href='/apikeys' pinned={pinned} setPinned={setPinned}>Formulario Externo</DDMenuItem>
+                  }
+                  {can('integrations', 'pixel', 'all') &&
+                    <DDMenuItem icon='mdi mdi-image-filter-center-focus-strong' href='/pixels' pinned={pinned} setPinned={setPinned}>Atalaya Pixel</DDMenuItem>
+                  }
                 </div>
               </>
             }

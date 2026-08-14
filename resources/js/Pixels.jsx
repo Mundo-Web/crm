@@ -235,6 +235,7 @@ const PixelIntegration = ({ apikey, breadkowns }) => {
 };
 
 CreateReactScript((el, properties) => {
+  if (!properties.can('integrations', 'pixel', 'all')) return (location.href = '/');
   createRoot(el).render(
     <Adminto {...properties} title='Pixel de Seguimiento'>
       <PixelIntegration {...properties} />

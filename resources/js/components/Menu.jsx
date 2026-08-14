@@ -409,37 +409,44 @@ const Menu = ({
                                 Procesos
                             </MenuItem>
                         )}
-                        <MenuItem
-                            pinned={pinned}
-                            setPinned={setPinned}
-                            href="/flows"
-                            icon="mdi mdi-source-branch"
-                        >
-                            Flujos
-                        </MenuItem>
-                        {can("campaigns", "root", "all", "list") && (
+                        {can("flows", "root", "all", "list") && (
+                            <MenuItem
+                                pinned={pinned}
+                                setPinned={setPinned}
+                                href="/flows"
+                                icon="mdi mdi-source-branch"
+                            >
+                                Flujos
+                            </MenuItem>
+                        )}
+                        {(can("campaigns", "root", "all", "list") ||
+                            can("meta-forms", "root", "all", "list")) && (
                             <MenuItemContainer
                                 title="Meta"
                                 icon="mdi mdi-facebook"
                             >
-                                <MenuItem
-                                    pinned={pinned}
-                                    setPinned={setPinned}
-                                    href="/campaigns"
-                                    icon="mdi mdi-google-ads"
-                                    pinLabel="Meta • Campañas"
-                                >
-                                    Campañas
-                                </MenuItem>
-                                <MenuItem
-                                    pinned={pinned}
-                                    setPinned={setPinned}
-                                    href="/meta-forms"
-                                    icon="mdi mdi-form-select"
-                                    pinLabel="Meta • Formularios"
-                                >
-                                    Formularios
-                                </MenuItem>
+                                {can("campaigns", "root", "all", "list") && (
+                                    <MenuItem
+                                        pinned={pinned}
+                                        setPinned={setPinned}
+                                        href="/campaigns"
+                                        icon="mdi mdi-google-ads"
+                                        pinLabel="Meta • Campañas"
+                                    >
+                                        Campañas
+                                    </MenuItem>
+                                )}
+                                {can("meta-forms", "root", "all", "list") && (
+                                    <MenuItem
+                                        pinned={pinned}
+                                        setPinned={setPinned}
+                                        href="/meta-forms"
+                                        icon="mdi mdi-form-select"
+                                        pinLabel="Meta • Formularios"
+                                    >
+                                        Formularios
+                                    </MenuItem>
+                                )}
                             </MenuItemContainer>
                         )}
 
