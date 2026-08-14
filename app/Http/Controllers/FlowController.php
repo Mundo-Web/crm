@@ -525,7 +525,9 @@ class FlowController extends BasicController
                 if ($nodeType === 'PETICION_DATOS') {
                     $fieldKey     = $nodeData['field_key']     ?? 'contact_name';
                     $promptMsg    = $nodeData['question_text'] ?? ($nodeData['prompt_message'] ?? ($nodeData['prompt'] ?? ($nodeData['content'] ?? null)));
-                    $skipIfFilled = $nodeData['skip_if_filled'] ?? true;
+                    // El frontend guarda 'skip_if_exists'. Default: false (no omitir) para que
+                    // siempre pregunte salvo que el usuario active el toggle explícitamente.
+                    $skipIfFilled = $nodeData['skip_if_exists'] ?? false;
 
                     // Si el campo ya está lleno y se configuró para omitir, saltar al siguiente nodo
                     $currentValue = $client->{$fieldKey} ?? null;
