@@ -9,6 +9,7 @@
     @viteReactRefresh
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+    <meta name="google-site-verification" content="ALmdxO-fVbsla2dyc0JjGYFnmi6nIcRrdSeixIAzNtU" />
     <title>Gestion de clientes | Atalaya</title>
     <link rel="shortcut icon" href="/assets/img/icon.svg" type="image/png">
 
