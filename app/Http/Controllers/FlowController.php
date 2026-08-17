@@ -343,19 +343,41 @@ class FlowController extends BasicController
                     $conditions = json_decode($conditions, true) ?? [];
                 }
 
+                $originLower = strtolower($origin ?? ($client->origin ?? ''));
+                $triggeredByLower = strtolower($client->triggered_by ?? '');
+                $sourceChannelLower = strtolower($client->source_channel ?? '');
+
+                $isFormLead = !empty($client->form_id)
+                    || !empty($client->form_name)
+                    || str_contains($triggeredByLower, 'formulario')
+                    || str_contains($triggeredByLower, 'form')
+                    || str_contains($sourceChannelLower, 'form')
+                    || in_array($originLower, ['forms', 'meta_form', 'meta_lead_ads', 'fb_form', 'ig_form']);
+
+                $isCtwaLead = in_array($originLower, ['ctwa', 'click_to_whatsapp'])
+                    || str_contains($triggeredByLower, 'ctwa')
+                    || str_contains($triggeredByLower, 'click to whatsapp');
+
+                $isMessengerLead = in_array($originLower, ['messenger', 'fb_messenger'])
+                    || str_contains($triggeredByLower, 'messenger');
+
+                $isInstagramDmLead = ($originLower === 'instagram' || str_contains($triggeredByLower, 'instagram')) && !$isFormLead;
+
+                $isWhatsAppDirect = in_array($originLower, ['whatsapp', 'evoapi', 'directo', 'whatsapp api']) && !$isCtwaLead;
+
                 $originMatch = false;
-                if ($type === 'all') {
+                if ($type === 'all' || $type === 'status_change') {
                     $originMatch = true;
-                } else if ($type === 'messenger' && in_array($origin, ['messenger', 'fb_messenger'])) {
-                    $originMatch = true;
-                } else if ($type === 'instagram_dm' && in_array($origin, ['instagram', 'ig_dm'])) {
-                    $originMatch = true;
-                } else if (in_array($type, ['whatsapp', 'click_to_whatsapp']) && in_array($origin, ['whatsapp', 'evoapi', 'ctwa'])) {
-                    $originMatch = true;
-                } else if (in_array($type, ['meta_lead_ads', 'fb_form', 'ig_form']) && in_array($origin, ['forms', 'meta_form'])) {
-                    $originMatch = true;
-                } else if ($type === 'status_change') {
-                    $originMatch = true;
+                } else if ($type === 'messenger') {
+                    $originMatch = $isMessengerLead;
+                } else if ($type === 'instagram_dm') {
+                    $originMatch = $isInstagramDmLead;
+                } else if ($type === 'click_to_whatsapp') {
+                    $originMatch = $isCtwaLead;
+                } else if ($type === 'whatsapp') {
+                    $originMatch = ($isWhatsAppDirect || $isCtwaLead);
+                } else if (in_array($type, ['meta_lead_ads', 'fb_form', 'ig_form'])) {
+                    $originMatch = $isFormLead;
                 }
 
                 if (!$originMatch) continue;
@@ -395,8 +417,27 @@ class FlowController extends BasicController
     public static function triggerFlowsForStatusChange(Client $client)
     {
         try {
-            // Determinar el origen del lead para compararlo con el trigger_type del flujo
             $clientOrigin = strtolower($client->origin ?? '');
+            $triggeredByLower = strtolower($client->triggered_by ?? '');
+            $sourceChannelLower = strtolower($client->source_channel ?? '');
+
+            $isFormLead = !empty($client->form_id)
+                || !empty($client->form_name)
+                || str_contains($triggeredByLower, 'formulario')
+                || str_contains($triggeredByLower, 'form')
+                || str_contains($sourceChannelLower, 'form')
+                || in_array($clientOrigin, ['forms', 'meta_form', 'meta_lead_ads', 'fb_form', 'ig_form']);
+
+            $isCtwaLead = in_array($clientOrigin, ['ctwa', 'click_to_whatsapp'])
+                || str_contains($triggeredByLower, 'ctwa')
+                || str_contains($triggeredByLower, 'click to whatsapp');
+
+            $isMessengerLead = in_array($clientOrigin, ['messenger', 'fb_messenger'])
+                || str_contains($triggeredByLower, 'messenger');
+
+            $isInstagramDmLead = ($clientOrigin === 'instagram' || str_contains($triggeredByLower, 'instagram')) && !$isFormLead;
+
+            $isWhatsAppDirect = in_array($clientOrigin, ['whatsapp', 'evoapi', 'directo', 'whatsapp api']) && !$isCtwaLead;
 
             $flows = Flow::where('business_id', $client->business_id)
                 ->where('status', true)
@@ -405,18 +446,19 @@ class FlowController extends BasicController
             foreach ($flows as $flow) {
                 $type = $flow->trigger_type ?? 'all';
 
-                // Verificar si el origen del lead coincide con el trigger del flujo
                 $originMatch = false;
                 if ($type === 'all' || $type === 'status_change') {
                     $originMatch = true;
-                } elseif ($type === 'messenger' && in_array($clientOrigin, ['messenger', 'fb_messenger'])) {
-                    $originMatch = true;
-                } elseif ($type === 'instagram_dm' && in_array($clientOrigin, ['instagram', 'ig_dm'])) {
-                    $originMatch = true;
-                } elseif (in_array($type, ['whatsapp', 'click_to_whatsapp']) && in_array($clientOrigin, ['whatsapp', 'evoapi', 'ctwa', 'whatsapp api', 'directo'])) {
-                    $originMatch = true;
-                } elseif (in_array($type, ['meta_lead_ads', 'fb_form', 'ig_form']) && in_array($clientOrigin, ['forms', 'meta_form'])) {
-                    $originMatch = true;
+                } elseif ($type === 'messenger') {
+                    $originMatch = $isMessengerLead;
+                } elseif ($type === 'instagram_dm') {
+                    $originMatch = $isInstagramDmLead;
+                } elseif ($type === 'click_to_whatsapp') {
+                    $originMatch = $isCtwaLead;
+                } elseif ($type === 'whatsapp') {
+                    $originMatch = ($isWhatsAppDirect || $isCtwaLead);
+                } elseif (in_array($type, ['meta_lead_ads', 'fb_form', 'ig_form'])) {
+                    $originMatch = $isFormLead;
                 }
 
                 if (!$originMatch) continue;
@@ -431,6 +473,10 @@ class FlowController extends BasicController
                 }
 
                 if (!empty($conditions['status_id']) && $conditions['status_id'] != $client->status_id) {
+                    continue;
+                }
+
+                if (!empty($conditions['meta_form_id']) && !empty($client->form_id) && $conditions['meta_form_id'] != $client->form_id) {
                     continue;
                 }
 
@@ -510,7 +556,16 @@ class FlowController extends BasicController
                 }
 
                 if ($nodeType === 'MENSAJE') {
-                    if (!empty($nodeData['content'])) {
+                    $isMetaTemplate = !empty($nodeData['is_meta_template']);
+                    $templateName = $nodeData['template_name'] ?? null;
+                    if (!$templateName && !empty($nodeData['default_message_id']) && str_starts_with($nodeData['default_message_id'], 'meta_tpl_')) {
+                        $templateName = str_replace('meta_tpl_', '', $nodeData['default_message_id']);
+                        $isMetaTemplate = true;
+                    }
+
+                    if ($isMetaTemplate && !empty($templateName)) {
+                        self::sendMetaWhatsAppTemplate($client, $templateName, 'es', [], $nodeData['content'] ?? null);
+                    } else if (!empty($nodeData['content'])) {
                         $rawText = self::cleanHtmlText($nodeData['content']);
                         $clientData = $client->toArray();
                         unset($clientData['form_answers']);
@@ -983,4 +1038,94 @@ class FlowController extends BasicController
                 ->delay(now()->addSeconds($durationSec));
         }
     }
+
+    public static function sendMetaWhatsAppTemplate(Client $client, string $templateName, string $language = 'es', array $parameters = [], ?string $fallbackText = null): bool
+    {
+        try {
+            $number = $client->contact_phone;
+            if (!$number) {
+                Log::warning("sendMetaWhatsAppTemplate: cliente ID {$client->id} no tiene teléfono registrado.");
+                return false;
+            }
+
+            $number = preg_replace('/[^0-9]/', '', $number);
+            if (strlen($number) === 9 && strpos($number, '9') === 0) {
+                $number = '51' . $number;
+            }
+
+            $integration = ($client->integration && $client->integration->meta_service === 'whatsapp' && $client->integration->status)
+                ? $client->integration
+                : Integration::where('business_id', $client->business_id)
+                    ->where('meta_service', 'whatsapp')
+                    ->where('status', true)
+                    ->first();
+
+            if (!$integration || empty($integration->meta_access_token) || empty($integration->meta_number_id)) {
+                Log::error("sendMetaWhatsAppTemplate: no se encontró integración activa de WhatsApp Meta para business_id {$client->business_id}");
+                return false;
+            }
+
+            $url = env('FACEBOOK_GRAPH_URL', 'https://graph.facebook.com/v22.0') . '/' . $integration->meta_number_id . '/messages';
+
+            $templatePayload = [
+                'name' => $templateName,
+                'language' => [
+                    'code' => $language ?: 'es'
+                ]
+            ];
+
+            if (!empty($parameters)) {
+                $compParams = [];
+                foreach ($parameters as $p) {
+                    $compParams[] = ['type' => 'text', 'text' => $p];
+                }
+                $templatePayload['components'] = [
+                    [
+                        'type' => 'body',
+                        'parameters' => $compParams
+                    ]
+                ];
+            }
+
+            $payload = [
+                'messaging_product' => 'whatsapp',
+                'recipient_type'    => 'individual',
+                'to'                => $number,
+                'type'              => 'template',
+                'template'          => $templatePayload
+            ];
+
+            Log::info("sendMetaWhatsAppTemplate: Enviando plantilla '{$templateName}' a {$number} (lead {$client->id})", ['url' => $url]);
+
+            $res = Http::withToken($integration->meta_access_token)->post($url, $payload);
+
+            if (!$res->ok()) {
+                Log::error("sendMetaWhatsAppTemplate: Error al enviar plantilla '{$templateName}' a {$number}: " . $res->body());
+                return false;
+            }
+
+            $resData = $res->json();
+            $messageId = $resData['messages'][0]['id'] ?? null;
+
+            $dbMessage = $fallbackText ? self::cleanHtmlText($fallbackText) : "[Plantilla Meta: {$templateName}]";
+
+            Message::create([
+                'wa_id'       => $number,
+                'role'        => 'AI',
+                'message'     => Text::html2wa($dbMessage),
+                'prompt'      => "Flujo Plantilla Meta: {$templateName}",
+                'microtime'   => (int) (microtime(true) * 1_000_000),
+                'business_id' => $client->business_id,
+                'message_id'  => $messageId,
+                'seen'        => true,
+            ]);
+
+            Log::info("sendMetaWhatsAppTemplate: Plantilla '{$templateName}' enviada exitosamente a {$number} para lead {$client->id}");
+            return true;
+        } catch (\Throwable $th) {
+            Log::error("sendMetaWhatsAppTemplate exception: " . $th->getMessage());
+            return false;
+        }
+    }
 }
+
