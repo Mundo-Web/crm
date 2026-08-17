@@ -260,7 +260,7 @@ class FlowController extends BasicController
             ], 404);
         }
 
-        $lead = \App\Models\Lead::where('business_id', $businessId)->find($request->lead_id);
+        $lead = Client::where('business_id', $businessId)->find($request->lead_id);
         if (!$lead) {
             return response()->json([
                 'status'  => false,
@@ -268,31 +268,106 @@ class FlowController extends BasicController
             ], 404);
         }
 
-        $nodes = $flow->tree['nodes'] ?? [];
-        $executed = [];
-
-        foreach ($nodes as $node) {
-            if (($node['type'] ?? '') === 'MENSAJE' && !empty($node['data']['content'])) {
-                $executed[] = [
-                    'type' => 'MENSAJE',
-                    'title' => $node['data']['title'] ?? 'Mensaje de Flujo',
-                    'content' => self::cleanHtmlText($node['data']['content']),
-                ];
-                break;
-            }
-        }
+        self::executeGraphForClient($flow, $lead);
 
         return response()->json([
             'status'  => true,
-            'message' => "Flujo '{$flow->name}' asignado e iniciado correctamente a {$lead->contact_name}",
+            'message' => "Flujo '{$flow->name}' ejecutado correctamente para {$lead->contact_name}",
             'data'    => [
                 'flow_id'   => $flow->id,
                 'flow_name' => $flow->name,
                 'lead_id'   => $lead->id,
-                'executed'  => $executed,
             ],
         ]);
     }
+
+    public function executeOnMatchingLeads(Request $request)
+    {
+        $request->validate([
+            'flow_id' => 'required',
+        ]);
+
+        $businessId = Auth::user()->business_id;
+        $flow = Flow::where('business_id', $businessId)->find($request->flow_id);
+        if (!$flow) {
+            return response()->json([
+                'status'  => false,
+                'message' => 'Flujo no encontrado',
+            ], 404);
+        }
+
+        $conditions = $flow->trigger_conditions ?? [];
+        if (!is_array($conditions)) {
+            $conditions = json_decode($conditions, true) ?? [];
+        }
+
+        $query = Client::where('business_id', $businessId);
+
+        if (!empty($conditions['status_id'])) {
+            $query->where('status_id', $conditions['status_id']);
+        }
+        if (!empty($conditions['manage_status_id'])) {
+            $query->where('manage_status_id', $conditions['manage_status_id']);
+        }
+        if (!empty($conditions['meta_form_id'])) {
+            $query->where('form_id', $conditions['meta_form_id']);
+        }
+
+        $leads = $query->get();
+        $executedCount = 0;
+
+        foreach ($leads as $client) {
+            $clientOrigin = strtolower($client->origin ?? '');
+            $triggeredByLower = strtolower($client->triggered_by ?? '');
+            $sourceChannelLower = strtolower($client->source_channel ?? '');
+
+            $isFormLead = !empty($client->form_id)
+                || !empty($client->form_name)
+                || str_contains($triggeredByLower, 'formulario')
+                || str_contains($triggeredByLower, 'form')
+                || str_contains($sourceChannelLower, 'form')
+                || in_array($clientOrigin, ['forms', 'meta_form', 'meta_lead_ads', 'fb_form', 'ig_form']);
+
+            $isCtwaLead = in_array($clientOrigin, ['ctwa', 'click_to_whatsapp'])
+                || str_contains($triggeredByLower, 'ctwa')
+                || str_contains($triggeredByLower, 'click to whatsapp');
+
+            $isMessengerLead = in_array($clientOrigin, ['messenger', 'fb_messenger'])
+                || str_contains($triggeredByLower, 'messenger');
+
+            $isInstagramDmLead = ($clientOrigin === 'instagram' || str_contains($triggeredByLower, 'instagram')) && !$isFormLead;
+
+            $isWhatsAppDirect = in_array($clientOrigin, ['whatsapp', 'evoapi', 'directo', 'whatsapp api']) && !$isCtwaLead;
+
+            $originMatch = false;
+            $type = $flow->trigger_type ?? 'all';
+            if ($type === 'all' || $type === 'status_change') {
+                $originMatch = true;
+            } elseif ($type === 'messenger') {
+                $originMatch = $isMessengerLead;
+            } elseif ($type === 'instagram_dm') {
+                $originMatch = $isInstagramDmLead;
+            } elseif ($type === 'click_to_whatsapp') {
+                $originMatch = $isCtwaLead;
+            } elseif ($type === 'whatsapp') {
+                $originMatch = ($isWhatsAppDirect || $isCtwaLead);
+            } elseif (in_array($type, ['meta_lead_ads', 'fb_form', 'ig_form'])) {
+                $originMatch = $isFormLead;
+            }
+
+            if ($originMatch) {
+                self::executeGraphForClient($flow, $client);
+                $executedCount++;
+            }
+        }
+
+        return response()->json([
+            'status'         => true,
+            'message'        => "Flujo '{$flow->name}' ejecutado exitosamente sobre {$executedCount} leads existentes.",
+            'executed_count' => $executedCount,
+        ]);
+    }
+
 
     public static function triggerFlowsForIncomingLead(Client $client, ?string $origin = null, ?Message $messageJpa = null)
     {

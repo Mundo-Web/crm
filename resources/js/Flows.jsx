@@ -1244,8 +1244,44 @@ const Flows = ({
         }
     };
 
+    // Execute flow on all existing matching leads
+    const handleExecuteMatching = async () => {
+        if (!selectedFlow?.id) {
+            Swal.fire("Atención", "Guarda primero el diagrama para poder ejecutarlo sobre leads existentes.", "warning");
+            return;
+        }
+
+        const confirm = await Swal.fire({
+            title: "¿Ejecutar sobre leads existentes?",
+            text: `El flujo '${flowName}' se ejecutará para todos los leads del CRM que cumplan con el estado, etiqueta y origen configurados.`,
+            icon: "question",
+            showCancelButton: true,
+            confirmButtonText: "Sí, ejecutar ahora",
+            cancelButtonText: "Cancelar",
+            confirmButtonColor: "#3085d6",
+        });
+
+        if (!confirm.isConfirmed) return;
+
+        try {
+            const { status, result } = await Fetch("/api/flows/execute-matching", {
+                method: "POST",
+                body: JSON.stringify({ flow_id: selectedFlow.id }),
+            });
+
+            if (status) {
+                Swal.fire("¡Proceso Completado!", result?.message || "Flujo ejecutado correctamente.", "success");
+            } else {
+                Swal.fire("Error", result?.message || "Error al ejecutar el flujo", "error");
+            }
+        } catch (error) {
+            Swal.fire("Error", "Error al conectar con el servidor", "error");
+        }
+    };
+
     // Toast mixin without dark backdrop overlay
     const Toast = Swal.mixin({
+
         toast: true,
         position: "top-end",
         showConfirmButton: false,
@@ -1555,9 +1591,20 @@ const Flows = ({
                                 >
                                     <i className="mdi mdi-play-circle-outline me-1"></i> {showSimulator ? "Ocultar Simulador" : "Simular / Probar Flujo"}
                                 </button>
+                                {isEditing && (
+                                    <button
+                                        type="button"
+                                        className="btn btn-sm btn-outline-warning fw-bold px-3 py-1 font-12"
+                                        onClick={handleExecuteMatching}
+                                        title="Ejecuta este flujo de inmediato para todos los prospectos del CRM que ya cumplen con el estado y origen"
+                                    >
+                                        <i className="mdi mdi-account-multiple-check me-1"></i> Ejecutar sobre Leads Existentes
+                                    </button>
+                                )}
                                 <button className="btn btn-sm btn-primary fw-bold px-3 py-1 font-12" onClick={handleSaveFlow}>
                                     <i className="mdi mdi-check-circle me-1"></i> Guardar Diagrama
                                 </button>
+
                                 <button
                                     type="button"
                                     className="btn-close"

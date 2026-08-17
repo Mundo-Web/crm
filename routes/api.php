@@ -334,6 +334,7 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/flows/active', [FlowController::class, 'activeFlows']);
     Route::post('/flows/execute', [FlowController::class, 'executeFlow']);
+    Route::post('/flows/execute-matching', [FlowController::class, 'executeOnMatchingLeads']);
 
     Route::prefix('/atalaya')->group(function () {
         Route::post('/users/paginate', [AtalayaUserController::class, 'paginate']);
