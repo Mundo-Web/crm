@@ -175,7 +175,7 @@ class LeadController extends BasicController
                     'last_human_message_microtime' => Message::select('microtime')
                         ->where(function ($q) {
                             $q->whereColumn('messages.wa_id', 'clients.contact_phone')
-                              ->orWhereColumn('messages.wa_id', 'clients.integration_user_id');
+                                ->orWhereColumn('messages.wa_id', 'clients.integration_user_id');
                         })
                         ->where('messages.role', 'Human')
                         ->whereColumn('messages.business_id', 'clients.business_id')
@@ -204,7 +204,7 @@ class LeadController extends BasicController
                 'last_human_message_microtime' => Message::select('microtime')
                     ->where(function ($q) {
                         $q->whereColumn('messages.wa_id', 'clients.contact_phone')
-                          ->orWhereColumn('messages.wa_id', 'clients.integration_user_id');
+                            ->orWhereColumn('messages.wa_id', 'clients.integration_user_id');
                     })
                     ->where('messages.role', 'Human')
                     ->whereColumn('messages.business_id', 'clients.business_id')
@@ -288,7 +288,7 @@ class LeadController extends BasicController
 
             $business_id       = Auth::user()->business_id;
             $campaignIdColumn  = $mapping['campaign_id']   ?? null;
-            $campaignNameColumn= $mapping['campaign_name'] ?? null;
+            $campaignNameColumn = $mapping['campaign_name'] ?? null;
             $stripMetaPrefix   = fn(string $v): string => trim(preg_replace('/^[a-z]+:/i', '', $v));
 
             // Recopilar códigos de campaña
@@ -325,26 +325,63 @@ class LeadController extends BasicController
 
                 $campaignId = ($adId && isset($existingCampaigns[$adId])) ? $existingCampaigns[$adId] : null;
 
+                $dateRaw  = ($mapping['date'] ?? null) && !empty($row[$mapping['date']]) ? $row[$mapping['date']] : null;
+                $parsedDt = Carbon::now();
+                if (!empty($dateRaw)) {
+                    if (is_numeric($dateRaw)) {
+                        try {
+                            $parsedDt = Carbon::instance(\PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($dateRaw));
+                        } catch (\Throwable $e) {
+                            $parsedDt = Carbon::parse($dateRaw);
+                        }
+                    } else {
+                        try {
+                            $parsedDt = Carbon::parse($dateRaw);
+                        } catch (\Throwable $e) {
+                            $parsedDt = Carbon::now();
+                        }
+                    }
+                }
+
                 $originRaw = strtolower(($mapping['source'] ?? null) ? ($row[$mapping['source']] ?? '') : '');
                 $origin = match ($originRaw) {
                     'fb', 'facebook'   => 'Facebook',
                     'ig', 'instagram'  => 'Instagram',
+                    'tiktok'           => 'TikTok',
+                    'google'           => 'Google',
                     default            => (($mapping['source'] ?? null) ? ($row[$mapping['source']] ?? null) : null),
                 };
+
+                $source = 'Importado';
+                $triggeredBy = ($mapping['triggered_by'] ?? null) ? ($row[$mapping['triggered_by']] ?? null) : null;
+                $sourceChannel = null;
+
+                if ($origin === 'Facebook' || $origin === 'Instagram') {
+                    $source = 'Meta';
+                    $triggeredBy = $triggeredBy ?: ('Formulario ' . $origin);
+                    $sourceChannel = $origin . ' Form';
+                } elseif ($origin === 'TikTok') {
+                    $source = 'TikTok';
+                    $triggeredBy = $triggeredBy ?: 'Formulario TikTok';
+                    $sourceChannel = 'TikTok Form';
+                } elseif ($origin === 'Google') {
+                    $source = 'Google';
+                    $triggeredBy = $triggeredBy ?: 'Google Ads';
+                    $sourceChannel = 'Google Ads';
+                }
 
                 $adsetColumn = $mapping['adset_name'] ?? null;
                 $adColumn    = $mapping['ad_name']    ?? null;
                 $adsetName   = $adsetColumn ? (trim(preg_replace('/^[a-z]+:/i', '', $row[$adsetColumn] ?? '')) ?: null) : null;
                 $adName      = $adColumn    ? (trim(preg_replace('/^[a-z]+:/i', '', $row[$adColumn]    ?? '')) ?: null) : null;
 
-                $dateRaw  = ($mapping['date'] ?? null) && !empty($row[$mapping['date']]) ? $row[$mapping['date']] : null;
-                $parsedDt = $dateRaw ? Carbon::parse($dateRaw) : Carbon::now();
-
                 $mappedRows[] = [
                     'name'           => ($mapping['name'] ?? null) ? ($row[$mapping['name']] ?? null) : null,
                     'contact_email'  => ($mapping['email'] ?? null) ? ($row[$mapping['email']] ?? null) : null,
                     'contact_phone'  => $phone ?: null,
                     'origin'         => $origin,
+                    'source'         => $source,
+                    'triggered_by'   => $triggeredBy,
                     'campaign_id'    => $campaignId,
                     'adset_name'     => $adsetName,
                     'ad_name'        => $adName,
@@ -401,7 +438,7 @@ class LeadController extends BasicController
                 $row['_status'] = $found ? 'existing' : 'new';
                 $row['_existing_id']   = $found?->id;
                 $row['_existing_name'] = $found?->name;
-                $row['_existing_since']= $found?->created_at;
+                $row['_existing_since'] = $found?->created_at;
 
                 if ($found) $existingRows[] = $row;
                 else        $newRows[]      = $row;
@@ -566,7 +603,22 @@ class LeadController extends BasicController
                     $phone = '51' . $phone;
                 }
                 $dateRaw = ($mapping['date'] ?? null) && !empty($row[$mapping['date']]) ? $row[$mapping['date']] : null;
-                $mappingDate = $dateRaw ? Carbon::parse($dateRaw) : Carbon::now();
+                $mappingDate = Carbon::now();
+                if (!empty($dateRaw)) {
+                    if (is_numeric($dateRaw)) {
+                        try {
+                            $mappingDate = Carbon::instance(\PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($dateRaw));
+                        } catch (\Throwable $e) {
+                            $mappingDate = Carbon::parse($dateRaw);
+                        }
+                    } else {
+                        try {
+                            $mappingDate = Carbon::parse($dateRaw);
+                        } catch (\Throwable $e) {
+                            $mappingDate = Carbon::now();
+                        }
+                    }
+                }
 
                 // Determine campaign_id
                 $campaignId = null;
@@ -590,17 +642,27 @@ class LeadController extends BasicController
                 $origin = match ($originRaw) {
                     'fb', 'facebook' => 'Facebook',
                     'ig', 'instagram' => 'Instagram',
-                    default => ($mapping['source'] ?? null) ? ($row[$mapping['source']] ?? null) : null,
+                    'tiktok'         => 'TikTok',
+                    'google'         => 'Google',
+                    default          => (($mapping['source'] ?? null) ? ($row[$mapping['source']] ?? null) : null),
                 };
 
-                $source = 'Importación';
-                $triggeredBy = ($mapping['triggered_by'] ?? null) ? ($row[$mapping['triggered_by']] ?? 'Importación') : 'Importación';
+                $source = 'Importado';
+                $triggeredBy = ($mapping['triggered_by'] ?? null) ? ($row[$mapping['triggered_by']] ?? null) : null;
                 $sourceChannel = null;
 
                 if ($origin === 'Facebook' || $origin === 'Instagram') {
                     $source = 'Meta';
-                    $triggeredBy = 'Formulario ' . $origin;
+                    $triggeredBy = $triggeredBy ?: ('Formulario ' . $origin);
                     $sourceChannel = $origin . ' Form';
+                } elseif ($origin === 'TikTok') {
+                    $source = 'TikTok';
+                    $triggeredBy = $triggeredBy ?: 'Formulario TikTok';
+                    $sourceChannel = 'TikTok Form';
+                } elseif ($origin === 'Google') {
+                    $source = 'Google';
+                    $triggeredBy = $triggeredBy ?: 'Google Ads';
+                    $sourceChannel = 'Google Ads';
                 }
 
                 $adsetColumn = $mapping['adset_name'] ?? null;
@@ -665,7 +727,7 @@ class LeadController extends BasicController
             }
 
             $emails = array_filter(array_unique(array_map('strtolower', array_map('trim', array_column($mappedRows, 'contact_email')))));
-            
+
             $phoneSuffixes = [];
             foreach ($mappedRows as $row) {
                 if ($row['contact_phone']) {
@@ -926,16 +988,16 @@ class LeadController extends BasicController
             if (empty($leads)) {
                 $leads = json_decode($request->getContent(), true);
             }
-            
+
             \Illuminate\Support\Facades\Log::info('Contenido recibido en syncMetaLeads: ' . json_encode($leads));
-            
+
             if (!$leads || !is_array($leads)) {
                 \Illuminate\Support\Facades\Log::error('Error en sincronización Meta: JSON inválido o vacío. Contenido recibido: ' . substr($request->getContent(), 0, 500));
                 throw new Exception('El JSON proporcionado no es válido o está vacío.');
             }
-            
+
             \Illuminate\Support\Facades\Log::info('Iniciando sincronización Meta: ' . count($leads) . ' leads recibidos.');
-            
+
             $business_id = Auth::user()->business_id;
             $updatedCount = 0;
 
@@ -952,12 +1014,12 @@ class LeadController extends BasicController
 
                 $platformCode = strtolower($leadData['platform'] ?? 'fb');
                 $platformName = $platformCode == 'ig' ? 'Instagram' : 'Facebook';
-                
+
                 // Sync campaign
                 $campaignId = null;
                 $rawCampaignId = $leadData['campaign_id'] ?? null;
                 $cleanCampaignId = $rawCampaignId ? trim(preg_replace('/^[a-z]+:/i', '', $rawCampaignId)) : null;
-                
+
                 if ($cleanCampaignId) {
                     $campaign = Campaign::updateOrCreate([
                         'business_id' => $business_id,
@@ -1160,7 +1222,7 @@ class LeadController extends BasicController
                 throw new Exception('Lead no encontrado');
             }
             if ($leadJpa->business_id != Auth::user()->business_id) throw new Exception('Este lead no pertenece a tu empresa');
-            
+
             $oldStatus = $leadJpa->status_id;
             $leadJpa->status_id = $request->status;
 
@@ -1248,10 +1310,10 @@ class LeadController extends BasicController
                 throw new Exception('Lead no encontrado');
             }
             if ($leadJpa->business_id != Auth::user()->business_id) throw new Exception('Este lead no pertenece a tu empresa');
-            
+
             $oldManageStatus = $leadJpa->manage_status_id;
             $leadJpa->manage_status_id = $request->status;
-            
+
             \Illuminate\Support\Facades\Log::info('LeadController::manageStatus - Actualizando etiqueta', [
                 'old_manage_status' => $oldManageStatus,
                 'new_manage_status' => $request->status,
@@ -1292,10 +1354,10 @@ class LeadController extends BasicController
                 throw new Exception('Lead no encontrado');
             }
             if ($leadJpa->business_id != Auth::user()->business_id) throw new Exception('Este lead no pertenece a tu empresa');
-            
+
             $leadJpa->chat_status_id = $request->status;
             $leadJpa->save();
-            
+
             return $leadJpa->load(['status', 'assigned', 'manageStatus', 'chatStatus', 'creator']);
         });
         return response($response->toArray(), $response->status);
@@ -1309,10 +1371,10 @@ class LeadController extends BasicController
                 throw new Exception('Lead no encontrado');
             }
             if ($leadJpa->business_id != Auth::user()->business_id) throw new Exception('Este lead no pertenece a tu empresa');
-            
+
             $leadJpa->is_pinned = $request->is_pinned;
             $leadJpa->save();
-            
+
             return $leadJpa->load(['status', 'assigned', 'manageStatus', 'chatStatus', 'creator']);
         });
         return response($response->toArray(), $response->status);
