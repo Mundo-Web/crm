@@ -32,6 +32,7 @@ class StatusController extends BasicController
             ->where('business_id', Auth::user()->business_id)
             ->whereNotNull('status')
             ->get();
+        $statuses->each->append(['children_count', 'last_used_at']);
         $tables = Table::where('configurable', true)->get();
         return [
             'statuses' => $statuses,
@@ -135,6 +136,7 @@ class StatusController extends BasicController
     public function afterSave(Request $request, object $jpa, ?bool $isNew)
     {
         $jpa->table = $jpa->table()->first();
+        $jpa->append(['children_count', 'last_used_at']);
         return $jpa;
     }
 

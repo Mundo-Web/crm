@@ -45,11 +45,6 @@ class Status extends Model
         'business_id'
     ];
 
-    protected $appends = [
-        'children_count',
-        'last_used_at'
-    ];
-
     public function table()
     {
         return $this->belongsTo(Table::class, 'table_id', 'id');

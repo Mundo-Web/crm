@@ -200,18 +200,7 @@ class LeadController extends BasicController
         $suffix = $request->suffix;
         $defaultLeadStatus = Setting::get('default-lead-status');
         $query = $model::select($request->fields ?? 'clients.*')
-            ->addSelect([
-                'last_human_message_microtime' => Message::select('microtime')
-                    ->where(function ($q) {
-                        $q->whereColumn('messages.wa_id', 'clients.contact_phone')
-                            ->orWhereColumn('messages.wa_id', 'clients.integration_user_id');
-                    })
-                    ->where('messages.role', 'Human')
-                    ->whereColumn('messages.business_id', 'clients.business_id')
-                    ->orderBy('microtime', 'desc')
-                    ->limit(1)
-            ])
-            ->withCount($request->withCount ?? ['notes', 'tasks', 'pendingTasks', 'products'])
+            ->withCount($request->withCount ?? ['products'])
             ->with($request->with ?? ['status', 'assigned', 'manageStatus', 'chatStatus', 'creator', 'integration', 'campaign', 'businessSector', 'entries.campaign'])
             ->leftJoin('statuses AS status', 'status.id', 'status_id')
             ->leftJoin('statuses AS manage_status', 'manage_status.id', 'manage_status_id')
