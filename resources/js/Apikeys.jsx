@@ -254,15 +254,15 @@ const Apikeys = ({ apikey }) => {
               {/* Tab 2: Guía de UTMs */}
               <div className="tab-pane fade" id="utm-guide" role="tabpanel" aria-labelledby="guide-tab">
                 <div className="alert alert-primary mb-3">
-                  <h6 className="alert-heading font-14 mb-1"><i className="mdi mdi-brain me-1"></i> ¿Cómo resuelve Atalaya el Origen (<code>origin</code>) de forma inteligente?</h6>
+                  <h6 className="alert-heading font-14 mb-1"><i className="mdi mdi-brain me-1"></i> ¿Cómo visualiza Atalaya CRM los datos en la tabla de Leads?</h6>
                   <p className="mb-1 font-12">
-                    Si tu formulario envía <code>"origin": "Landing Page"</code> o valores genéricos pero la URL tiene parámetros UTM, <b>Atalaya sobreescribe inteligentemente el origen</b> asignando la plataforma real publicitaria:
+                    En la tabla principal de Leads, Atalaya mapea automáticamente tus parámetros UTM a las columnas correspondientes:
                   </p>
                   <ul className="mb-0 font-12 ps-3">
-                    <li>Si <code>utm_source</code> es <b><code>google</code></b> o <b><code>googleads</code></b> $\rightarrow$ Se guarda automáticamente como <b>Google Ads</b>.</li>
-                    <li>Si <code>utm_source</code> es <b><code>meta</code></b>, <b><code>facebook</code></b>, <b><code>instagram</code></b>, <b><code>messenger</code></b> o <b><code>whatsapp</code></b> $\rightarrow$ Se guarda como <b>Meta</b>.</li>
-                    <li>Si el usuario entra de forma directa o sin UTMs $\rightarrow$ Se guarda como <b>Orgánico</b>.</li>
-                    <li>La fuente técnica (<code>source</code>) se mantiene como <b>Landing</b> y el disparador (<code>triggered_by</code>) como <b>Formulario Landing</b>.</li>
+                    <li>Columna <b>Red Social (Campaña)</b>: Asigna la red o ecosistema (<b>Google</b>, <b>Meta</b>, <b>TikTok</b>, <b>LinkedIn</b> u <b>Orgánico</b>).</li>
+                    <li>Columna <b>Orígen</b>: Si vino de pauta (<code>utm_medium=cpc</code> o <code>utm_source=googleads</code>), se muestra como <b>Google Ads</b> / <b>Meta Ads</b> / <b>Landing</b>.</li>
+                    <li>Columna <b>Registrado en</b>: Muestra <b>Formulario Landing</b> (o el nombre de tu formulario).</li>
+                    <li>Columna <b>Campaña</b>: Muestra el nombre de tu campaña (<code>utm_campaign</code>).</li>
                   </ul>
                 </div>
 
@@ -270,78 +270,72 @@ const Apikeys = ({ apikey }) => {
                   <table className="table table-bordered table-sm font-13 align-middle mb-0">
                     <thead className="table-light">
                       <tr>
-                        <th>Parámetro</th>
-                        <th>Valores en URL / JSON</th>
-                        <th>Resultado en Atalaya CRM</th>
-                        <th>Notas de Lógica</th>
+                        <th>Parámetro UTM</th>
+                        <th>Valores en URL / Formulario</th>
+                        <th>Columna en Atalaya CRM</th>
+                        <th>Valor que se Muestra</th>
                       </tr>
                     </thead>
                     <tbody>
                       <tr>
                         <td><code>utm_source</code></td>
                         <td><code>google</code>, <code>googleads</code></td>
-                        <td><span className="badge bg-danger">Google Ads</span></td>
-                        <td>Asigna Origen: Google Ads</td>
+                        <td><b>Red Social (Campaña)</b></td>
+                        <td><span className="badge bg-danger">Google</span></td>
                       </tr>
                       <tr>
                         <td><code>utm_source</code></td>
                         <td><code>meta</code>, <code>facebook</code>, <code>instagram</code>, <code>messenger</code>, <code>whatsapp</code></td>
+                        <td><b>Red Social (Campaña)</b></td>
                         <td><span className="badge bg-primary">Meta</span></td>
-                        <td>Asigna Origen: Meta (engloba el ecosistema Meta)</td>
                       </tr>
                       <tr>
                         <td><code>utm_source</code></td>
                         <td><code>tiktok</code></td>
+                        <td><b>Red Social (Campaña)</b></td>
                         <td><span className="badge bg-dark">TikTok</span></td>
-                        <td>Asigna Origen: TikTok</td>
                       </tr>
                       <tr>
                         <td><code>utm_source</code></td>
                         <td><code>linkedin</code></td>
+                        <td><b>Red Social (Campaña)</b></td>
                         <td><span className="badge bg-info">LinkedIn</span></td>
-                        <td>Asigna Origen: LinkedIn</td>
                       </tr>
                       <tr>
                         <td><em>(Sin UTMs)</em></td>
                         <td><em>(No enviado)</em></td>
+                        <td><b>Red Social (Campaña)</b></td>
                         <td><span className="badge bg-secondary">Orgánico</span></td>
-                        <td>Tráfico directo o sin pauta</td>
                       </tr>
                       <tr>
                         <td><code>utm_medium</code></td>
                         <td><code>cpc</code>, <code>paid</code>, <code>ads</code></td>
-                        <td><b>Anuncio</b></td>
-                        <td>Clasifica el proceso como pauta pagada</td>
+                        <td><b>Orígen</b></td>
+                        <td><b>Google Ads</b> / <b>Meta Ads</b> <em>(o Anuncio)</em></td>
                       </tr>
                       <tr>
                         <td><code>utm_campaign</code></td>
                         <td><code>Nombre_Campana</code></td>
-                        <td><b>Campaña Vinculada</b></td>
-                        <td>Crea o vincula la campaña automáticamente en Atalaya</td>
+                        <td><b>Campaña</b></td>
+                        <td><b>Nombre de la Campaña</b></td>
                       </tr>
                       <tr>
                         <td><code>utm_term</code></td>
                         <td><code>Grupo_Anuncios</code> o keyword</td>
-                        <td><b>Grupo de Anuncios</b> (AdSet)</td>
-                        <td>Guarda el conjunto de anuncios</td>
+                        <td><b>Grupo de Anuncios</b></td>
+                        <td>Conjunto de anuncios / keyword</td>
                       </tr>
                       <tr>
                         <td><code>utm_content</code></td>
                         <td><code>Nombre_Anuncio</code></td>
-                        <td><b>Anuncio / Creativo</b></td>
-                        <td>Guarda el anuncio o video específico</td>
+                        <td><b>Anuncio</b></td>
+                        <td>Creativo / video específico</td>
                       </tr>
                       <tr>
                         <td><code>triggered_by</code></td>
                         <td><code>Formulario Landing</code></td>
+                        <td><b>Registrado en</b></td>
                         <td><b>Formulario Landing</b></td>
-                        <td>Disparador de entrada en la página</td>
-                      </tr>
-                      <tr>
-                        <td><code>source</code></td>
-                        <td><code>Landing</code></td>
-                        <td><b>Landing</b></td>
-                        <td>Fuente técnica de conversión web</td>
                       </tr>
                     </tbody>
                   </table>

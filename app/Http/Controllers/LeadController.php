@@ -1507,51 +1507,66 @@ class LeadController extends BasicController
                 }
             }
 
-            // 2. Normalización inteligente de Origin y Source basado en utm_source y utm_medium
-            $detectedPlatform = null;
+            // 2. Normalización inteligente de Red Social (origin) y Origen Publicitario (source)
+            $detectedSocial = null;
             $platformSource = 'other';
             $rawSource = strtolower(trim((string) $utmSource));
             $rawMedium = strtolower(trim((string) $utmMedium));
 
-            // Si es Meta (Facebook, Instagram, Messenger, WhatsApp) se normaliza como 'Meta'
+            // Si es Meta (Facebook, Instagram, Messenger, WhatsApp) se asigna como 'Meta'
             if (in_array($rawSource, ['meta', 'facebook', 'fb', 'instagram', 'ig', 'messenger', 'whatsapp', 'wa']) || str_contains($rawSource, 'facebook') || str_contains($rawSource, 'instagram') || str_contains($rawSource, 'whatsapp')) {
-                $detectedPlatform = 'Meta';
+                $detectedSocial = 'Meta';
                 $platformSource = 'facebook';
             } elseif (in_array($rawSource, ['google', 'googleads', 'google_ads', 'adwords', 'gads']) || str_contains($rawSource, 'google')) {
-                $detectedPlatform = 'Google Ads';
+                $detectedSocial = 'Google';
                 $platformSource = 'google';
             } elseif (in_array($rawSource, ['tiktok', 'tt']) || str_contains($rawSource, 'tiktok')) {
-                $detectedPlatform = 'TikTok';
+                $detectedSocial = 'TikTok';
                 $platformSource = 'tiktok';
             } elseif (in_array($rawSource, ['linkedin', 'li']) || str_contains($rawSource, 'linkedin')) {
-                $detectedPlatform = 'LinkedIn';
+                $detectedSocial = 'LinkedIn';
                 $platformSource = 'linkedin';
             } elseif (in_array($rawSource, ['email', 'mailing', 'newsletter'])) {
-                $detectedPlatform = 'Email';
+                $detectedSocial = 'Email';
                 $platformSource = 'email';
             } elseif (!empty($rawSource)) {
-                $detectedPlatform = ucfirst($rawSource);
+                $detectedSocial = ucfirst($rawSource);
                 $platformSource = $rawSource;
             }
 
-            // Normalizar utm_medium (cpc / paid -> Anuncio)
-            $isPaidAd = in_array($rawMedium, ['cpc', 'paid', 'ads', 'ad', 'paid_social', 'ppc']);
+            // Normalizar si es anuncio pagado (cpc, paid, ads) o si viene de googleads
+            $isPaidAd = in_array($rawMedium, ['cpc', 'paid', 'ads', 'ad', 'paid_social', 'ppc']) || in_array($rawSource, ['googleads', 'google_ads', 'adwords', 'gads']);
 
+            // Campo `origin` -> Se visualiza en la columna "Red Social (Campaña)"
             $genericOrigins = ['landing page', 'landing', 'web', 'externo', 'api', 'formulario', ''];
             $reqOrigin = trim((string) ($request->origin ?? ''));
 
             if (!empty($reqOrigin) && !in_array(strtolower($reqOrigin), $genericOrigins)) {
                 $finalOrigin = $reqOrigin;
-            } elseif ($detectedPlatform) {
-                $finalOrigin = $detectedPlatform;
+            } elseif ($detectedSocial) {
+                $finalOrigin = $detectedSocial;
             } else {
-                // Si no viene UTM source ni origin explícito, se asigna como 'Orgánico'
                 $finalOrigin = 'Orgánico';
             }
 
-            $finalSource = $request->source ?? 'Landing';
-            $finalSourceChannel = $request->source_channel ?? ($detectedPlatform ? "Landing - {$detectedPlatform}" : 'Landing Page');
+            // Campo `source` -> Se visualiza en la columna "Orígen"
+            if ($request->source && !in_array(strtolower(trim($request->source)), ['landing page', 'api', 'web', 'landing'])) {
+                $finalSource = $request->source;
+            } elseif ($detectedSocial == 'Google' && $isPaidAd) {
+                $finalSource = 'Google Ads';
+            } elseif ($detectedSocial == 'Meta' && $isPaidAd) {
+                $finalSource = 'Meta Ads';
+            } elseif ($detectedSocial == 'TikTok' && $isPaidAd) {
+                $finalSource = 'TikTok Ads';
+            } elseif ($isPaidAd && $detectedSocial) {
+                $finalSource = "{$detectedSocial} Ads";
+            } else {
+                $finalSource = 'Landing';
+            }
+
+            // Campo `triggered_by` -> Se visualiza en la columna "Registrado en"
             $finalTriggeredBy = $request->triggered_by ?? ($request->form_name ? "Formulario {$request->form_name}" : 'Formulario Landing');
+            $finalSourceChannel = $request->source_channel ?? ($detectedSocial ? "Landing - {$detectedSocial}" : 'Landing Page');
 
             // 3. Detección, búsqueda y creación automática de Campaña (Campaign)
             $campaignIdentifier = $request->campaign_code 
@@ -1598,7 +1613,7 @@ class LeadController extends BasicController
             $validatedData['triggered_by'] = $finalTriggeredBy;
             $validatedData['campaign_id'] = $campaignId;
             $validatedData['adset_name'] = $request->adset_name ?? $utmTerm ?? null;
-            $validatedData['ad_name'] = $request->ad_name ?? $utmContent ?? null;
+            $validatedData['ad_name'] = $request->ad_name ?? $utmContent ?? ($isPaidAd ? 'Anuncio' : (!empty($utmMedium) ? $utmMedium : null));
             $validatedData['web_url'] = $webUrl;
             $validatedData['date'] = Trace::getDate('date');
             $validatedData['time'] = Trace::getDate('time');
@@ -1700,8 +1715,9 @@ class LeadController extends BasicController
             // 5. Nota detallada de Marketing y Atribución
             $attrDetails = [];
             if (!empty($campaignTitle ?? $campaignIdentifier)) $attrDetails[] = "• <b>Campaña:</b> " . ($campaignTitle ?? $campaignIdentifier);
-            if (!empty($utmSource)) $attrDetails[] = "• <b>Plataforma (UTM Source):</b> " . $utmSource . ($detectedPlatform ? " ({$detectedPlatform})" : "");
-            if (!empty($utmMedium)) $attrDetails[] = "• <b>Tipo de Tráfico (UTM Medium):</b> " . ($isPaidAd ? "Anuncio ({$utmMedium})" : ($utmMedium ?: "Orgánico"));
+            if (!empty($utmSource)) $attrDetails[] = "• <b>Red Social (Plataforma):</b> " . $utmSource . ($detectedSocial ? " ({$detectedSocial})" : "");
+            $attrDetails[] = "• <b>Orígen:</b> " . $finalSource;
+            if (!empty($utmMedium)) $attrDetails[] = "• <b>Tipo de Tráfico:</b> " . ($isPaidAd ? "Anuncio ({$utmMedium})" : ($utmMedium ?: "Orgánico"));
             if (!empty($validatedData['adset_name'])) $attrDetails[] = "• <b>Grupo de Anuncios (UTM Term):</b> " . $validatedData['adset_name'];
             if (!empty($validatedData['ad_name'])) $attrDetails[] = "• <b>Anuncio / Creativo (UTM Content):</b> " . $validatedData['ad_name'];
             if (!empty($validatedData['web_url'])) $attrDetails[] = "• <b>URL de Aterrizaje:</b> <a href='{$validatedData['web_url']}' target='_blank'>{$validatedData['web_url']}</a>";
