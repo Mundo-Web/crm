@@ -5,7 +5,23 @@
     const endpoint = "{{ config('app.url') }}/free/track";
 
     // Set session cookie x-Breakdown-ID
-    document.cookie = `X-Breakdown-ID=${breakdownID}; path=/`;
+    document.cookie = `X-Breakdown-ID=${breakdownID}; path=/; max-age=2592000`;
+    try {
+        localStorage.setItem("atalaya_breakdown_id", breakdownID);
+        const urlParams = new URLSearchParams(window.location.search);
+        const utms = {
+            utm_source: urlParams.get("utm_source") || "",
+            utm_medium: urlParams.get("utm_medium") || "",
+            utm_campaign: urlParams.get("utm_campaign") || "",
+            utm_term: urlParams.get("utm_term") || "",
+            utm_content: urlParams.get("utm_content") || "",
+            page_url: window.location.href,
+            referrer: document.referrer || ""
+        };
+        if (utms.utm_source || utms.utm_campaign || utms.utm_medium) {
+            localStorage.setItem("atalaya_utms", JSON.stringify(utms));
+        }
+    } catch(e){}
 
     function sendTracking(payload) {
         fetch(endpoint, {

@@ -1442,12 +1442,8 @@ class LeadController extends BasicController
                 'contact_email.email' => 'El correo electrónico debe tener el formato user@domain.com.',
                 'contact_email.max' => 'El correo electrónico no debe exceder los 320 caracteres.',
                 'contact_position.string' => 'La posición de contacto debe ser una cadena de texto.',
-                // 'tradename.required' => 'El nombre comercial es obligatorio.',
-                // 'tradename.string' => 'El nombre comercial debe ser una cadena de texto.',
                 'message.required' => 'El mensaje es obligatorio.',
                 'message.string' => 'El mensaje debe ser una cadena de texto.',
-                'origin.required' => 'El origen es obligatorio.',
-                'origin.string' => 'El origen debe ser una cadena de texto.'
             ];
 
             $validatedData = $request->validate([
@@ -1455,17 +1451,158 @@ class LeadController extends BasicController
                 'contact_phone' => 'required|max:15',
                 'contact_email' => 'required|email|max:320',
                 'contact_position' => 'nullable|string',
-                // 'tradename' => 'required|string',
+                'tradename' => 'nullable|string',
                 'workers' => 'nullable|string',
                 'source' => 'nullable|string',
                 'message' => 'required|string',
-                'origin' => 'required|string',
-                'triggered_by' => 'nullable|string'
+                'origin' => 'nullable|string',
+                'triggered_by' => 'nullable|string',
+                'source_channel' => 'nullable|string',
+                'utm_source' => 'nullable|string',
+                'utm_medium' => 'nullable|string',
+                'utm_campaign' => 'nullable|string',
+                'utm_term' => 'nullable|string',
+                'utm_content' => 'nullable|string',
+                'campaign_id' => 'nullable|string',
+                'campaign_name' => 'nullable|string',
+                'campaign_code' => 'nullable|string',
+                'adset_name' => 'nullable|string',
+                'adset_id' => 'nullable|string',
+                'ad_name' => 'nullable|string',
+                'ad_id' => 'nullable|string',
+                'web_url' => 'nullable|string',
+                'landing_url' => 'nullable|string',
+                'referrer' => 'nullable|string',
+                'x_breakdown_id' => 'nullable|string',
+                'breakdown_id' => 'nullable|string',
+                'form_answers' => 'nullable',
+                'form_name' => 'nullable|string',
+                'form_id' => 'nullable|string'
             ], $messages);
 
+            // 1. Fallback a Pixel Breakdown si no vinieron UTMs en el cuerpo
+            $utmSource = $request->utm_source;
+            $utmMedium = $request->utm_medium;
+            $utmCampaign = $request->utm_campaign;
+            $utmTerm = $request->utm_term;
+            $utmContent = $request->utm_content;
+            $webUrl = $request->web_url ?? $request->landing_url ?? $request->header('Referer');
+            $referrer = $request->referrer;
+
+            $trackingId = $request->x_breakdown_id 
+                ?? $request->breakdown_id 
+                ?? $request->header('X-Breakdown-ID') 
+                ?? $request->cookie('X-Breakdown-ID');
+
+            if ($trackingId) {
+                $breakdown = DB::table('breakdowns')->where('id', $trackingId)->first();
+                if ($breakdown) {
+                    $utmSource = $utmSource ?: $breakdown->utm_source;
+                    $utmMedium = $utmMedium ?: ($breakdown->utm_medium ?? null);
+                    $utmCampaign = $utmCampaign ?: ($breakdown->utm_campaign ?? null);
+                    $utmTerm = $utmTerm ?: ($breakdown->utm_term ?? null);
+                    $utmContent = $utmContent ?: ($breakdown->utm_content ?? null);
+                    $webUrl = $webUrl ?: ($breakdown->page_url ?? null);
+                    $referrer = $referrer ?: ($breakdown->referrer ?? null);
+                }
+            }
+
+            // 2. Normalización inteligente de Origin y Source basado en utm_source
+            $detectedPlatform = null;
+            $platformSource = 'other';
+            $rawSource = strtolower(trim((string) $utmSource));
+
+            if (in_array($rawSource, ['googleads', 'google', 'google_ads', 'adwords', 'gads']) || str_contains($rawSource, 'google')) {
+                $detectedPlatform = 'Google Ads';
+                $platformSource = 'google';
+            } elseif (in_array($rawSource, ['facebook', 'fb', 'meta']) || str_contains($rawSource, 'facebook')) {
+                $detectedPlatform = 'Facebook';
+                $platformSource = 'facebook';
+            } elseif (in_array($rawSource, ['instagram', 'ig']) || str_contains($rawSource, 'instagram')) {
+                $detectedPlatform = 'Instagram';
+                $platformSource = 'instagram';
+            } elseif (in_array($rawSource, ['tiktok', 'tt']) || str_contains($rawSource, 'tiktok')) {
+                $detectedPlatform = 'TikTok';
+                $platformSource = 'tiktok';
+            } elseif (in_array($rawSource, ['linkedin', 'li']) || str_contains($rawSource, 'linkedin')) {
+                $detectedPlatform = 'LinkedIn';
+                $platformSource = 'linkedin';
+            } elseif (in_array($rawSource, ['whatsapp', 'wa']) || str_contains($rawSource, 'whatsapp')) {
+                $detectedPlatform = 'WhatsApp';
+                $platformSource = 'whatsapp';
+            } elseif (in_array($rawSource, ['email', 'mailing', 'newsletter'])) {
+                $detectedPlatform = 'Email';
+                $platformSource = 'email';
+            } elseif (in_array($rawSource, ['organico', 'organic'])) {
+                $detectedPlatform = 'Orgánico';
+                $platformSource = 'organico';
+            } elseif (!empty($rawSource)) {
+                $detectedPlatform = ucfirst($rawSource);
+                $platformSource = $rawSource;
+            }
+
+            $genericOrigins = ['landing page', 'landing', 'web', 'externo', 'api', 'formulario', ''];
+            $reqOrigin = trim((string) ($request->origin ?? ''));
+
+            if (!empty($reqOrigin) && !in_array(strtolower($reqOrigin), $genericOrigins)) {
+                $finalOrigin = $reqOrigin;
+            } elseif ($detectedPlatform) {
+                $finalOrigin = $detectedPlatform;
+            } else {
+                $finalOrigin = !empty($reqOrigin) ? $reqOrigin : 'Landing Page';
+            }
+
+            $finalSource = $request->source ?? ($detectedPlatform ? "Landing ({$detectedPlatform})" : 'Landing Page');
+            $finalSourceChannel = $request->source_channel ?? ($detectedPlatform ? "Landing - {$detectedPlatform}" : 'Landing Page');
+            $finalTriggeredBy = $request->triggered_by ?? ($detectedPlatform ? "Formulario Landing ({$detectedPlatform})" : 'Formulario Landing');
+
+            // 3. Detección, búsqueda y creación automática de Campaña (Campaign)
+            $campaignIdentifier = $request->campaign_code 
+                ?? $utmCampaign 
+                ?? $request->campaign_name 
+                ?? $request->campaign_id;
+
+            $campaignTitle = $request->campaign_name ?? $utmCampaign ?? $request->campaign_code;
+            $campaignId = null;
+
+            if (!empty($campaignIdentifier)) {
+                $campaign = Campaign::where('business_id', $businessJpa->id)
+                    ->where(function ($q) use ($campaignIdentifier, $campaignTitle) {
+                        $q->where('code', (string)$campaignIdentifier)
+                          ->orWhere('title', (string)$campaignIdentifier)
+                          ->orWhere('id', (string)$campaignIdentifier);
+                        if ($campaignTitle) {
+                            $q->orWhere('title', (string)$campaignTitle);
+                        }
+                    })
+                    ->first();
+
+                if (!$campaign) {
+                    $campaign = Campaign::create([
+                        'id' => (string) Uuid::uuid1(),
+                        'business_id' => $businessJpa->id,
+                        'code' => (string) $campaignIdentifier,
+                        'title' => (string) ($campaignTitle ?: $campaignIdentifier),
+                        'source' => strtolower($platformSource),
+                        'status' => true,
+                        'protected' => true,
+                    ]);
+                }
+
+                $campaignId = $campaign->id;
+            }
+
+            // 4. Armar campos para el Lead
             $validatedData['business_id'] = $businessJpa->id;
             $validatedData['name'] = $validatedData['contact_name'];
-            $validatedData['source'] = $validatedData['source'] ?? 'Externo';
+            $validatedData['origin'] = $finalOrigin;
+            $validatedData['source'] = $finalSource;
+            $validatedData['source_channel'] = $finalSourceChannel;
+            $validatedData['triggered_by'] = $finalTriggeredBy;
+            $validatedData['campaign_id'] = $campaignId;
+            $validatedData['adset_name'] = $request->adset_name ?? $utmTerm ?? null;
+            $validatedData['ad_name'] = $request->ad_name ?? $utmContent ?? null;
+            $validatedData['web_url'] = $webUrl;
             $validatedData['date'] = Trace::getDate('date');
             $validatedData['time'] = Trace::getDate('time');
             $validatedData['ip'] = $request->ip();
@@ -1480,15 +1617,116 @@ class LeadController extends BasicController
                     'complete_registration' => false,
                     'status' => true
                 ], $validatedData);
+                $this->afterSave($request, $leadJpa, false);
             } else {
-                $leadJpa = Client::create($validatedData);
+                // Verificar si ya existe un lead con el mismo teléfono o correo en la empresa
+                $cleanPhone = preg_replace('/[^0-9]/', '', $validatedData['contact_phone'] ?? '');
+                if (strlen($cleanPhone) > 9) $cleanPhone = substr($cleanPhone, -9);
+                $cleanEmail = strtolower(trim($validatedData['contact_email'] ?? ''));
+
+                $existingClient = Client::where('business_id', $businessJpa->id)
+                    ->where(function ($q) use ($cleanPhone, $cleanEmail) {
+                        $hasCondition = false;
+                        if (!empty($cleanPhone) && strlen($cleanPhone) >= 7) {
+                            $q->where(DB::raw('RIGHT(contact_phone, 9)'), $cleanPhone);
+                            $hasCondition = true;
+                        }
+                        if (!empty($cleanEmail)) {
+                            if ($hasCondition) {
+                                $q->orWhere(DB::raw('LOWER(contact_email)'), $cleanEmail);
+                            } else {
+                                $q->where(DB::raw('LOWER(contact_email)'), $cleanEmail);
+                            }
+                        }
+                    })
+                    ->first();
+
+                if ($existingClient) {
+                    // Lead existente: Actualizar campos vacíos y registrar nuevo canal/entrada sin duplicar cliente
+                    $updateFields = [
+                        'complete_registration' => true,
+                    ];
+                    if (!$existingClient->contact_email && $validatedData['contact_email']) {
+                        $updateFields['contact_email'] = $validatedData['contact_email'];
+                    }
+                    if (!$existingClient->contact_phone && $validatedData['contact_phone']) {
+                        $updateFields['contact_phone'] = $validatedData['contact_phone'];
+                    }
+                    if ((!$existingClient->contact_name || $existingClient->contact_name == $existingClient->contact_phone) && $validatedData['contact_name']) {
+                        $updateFields['contact_name'] = $validatedData['contact_name'];
+                        $updateFields['name'] = $validatedData['contact_name'];
+                    }
+                    if (!$existingClient->campaign_id && $campaignId) {
+                        $updateFields['campaign_id'] = $campaignId;
+                    }
+                    if (!$existingClient->ad_name && !empty($validatedData['ad_name'])) {
+                        $updateFields['ad_name'] = $validatedData['ad_name'];
+                    }
+                    if (!$existingClient->adset_name && !empty($validatedData['adset_name'])) {
+                        $updateFields['adset_name'] = $validatedData['adset_name'];
+                    }
+                    if ($webUrl) {
+                        $updateFields['web_url'] = $webUrl;
+                    }
+                    $existingClient->update($updateFields);
+                    $leadJpa = $existingClient;
+
+                    // Registrar entrada omnicanal en client_entries si no existía exactamente este origen
+                    $entryExists = \App\Models\ClientEntry::where('client_id', $leadJpa->id)
+                        ->where('campaign_id', $campaignId)
+                        ->where('source', $finalSource)
+                        ->where('origin', $finalOrigin)
+                        ->exists();
+
+                    if (!$entryExists) {
+                        \App\Models\ClientEntry::create([
+                            'id'             => (string) Uuid::uuid1(),
+                            'client_id'      => $leadJpa->id,
+                            'campaign_id'    => $campaignId,
+                            'adset_name'     => $validatedData['adset_name'],
+                            'ad_name'        => $validatedData['ad_name'],
+                            'source'         => $finalSource,
+                            'origin'         => $finalOrigin,
+                            'lead_origin'    => 'integration',
+                            'triggered_by'   => $finalTriggeredBy,
+                            'source_channel' => $finalSourceChannel,
+                            'entry_date'     => now(),
+                        ]);
+                    }
+                } else {
+                    // Lead completamente nuevo
+                    $leadJpa = Client::create($validatedData);
+                    $this->afterSave($request, $leadJpa, true);
+                }
             }
 
-            $this->afterSave($request, $leadJpa, true);
+            // 5. Nota detallada de Marketing y Atribución
+            $attrDetails = [];
+            if (!empty($campaignTitle ?? $campaignIdentifier)) $attrDetails[] = "• <b>Campaña:</b> " . ($campaignTitle ?? $campaignIdentifier);
+            if (!empty($utmSource)) $attrDetails[] = "• <b>UTM Source:</b> " . $utmSource;
+            if (!empty($utmMedium)) $attrDetails[] = "• <b>UTM Medium:</b> " . $utmMedium;
+            if (!empty($validatedData['adset_name'])) $attrDetails[] = "• <b>Conjunto/Término:</b> " . $validatedData['adset_name'];
+            if (!empty($validatedData['ad_name'])) $attrDetails[] = "• <b>Anuncio/Contenido:</b> " . $validatedData['ad_name'];
+            if (!empty($validatedData['web_url'])) $attrDetails[] = "• <b>URL de Aterrizaje:</b> <a href='{$validatedData['web_url']}' target='_blank'>{$validatedData['web_url']}</a>";
+            if (!empty($referrer)) $attrDetails[] = "• <b>Referrer:</b> " . $referrer;
+
+            if (!empty($attrDetails)) {
+                ClientNote::create([
+                    'note_type_id' => '8e895346-3d87-4a87-897a-4192b917c211',
+                    'client_id' => $leadJpa->id,
+                    'name' => 'Atribución de Campaña y UTMs',
+                    'description' => implode("<br>", $attrDetails),
+                ]);
+            }
 
             SendNewLeadNotification::dispatchAfterResponse($leadJpa, $businessJpa);
 
             $response->message = 'Se ha creado el lead correctamente';
+            $response->data = [
+                'id' => $leadJpa->id,
+                'origin' => $leadJpa->origin,
+                'campaign_id' => $leadJpa->campaign_id,
+            ];
         });
         return response($response->toArray(), $response->status);
     }

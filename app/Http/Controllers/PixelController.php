@@ -30,6 +30,12 @@ class PixelController extends BasicController
         $businessUUID = $request->apiKey;
         $trackingId = $request->query('x-breakdown-id');
         $utmSource = $request->query('utm_source');
+        $utmMedium = $request->query('utm_medium');
+        $utmCampaign = $request->query('utm_campaign');
+        $utmTerm = $request->query('utm_term');
+        $utmContent = $request->query('utm_content');
+        $pageUrl = $request->query('page_url') ?? $request->header('Referer');
+        $referrer = $request->query('referrer');
 
         $exists = false;
 
@@ -61,6 +67,12 @@ class PixelController extends BasicController
                 'os' => $os,
                 'device' => $device,
                 'utm_source' => $utmSource,
+                'utm_medium' => $utmMedium,
+                'utm_campaign' => $utmCampaign,
+                'utm_term' => $utmTerm,
+                'utm_content' => $utmContent,
+                'page_url' => $pageUrl,
+                'referrer' => $referrer,
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);

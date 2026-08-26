@@ -33,7 +33,29 @@ const PixelIntegration = ({ apikey, breadkowns }) => {
 
   const pixelScript = `<!-- Atalaya Tracking Pixel -->
 <script>
-  (function(){const e=new URLSearchParams(window.location.search),t=e.get("utm_source")||"",o=e=>{const t="; "+document.cookie,o=t.split("; "+e+"=");return 2===o.length?o.pop().split(";").shift():null},n=o("X-Breakdown-ID"),r=new URLSearchParams;t&&r.append("utm_source",t),n&&r.append("x-breakdown-id",n);const c=r.toString(),s=\`https://crm.atalaya.pe/free/pixel/${apikey}\${c?"?"+c:""}\`,a=document.createElement("script");a.type="text/javascript",a.async=!0,a.src=s;const i=document.getElementsByTagName("script")[0];i.parentNode.insertBefore(a,i)})();
+  (function(){
+    const p = new URLSearchParams(window.location.search);
+    const getCookie = (name) => {
+      const v = "; " + document.cookie;
+      const parts = v.split("; " + name + "=");
+      return parts.length === 2 ? parts.pop().split(";").shift() : null;
+    };
+    const breakdownId = getCookie("X-Breakdown-ID");
+    const q = new URLSearchParams();
+    ["utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content"].forEach(k => {
+      const val = p.get(k);
+      if (val) q.append(k, val);
+    });
+    if (breakdownId) q.append("x-breakdown-id", breakdownId);
+    const query = q.toString();
+    const s = "https://${Global.APP_CORRELATIVE}.${Global.APP_DOMAIN}/free/pixel/${apikey}" + (query ? "?" + query : "");
+    const a = document.createElement("script");
+    a.type = "text/javascript";
+    a.async = !0;
+    a.src = s;
+    const i = document.getElementsByTagName("script")[0];
+    i.parentNode.insertBefore(a, i);
+  })();
 </script>`
   return (<>
     <div className="row">
@@ -79,14 +101,14 @@ const PixelIntegration = ({ apikey, breadkowns }) => {
                 <li><i className="fa fa-check-circle text-success me-2"></i><b>Navegador y versión</b></li>
                 <li><i className="fa fa-check-circle text-success me-2"></i><b>Sistema operativo</b></li>
                 <li><i className="fa fa-check-circle text-success me-2"></i><b>Dispositivo (móvil o escritorio)</b></li>
-                <li><i className="fa fa-check-circle text-success me-2"></i><b>UTM Source (Facebook, Instagram)</b></li>
+                <li><i className="fa fa-check-circle text-success me-2"></i><b>Parámetros UTM completos (utm_source, utm_medium, utm_campaign, utm_term, utm_content)</b></li>
                 <li><i className="fa fa-check-circle text-success me-2"></i><b>Fecha y hora de la visita</b></li>
               </ul>
             </div>
 
             <div className="mb-3">
               <h5>Ejemplo de URL con UTM:</h5>
-              <pre><code>{`https://tusitio.com/?utm_source=fb`}</code></pre>
+              <pre><code>{`https://tusitio.com/?utm_source=googleads&utm_medium=cpc&utm_campaign=Busqueda`}</code></pre>
             </div>
 
             <div className="mb-3">
