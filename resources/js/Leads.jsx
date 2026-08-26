@@ -88,7 +88,7 @@ const getChannelStyle = (entry) => {
         return { icon: 'mdi-whatsapp', color: '#25D366', label: hasCampaign ? 'WhatsApp (Anuncio)' : 'WhatsApp (Orgánico)' };
     }
     if (source.includes('google') || origin.includes('google')) {
-        return { icon: 'mdi-google', color: '#EA4335', label: hasCampaign ? 'Google' : 'Google' };
+        return { icon: 'mdi-google', color: '#EA4335', label: 'Google Ads' };
     }
     if (source.includes('landing') || origin.includes('landing')) {
         return { icon: 'mdi-web', color: '#6c757d', label: 'Landing Page' };

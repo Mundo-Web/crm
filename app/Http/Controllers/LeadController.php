@@ -1518,7 +1518,7 @@ class LeadController extends BasicController
                 $detectedPlatform = 'Meta';
                 $platformSource = 'facebook';
             } elseif (in_array($rawSource, ['google', 'googleads', 'google_ads', 'adwords', 'gads']) || str_contains($rawSource, 'google')) {
-                $detectedPlatform = 'Google';
+                $detectedPlatform = 'Google Ads';
                 $platformSource = 'google';
             } elseif (in_array($rawSource, ['tiktok', 'tt']) || str_contains($rawSource, 'tiktok')) {
                 $detectedPlatform = 'TikTok';
