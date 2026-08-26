@@ -73,9 +73,9 @@ const driverObj = driver({
  * Determina el ícono y color para un `ClientEntry` según su canal de origen.
  */
 const getChannelStyle = (entry) => {
-    const source   = (entry.source   || '').toLowerCase();
-    const origin   = (entry.origin   || '').toLowerCase();
-    const trigger  = (entry.triggered_by || '').toLowerCase();
+    const source = (entry.source || '').toLowerCase();
+    const origin = (entry.origin || '').toLowerCase();
+    const trigger = (entry.triggered_by || '').toLowerCase();
     const hasCampaign = !!entry.campaign_id;
 
     if (origin.includes('instagram') || trigger.includes('instagram')) {
@@ -88,7 +88,7 @@ const getChannelStyle = (entry) => {
         return { icon: 'mdi-whatsapp', color: '#25D366', label: hasCampaign ? 'WhatsApp (Anuncio)' : 'WhatsApp (Orgánico)' };
     }
     if (source.includes('google') || origin.includes('google')) {
-        return { icon: 'mdi-google', color: '#EA4335', label: 'Google Ads' };
+        return { icon: 'mdi-google', color: '#EA4335', label: hasCampaign ? 'Google' : 'Google' };
     }
     if (source.includes('landing') || origin.includes('landing')) {
         return { icon: 'mdi-web', color: '#6c757d', label: 'Landing Page' };
@@ -114,22 +114,22 @@ const OriginBadges = ({ entries, fallbackOrigin }) => {
             <small className="text-muted me-1">canales:</small>
             {entries.filter(Boolean).map((entry, idx) => {
                 const style = getChannelStyle(entry);
-                
+
                 let entryDate = '';
                 if (entry.entry_date) {
                     const parsedDate = new Date(entry.entry_date);
                     if (!isNaN(parsedDate.getTime())) {
-                        entryDate = parsedDate.toLocaleDateString('es-PE', { day:'2-digit', month:'short', year:'numeric' });
+                        entryDate = parsedDate.toLocaleDateString('es-PE', { day: '2-digit', month: 'short', year: 'numeric' });
                     }
                 }
 
                 const tooltipLines = [
                     entryDate ? `📅 ${entryDate}` : null,
                     (entry.campaign && typeof entry.campaign === 'object' && entry.campaign.title) ? `🎯 Campaña: ${entry.campaign.title}` : null,
-                    entry.adset_name       ? `📁 Conjunto: ${entry.adset_name}`   : null,
-                    entry.ad_name          ? `📌 Anuncio: ${entry.ad_name}`       : null,
+                    entry.adset_name ? `📁 Conjunto: ${entry.adset_name}` : null,
+                    entry.ad_name ? `📌 Anuncio: ${entry.ad_name}` : null,
                     (entry.form_name || entry.form_id) ? `📋 Formulario: ${entry.form_name || entry.form_id}` : null,
-                    entry.triggered_by     ? `🔗 Vía: ${entry.triggered_by}`      : null,
+                    entry.triggered_by ? `🔗 Vía: ${entry.triggered_by}` : null,
                 ].filter(Boolean).join('\n');
 
                 return (
@@ -717,16 +717,16 @@ const Leads = (properties) => {
             client_data: clientData,
             tasks: isTask
                 ? [
-                      {
-                          name: taskTitleRef.current.value,
-                          type: taskTypeRef.current.value,
-                          priority: taskPriorityRef.current.value,
-                          description: text ? content : undefined,
-                          ends_at: `${taskEndsAtDateRef.current.value} ${taskEndsAtTimeRef.current.value}`,
-                          assigned_to: taskAssignedToRef.current.value,
-                          mentions,
-                      },
-                  ]
+                    {
+                        name: taskTitleRef.current.value,
+                        type: taskTypeRef.current.value,
+                        priority: taskPriorityRef.current.value,
+                        description: text ? content : undefined,
+                        ends_at: `${taskEndsAtDateRef.current.value} ${taskEndsAtTimeRef.current.value}`,
+                        assigned_to: taskAssignedToRef.current.value,
+                        mentions,
+                    },
+                ]
                 : [],
             mentions: !isTask ? mentions : [],
         });
@@ -748,7 +748,7 @@ const Leads = (properties) => {
                     if (res?.status === 200) {
                         toast.success("Cita sincronizada con Google Calendar");
                     }
-                }).catch(() => {});
+                }).catch(() => { });
             }
         }
 
@@ -1351,15 +1351,15 @@ const Leads = (properties) => {
 
         // ── 2. Mostrar resumen detallado ─────────────────────────────────────
         const s = preview.data?.summary || {};
-        const sampleNew      = (preview.data?.sample_new      || []).slice(0, 10);
+        const sampleNew = (preview.data?.sample_new || []).slice(0, 10);
         const sampleExisting = (preview.data?.sample_existing || []).slice(0, 20);
-        const campaigns      = (preview.data?.campaign_breakdown || []);
+        const campaigns = (preview.data?.campaign_breakdown || []);
 
         const campaignRows = campaigns.map(c =>
             `<tr>
                 <td style="padding:3px 8px;border:1px solid #e2e8f0;font-size:11px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${c.campaign_code}">
                     ${c.has_campaign ? `<span style="color:#10b981">✔</span>` : `<span style="color:#f43f5e">✘</span>`}
-                    <code style="font-size:10px">${String(c.campaign_code).slice(0,20)}${String(c.campaign_code).length>20?'…':''}</code>
+                    <code style="font-size:10px">${String(c.campaign_code).slice(0, 20)}${String(c.campaign_code).length > 20 ? '…' : ''}</code>
                 </td>
                 <td style="padding:3px 8px;border:1px solid #e2e8f0;text-align:center;font-size:11px">${c.total}</td>
                 <td style="padding:3px 8px;border:1px solid #e2e8f0;text-align:center;color:#6366f1;font-size:11px">${c.new}</td>
@@ -1368,21 +1368,21 @@ const Leads = (properties) => {
         ).join('');
 
         const newRows = sampleNew.map((r, i) =>
-            `<tr style="background:${i%2===0?'#f8fafc':'#fff'}">
-                <td style="padding:3px 6px;border:1px solid #e2e8f0;font-size:10px">${r.name||'-'}</td>
-                <td style="padding:3px 6px;border:1px solid #e2e8f0;font-size:10px">${r.contact_phone||'-'}</td>
-                <td style="padding:3px 6px;border:1px solid #e2e8f0;font-size:10px">${r.origin||'-'}</td>
-                <td style="padding:3px 6px;border:1px solid #e2e8f0;font-size:10px">${r.date?.slice(0,10)||'-'}</td>
-                <td style="padding:3px 6px;border:1px solid #e2e8f0;font-size:10px;color:${r._has_campaign?'#10b981':'#94a3b8'}">${r._has_campaign?'✔ Sí':'✘ No'}</td>
+            `<tr style="background:${i % 2 === 0 ? '#f8fafc' : '#fff'}">
+                <td style="padding:3px 6px;border:1px solid #e2e8f0;font-size:10px">${r.name || '-'}</td>
+                <td style="padding:3px 6px;border:1px solid #e2e8f0;font-size:10px">${r.contact_phone || '-'}</td>
+                <td style="padding:3px 6px;border:1px solid #e2e8f0;font-size:10px">${r.origin || '-'}</td>
+                <td style="padding:3px 6px;border:1px solid #e2e8f0;font-size:10px">${r.date?.slice(0, 10) || '-'}</td>
+                <td style="padding:3px 6px;border:1px solid #e2e8f0;font-size:10px;color:${r._has_campaign ? '#10b981' : '#94a3b8'}">${r._has_campaign ? '✔ Sí' : '✘ No'}</td>
             </tr>`
         ).join('');
 
         const existingRows = sampleExisting.map((r, i) =>
-            `<tr style="background:${i%2===0?'#fefce8':'#fffbeb'}">
-                <td style="padding:3px 6px;border:1px solid #e2e8f0;font-size:10px">${r.name||'-'}</td>
-                <td style="padding:3px 6px;border:1px solid #e2e8f0;font-size:10px">${r.contact_phone||'-'}</td>
-                <td style="padding:3px 6px;border:1px solid #e2e8f0;font-size:10px;color:#f59e0b">↩ ${r._existing_name||'Mismo cliente'}</td>
-                <td style="padding:3px 6px;border:1px solid #e2e8f0;font-size:10px">${r._existing_since?.slice?.(0,10)||'-'}</td>
+            `<tr style="background:${i % 2 === 0 ? '#fefce8' : '#fffbeb'}">
+                <td style="padding:3px 6px;border:1px solid #e2e8f0;font-size:10px">${r.name || '-'}</td>
+                <td style="padding:3px 6px;border:1px solid #e2e8f0;font-size:10px">${r.contact_phone || '-'}</td>
+                <td style="padding:3px 6px;border:1px solid #e2e8f0;font-size:10px;color:#f59e0b">↩ ${r._existing_name || 'Mismo cliente'}</td>
+                <td style="padding:3px 6px;border:1px solid #e2e8f0;font-size:10px">${r._existing_since?.slice?.(0, 10) || '-'}</td>
             </tr>`
         ).join('');
 
@@ -1492,10 +1492,10 @@ const Leads = (properties) => {
                 Swal.fire({
                     title: "Importación Exitosa",
                     html: `Se procesaron correctamente los registros:<br><br>` +
-                          `<div style="text-align: left; max-width: 250px; margin: 0 auto;">` +
-                          `🟢 <b>Nuevos agregados:</b> ${created}<br>` +
-                          `🔵 <b>Re-registrados (Existentes):</b> ${updated}` +
-                          `</div>`,
+                        `<div style="text-align: left; max-width: 250px; margin: 0 auto;">` +
+                        `🟢 <b>Nuevos agregados:</b> ${created}<br>` +
+                        `🔵 <b>Re-registrados (Existentes):</b> ${updated}` +
+                        `</div>`,
                     icon: "success",
                     confirmButtonText: "Genial",
                 });
@@ -1558,7 +1558,7 @@ const Leads = (properties) => {
         // Primera pasada: Coincidencias exactas / prioritarias
         excelFields.forEach((col) => {
             const lower = col.toLowerCase().trim();
-            
+
             if (!mapping.name && (lower === "full_name" || lower === "full name" || lower === "nombre completo")) {
                 mapping.name = col;
             }
@@ -1625,7 +1625,7 @@ const Leads = (properties) => {
             if (!mapping.ad_name && (lower.includes("ad_name") || lower.includes("ad name") || (lower.includes("anuncio") && !lower.includes("grupo")))) {
                 mapping.ad_name = col;
             }
-            
+
             // Mapear preguntas de formulario (columnas que contienen un signo de interrogacion "?")
             if (col.includes("?") && !mapping.form.includes(col)) {
                 mapping.form.push(col);
@@ -1759,19 +1759,19 @@ const Leads = (properties) => {
                         rest={
                             hasForms
                                 ? [
-                                      {
-                                          label: "Interesados",
-                                          rest: newLeadsRest,
-                                          className: "btn-soft-success",
-                                          classNameWhenActive: "btn-success",
-                                      },
-                                      {
-                                          label: "Posibles interesados",
-                                          rest: incompleteLeadsRest,
-                                          className: "btn-soft-secondary",
-                                          classNameWhenActive: "btn-secondary",
-                                      },
-                                  ]
+                                    {
+                                        label: "Interesados",
+                                        rest: newLeadsRest,
+                                        className: "btn-soft-success",
+                                        classNameWhenActive: "btn-success",
+                                    },
+                                    {
+                                        label: "Posibles interesados",
+                                        rest: incompleteLeadsRest,
+                                        className: "btn-soft-secondary",
+                                        classNameWhenActive: "btn-secondary",
+                                    },
+                                ]
                                 : newLeadsRest
                         }
                         can={can}
@@ -2104,7 +2104,7 @@ const Leads = (properties) => {
                                     .map((type, i) => {
                                         const drawGoogleAuth =
                                             type.id ==
-                                                "37b1e8e2-04c4-4246-a8c9-838baa7f8187" &&
+                                            "37b1e8e2-04c4-4246-a8c9-838baa7f8187" &&
                                             !hasGSToken;
                                         return (
                                             <div
@@ -2119,52 +2119,52 @@ const Leads = (properties) => {
                                                         </span>
                                                         {type.id ==
                                                             "37b1e8e2-04c4-4246-a8c9-838baa7f8187" && (
-                                                            <div className="d-flex gap-1">
-                                                                <Tippy content="Refrescar correos">
+                                                                <div className="d-flex gap-1">
+                                                                    <Tippy content="Refrescar correos">
+                                                                        <button
+                                                                            className="btn btn-xs btn-white"
+                                                                            type="button"
+                                                                            disabled={
+                                                                                loadingMails
+                                                                            }
+                                                                            onClick={() =>
+                                                                                setLeadLoaded(
+                                                                                    (
+                                                                                        old,
+                                                                                    ) => ({
+                                                                                        ...old,
+                                                                                        refresh:
+                                                                                            crypto.randomUUID(),
+                                                                                    }),
+                                                                                )
+                                                                            }
+                                                                        >
+                                                                            {loadingMails ? (
+                                                                                <i className="fa fa-spinner fa-spin"></i>
+                                                                            ) : (
+                                                                                <i className="fas fa-redo"></i>
+                                                                            )}
+                                                                        </button>
+                                                                    </Tippy>
                                                                     <button
-                                                                        className="btn btn-xs btn-white"
+                                                                        className="btn btn-xs btn-success"
                                                                         type="button"
-                                                                        disabled={
-                                                                            loadingMails
-                                                                        }
-                                                                        onClick={() =>
-                                                                            setLeadLoaded(
-                                                                                (
-                                                                                    old,
-                                                                                ) => ({
-                                                                                    ...old,
-                                                                                    refresh:
-                                                                                        crypto.randomUUID(),
-                                                                                }),
-                                                                            )
-                                                                        }
+                                                                        onClick={() => {
+                                                                            setInReplyTo(
+                                                                                null,
+                                                                            );
+                                                                            $(
+                                                                                composeModal.current,
+                                                                            ).modal(
+                                                                                "show",
+                                                                            );
+                                                                        }}
                                                                     >
-                                                                        {loadingMails ? (
-                                                                            <i className="fa fa-spinner fa-spin"></i>
-                                                                        ) : (
-                                                                            <i className="fas fa-redo"></i>
-                                                                        )}
+                                                                        <i className="mdi mdi-pen me-1"></i>
+                                                                        Redactar
                                                                     </button>
-                                                                </Tippy>
-                                                                <button
-                                                                    className="btn btn-xs btn-success"
-                                                                    type="button"
-                                                                    onClick={() => {
-                                                                        setInReplyTo(
-                                                                            null,
-                                                                        );
-                                                                        $(
-                                                                            composeModal.current,
-                                                                        ).modal(
-                                                                            "show",
-                                                                        );
-                                                                    }}
-                                                                >
-                                                                    <i className="mdi mdi-pen me-1"></i>
-                                                                    Redactar
-                                                                </button>
-                                                            </div>
-                                                        )}
+                                                                </div>
+                                                            )}
                                                     </h4>
                                                 )}
                                                 <input
@@ -2265,156 +2265,156 @@ const Leads = (properties) => {
                                                     )}
                                                     {type.id ==
                                                         "e20c7891-1ef8-4388-8150-4c1028cc4525" && (
-                                                        <>
-                                                            <InputFormGroup
-                                                                eRef={
-                                                                    taskTitleRef
-                                                                }
-                                                                label="Titulo de la tarea"
-                                                                col="col-12"
-                                                                required
-                                                            />
-                                                            <SelectFormGroup
-                                                                eRef={
-                                                                    taskTypeRef
-                                                                }
-                                                                label="Tipo de tarea"
-                                                                col="col-lg-4 col-md-12"
-                                                                required
-                                                                dropdownParent={`#note-type-${type.id}`}
-                                                                minimumResultsForSearch={
-                                                                    Infinity
-                                                                }
-                                                            >
-                                                                <option value="Llamada">
-                                                                    Llamada
-                                                                </option>
-                                                                <option value="Correo">
-                                                                    Correo
-                                                                </option>
-                                                                <option
-                                                                    value="Por hacer"
-                                                                    selected
+                                                            <>
+                                                                <InputFormGroup
+                                                                    eRef={
+                                                                        taskTitleRef
+                                                                    }
+                                                                    label="Titulo de la tarea"
+                                                                    col="col-12"
+                                                                    required
+                                                                />
+                                                                <SelectFormGroup
+                                                                    eRef={
+                                                                        taskTypeRef
+                                                                    }
+                                                                    label="Tipo de tarea"
+                                                                    col="col-lg-4 col-md-12"
+                                                                    required
+                                                                    dropdownParent={`#note-type-${type.id}`}
+                                                                    minimumResultsForSearch={
+                                                                        Infinity
+                                                                    }
                                                                 >
-                                                                    Por hacer
-                                                                </option>
-                                                            </SelectFormGroup>
-                                                            <SelectFormGroup
-                                                                eRef={
-                                                                    taskPriorityRef
-                                                                }
-                                                                label="Prioridad"
-                                                                col="col-lg-3 col-md-12"
-                                                                required
-                                                                dropdownParent={`#note-type-${type.id}`}
-                                                                minimumResultsForSearch={
-                                                                    Infinity
-                                                                }
-                                                            >
-                                                                <option value="Baja">
-                                                                    Baja
-                                                                </option>
-                                                                <option
-                                                                    value="Media"
-                                                                    selected
+                                                                    <option value="Llamada">
+                                                                        Llamada
+                                                                    </option>
+                                                                    <option value="Correo">
+                                                                        Correo
+                                                                    </option>
+                                                                    <option
+                                                                        value="Por hacer"
+                                                                        selected
+                                                                    >
+                                                                        Por hacer
+                                                                    </option>
+                                                                </SelectFormGroup>
+                                                                <SelectFormGroup
+                                                                    eRef={
+                                                                        taskPriorityRef
+                                                                    }
+                                                                    label="Prioridad"
+                                                                    col="col-lg-3 col-md-12"
+                                                                    required
+                                                                    dropdownParent={`#note-type-${type.id}`}
+                                                                    minimumResultsForSearch={
+                                                                        Infinity
+                                                                    }
                                                                 >
-                                                                    Media
-                                                                </option>
-                                                                <option value="Alta">
-                                                                    Alta
-                                                                </option>
-                                                                <option value="Urgente">
-                                                                    Urgente
-                                                                </option>
-                                                            </SelectFormGroup>
-                                                            <SelectAPIFormGroup
-                                                                eRef={
-                                                                    taskAssignedToRef
-                                                                }
-                                                                label="Asignado a"
-                                                                col="col-lg-5 col-md-12"
-                                                                dropdownParent={`#note-type-${type.id}`}
-                                                                searchAPI="/api/users/paginate"
-                                                                searchBy="fullname"
-                                                            />
-                                                            <InputFormGroup
-                                                                eRef={
-                                                                    taskEndsAtDateRef
-                                                                }
-                                                                label="Fecha finalización"
-                                                                type="date"
-                                                                col="col-lg-6 col-md-12"
-                                                                required
-                                                            />
-                                                            <InputFormGroup
-                                                                eRef={
-                                                                    taskEndsAtTimeRef
-                                                                }
-                                                                label="Hora finalización"
-                                                                type="time"
-                                                                col="col-lg-6 col-md-12"
-                                                                required
-                                                            />
-                                                        </>
-                                                    )}
+                                                                    <option value="Baja">
+                                                                        Baja
+                                                                    </option>
+                                                                    <option
+                                                                        value="Media"
+                                                                        selected
+                                                                    >
+                                                                        Media
+                                                                    </option>
+                                                                    <option value="Alta">
+                                                                        Alta
+                                                                    </option>
+                                                                    <option value="Urgente">
+                                                                        Urgente
+                                                                    </option>
+                                                                </SelectFormGroup>
+                                                                <SelectAPIFormGroup
+                                                                    eRef={
+                                                                        taskAssignedToRef
+                                                                    }
+                                                                    label="Asignado a"
+                                                                    col="col-lg-5 col-md-12"
+                                                                    dropdownParent={`#note-type-${type.id}`}
+                                                                    searchAPI="/api/users/paginate"
+                                                                    searchBy="fullname"
+                                                                />
+                                                                <InputFormGroup
+                                                                    eRef={
+                                                                        taskEndsAtDateRef
+                                                                    }
+                                                                    label="Fecha finalización"
+                                                                    type="date"
+                                                                    col="col-lg-6 col-md-12"
+                                                                    required
+                                                                />
+                                                                <InputFormGroup
+                                                                    eRef={
+                                                                        taskEndsAtTimeRef
+                                                                    }
+                                                                    label="Hora finalización"
+                                                                    type="time"
+                                                                    col="col-lg-6 col-md-12"
+                                                                    required
+                                                                />
+                                                            </>
+                                                        )}
                                                     {type.id ==
                                                         "8e895346-3d87-4a87-897a-4192b917c211" && (
-                                                        <>
-                                                            <InputFormGroup
-                                                                eRef={
-                                                                    processRef
-                                                                }
-                                                                label="Proceso"
-                                                                col="col-12"
-                                                                parentClassName="dropdown"
-                                                                className="dropdown-toggle"
-                                                                data-bs-toggle="dropdown"
-                                                            >
-                                                                <ul
-                                                                    className="dropdown-menu"
-                                                                    style={{
-                                                                        width: "100%",
-                                                                    }}
+                                                            <>
+                                                                <InputFormGroup
+                                                                    eRef={
+                                                                        processRef
+                                                                    }
+                                                                    label="Proceso"
+                                                                    col="col-12"
+                                                                    parentClassName="dropdown"
+                                                                    className="dropdown-toggle"
+                                                                    data-bs-toggle="dropdown"
                                                                 >
-                                                                    {processes.map(
-                                                                        (
-                                                                            process,
-                                                                            index,
-                                                                        ) => {
-                                                                            return (
-                                                                                <li
-                                                                                    key={
-                                                                                        index
-                                                                                    }
-                                                                                    className="dropdown-item"
-                                                                                    onClick={() =>
+                                                                    <ul
+                                                                        className="dropdown-menu"
+                                                                        style={{
+                                                                            width: "100%",
+                                                                        }}
+                                                                    >
+                                                                        {processes.map(
+                                                                            (
+                                                                                process,
+                                                                                index,
+                                                                            ) => {
+                                                                                return (
+                                                                                    <li
+                                                                                        key={
+                                                                                            index
+                                                                                        }
+                                                                                        className="dropdown-item"
+                                                                                        onClick={() =>
                                                                                         (processRef.current.value =
                                                                                             process.name)
-                                                                                    }
-                                                                                    style={{
-                                                                                        cursor: "pointer",
-                                                                                    }}
-                                                                                >
-                                                                                    <b className="d-block">
-                                                                                        {
-                                                                                            process.name
                                                                                         }
-                                                                                    </b>
-                                                                                    {process.description && (
-                                                                                        <small className="d-block text-truncate">
+                                                                                        style={{
+                                                                                            cursor: "pointer",
+                                                                                        }}
+                                                                                    >
+                                                                                        <b className="d-block">
                                                                                             {
-                                                                                                process.description
+                                                                                                process.name
                                                                                             }
-                                                                                        </small>
-                                                                                    )}
-                                                                                </li>
-                                                                            );
-                                                                        },
-                                                                    )}
-                                                                </ul>
-                                                            </InputFormGroup>
-                                                        </>
-                                                    )}
+                                                                                        </b>
+                                                                                        {process.description && (
+                                                                                            <small className="d-block text-truncate">
+                                                                                                {
+                                                                                                    process.description
+                                                                                                }
+                                                                                            </small>
+                                                                                        )}
+                                                                                    </li>
+                                                                                );
+                                                                            },
+                                                                        )}
+                                                                    </ul>
+                                                                </InputFormGroup>
+                                                            </>
+                                                        )}
                                                     <div
                                                         className="col-12 mb-2"
                                                         hidden={
@@ -2431,7 +2431,7 @@ const Leads = (properties) => {
                                                         <div
                                                             ref={
                                                                 typeRefs[
-                                                                    type.id
+                                                                type.id
                                                                 ]
                                                             }
                                                             id={`editor-${type.id}`}
@@ -2444,325 +2444,325 @@ const Leads = (properties) => {
                                                     </div>
                                                     {type.id ==
                                                         "8e895346-3d87-4a87-897a-4192b917c211" && (
-                                                        <>
-                                                            <div className="col-sm-12 col-md-12 col-lg-6 mb-2">
-                                                                <label className="form-label">
-                                                                    Estado de
-                                                                    gestión
-                                                                </label>
-                                                                <div className="dropdown">
-                                                                    <button
-                                                                        className="btn btn-white btn-sm dropdown-toggle w-100 text-start"
-                                                                        type="button"
-                                                                        data-bs-toggle="dropdown"
-                                                                        aria-expanded="false"
-                                                                        ref={
-                                                                            statusRef
-                                                                        }
-                                                                    >
-                                                                        {statuses.find(
-                                                                            (
-                                                                                s,
-                                                                            ) =>
-                                                                                s.id ===
-                                                                                processStatus,
-                                                                        )
-                                                                            ?.name ||
-                                                                            "Seleccionar estado"}
-                                                                        <i className="mdi mdi-chevron-down float-end" />
-                                                                    </button>
-                                                                    <ul className="dropdown-menu w-100">
-                                                                        {statuses
-                                                                            .sort(
+                                                            <>
+                                                                <div className="col-sm-12 col-md-12 col-lg-6 mb-2">
+                                                                    <label className="form-label">
+                                                                        Estado de
+                                                                        gestión
+                                                                    </label>
+                                                                    <div className="dropdown">
+                                                                        <button
+                                                                            className="btn btn-white btn-sm dropdown-toggle w-100 text-start"
+                                                                            type="button"
+                                                                            data-bs-toggle="dropdown"
+                                                                            aria-expanded="false"
+                                                                            ref={
+                                                                                statusRef
+                                                                            }
+                                                                        >
+                                                                            {statuses.find(
                                                                                 (
-                                                                                    a,
-                                                                                    b,
+                                                                                    s,
                                                                                 ) =>
-                                                                                    a.order -
-                                                                                    b.order,
+                                                                                    s.id ===
+                                                                                    processStatus,
                                                                             )
-                                                                            .map(
-                                                                                (
-                                                                                    status,
-                                                                                ) => (
-                                                                                    <li
-                                                                                        key={
-                                                                                            status.id
-                                                                                        }
-                                                                                    >
-                                                                                        <button
-                                                                                            className="dropdown-item"
-                                                                                            type="button"
-                                                                                            onClick={() =>
-                                                                                                setProcessStatus(
-                                                                                                    status.id,
-                                                                                                )
+                                                                                ?.name ||
+                                                                                "Seleccionar estado"}
+                                                                            <i className="mdi mdi-chevron-down float-end" />
+                                                                        </button>
+                                                                        <ul className="dropdown-menu w-100">
+                                                                            {statuses
+                                                                                .sort(
+                                                                                    (
+                                                                                        a,
+                                                                                        b,
+                                                                                    ) =>
+                                                                                        a.order -
+                                                                                        b.order,
+                                                                                )
+                                                                                .map(
+                                                                                    (
+                                                                                        status,
+                                                                                    ) => (
+                                                                                        <li
+                                                                                            key={
+                                                                                                status.id
                                                                                             }
                                                                                         >
-                                                                                            <i
-                                                                                                className="mdi mdi-circle me-1"
-                                                                                                style={{
-                                                                                                    color: status.color,
-                                                                                                }}
-                                                                                            />
-                                                                                            {
-                                                                                                status.name
-                                                                                            }
-                                                                                        </button>
-                                                                                    </li>
-                                                                                ),
-                                                                            )}
-                                                                    </ul>
-                                                                </div>
-                                                            </div>
-
-                                                            <div className="col-sm-12 col-md-12 col-lg-6 mb-2">
-                                                                <label className="form-label">
-                                                                    Etiqueta
-                                                                </label>
-                                                                <div className="dropdown">
-                                                                    <button
-                                                                        className="btn btn-white btn-sm dropdown-toggle w-100 text-start"
-                                                                        type="button"
-                                                                        data-bs-toggle="dropdown"
-                                                                        aria-expanded="false"
-                                                                        ref={
-                                                                            manageStatusRef
-                                                                        }
-                                                                    >
-                                                                        {manageStatuses.find(
-                                                                            (
-                                                                                s,
-                                                                            ) =>
-                                                                                s.id ===
-                                                                                processManageStatus,
-                                                                        )
-                                                                            ?.name ||
-                                                                            "Seleccionar estado"}
-                                                                        <i className="mdi mdi-chevron-down float-end" />
-                                                                    </button>
-                                                                    <ul className="dropdown-menu w-100">
-                                                                        {manageStatuses
-                                                                            .filter(
-                                                                                (
-                                                                                    status,
-                                                                                ) => {
-                                                                                    const parent =
-                                                                                        statuses.find(
-                                                                                            (
-                                                                                                s,
-                                                                                            ) =>
-                                                                                                s.id ===
-                                                                                                processStatus,
-                                                                                        );
-                                                                                    if (
-                                                                                        !Array.isArray(
-                                                                                            parent?.children,
-                                                                                        ) ||
-                                                                                        parent
-                                                                                            .children
-                                                                                            .length ===
-                                                                                            0
-                                                                                    )
-                                                                                        return true;
-                                                                                    return parent.children.includes(
-                                                                                        status.id,
-                                                                                    );
-                                                                                },
-                                                                            )
-                                                                            .sort(
-                                                                                (
-                                                                                    a,
-                                                                                    b,
-                                                                                ) =>
-                                                                                    a.order -
-                                                                                    b.order,
-                                                                            )
-                                                                            .map(
-                                                                                (
-                                                                                    status,
-                                                                                ) => (
-                                                                                    <li
-                                                                                        key={
-                                                                                            status.id
-                                                                                        }
-                                                                                    >
-                                                                                        <button
-                                                                                            className="dropdown-item"
-                                                                                            type="button"
-                                                                                            onClick={() => {
-                                                                                                setProcessManageStatus(
-                                                                                                    status.id,
-                                                                                                );
-                                                                                                if (
-                                                                                                    status.parent &&
-                                                                                                    statuses.some(
-                                                                                                        (
-                                                                                                            s,
-                                                                                                        ) =>
-                                                                                                            s.id ===
-                                                                                                            status.parent,
-                                                                                                    )
-                                                                                                ) {
+                                                                                            <button
+                                                                                                className="dropdown-item"
+                                                                                                type="button"
+                                                                                                onClick={() =>
                                                                                                     setProcessStatus(
-                                                                                                        status.parent,
-                                                                                                    );
+                                                                                                        status.id,
+                                                                                                    )
                                                                                                 }
-                                                                                            }}
-                                                                                        >
-                                                                                            <i
-                                                                                                className="mdi mdi-circle me-1"
-                                                                                                style={{
-                                                                                                    color: status.color,
-                                                                                                }}
-                                                                                            />
-                                                                                            {
-                                                                                                status.name
-                                                                                            }
-                                                                                        </button>
-                                                                                    </li>
-                                                                                ),
-                                                                            )}
-                                                                    </ul>
+                                                                                            >
+                                                                                                <i
+                                                                                                    className="mdi mdi-circle me-1"
+                                                                                                    style={{
+                                                                                                        color: status.color,
+                                                                                                    }}
+                                                                                                />
+                                                                                                {
+                                                                                                    status.name
+                                                                                                }
+                                                                                            </button>
+                                                                                        </li>
+                                                                                    ),
+                                                                                )}
+                                                                        </ul>
+                                                                    </div>
                                                                 </div>
-                                                            </div>
-                                                        </>
-                                                    )}
+
+                                                                <div className="col-sm-12 col-md-12 col-lg-6 mb-2">
+                                                                    <label className="form-label">
+                                                                        Etiqueta
+                                                                    </label>
+                                                                    <div className="dropdown">
+                                                                        <button
+                                                                            className="btn btn-white btn-sm dropdown-toggle w-100 text-start"
+                                                                            type="button"
+                                                                            data-bs-toggle="dropdown"
+                                                                            aria-expanded="false"
+                                                                            ref={
+                                                                                manageStatusRef
+                                                                            }
+                                                                        >
+                                                                            {manageStatuses.find(
+                                                                                (
+                                                                                    s,
+                                                                                ) =>
+                                                                                    s.id ===
+                                                                                    processManageStatus,
+                                                                            )
+                                                                                ?.name ||
+                                                                                "Seleccionar estado"}
+                                                                            <i className="mdi mdi-chevron-down float-end" />
+                                                                        </button>
+                                                                        <ul className="dropdown-menu w-100">
+                                                                            {manageStatuses
+                                                                                .filter(
+                                                                                    (
+                                                                                        status,
+                                                                                    ) => {
+                                                                                        const parent =
+                                                                                            statuses.find(
+                                                                                                (
+                                                                                                    s,
+                                                                                                ) =>
+                                                                                                    s.id ===
+                                                                                                    processStatus,
+                                                                                            );
+                                                                                        if (
+                                                                                            !Array.isArray(
+                                                                                                parent?.children,
+                                                                                            ) ||
+                                                                                            parent
+                                                                                                .children
+                                                                                                .length ===
+                                                                                            0
+                                                                                        )
+                                                                                            return true;
+                                                                                        return parent.children.includes(
+                                                                                            status.id,
+                                                                                        );
+                                                                                    },
+                                                                                )
+                                                                                .sort(
+                                                                                    (
+                                                                                        a,
+                                                                                        b,
+                                                                                    ) =>
+                                                                                        a.order -
+                                                                                        b.order,
+                                                                                )
+                                                                                .map(
+                                                                                    (
+                                                                                        status,
+                                                                                    ) => (
+                                                                                        <li
+                                                                                            key={
+                                                                                                status.id
+                                                                                            }
+                                                                                        >
+                                                                                            <button
+                                                                                                className="dropdown-item"
+                                                                                                type="button"
+                                                                                                onClick={() => {
+                                                                                                    setProcessManageStatus(
+                                                                                                        status.id,
+                                                                                                    );
+                                                                                                    if (
+                                                                                                        status.parent &&
+                                                                                                        statuses.some(
+                                                                                                            (
+                                                                                                                s,
+                                                                                                            ) =>
+                                                                                                                s.id ===
+                                                                                                                status.parent,
+                                                                                                        )
+                                                                                                    ) {
+                                                                                                        setProcessStatus(
+                                                                                                            status.parent,
+                                                                                                        );
+                                                                                                    }
+                                                                                                }}
+                                                                                            >
+                                                                                                <i
+                                                                                                    className="mdi mdi-circle me-1"
+                                                                                                    style={{
+                                                                                                        color: status.color,
+                                                                                                    }}
+                                                                                                />
+                                                                                                {
+                                                                                                    status.name
+                                                                                                }
+                                                                                            </button>
+                                                                                        </li>
+                                                                                    ),
+                                                                                )}
+                                                                        </ul>
+                                                                    </div>
+                                                                </div>
+                                                            </>
+                                                        )}
                                                     {type.id !=
                                                         "37b1e8e2-04c4-4246-a8c9-838baa7f8187" && (
-                                                        <div className="col-12">
-                                                            <button
-                                                                className="btn btn-sm btn-success"
-                                                                type="button"
-                                                                value={type.id}
-                                                                onClick={
-                                                                    onSaveNote
-                                                                }
-                                                            >
-                                                                Guardar
-                                                            </button>
-                                                        </div>
-                                                    )}
+                                                            <div className="col-12">
+                                                                <button
+                                                                    className="btn btn-sm btn-success"
+                                                                    type="button"
+                                                                    value={type.id}
+                                                                    onClick={
+                                                                        onSaveNote
+                                                                    }
+                                                                >
+                                                                    Guardar
+                                                                </button>
+                                                            </div>
+                                                        )}
                                                 </div>
                                                 {type.id !=
                                                     "37b1e8e2-04c4-4246-a8c9-838baa7f8187" && (
-                                                    <hr />
-                                                )}
+                                                        <hr />
+                                                    )}
                                                 {type.id ==
-                                                "37b1e8e2-04c4-4246-a8c9-838baa7f8187"
+                                                    "37b1e8e2-04c4-4246-a8c9-838baa7f8187"
                                                     ? mails?.map(
-                                                          (mail, index) => {
-                                                              const sender =
-                                                                  String(
-                                                                      mail.sender,
-                                                                  ).replace(
-                                                                      /\<(.*?)\>/g,
-                                                                      '<span className="me-1">·</span><small style="font-weight: lighter">&lt;$1&gt;</small>',
-                                                                  );
-                                                              const date =
-                                                                  new Date(
-                                                                      mail.date,
-                                                                  );
-                                                              return (
-                                                                  <div
-                                                                      key={
-                                                                          index
-                                                                      }
-                                                                      className="card mb-2 border"
-                                                                  >
-                                                                      <div
-                                                                          className="card-header p-2"
-                                                                          style={{
-                                                                              cursor: "pointer",
-                                                                          }}
-                                                                          onClick={async () => {
-                                                                              const mailing =
-                                                                                  await gmailRest.getDetails(
-                                                                                      mail.id,
-                                                                                  );
-                                                                              if (
-                                                                                  !mailing
-                                                                              )
-                                                                                  return;
-                                                                              setMailLoaded(
-                                                                                  mailing,
-                                                                              );
-                                                                              $(
-                                                                                  mailModal.current,
-                                                                              ).modal(
-                                                                                  "show",
-                                                                              );
-                                                                          }}
-                                                                      >
-                                                                          <b className="d-block">
-                                                                              {mail.type ==
-                                                                              "sent" ? (
-                                                                                  <i className="mdi mdi-send me-1"></i>
-                                                                              ) : (
-                                                                                  <i className="mdi mdi-inbox me-1"></i>
-                                                                              )}
-                                                                              <HtmlContent
-                                                                                  className={
-                                                                                      "d-inline"
-                                                                                  }
-                                                                                  html={
-                                                                                      sender
-                                                                                  }
-                                                                              />
-                                                                          </b>
-                                                                          <small className="text-muted">
-                                                                              {moment(
-                                                                                  date,
-                                                                              ).format(
-                                                                                  "LLL",
-                                                                              )}
-                                                                          </small>
-                                                                      </div>
-                                                                      <div className="card-body p-2">
-                                                                          <small>
-                                                                              <b>
-                                                                                  {
-                                                                                      mail.subject
-                                                                                  }
-                                                                              </b>{" "}
-                                                                              -{" "}
-                                                                              {mail.snippet ||
-                                                                                  "."}
-                                                                          </small>
-                                                                      </div>
-                                                                  </div>
-                                                              );
-                                                          },
-                                                      )
+                                                        (mail, index) => {
+                                                            const sender =
+                                                                String(
+                                                                    mail.sender,
+                                                                ).replace(
+                                                                    /\<(.*?)\>/g,
+                                                                    '<span className="me-1">·</span><small style="font-weight: lighter">&lt;$1&gt;</small>',
+                                                                );
+                                                            const date =
+                                                                new Date(
+                                                                    mail.date,
+                                                                );
+                                                            return (
+                                                                <div
+                                                                    key={
+                                                                        index
+                                                                    }
+                                                                    className="card mb-2 border"
+                                                                >
+                                                                    <div
+                                                                        className="card-header p-2"
+                                                                        style={{
+                                                                            cursor: "pointer",
+                                                                        }}
+                                                                        onClick={async () => {
+                                                                            const mailing =
+                                                                                await gmailRest.getDetails(
+                                                                                    mail.id,
+                                                                                );
+                                                                            if (
+                                                                                !mailing
+                                                                            )
+                                                                                return;
+                                                                            setMailLoaded(
+                                                                                mailing,
+                                                                            );
+                                                                            $(
+                                                                                mailModal.current,
+                                                                            ).modal(
+                                                                                "show",
+                                                                            );
+                                                                        }}
+                                                                    >
+                                                                        <b className="d-block">
+                                                                            {mail.type ==
+                                                                                "sent" ? (
+                                                                                <i className="mdi mdi-send me-1"></i>
+                                                                            ) : (
+                                                                                <i className="mdi mdi-inbox me-1"></i>
+                                                                            )}
+                                                                            <HtmlContent
+                                                                                className={
+                                                                                    "d-inline"
+                                                                                }
+                                                                                html={
+                                                                                    sender
+                                                                                }
+                                                                            />
+                                                                        </b>
+                                                                        <small className="text-muted">
+                                                                            {moment(
+                                                                                date,
+                                                                            ).format(
+                                                                                "LLL",
+                                                                            )}
+                                                                        </small>
+                                                                    </div>
+                                                                    <div className="card-body p-2">
+                                                                        <small>
+                                                                            <b>
+                                                                                {
+                                                                                    mail.subject
+                                                                                }
+                                                                            </b>{" "}
+                                                                            -{" "}
+                                                                            {mail.snippet ||
+                                                                                "."}
+                                                                        </small>
+                                                                    </div>
+                                                                </div>
+                                                            );
+                                                        },
+                                                    )
                                                     : notes
-                                                          .filter(
-                                                              (x) =>
-                                                                  x.note_type_id ==
-                                                                  type.id,
-                                                          )
-                                                          .sort((a, b) =>
-                                                              b.created_at >
-                                                              a.created_at
-                                                                  ? 1
-                                                                  : -1,
-                                                          )
-                                                          .map((note, i) => {
-                                                              return (
-                                                                  <ClientNotesCard
-                                                                      key={`note-${i}`}
-                                                                      {...note}
-                                                                      session={
-                                                                          session
-                                                                      }
-                                                                      onDeleteNote={
-                                                                          onDeleteNote
-                                                                      }
-                                                                      onUpdateNote={
-                                                                          onUpdateNoteClicked
-                                                                      }
-                                                                  />
-                                                              );
-                                                          })}
+                                                        .filter(
+                                                            (x) =>
+                                                                x.note_type_id ==
+                                                                type.id,
+                                                        )
+                                                        .sort((a, b) =>
+                                                            b.created_at >
+                                                                a.created_at
+                                                                ? 1
+                                                                : -1,
+                                                        )
+                                                        .map((note, i) => {
+                                                            return (
+                                                                <ClientNotesCard
+                                                                    key={`note-${i}`}
+                                                                    {...note}
+                                                                    session={
+                                                                        session
+                                                                    }
+                                                                    onDeleteNote={
+                                                                        onDeleteNote
+                                                                    }
+                                                                    onUpdateNote={
+                                                                        onUpdateNoteClicked
+                                                                    }
+                                                                />
+                                                            );
+                                                        })}
                                             </div>
                                         );
                                     })}
@@ -2811,7 +2811,7 @@ const Leads = (properties) => {
                                                 total +
                                                 Number(
                                                     product.pivot_price ??
-                                                        product.price,
+                                                    product.price,
                                                 ),
                                             0,
                                         ),

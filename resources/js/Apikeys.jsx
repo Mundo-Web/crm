@@ -206,6 +206,11 @@ const Apikeys = ({ apikey }) => {
                 </a>
               </li>
               <li className="nav-item" role="presentation">
+                <a className="nav-link" id="guide-tab" data-bs-toggle="tab" href="#utm-guide" role="tab" aria-controls="utm-guide" aria-selected="false">
+                  <i className="mdi mdi-book-open-page-variant me-1"></i> Guía de UTMs y Orígenes
+                </a>
+              </li>
+              <li className="nav-item" role="presentation">
                 <a className="nav-link" id="script-tab" data-bs-toggle="tab" href="#landing-script" role="tab" aria-controls="landing-script" aria-selected="false">
                   <i className="mdi mdi-javascript me-1"></i> Script Automático para Landing (JS)
                 </a>
@@ -223,31 +228,97 @@ const Apikeys = ({ apikey }) => {
                 <h5>Cuerpo de la Solicitud (JSON):</h5>
                 <pre><code>{`{
   // --- DATOS DEL CONTACTO (OBLIGATORIOS) ---
-  "contact_name": "Juan Pérez",                 // Requerido (Nombre completo)
+  "contact_name": "Juan Pérez",                 // Requerido (Nombre completo del contacto)
   "contact_phone": "999888777",                 // Requerido (Teléfono o WhatsApp)
   "contact_email": "juan.perez@example.com",    // Requerido (Correo electrónico)
-  "message": "Hola, solicito información",      // Requerido (Mensaje o consulta)
+  "message": "Hola, solicito información",      // Requerido (Mensaje o requerimiento)
 
   // --- DATOS DEL CONTACTO (OPCIONALES) ---
-  "contact_position": "Gerente General",        // Opcional (Cargo)
-  "tradename": "Empresa SAC",                   // Opcional (Nombre de empresa)
+  "contact_position": "Gerente General",        // Opcional (Cargo o puesto)
+  "tradename": "Empresa SAC",                   // Opcional (Nombre de la empresa)
   "workers": "10-20",                           // Opcional (N° de trabajadores)
 
-  // --- PARÁMETROS DE CAMPAÑA Y MARKETING (RECOMENDADOS PARA ATRIBUCIÓN) ---
-  "utm_source": "googleads",                    // Opcional ("googleads", "facebook", "instagram", "tiktok", etc.)
-  "utm_medium": "cpc",                          // Opcional ("cpc", "paid", "display", "social", etc.)
-  "utm_campaign": "Busqueda_Marca",             // Opcional (Nombre de Campaña - Atalaya la vinculará automáticamente)
-  "utm_term": "software crm",                   // Opcional (Palabra clave / Grupo de anuncios)
-  "utm_content": "Anuncio_Texto_1",             // Opcional (Creativo / Anuncio específico)
-  "web_url": "https://tusitio.com/?utm_source=googleads...", // Opcional (URL completa de la landing)
+  // --- PARÁMETROS DE ATRIBUCIÓN Y MARKETING (RECOMENDADOS) ---
+  "utm_source": "meta",                         // Opcional ("meta", "google", "tiktok", "linkedin", "whatsapp")
+  "utm_medium": "cpc",                          // Opcional ("cpc" se clasifica como tipo Anuncio publicitario)
+  "utm_campaign": "Busqueda_Marca",             // Opcional (Nombre de Campaña - Atalaya la vincula automáticamente)
+  "utm_term": "Grupo_Anuncios_Lima",            // Opcional (Grupo de Anuncios / AdSet o Palabra clave)
+  "utm_content": "Anuncio_Video_1",             // Opcional (Nombre de Anuncio / Creativo específico)
+  "web_url": "https://landing.tusitio.com/?...", // Opcional (URL completa de la landing con UTMs)
 
-  // --- ORIGEN PERSONALIZADO (OPCIONAL) ---
-  "origin": "Google Ads",                       // Opcional (Si se omite, se auto-detecta de utm_source)
-  "triggered_by": "Formulario Landing"          // Opcional ("Formulario Landing", "WhatsApp", etc.)
+  // --- DISPARADOR / FORMULARIO ---
+  "triggered_by": "Formulario Landing"          // Opcional (Por defecto: "Formulario Landing" o el nombre de tu formulario)
 }`}</code></pre>
               </div>
 
-              {/* Tab 2: Landing Script */}
+              {/* Tab 2: Guía de UTMs */}
+              <div className="tab-pane fade" id="utm-guide" role="tabpanel" aria-labelledby="guide-tab">
+                <div className="table-responsive">
+                  <table className="table table-bordered table-sm font-13 align-middle mb-0">
+                    <thead className="table-light">
+                      <tr>
+                        <th>Parámetro UTM</th>
+                        <th>Valores Recomendados</th>
+                        <th>Cómo lo procesa Atalaya CRM</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td><code>utm_source</code></td>
+                        <td><code>meta</code>, <code>facebook</code>, <code>instagram</code>, <code>messenger</code>, <code>whatsapp</code></td>
+                        <td>Asigna Origen: <span className="badge bg-primary">Meta</span></td>
+                      </tr>
+                      <tr>
+                        <td><code>utm_source</code></td>
+                        <td><code>google</code>, <code>googleads</code></td>
+                        <td>Asigna Origen: <span className="badge bg-danger">Google</span></td>
+                      </tr>
+                      <tr>
+                        <td><code>utm_source</code></td>
+                        <td><code>tiktok</code></td>
+                        <td>Asigna Origen: <span className="badge bg-dark">TikTok</span></td>
+                      </tr>
+                      <tr>
+                        <td><code>utm_source</code></td>
+                        <td><code>linkedin</code></td>
+                        <td>Asigna Origen: <span className="badge bg-info">LinkedIn</span></td>
+                      </tr>
+                      <tr>
+                        <td><code>utm_source</code> (vacío o sin UTM)</td>
+                        <td><em>(No enviado)</em></td>
+                        <td>Asigna Origen: <span className="badge bg-secondary">Orgánico</span></td>
+                      </tr>
+                      <tr>
+                        <td><code>utm_medium</code></td>
+                        <td><code>cpc</code>, <code>paid</code>, <code>ads</code></td>
+                        <td>Clasificado como Proceso/Tipo: <b>Anuncio</b></td>
+                      </tr>
+                      <tr>
+                        <td><code>utm_campaign</code></td>
+                        <td>Nombre de tu campaña</td>
+                        <td>Vincula / Crea la <b>Campaña</b> automáticamente en Atalaya</td>
+                      </tr>
+                      <tr>
+                        <td><code>utm_term</code></td>
+                        <td>Grupo de anuncios o palabra clave</td>
+                        <td>Guarda el <b>Grupo de Anuncios</b> (AdSet)</td>
+                      </tr>
+                      <tr>
+                        <td><code>utm_content</code></td>
+                        <td>Nombre o ID del anuncio</td>
+                        <td>Guarda el <b>Anuncio</b> (Creativo)</td>
+                      </tr>
+                      <tr>
+                        <td><code>triggered_by</code></td>
+                        <td><code>Formulario Landing</code> o nombre libre</td>
+                        <td>Registra el disparador de entrada del lead</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Tab 3: Landing Script */}
               <div className="tab-pane fade" id="landing-script" role="tabpanel" aria-labelledby="script-tab">
                 <div className="d-flex justify-content-between align-items-center mb-2">
                   <span className="text-muted font-13">Copia y pega este script en tu landing page para capturar UTMs automáticamente:</span>
@@ -258,7 +329,7 @@ const Apikeys = ({ apikey }) => {
                 <pre style={{ maxHeight: '350px', overflowY: 'auto' }}><code>{landingScriptExample}</code></pre>
               </div>
 
-              {/* Tab 3: cURL Example */}
+              {/* Tab 4: cURL Example */}
               <div className="tab-pane fade" id="curl-example" role="tabpanel" aria-labelledby="curl-tab">
                 <h5>Ejemplo con cURL:</h5>
                 <pre><code>{`curl -X POST "https://${Global.APP_CORRELATIVE}.${Global.APP_DOMAIN}/free/leads" \\
@@ -269,11 +340,12 @@ const Apikeys = ({ apikey }) => {
     "contact_phone": "987654321",
     "contact_email": "jane@example.com",
     "message": "Consulta de cotización",
-    "utm_source": "googleads",
+    "utm_source": "meta",
     "utm_medium": "cpc",
-    "utm_campaign": "Busqueda",
-    "utm_content": "Anuncio_Google_1",
-    "web_url": "https://landing.tusitio.com/?utm_source=googleads&utm_medium=cpc&utm_campaign=Busqueda"
+    "utm_campaign": "Campana_Verano_2026",
+    "utm_term": "Grupo_Anuncios_Lima",
+    "utm_content": "Anuncio_Video_1",
+    "web_url": "https://landing.tusitio.com/?utm_source=meta&utm_medium=cpc&utm_campaign=Campana_Verano_2026"
   }'`}</code></pre>
               </div>
             </div>
