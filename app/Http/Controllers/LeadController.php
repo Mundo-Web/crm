@@ -798,7 +798,8 @@ class LeadController extends BasicController
 
                     $notesToInsert = [];
                     $tasksToInsert = [];
-                    $newLeadMessageTemplate = Setting::get('whatsapp-new-lead-notification-message', $business_id);
+                    $newLeadMessageTemplate = Setting::get('whatsapp-new-lead-notification-message', $business_id)
+                        ?: 'Se ha registrado un nuevo lead: {{name}} ({{contact_phone}})';
 
                     foreach ($rowsToInsert as $row) {
                         $formString = '';
@@ -824,7 +825,8 @@ class LeadController extends BasicController
 
                         // 1.2. Nota de "Lead nuevo"
                         $newLeadNoteId = Uuid::uuid1()->toString();
-                        $description = UtilController::replaceData($newLeadMessageTemplate, $row);
+                        $description = UtilController::replaceData($newLeadMessageTemplate, $row)
+                            ?: "Se ha registrado un nuevo lead: {$row['name']} ({$row['contact_phone']})";
                         $notesToInsert[] = [
                             'id' => $newLeadNoteId,
                             'note_type_id' => '8e895346-3d87-4a87-897a-4192b917c211',

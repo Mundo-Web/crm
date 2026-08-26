@@ -18,8 +18,9 @@ class UtilController
 {
   use Importable;
 
-  static function html2wa(String $string = '')
+  static function html2wa(?string $string = '')
   {
+    if (empty($string)) return '';
 
     $string = str_replace('{{session.sign}}', '', $string);
 
@@ -101,10 +102,12 @@ class UtilController
     return response($response->toArray(), $response->status);
   }
 
-  static function replaceData(string $string, array $object)
+  static function replaceData(?string $string, array $object)
   {
+    if (empty($string)) return '';
     foreach ($object as $key => $value) {
-      $string = str_replace('{{' . $key . '}}', $value, $string);
+      if (is_array($value) || is_object($value)) continue;
+      $string = str_replace('{{' . $key . '}}', (string) $value, $string);
     }
     return $string;
   }
