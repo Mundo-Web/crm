@@ -352,7 +352,7 @@ function OverlayTable({ p }) {
 }
 
 const kanbanColumns = [0, 1, 2, 3, 4];
-const cardsPerCol = [3, 4, 2, 3, 2];
+const cardsPerCol = [3, 3, 2, 1, 0];
 
 function OverlayKanban({ p }) {
   const base = KANBAN_START + 0.02;

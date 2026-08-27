@@ -272,7 +272,7 @@ class AuthController extends Controller
 
     if (!$service)
       return redirect(env('APP_PROTOCOL') . '://' . env('APP_DOMAIN'));
-    if (!$service->first_time)
+    if (!$service->first_time && !$request->has('preview') && !$request->has('step'))
       return redirect('/home');
 
     return Inertia::render('Join', [
