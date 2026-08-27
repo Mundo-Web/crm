@@ -1,20 +1,20 @@
 import { useEffect } from "react";
 import AuthRest from "../../actions/AuthRest";
 const statuses = [
-    'Nuevo',
-    'Gestión',
-    'Reunión',
-    'Propuesta',
-    'Decisión',
+    'Recién Llegados',
+    'Recién Asignados',
+    'En Gestión',
+    'Propuesto',
+    'En Toma de Decisión',
 ]
 
 const StatusesStep = ({ data, setData, setStep }) => {
-    // Ensure 'Nuevo' status is always included in data.statuses
+    // Ensure 'Recién Llegados' status is always included in data.statuses
     useEffect(() => {
-        if (!data.statuses || !data.statuses.includes('Nuevo')) {
+        if (!data.statuses || !data.statuses.includes('Recién Llegados')) {
             setData({
                 ...data,
-                statuses: ['Nuevo', ...(data.statuses || [])]
+                statuses: ['Recién Llegados', ...(data.statuses || [])]
             });
         }
     }, []);
@@ -35,7 +35,7 @@ const StatusesStep = ({ data, setData, setStep }) => {
                 {
                     structuredClone(statuses).map((status) => {
                         const selected = data.statuses?.includes(status)
-                        const isNuevo = status === 'Nuevo'
+                        const isNuevo = status === 'Recién Llegados'
                         return <div
                             key={status}
                             className={`group border-2 ${selected ? 'border-[#4621E1] bg-[#4621E1] bg-opacity-5' : 'border-[#BEC5FF]'} ps-3 py-1 pe-4 rounded-xl flex gap-1 items-center justify-center ${isNuevo ? 'cursor-not-allowed opacity-75' : 'cursor-pointer'} transition-colors select-none`}

@@ -32,7 +32,7 @@ class AuthController extends Controller
 
       $manageStatuses = $request->manageStatuses;
       foreach ($manageStatuses as $key => $status) {
-        $statusJpa =  Status::create([
+        $statusJpa = Status::create([
           'name' => $status,
           'table_id' => '9c27e649-574a-47eb-82af-851c5d425434',
           'order' => $key + 1,
@@ -48,7 +48,7 @@ class AuthController extends Controller
         }
       }
 
-      $statuses = $request->statuses ?? ['Nuevo', 'Gestión', 'Decisión'];
+      $statuses = $request->statuses ?? ['Recién Llegados', 'Recién Asignados', 'En Gestión', 'Propuesto', 'En Toma de Decisión'];
       foreach ($statuses as $key => $status) {
         $statusJpa = Status::create([
           'name' => $status,
@@ -58,7 +58,7 @@ class AuthController extends Controller
           'business_id' => Auth::user()->business_id
         ]);
 
-        if ($status == 'Nuevo') {
+        if ($status == 'Recién Llegados') {
           Setting::create([
             'name' => 'default-lead-status',
             'value' => $statusJpa->id,
@@ -119,13 +119,15 @@ class AuthController extends Controller
         ->where('services_by_businesses.business_id', Auth::user()->business_id)
         ->where('businesses.created_by', Auth::user()->id)
         ->first();
-      if (!$serviceJpa) throw new Exception('No tienes acceso a este servicio');
+      if (!$serviceJpa)
+        throw new Exception('No tienes acceso a este servicio');
       $serviceJpa->first_time = false;
       $serviceJpa->save();
 
       if (!empty($request->emails) && is_array($request->emails)) {
         foreach ($request->emails as $email) {
-          if (empty($email)) continue;
+          if (empty($email))
+            continue;
           try {
             $userJpa = User::where('email', $email)->first();
             if ($userJpa) {
@@ -160,17 +162,19 @@ class AuthController extends Controller
   /**
    * Handle an incoming authentication request.
    */
-  public function login(Request $request): HttpResponse | ResponseFactory | RedirectResponse
+  public function login(Request $request): HttpResponse|ResponseFactory|RedirectResponse
   {
     $response = new Response();
     try {
       $email = $request->email;
       $password = $request->password;
 
-      if (!Auth::attempt([
-        'email' => Controller::decode($email),
-        'password' => Controller::decode($password)
-      ])) {
+      if (
+        !Auth::attempt([
+          'email' => Controller::decode($email),
+          'password' => Controller::decode($password)
+        ])
+      ) {
         throw new Exception('Credenciales invalidas');
       }
 
@@ -231,7 +235,8 @@ class AuthController extends Controller
         ->where('services.correlative', env('APP_CORRELATIVE'))
         ->where('businesses.uuid', $business)
         ->first();
-      if (!$ubsbb) throw new Exception('No tienes permisos para este servicio');
+      if (!$ubsbb)
+        throw new Exception('No tienes permisos para este servicio');
 
       UsersByServicesByBusiness::join('services_by_businesses', 'services_by_businesses.id', 'users_by_services_by_businesses.service_by_business_id')
         ->where('users_by_services_by_businesses.user_id', Auth::user()->id)
@@ -257,8 +262,10 @@ class AuthController extends Controller
       ->where('services_by_businesses.business_id', Auth::user()->business_id)
       ->first();
 
-    if (!$service) return redirect(env('APP_PROTOCOL') . '://' . env('APP_DOMAIN'));
-    if (!$service->first_time) return redirect('/home');
+    if (!$service)
+      return redirect(env('APP_PROTOCOL') . '://' . env('APP_DOMAIN'));
+    if (!$service->first_time)
+      return redirect('/home');
 
     return Inertia::render('Join', [
       'global' => [
