@@ -21,7 +21,8 @@ const Join = ({ PUBLIC_RSA_KEY }) => {
     const jsEncrypt = new JSEncrypt()
     jsEncrypt.setPublicKey(PUBLIC_RSA_KEY)
 
-    const [step, setStep] = useState('usage');
+    const urlStep = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('step') : null
+    const [step, setStep] = useState(urlStep || 'usage');
     const [data, setData] = useState(Session.get('join-data') ?? {})
 
     console.clear()
