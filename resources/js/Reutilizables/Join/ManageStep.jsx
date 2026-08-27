@@ -53,7 +53,7 @@ const ManageStep = ({ data, setData, setStep }) => {
         <p className="text text-gray-600 mb-8">Define los estados para organizar tu proceso de ventas</p>
 
         <form className="mb-2" onSubmit={onModalSubmit}>
-            <div className="relative flex flex-wrap gap-2 max-h-[380px] overflow-y-auto pr-1">
+            <div className="relative flex flex-wrap gap-2.5 mb-6">
                 {
                     manageStatuses.map((status) => {
                         const selected = data.manageStatuses?.includes(status)
