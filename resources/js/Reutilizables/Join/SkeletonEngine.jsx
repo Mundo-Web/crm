@@ -52,13 +52,16 @@ export function useLoopProgress(durationMs) {
   return progress;
 }
 
-// ---------- primitives ----------
+// ---------- primitives (Light & Atalaya Colors) ----------
 
 const toneClass = {
-  base: 'bg-white/[0.06]',
-  soft: 'bg-white/[0.04]',
-  softer: 'bg-white/[0.025]',
-  accent: 'bg-emerald-400/15',
+  base: 'bg-slate-200/80',
+  soft: 'bg-slate-100',
+  softer: 'bg-slate-100/60',
+  accent: 'bg-[#4621E1]/15 border border-[#4621E1]/25',
+  orange: 'bg-[#FE4611]/15 border border-[#FE4611]/25',
+  emerald: 'bg-emerald-500/15 border border-emerald-500/25',
+  sky: 'bg-[#50C4FF]/20 border border-[#50C4FF]/30',
 };
 
 const SkeletonBase = ({ className = '', tone = 'base', rounded = 'rounded-md', style }) => (
@@ -91,13 +94,6 @@ export const SkCircle = ({
 
 // ---------- reveal wrapper ----------
 
-/**
- * Wraps children and animates them in based on loop progress `p`.
- * - pop: scale + fade (easeOutBack)
- * - rise: translateY up + fade
- * - draw: scaleY from 0 + fade (for thin lines)
- * - drop: translateY down + fade (for cards falling into kanban)
- */
 export const Reveal = ({
   at,
   dur = 0.12,

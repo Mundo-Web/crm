@@ -75,17 +75,32 @@ const JoinThanks = ({ data = {}, setData, step, setStep }) => {
   }, [step]);
 
   // ==============================================================
-  //  SAVING STEP: Full-Screen Pure Skeleton Scene (100% 1-to-1)
+  //  SAVING STEP: Max-Width Clean White Skeleton Dashboard Preview
   // ==============================================================
   if (step === 'saving') {
     return (
-      <div className="fixed inset-0 z-[9999] h-screen w-screen overflow-hidden bg-[#08080c]">
-        <JoinSkeletonScene />
+      <div className="w-full flex flex-col items-center justify-center py-2 px-2">
+        {/* Header note */}
+        <div className="text-center mb-3">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#EEF2FF] border border-[#DBE0FF] text-[#4621E1] rounded-full text-xs font-semibold mb-1 shadow-xs">
+            <i className="mdi mdi-loading mdi-spin text-sm" />
+            <span>Configurando tu espacio de trabajo en tiempo real</span>
+          </div>
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight">
+            Preparando tu <span className="text-[#FE4611]">CRM</span> y tableros
+          </h2>
+        </div>
+
+        {/* Skeleton Frame with max width */}
+        <div className="relative w-full max-w-4xl h-[480px] sm:h-[520px] rounded-2xl overflow-hidden border border-slate-200 bg-[#f8fafc] shadow-xl">
+          <JoinSkeletonScene />
+        </div>
+
         {failed && (
-          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-[10000]">
+          <div className="mt-3">
             <button
               onClick={saveData}
-              className="inline-flex items-center gap-2 border border-rose-500 bg-rose-600 hover:bg-rose-700 transition-colors font-semibold text-white rounded-xl py-2.5 px-6 text-sm shadow-xl"
+              className="inline-flex items-center gap-2 border border-rose-500 bg-rose-600 hover:bg-rose-700 transition-colors font-semibold text-white rounded-xl py-2 px-5 text-xs shadow-md"
             >
               <i className="mdi mdi-refresh" />
               Reintentar guardar
@@ -97,7 +112,7 @@ const JoinThanks = ({ data = {}, setData, step, setStep }) => {
   }
 
   // ==============================================================
-  //  THANKS STEP: Compact, Elegant Atalaya Welcome Card
+  //  THANKS STEP: Compact, Clean Atalaya Welcome Card
   // ==============================================================
   return (
     <div className="h-full flex items-center justify-center py-6 px-4">
