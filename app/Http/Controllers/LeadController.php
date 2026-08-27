@@ -164,6 +164,7 @@ class LeadController extends BasicController
             'months' => $months,
             'currentMonth' => $currentMonth,
             'currentYear' => $currentYear,
+            'boardName' => Setting::get('dashboard-name') ?? 'Leads',
         ];
     }
 

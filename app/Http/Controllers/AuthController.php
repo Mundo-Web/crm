@@ -30,7 +30,19 @@ class AuthController extends Controller
     DB::beginTransaction();
     $response = Response::simpleTryCatch(function () use ($request) {
 
-      $manageStatuses = $request->manageStatuses;
+      if (!empty($request->projectName)) {
+        Setting::set('dashboard-name', $request->projectName);
+      }
+
+      $manageStatuses = $request->manageStatuses ?? [
+        '🆕 Nuevo',
+        '📞 Por contactar',
+        '💬 Contactado',
+        '🎯 Calificado',
+        '🔥 Interesado',
+        '📄 Propuesta enviada',
+        '✅ Ganado'
+      ];
       foreach ($manageStatuses as $key => $status) {
         $statusJpa = Status::create([
           'name' => $status,
@@ -39,12 +51,8 @@ class AuthController extends Controller
           'business_id' => Auth::user()->business_id
         ]);
 
-        if ($status == 'Pendiente') {
-          Setting::create([
-            'name' => 'default-manage-lead-status',
-            'value' => $statusJpa->id,
-            'business_id' => Auth::user()->business_id
-          ]);
+        if ($key === 0 || $status == 'Pendiente' || $status == '🆕 Nuevo') {
+          Setting::set('default-manage-lead-status', $statusJpa->id);
         }
       }
 

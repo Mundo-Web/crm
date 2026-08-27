@@ -1639,7 +1639,7 @@ const Leads = (properties) => {
         <Adminto
             {...properties}
             setWAPhone={setWAPhone}
-            title="Leads"
+            title={properties.boardName || "Leads"}
             description="Gerencie sus leads y oportunidades"
             floatEnd={
                 <>

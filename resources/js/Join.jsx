@@ -51,12 +51,20 @@ const Join = ({ PUBLIC_RSA_KEY }) => {
     }
 
     useEffect(() => {
-        Session.set('join-data', data)
-    }, [data])
+        if (step === 'thanks') {
+            Session.delete('join-data')
+            try {
+                localStorage.removeItem('join-data')
+                sessionStorage.removeItem('join-data')
+            } catch (e) {}
+        } else if (step !== 'saving') {
+            Session.set('join-data', data)
+        }
+    }, [data, step])
 
     useEffect(() => {
         document.title = `Join | ${Global.APP_NAME}`
-    }, [null])
+    }, [])
 
     return <JoinContainer step={step} setStep={setStep}>
         {getStepView()}
