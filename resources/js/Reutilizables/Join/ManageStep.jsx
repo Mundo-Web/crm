@@ -25,7 +25,7 @@ const ManageStep = ({ data, setData, setStep }) => {
 
     return <>
         <h2 className="text-4xl font-bold mb-2">
-            Que estados de gestion quieres ver en tu tablero
+            Qué estados de gestión quieres ver en tu tablero
         </h2>
         <p className="text text-gray-600 mb-8">Define los estados para organizar tu proceso de ventas</p>
 

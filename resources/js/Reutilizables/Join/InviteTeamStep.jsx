@@ -6,13 +6,20 @@ const InviteTeamStep = ({ data, setData, setStep }) => {
     const [email, setEmail] = useState('')
 
     const onModalSubmit = () => {
-        setData({ ...data, emails })
-        setStep('dashboard')
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        let finalEmails = [...emails];
+        if (emailRegex.test(email.trim())) {
+            finalEmails = [...new Set([...emails, email.trim()])];
+            setEmails(finalEmails);
+            setEmail('');
+        }
+        setData(prev => ({ ...prev, emails: finalEmails }));
+        setStep('dashboard');
     }
 
     useEffect(() => {
-        setData({ ...data, emails })
-    }, [emails])
+        setData(prev => ({ ...prev, emails }));
+    }, [emails]);
 
     return <>
         <h2 className="text-4xl font-bold mb-2">Invita a tu equipo</h2>

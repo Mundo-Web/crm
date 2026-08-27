@@ -26,7 +26,7 @@ const StatusesStep = ({ data, setData, setStep }) => {
 
     return <>
         <h2 className="text-4xl font-bold mb-2">
-            Qué estapas de lead necesitar tener a la mano
+            Qué etapas de lead necesitas tener a la mano
         </h2>
         <p className="text text-gray-600 mb-8">Configura las etapas del embudo de conversión</p>
 

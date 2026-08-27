@@ -3,8 +3,10 @@ import InputContainer from "./InputContainer"
 const DashboardStep = ({ data, setData, setStep }) => {
     const onModalSubmit = (e) => {
         e.preventDefault()
-        setStep('columns')
+        setStep('manage')
     }
+
+    const previewColumns = ['Lead', 'Responsable', 'Teléfono', 'Estado']
 
     return <>
         <h2 className="text-4xl font-bold mb-2">
@@ -29,33 +31,21 @@ const DashboardStep = ({ data, setData, setStep }) => {
                 <table className="w-full border-collapse">
                     <thead>
                         <tr className="border-b">
-                            {data.columns?.length ? (
-                                data.columns.map((column, index) => (
-                                    <th key={index} className="p-3 text-left text-sm font-medium text-gray-600 text-nowrap">
-                                        {column}
-                                    </th>
-                                ))
-                            ) : (
-                                <th className="p-3 text-left text-sm font-medium text-gray-600 text-nowrap">
-                                    <div className="h-4 w-32 bg-gray-200 rounded animate-pulse"></div>
+                            {previewColumns.map((column, index) => (
+                                <th key={index} className="p-3 text-left text-sm font-medium text-gray-600 text-nowrap">
+                                    {column}
                                 </th>
-                            )}
+                            ))}
                         </tr>
                     </thead>
                     <tbody>
                         {[1, 2].map((row) => (
                             <tr key={row} className="border-b">
-                                {data.columns?.length ? (
-                                    data.columns.map((_, index) => (
-                                        <td key={index} className="p-3">
-                                            <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
-                                        </td>
-                                    ))
-                                ) : (
-                                    <td className="p-3">
+                                {previewColumns.map((_, index) => (
+                                    <td key={index} className="p-3">
                                         <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
                                     </td>
-                                )}
+                                ))}
                             </tr>
                         ))}
                     </tbody>

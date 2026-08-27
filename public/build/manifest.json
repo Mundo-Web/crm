@@ -675,7 +675,7 @@
     ]
   },
   "resources/js/Join.jsx": {
-    "file": "assets/Join-DfOYzmnN.js",
+    "file": "assets/Join-CrImA8dW.js",
     "name": "Join",
     "src": "resources/js/Join.jsx",
     "isEntry": true,
@@ -692,7 +692,6 @@
       "survey-image.png",
       "invite-team-image.png",
       "dashboard-image.png",
-      "columns-image.png",
       "manage-image.png",
       "statuses-image.png"
     ]

@@ -8,6 +8,7 @@ use App\Models\Atalaya\User;
 use App\Models\Atalaya\UsersByServicesByBusiness;
 use App\Models\Setting;
 use App\Models\Status;
+use App\Models\Process;
 use App\Providers\RouteServiceProvider;
 use Exception;
 use Illuminate\Contracts\Routing\ResponseFactory;
@@ -47,12 +48,13 @@ class AuthController extends Controller
         }
       }
 
-      $statuses = $request->statuses;
+      $statuses = $request->statuses ?? ['Nuevo', 'Gestión', 'Decisión'];
       foreach ($statuses as $key => $status) {
-        $statusJpa =  Status::create([
+        $statusJpa = Status::create([
           'name' => $status,
           'table_id' => 'e05a43e5-b3a6-46ce-8d1f-381a73498f33',
           'order' => $key + 1,
+          'pipeline' => true,
           'business_id' => Auth::user()->business_id
         ]);
 
@@ -65,7 +67,7 @@ class AuthController extends Controller
         }
       }
 
-      $clientStatusJpa =  Status::create([
+      $clientStatusJpa = Status::create([
         'name' => 'Cliente',
         'table_id' => 'a8367789-666e-4929-aacb-7cbc2fbf74de',
         'order' => count($statuses) + 1,
@@ -78,6 +80,38 @@ class AuthController extends Controller
         'business_id' => Auth::user()->business_id
       ]);
 
+      // Crear temperaturas de lead por defecto
+      $temperatures = [
+        [
+          'name' => 'Caliente',
+          'color' => '#ef4444',
+          'icon' => 'mdi-fire',
+          'order' => 1,
+        ],
+        [
+          'name' => 'Tibio',
+          'color' => '#f59e0b',
+          'icon' => 'mdi-lightning-bolt',
+          'order' => 2,
+        ],
+        [
+          'name' => 'Frío',
+          'color' => '#3b82f6',
+          'icon' => 'mdi-snowflake',
+          'order' => 3,
+        ],
+      ];
+      foreach ($temperatures as $temp) {
+        Status::create([
+          'name' => $temp['name'],
+          'color' => $temp['color'],
+          'icon' => $temp['icon'],
+          'order' => $temp['order'],
+          'table_id' => '584dfcba-4b2a-464a-9721-3dfc82bf83f2',
+          'business_id' => Auth::user()->business_id
+        ]);
+      }
+
       $serviceJpa = ServicesByBusiness::select('services_by_businesses.*')
         ->join('services', 'services.id', '=', 'services_by_businesses.service_id')
         ->join('businesses', 'businesses.id', '=', 'services_by_businesses.business_id')
@@ -89,15 +123,24 @@ class AuthController extends Controller
       $serviceJpa->first_time = false;
       $serviceJpa->save();
 
-      try {
-        $emails = $request->emails;
-        foreach ($emails as $email) {
-          $userJpa = User::where('email', $email)->first();
-          if ($userJpa) UserController::inviteInternal($serviceJpa->id, $userJpa);
-          else UserController::inviteExternal($serviceJpa->id, $email);
+      if (!empty($request->emails) && is_array($request->emails)) {
+        foreach ($request->emails as $email) {
+          if (empty($email)) continue;
+          try {
+            $userJpa = User::where('email', $email)->first();
+            if ($userJpa) {
+              UserController::inviteInternal($serviceJpa->id, $userJpa);
+            } else {
+              UserController::inviteExternal($serviceJpa->id, $email);
+            }
+          } catch (\Throwable $th) {
+            \Illuminate\Support\Facades\Log::error("Error al invitar al correo {$email} en init: " . $th->getMessage());
+          }
         }
-      } catch (\Throwable $th) {
       }
+
+      // Crear procesos por defecto
+      Process::createDefaultsForBusiness(Auth::user()->business_id);
 
       Setting::set('assignation-lead-status[task]', 'En curso');
       Setting::set('revertion-lead-status[task]', 'Pendiente');

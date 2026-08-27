@@ -11,7 +11,6 @@ import UsageStep from "./Reutilizables/Join/UsageStep";
 import SurveyStep from "./Reutilizables/Join/SurveyStep";
 import InviteTeamStep from "./Reutilizables/Join/InviteTeamStep";
 import DashboardStep from "./Reutilizables/Join/DashboardStep";
-import ColumnsStep from "./Reutilizables/Join/ColumnsStep";
 import ManageStep from "./Reutilizables/Join/ManageStep";
 import StatusesStep from "./Reutilizables/Join/StatusesStep";
 import JoinThanks from "./Reutilizables/Join/JoinThanks";
@@ -38,8 +37,6 @@ const Join = ({ PUBLIC_RSA_KEY }) => {
                 return <InviteTeamStep data={data} setData={setData} setStep={setStep} />
             case 'dashboard':
                 return <DashboardStep data={data} setData={setData} setStep={setStep} />
-            case 'columns':
-                return <ColumnsStep data={data} setData={setData} setStep={setStep} />
             case 'manage':
                 return <ManageStep data={data} setData={setData} setStep={setStep} />
             case 'statuses':

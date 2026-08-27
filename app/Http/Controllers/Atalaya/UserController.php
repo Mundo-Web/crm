@@ -95,17 +95,23 @@ class UserController extends BasicController
 
         $urlConfirm = env('APP_PROTOCOL') . '://' . env('APP_DOMAIN') . '/invitation/' . $ubsbb->invitation_token;
         $content = AtalayaConstant::value('accept-invitation');
-        $content = str_replace('{SENDER}', Auth::user()->name, $content);
+        $senderName = Auth::user()->name ?? Auth::user()->fullname ?? 'Atalaya';
+        $content = str_replace('{SENDER}', $senderName, $content);
         $content = str_replace('{SERVICE}', $serviceByBusinessJpa->service->name, $content);
         $content = str_replace('{BUSINESS}', $serviceByBusinessJpa->business->name, $content);
         $content = str_replace('{URL_CONFIRM}', $urlConfirm, $content);
 
-        $mailer = EmailConfig::config();
-        $mailer->Subject = 'Confirmacion - Atalaya';
-        $mailer->Body = $content;
-        $mailer->addAddress($userJpa->email);
-        $mailer->isHTML(true);
-        $mailer->send();
+        try {
+            $mailer = EmailConfig::config();
+            $mailer->Subject = 'Confirmacion - Atalaya';
+            $mailer->Body = $content;
+            $mailer->addAddress($userJpa->email);
+            $mailer->isHTML(true);
+            $mailer->send();
+            \Illuminate\Support\Facades\Log::info("Email de invitación interna enviado a {$userJpa->email}");
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error("Error enviando email de invitación interna a {$userJpa->email}: " . $e->getMessage());
+        }
 
         return User::byBusiness($userJpa->id);
     }
@@ -126,17 +132,23 @@ class UserController extends BasicController
         // Envío de email
         $urlConfirm = env('APP_PROTOCOL') . '://' . env('APP_DOMAIN') . '/register/' . $invitationEmail->invitation_token;
         $content = AtalayaConstant::value('accept-invitation');
-        $content = str_replace('{SENDER}', Auth::user()->name, $content);
+        $senderName = Auth::user()->name ?? Auth::user()->fullname ?? 'Atalaya';
+        $content = str_replace('{SENDER}', $senderName, $content);
         $content = str_replace('{SERVICE}', $serviceByBusinessJpa->service->name, $content);
         $content = str_replace('{BUSINESS}', $serviceByBusinessJpa->business->name, $content);
         $content = str_replace('{URL_CONFIRM}', $urlConfirm, $content);
 
-        $mailer = EmailConfig::config();
-        $mailer->Subject = 'Invitación - Atalaya';
-        $mailer->Body = $content;
-        $mailer->addAddress($invitationEmail->email);
-        $mailer->isHTML(true);
-        $mailer->send();
+        try {
+            $mailer = EmailConfig::config();
+            $mailer->Subject = 'Invitación - Atalaya';
+            $mailer->Body = $content;
+            $mailer->addAddress($invitationEmail->email);
+            $mailer->isHTML(true);
+            $mailer->send();
+            \Illuminate\Support\Facades\Log::info("Email de invitación externa enviado a {$invitationEmail->email}");
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error("Error enviando email de invitación externa a {$invitationEmail->email}: " . $e->getMessage());
+        }
 
         return $invitationEmail;
     }

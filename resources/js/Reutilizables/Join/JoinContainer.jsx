@@ -17,7 +17,6 @@ const images = [
     { key: 'survey', color: '#5633FE', image: SurveyImage, showProgressBar: true },
     { key: 'invite-team', color: '#FF6C37', image: InviteTeamImage, showProgressBar: true },
     { key: 'dashboard', color: '#4621E1', image: DashboardImage, showProgressBar: true },
-    { key: 'columns', color: '#50C4FF', image: ColumnsImage, showProgressBar: true },
     { key: 'manage', color: '#5633FE', image: ManageImage, showProgressBar: true },
     { key: 'statuses', color: '#FF6C37', image: StatusesImage, showProgressBar: true },
 ]
